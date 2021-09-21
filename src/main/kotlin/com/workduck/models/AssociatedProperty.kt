@@ -1,0 +1,33 @@
+package com.workduck.models
+
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
+import com.fasterxml.jackson.databind.JsonNode
+import com.workduck.utils.Helper
+
+/**
+ * All associated property type
+ */
+enum class AssociatedPropertyType{
+    TAG
+}
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = Tag::class, name = "tag")
+)
+sealed class AssociatedProperty(
+    propertyType: AssociatedPropertyType
+)
+@JsonTypeName("tag")
+data class Tag(
+    val id: String = Helper.generateId("TAG"),
+    val name: String,
+    val ownerIdentifier: OwnerIdentifier,
+    val expireAt: Long? = null,
+    val metaData: JsonNode? = null
+) : AssociatedProperty(AssociatedPropertyType.TAG), Entity
