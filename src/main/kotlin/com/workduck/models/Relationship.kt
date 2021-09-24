@@ -22,4 +22,10 @@ data class Relationship(
     init {
         Preconditions.checkArgument(startNode != endNode)
     }
+
+//    override val partitionKey: String
+//        get() = TODO("Not yet implemented")
+//
+//    override val sortKey: List<String>
+//        get() = TODO("Not yet implemented")
 }

@@ -21,6 +21,7 @@ enum class IdentifierType(s: String) {
     include = JsonTypeInfo.As.PROPERTY,
     property = "mapping")
 @JsonSubTypes(
+
     JsonSubTypes.Type(value = OwnerIdentifier::class, name = "owner"),
     JsonSubTypes.Type(value = NamespaceIdentifier::class, name = "namespace"),
     JsonSubTypes.Type(value = NodeIdentifier::class, name = "node"),

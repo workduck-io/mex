@@ -1,0 +1,17 @@
+{
+  "nodeID": "NODE1234",
+  "data": [
+    {
+      "id": "sampleParentID",
+      "content": "Sample Content"
+      "childrenElements": [
+        {
+          "id" : "sampleChildID",
+          "content" : "sample child content"
+
+        }
+
+      ]
+    }
+  ]
+}

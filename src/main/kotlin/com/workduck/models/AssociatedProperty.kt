@@ -30,4 +30,10 @@ data class Tag(
     val ownerIdentifier: OwnerIdentifier,
     val expireAt: Long? = null,
     val metaData: JsonNode? = null
-) : AssociatedProperty(AssociatedPropertyType.TAG), Entity
+) : AssociatedProperty(AssociatedPropertyType.TAG), Entity{
+//    override val partitionKey: String
+//        get() = TODO("Not yet implemented")
+//
+//    override val sortKey: List<String>
+//        get() = TODO("Not yet implemented")
+}
