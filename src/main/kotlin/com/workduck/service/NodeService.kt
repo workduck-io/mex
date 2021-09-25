@@ -38,7 +38,7 @@ class NodeService {
             id = "sampleParentID",
             parentID = "exampleID",
             content = "Sample Content",
-            children = listOf(ce),
+            children = mutableListOf(ce),
             elementType = "paragraph",
         )
 
@@ -63,6 +63,34 @@ class NodeService {
     fun deleteNode() {
 
         repository.delete(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest")
+    }
+
+    fun append() {
+        var node : Node = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
+        val jsonString = """
+        {
+            "type" : "AdvancedElement",
+            "id": "sampleParentID2",
+            "content": "Sample Content 2",
+            "elementType" : "list",
+            "childrenElements": [
+            {
+                "type" : "BasicTextElement",
+                "id" : "sampleChildID2",
+                "content" : "sample child content"
+            }
+            ]
+        }
+        """
+
+        val objectMapper = ObjectMapper()
+        val element: Element =objectMapper.readValue(jsonString, Element::class.java)
+
+        //node.data.add()
+        node.data += element
+        //node.data.toMutableList().add(element)
+        repository.update(node)
+
     }
 
     fun updateNode() {
@@ -100,6 +128,7 @@ class NodeService {
                 "type" : "AdvancedElement",
 				"id": "sampleParentID",
 				"content": "Sample Content",
+                "elementType": "list",
                 "childrenElements": [
                 {
                     "type" : "BasicTextElement",
@@ -137,12 +166,36 @@ class NodeService {
 
     }
 
+    fun jsonToElement()  {
+        val jsonString = """
+        {
+            "type" : "AdvancedElement",
+            "id": "sampleParentID",
+            "content": "Sample Content 2",
+            "elementType" : "list",
+            "childrenElements": [
+            {
+                "type" : "BasicTextElement",
+                "id" : "sampleChildID",
+                "content" : "sample child content"
+            }
+            ]
+        }
+        """
+
+        val objectMapper = ObjectMapper()
+        val element: Element =objectMapper.readValue(jsonString, Element::class.java)
+        println(element)
+
+    }
 }
 
 fun main(){
-    //NodeService().createNode()
+    NodeService().createNode()
     // NodeService().getNode()
     // NodeService().updateNode()
-    NodeService().deleteNode()
-   // NodeService().jsonToObjectMapper()
+    //NodeService().deleteNode()
+    //NodeService().jsonToObjectMapper()
+    //NodeService().jsonToElement()
+    NodeService().append()
 }

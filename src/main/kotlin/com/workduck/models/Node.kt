@@ -20,7 +20,7 @@ data class Node (
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName="SK")
-    var data: List<Element> = listOf(),
+    var data: List<Element> = mutableListOf(),
 
     @JsonProperty("version")
     @DynamoDBAttribute(attributeName="version")

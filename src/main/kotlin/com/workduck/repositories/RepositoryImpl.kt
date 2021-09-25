@@ -14,11 +14,11 @@ class RepositoryImpl<T: Entity>(
     private val dynamoDB: DynamoDB,
     private val mapper: DynamoDBMapper
 ): Repository<T> {
-    override fun get(identifier: Identifier) {
+    override fun get(identifier: Identifier): Node {
 
         /* How to avoid explicitly writing Node class here??? */
-        val node: Node =  mapper.load(Node::class.java, identifier.id)
-        println(node)
+        return mapper.load(Node::class.java, identifier.id)
+
     }
 
     override fun delete(identifier: Identifier, tableName : String) {
@@ -27,6 +27,7 @@ class RepositoryImpl<T: Entity>(
 
         /* currently there's just one record per primary key hence this is feasible. Will need to change this in future */
         val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec().withPrimaryKey("PK", identifier.id)
+
         table.deleteItem(deleteItemSpec)
 
     }
@@ -40,6 +41,9 @@ class RepositoryImpl<T: Entity>(
         mapper.save(t)
         return t;
     }
+
+
+
 
 //    override fun create(node: Node): Node {
 //        // TODO("Not yet implemented")
