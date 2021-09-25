@@ -30,15 +30,15 @@ class NodeService {
         val ce : Element = BasicTextElement(
             type = "BasicTextElement",
             id = "sameBSEid",
-            content = "Child Element Content"
+            content = "Child Element Content",
         )
         val pe : Element = AdvancedElement(
             type = "AdvancedElement",
             id = "sampleParentID",
             parentID = "exampleID",
             content = "Sample Content",
-            childrenElements = listOf(ce),
-            elementType = ElementTypes.PARAGRAPH
+            children = listOf(ce),
+            elementType = "paragraph",
         )
 
         val node = Node(
@@ -56,7 +56,7 @@ class NodeService {
 
 
     fun getNode() {
-        repository.get(NodeIdentifier("NodeFPGT8M5ES5828ZGKE9VFF7DS9V"))
+        repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
     }
     fun deleteNode() {
 
@@ -115,6 +115,6 @@ class NodeService {
 
 fun main(){
      NodeService().getNode()
-    // NodeService().createNode()
+    //NodeService().createNode()
    // NodeService().jsonToObjectMapper()
 }
