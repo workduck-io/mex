@@ -12,9 +12,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = AdvancedElement::class, name = "AdvancedElement"),
     JsonSubTypes.Type(value = BasicTextElement::class, name = "BasicTextElement")
 )
-interface Element {
-    fun content(): String
+interface Element{
+    fun getContent(): String
     fun getID() : String
-    fun getChildren() : List<Element>
-    fun getElementType() : String
+    fun getChildren() : List<Element>?
+    //fun getElementType() : String
 }

@@ -10,7 +10,7 @@ enum class NodeStatus{
     UNLINKED
 }
 
-@DynamoDBTable(tableName="elementsTable")
+@DynamoDBTable(tableName="elementsTableTest")
 data class Node (
 
     @JsonProperty("id")
@@ -19,8 +19,7 @@ data class Node (
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBRangeKey(attributeName="SK")
-    //@DynamoDBAttribute(attributeName="data")
+    @DynamoDBAttribute(attributeName="SK")
     var data: List<Element> = listOf(),
 
     @JsonProperty("version")
