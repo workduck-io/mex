@@ -50,9 +50,8 @@ data class Node (
     @DynamoDBAttribute(attributeName="updatedAt")
     var updatedAt : Long = System.currentTimeMillis()
 
-   // override val partitionKey: String = "NODE#${id}"
+    //override val entityID: String = id
 
-   // override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
-
+    //override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 
 }

@@ -3,11 +3,10 @@ package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.Node
-import java.awt.print.Book
 
 
 class RepositoryImpl<T: Entity>(
@@ -18,29 +17,29 @@ class RepositoryImpl<T: Entity>(
     override fun get(identifier: Identifier) {
 
         /* How to avoid explicitly writing Node class here??? */
-
-        /* Not Working????????????!!!! */
         val node: Node =  mapper.load(Node::class.java, identifier.id)
-
         println(node)
-        //return node
-       // return nodeRetrieved
-
     }
 
-    override fun delete(identifier: Identifier) {
-        TODO("Not yet implemented")
+    override fun delete(identifier: Identifier, tableName : String) {
+
+        val table = dynamoDB.getTable(tableName)
+
+        /* currently there's just one record per primary key hence this is feasible. Will need to change this in future */
+        val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec().withPrimaryKey("PK", identifier.id)
+        table.deleteItem(deleteItemSpec)
+
     }
 
     override fun create(t: T): T {
-        val table: Table = dynamoDB.getTable("elementsTable")
-       // println(t.sortKey + "" +  t.partitionKey)
-
-
         mapper.save(t)
         return t
     }
 
+    override fun update(t: T): T {
+        mapper.save(t)
+        return t;
+    }
 
 //    override fun create(node: Node): Node {
 //        // TODO("Not yet implemented")
@@ -70,7 +69,6 @@ class RepositoryImpl<T: Entity>(
 //        return node
 //    }
 
-    override fun update(t: T): T {
-        TODO("Not yet implemented")
-    }
+
 }
+

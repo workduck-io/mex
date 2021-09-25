@@ -11,5 +11,5 @@ interface Repository<T: Entity> {
 
     fun get(identifier: Identifier)
 
-    fun delete(identifier: Identifier)
+    fun delete(identifier: Identifier, tableName: String)
 }
