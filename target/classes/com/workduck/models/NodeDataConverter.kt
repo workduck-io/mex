@@ -12,10 +12,18 @@ class NodeDataConverter : DynamoDBTypeConverter<String, List<Element>> {
 
 	override fun convert(n : List<Element>): String? {
 		return objectMapper.writeValueAsString(n)
+		//val itemDimensions: List<Element> = n as List<Element>
+//		var nodeData : String = ""
+//		for(e in n) {
+//			nodeData += String.format("id:%s x content:%s x type:%s x children: %s", e.getID(), e.content(), e.getElementType(), e.getChildren())
+//		}
+//		return nodeData
+
+
 	}
 
-	override fun unconvert(nodeSchemaIdentifierString: String): List<Element> {
-		return objectMapper.readValue<List<Element>>(nodeSchemaIdentifierString)
+	override fun unconvert(nodeData: String): List<Element> {
+		return objectMapper.readValue<List<Element>>(nodeData)
 
 	}
 

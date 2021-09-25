@@ -5,19 +5,18 @@ enum class HeadingType{
     H2
 }
 data class Heading(
-    val content: String,
+    private var id: String = "",
+    private var content: String = "",
     val type: HeadingType
 ): Element {
-    override fun content(): String {
-        TODO("Not yet implemented")
-    }
-    override fun getID(): String {
-        TODO("Not yet implemented")
-    }
+    override fun getContent(): String = content
+
+    override fun getID(): String = id
+
     override fun getChildren(): List<Element> {
         TODO("Not yet implemented")
     }
-    override fun getElementType(): String  {
+    fun getElementType(): String  {
         TODO("Not yet implemented")
     }
 }

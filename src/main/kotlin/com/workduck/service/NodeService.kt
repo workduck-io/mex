@@ -1,6 +1,7 @@
 package com.workduck.service
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
@@ -42,7 +43,7 @@ class NodeService {
         )
 
         val node = Node(
-            id = Helper.generateId("Node"),
+            id = "NodeF873GEFPVJQKV43NQMWQEJQGLF", //Helper.generateId("Node"),
             version = "xyz",
             namespaceIdentifier = NamespaceIdentifier(Helper.generateId(IdentifierType.NAMESPACE.name)),
             nodeSchemaIdentifier = NodeSchemaIdentifier(Helper.generateId(IdentifierType.NODE_SCHEMA.name)),
@@ -56,13 +57,40 @@ class NodeService {
 
 
     fun getNode() {
+
         repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
     }
     fun deleteNode() {
 
-        repository.delete(NodeIdentifier("abc"))
+        repository.delete(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest")
     }
 
+    fun updateNode() {
+        val ce : Element = BasicTextElement(
+            type = "BasicTextElement",
+            id = "sameBSEid",
+            content = "Child Element Content",
+        )
+        val pe : Element = AdvancedElement(
+            type = "AdvancedElement",
+            id = "sampleParentID",
+            parentID = "exampleID",
+            content = "Sample Content",
+            children = listOf(ce),
+            elementType = "list",
+        )
+
+        val node = Node(
+            id = "NodeF873GEFPVJQKV43NQMWQEJQGLF", //Helper.generateId("Node"),
+            version = "xyz",
+            namespaceIdentifier = NamespaceIdentifier(Helper.generateId(IdentifierType.NAMESPACE.name)),
+            nodeSchemaIdentifier = NodeSchemaIdentifier(Helper.generateId(IdentifierType.NODE_SCHEMA.name)),
+            //status = NodeStatus.LINKED,
+            data = listOf(pe),
+            createdAt = 1231444
+        )
+        repository.update(node)
+    }
     fun jsonToObjectMapper() {
         val jsonString = """
 		{
@@ -89,17 +117,15 @@ class NodeService {
         val objectMapper = ObjectMapper()
         val node: Node = objectMapper.readValue(jsonString, Node::class.java)
         println(node)
-
-
-
-
     }
+
+
     fun connectToDynamo() {
         val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 
-        var dynamoDB: DynamoDB = DynamoDB(client)
+        val dynamoDB: DynamoDB = DynamoDB(client)
 
-        var table: Table = dynamoDB.getTable("usersTable")
+        val table: Table = dynamoDB.getTable("usersTable")
 
        // val mapValues: Map<String, AttributeValue> = HashMap()
         val item : Item = Item()
@@ -114,7 +140,9 @@ class NodeService {
 }
 
 fun main(){
-     NodeService().getNode()
     //NodeService().createNode()
+    // NodeService().getNode()
+    // NodeService().updateNode()
+    NodeService().deleteNode()
    // NodeService().jsonToObjectMapper()
 }

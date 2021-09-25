@@ -1,20 +1,28 @@
 package com.workduck.models
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument
+import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 
 enum class ElementTypes(val type : String) {
-	PARAGRAPH("paragraph"),
-	LIST("list")
+
+	PARAGRAPH("paragraph");
+
+	companion object {
+		private val codes = ElementTypes.values().associateBy(ElementTypes::type)
+		@JvmStatic @JsonCreator fun from (value: String) = codes[value]
+	}
 }
 
+@DynamoDBDocument
 class AdvancedElement (
 
 	@JsonProperty("id")
 	private var id: String = "defaultValue",
 
 	@JsonProperty("type")
-	private var type : String? = null,
+	private var type : String? = "",
 
 	@JsonProperty("parentID")
 	private var parentID : String? = null,
@@ -23,19 +31,22 @@ class AdvancedElement (
 	private var content: String? = null,
 
 	@JsonProperty("childrenElements")
-	private var childrenElements: List<Element> = listOf(),
+	private var children: List<Element>? = listOf(),
 
 	@JsonProperty("elementType")
-	private var elementType : Enum<ElementTypes>? = ElementTypes.PARAGRAPH,
+	private var elementType : String = "parapgraph",
 ) : Element {
-	override fun content(): String {
+	override fun getContent(): String {
 		if (content != null) return content as String
 		return ""
 	}
 
 	override fun getID(): String = id
 
-	override fun getChildren(): List<Element> = childrenElements
+	override fun getChildren(): List<Element>? = children
 
-	override fun getElementType(): String = "Testing"
+	fun getElementType(): String = elementType
+
+	fun getType() : String? = type
+
 }

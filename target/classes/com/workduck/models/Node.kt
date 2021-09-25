@@ -11,7 +11,7 @@ enum class NodeStatus {
     UNLINKED
 }
 
-@DynamoDBTable(tableName="elementsTable")
+@DynamoDBTable(tableName="elementsTableTest")
 data class Node (
 
     @JsonProperty("id")
@@ -20,8 +20,7 @@ data class Node (
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBRangeKey(attributeName="SK")
-    //@DynamoDBAttribute(attributeName="data")
+    @DynamoDBAttribute(attributeName="SK")
     var data: List<Element> = listOf(),
 
     @JsonProperty("version")
@@ -52,9 +51,8 @@ data class Node (
     @DynamoDBAttribute(attributeName="updatedAt")
     var updatedAt : Long = System.currentTimeMillis()
 
-   // override val partitionKey: String = "NODE#${id}"
+    //override val entityID: String = id
 
-   // override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
-
+    //override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 
 }

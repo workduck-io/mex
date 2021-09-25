@@ -32,37 +32,37 @@ enum class IdentifierType(s: String) {
 )
 sealed class Identifier(
     val type: IdentifierType,
-    open val id: String
+    open var id: String
 )
 
 @JsonTypeName("owner")
 data class OwnerIdentifier(
-    override val id : String = Helper.generateId(IdentifierType.OWNER.name)
+    override var id : String = Helper.generateId(IdentifierType.OWNER.name)
 ): Identifier(IdentifierType.OWNER, id)
 
 @JsonTypeName("namespace")
 data class NamespaceIdentifier(
-    override val id : String = Helper.generateId(IdentifierType.NAMESPACE.name)
+    override var id : String = Helper.generateId(IdentifierType.NAMESPACE.name)
 ): Identifier(IdentifierType.NAMESPACE, id)
 
 @JsonTypeName("node")
 data class NodeIdentifier(
-    override val id : String = Helper.generateId(IdentifierType.NODE.name)
+    override var id : String = Helper.generateId(IdentifierType.NODE.name)
 ): Identifier(IdentifierType.NODE, id)
 
 @JsonTypeName("as-property")
 data class AssociatedPropertyIdentifier(
     val associatedPropertyType: AssociatedPropertyType,
-    override val id : String = Helper.generateId(IdentifierType.ASSOCIATED_PROPERTY.name)
+    override var id : String = Helper.generateId(IdentifierType.ASSOCIATED_PROPERTY.name)
 ): Identifier(IdentifierType.ASSOCIATED_PROPERTY, id)
 
 
 @JsonTypeName("node-schema")
 data class NodeSchemaIdentifier(
-    override val id : String = Helper.generateId(IdentifierType.NODE_SCHEMA.name)
+    override var id : String = Helper.generateId(IdentifierType.NODE_SCHEMA.name)
 ): Identifier(IdentifierType.NODE_SCHEMA, id)
 
 @JsonTypeName("relationship")
 data class RelationshipIdentifier(
-    override val id : String = Helper.generateId(IdentifierType.RELATIONSHIP.name)
+    override var id : String = Helper.generateId(IdentifierType.RELATIONSHIP.name)
 ): Identifier(IdentifierType.RELATIONSHIP, id)
