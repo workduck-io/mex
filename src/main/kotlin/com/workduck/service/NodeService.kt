@@ -1,17 +1,19 @@
 package com.workduck.service
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.workduck.models.*
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
+import java.util.*
 
 
 /**
@@ -58,7 +60,8 @@ class NodeService {
 
     fun getNode() {
 
-        repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
+        val node : Node = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
+        println(node)
     }
     fun deleteNode() {
 
@@ -66,9 +69,11 @@ class NodeService {
     }
 
     fun append() {
-        var node : Node = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
+
+
         val jsonString = """
-        {
+        [
+            {
             "type" : "AdvancedElement",
             "id": "sampleParentID2",
             "content": "Sample Content 2",
@@ -79,17 +84,30 @@ class NodeService {
                 "id" : "sampleChildID2",
                 "content" : "sample child content"
             }
-            ]
-        }
+            ]},
+            {
+            "type" : "AdvancedElement",
+            "id": "sampleParentID3",
+            "content": "Sample Content 3",
+            "elementType" : "random element type",
+            "childrenElements": [
+            {
+                "type" : "BasicTextElement",
+                "id" : "sampleChildID3",
+                "content" : "sample child content"
+            }
+            ]}
+            
+        ]
         """
 
-        val objectMapper = ObjectMapper()
-        val element: Element =objectMapper.readValue(jsonString, Element::class.java)
-
-        //node.data.add()
-        node.data += element
-        //node.data.toMutableList().add(element)
-        repository.update(node)
+        val objectMapper = ObjectMapper().registerKotlinModule()
+        val elements: MutableList<Element> = objectMapper.readValue(jsonString)
+        println(elements)
+        repository.append(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest", elements)
+        //val node : Node = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
+        //node.data += element
+        //repository.update(node)
 
     }
 
@@ -191,7 +209,7 @@ class NodeService {
 }
 
 fun main(){
-    NodeService().createNode()
+    //NodeService().createNode()
     // NodeService().getNode()
     // NodeService().updateNode()
     //NodeService().deleteNode()
