@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.workduck.models.*
+import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
+import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import java.util.*
@@ -23,9 +25,10 @@ class NodeService {
     //Todo: Inject them from handlers
 
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-    var dynamoDB: DynamoDB = DynamoDB(client)
+    private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
-    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper)
+    private val nodeRepository : NodeRepository = NodeRepository(mapper, dynamoDB)
+    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository)
 
 
     fun createNode(){
@@ -104,10 +107,7 @@ class NodeService {
         val objectMapper = ObjectMapper().registerKotlinModule()
         val elements: MutableList<Element> = objectMapper.readValue(jsonString)
         println(elements)
-        repository.append(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest", elements)
-        //val node : Node = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
-        //node.data += element
-        //repository.update(node)
+        nodeRepository.append(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest", elements)
 
     }
 
@@ -210,14 +210,10 @@ class NodeService {
 
 fun main(){
     //NodeService().createNode()
-    // NodeService().getNode()
+     NodeService().getNode()
     // NodeService().updateNode()
     //NodeService().deleteNode()
     //NodeService().jsonToObjectMapper()
     //NodeService().jsonToElement()
-    NodeService().append()
+    //NodeService().append()
 }
-
-
-/* WorkspaceService : Stores just Workspace ID and Workspace name */
-/* NamespaceService : Stores mapping of All namespace IDs with WorkspaceIDs, and namespace name etc. */

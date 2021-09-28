@@ -4,16 +4,18 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.*
+import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
-import kotlinx.html.currentTimeMillis
 
 class NamespaceService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-	var dynamoDB: DynamoDB = DynamoDB(client)
+	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper)
+	private val namespaceRepository : NamespaceRepository = NamespaceRepository(mapper)
+	private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository)
+
 
 
 	fun createNamespace(){
@@ -49,7 +51,7 @@ class NamespaceService {
 
 fun main(){
 	//NamespaceService().createNamespace()
-	//NamespaceService().getNamespace()
+	println(NamespaceService().getNamespace())
 	//NamespaceService().updateNamespace()
-	NamespaceService().deleteNamespace()
+	//NamespaceService().deleteNamespace()
 }

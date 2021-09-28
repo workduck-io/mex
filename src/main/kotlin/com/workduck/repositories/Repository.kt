@@ -14,5 +14,4 @@ interface Repository<T: Entity> {
 
     fun delete(identifier: Identifier, tableName: String)
 
-    fun append(identifier: Identifier, tableName: String, elements : MutableList<Element>)
 }
