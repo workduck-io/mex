@@ -1,10 +1,7 @@
 package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
-import com.workduck.models.Element
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
-import com.workduck.models.Namespace
+import com.workduck.models.*
 
 class NamespaceRepository(
 	private val mapper: DynamoDBMapper
@@ -14,6 +11,8 @@ class NamespaceRepository(
 	override fun get(identifier: Identifier): Entity {
 		return mapper.load(Namespace::class.java, identifier.id)
 	}
+
+
 
 	override fun create(t: Namespace): Namespace {
 		TODO("Not yet implemented")
@@ -27,8 +26,5 @@ class NamespaceRepository(
 		TODO("Not yet implemented")
 	}
 
-	override fun append(identifier: Identifier, tableName: String, elements: MutableList<Element>) {
-		TODO("Not yet implemented")
-	}
 
 }

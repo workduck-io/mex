@@ -9,18 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
 import kotlin.collections.HashMap
 
-/*
-NodeRepo
-get
-
-
-WorkspaceRepo
-get
-
-NamespaceRepo
-get
-*/
-
 class RepositoryImpl<T: Entity>(
     //val amazonDynamoDB: AmazonDynamoDB
     private val dynamoDB: DynamoDB,

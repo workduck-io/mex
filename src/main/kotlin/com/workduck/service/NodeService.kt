@@ -131,6 +131,7 @@ class NodeService {
             version = "xyz",
             namespaceIdentifier = NamespaceIdentifier(Helper.generateId(IdentifierType.NAMESPACE.name)),
             nodeSchemaIdentifier = NodeSchemaIdentifier(Helper.generateId(IdentifierType.NODE_SCHEMA.name)),
+            workspaceIdentifier = WorkspaceIdentifier("WS1234"),
             //status = NodeStatus.LINKED,
             data = listOf(pe),
             createdAt = 1231444
@@ -210,7 +211,7 @@ class NodeService {
 
 fun main(){
     //NodeService().createNode()
-     NodeService().getNode()
+    // NodeService().getNode()
     // NodeService().updateNode()
     //NodeService().deleteNode()
     //NodeService().jsonToObjectMapper()
