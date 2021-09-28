@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 
 
 
-class NameSpaceIdentifierConverter : DynamoDBTypeConverter<String, NamespaceIdentifier?> {
+class NamespaceIdentifierConverter : DynamoDBTypeConverter<String, NamespaceIdentifier?> {
 
 	private val objectMapper = ObjectMapper()
 

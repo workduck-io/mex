@@ -60,7 +60,7 @@ class NodeService {
 
     fun getNode() {
 
-        val node : Node = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
+        val node : Entity = repository.get(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
         println(node)
     }
     fun deleteNode() {
@@ -217,3 +217,7 @@ fun main(){
     //NodeService().jsonToElement()
     NodeService().append()
 }
+
+
+/* WorkspaceService : Stores just Workspace ID and Workspace name */
+/* NamespaceService : Stores mapping of All namespace IDs with WorkspaceIDs, and namespace name etc. */

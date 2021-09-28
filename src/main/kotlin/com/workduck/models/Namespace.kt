@@ -12,11 +12,12 @@ enum class NamespaceStatus{
  * class for namespace
  */
 class Namespace(
-    val authorizations : Set<Auth>,
+    //val authorizations : Set<Auth>,
     val name: String,
-    val owner: OwnerIdentifier,
+    val workspace: WorkspaceIdentifier,
+    //val owner: OwnerIdentifier,
     val createdAt: Long,
-    val status: NamespaceStatus = NamespaceStatus.ACTIVE
+    //val status: NamespaceStatus = NamespaceStatus.ACTIVE
 ){
     val updatedAt = System.currentTimeMillis()
 }

@@ -12,7 +12,8 @@ enum class IdentifierType(s: String) {
     NODE("NODE"),
     ASSOCIATED_PROPERTY("AS-PROPERTY"),
     NODE_SCHEMA("NODE-SCHEMA"),
-    RELATIONSHIP("RELATIONSHIP")
+    RELATIONSHIP("RELATIONSHIP"),
+    WORKSPACE("WORKSPACE")
 
 }
 
@@ -66,3 +67,9 @@ data class NodeSchemaIdentifier(
 data class RelationshipIdentifier(
     override var id : String = Helper.generateId(IdentifierType.RELATIONSHIP.name)
 ): Identifier(IdentifierType.RELATIONSHIP, id)
+
+
+@JsonTypeName("workspace")
+data class WorkspaceIdentifier(
+    override var id : String = Helper.generateId(IdentifierType.WORKSPACE.name)
+): Identifier(IdentifierType.WORKSPACE, id)
