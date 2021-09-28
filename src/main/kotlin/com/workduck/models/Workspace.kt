@@ -12,7 +12,7 @@ class Workspace(
 
 	@JsonProperty("id")
 	@DynamoDBHashKey(attributeName="PK")
-	var id : String = Helper.generateId("WS"),
+	var id : String = Helper.generateId(IdentifierType.WORKSPACE.name),
 
 
 	@JsonProperty("name")

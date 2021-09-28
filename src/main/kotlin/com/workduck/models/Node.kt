@@ -15,7 +15,7 @@ data class Node (
 
     @JsonProperty("id")
     @DynamoDBHashKey(attributeName="PK")
-    var id: String = Helper.generateId("NODE"),
+    var id: String = Helper.generateId(IdentifierType.NODE.name),
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
@@ -32,7 +32,7 @@ data class Node (
     var namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("workspaceIdentifier")
-    //@DynamoDBTypeConverted(converter = WorkSpaceIdentifierConverter::class)
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName="workspaceIdentifier")
     var workspaceIdentifier: WorkspaceIdentifier? = null,
 

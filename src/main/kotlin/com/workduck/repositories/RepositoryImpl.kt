@@ -9,6 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
 import kotlin.collections.HashMap
 
+/*
+NodeRepo
+get
+
+
+WorkspaceRepo
+get
+*/
 
 class RepositoryImpl<T: Entity>(
     //val amazonDynamoDB: AmazonDynamoDB
@@ -21,10 +29,10 @@ class RepositoryImpl<T: Entity>(
         if(identifier is NodeIdentifier)
             return mapper.load(Node::class.java, identifier.id)
 
+        if(identifier is WorkspaceIdentifier)
+            return mapper.load(Workspace::class.java, identifier.id)
 
-        return mapper.load(Workspace::class.java, identifier.id)
-
-
+        return mapper.load(Namespace::class.java, identifier.id)
     }
 
     override fun delete(identifier: Identifier, tableName : String) {
