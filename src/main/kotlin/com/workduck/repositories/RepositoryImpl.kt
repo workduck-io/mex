@@ -6,10 +6,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.workduck.models.Element
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
-import com.workduck.models.Node
+import com.workduck.models.*
 import kotlin.collections.HashMap
 
 
@@ -18,10 +15,15 @@ class RepositoryImpl<T: Entity>(
     private val dynamoDB: DynamoDB,
     private val mapper: DynamoDBMapper
 ): Repository<T> {
-    override fun get(identifier: Identifier): Node {
+    override fun get(identifier: Identifier): Entity {
 
-        /* How to avoid explicitly writing Node class here??? */
-        return mapper.load(Node::class.java, identifier.id)
+        /* How to avoid explicitly writing Node, Workspace classes here??? */
+        if(identifier is NodeIdentifier)
+            return mapper.load(Node::class.java, identifier.id)
+
+
+        return mapper.load(Workspace::class.java, identifier.id)
+
 
     }
 

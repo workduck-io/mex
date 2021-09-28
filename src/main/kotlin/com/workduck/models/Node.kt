@@ -28,9 +28,14 @@ data class Node (
     var version: String? = null,
 
     @JsonProperty("namespaceIdentifier")
-    @DynamoDBTypeConverted(converter = NameSpaceIdentifierConverter::class)
+    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName="namespaceIdentifier")
     var namespaceIdentifier: NamespaceIdentifier? = null,
+
+    @JsonProperty("workspaceIdentifier")
+    //@DynamoDBTypeConverted(converter = WorkSpaceIdentifierConverter::class)
+    @DynamoDBAttribute(attributeName="workspaceIdentifier")
+    var workspaceIdentifier: WorkspaceIdentifier? = null,
 
     @JsonProperty("nodeSchemaIdentifier")
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)

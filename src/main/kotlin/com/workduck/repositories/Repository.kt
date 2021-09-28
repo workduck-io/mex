@@ -10,7 +10,7 @@ interface Repository<T: Entity> {
 
     fun update(t:T): T
 
-    fun get(identifier: Identifier) : Node
+    fun get(identifier: Identifier) : Entity
 
     fun delete(identifier: Identifier, tableName: String)
 
