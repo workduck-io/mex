@@ -6,16 +6,19 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.Entity
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
+import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
 
 class WorkspaceService {
 
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-	var dynamoDB: DynamoDB = DynamoDB(client)
+	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper)
+	private val workspaceRepository : WorkspaceRepository = WorkspaceRepository(mapper)
+	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository)
 
 	fun createWorkspace(){
 		val ws : Workspace = Workspace(
@@ -50,8 +53,8 @@ class WorkspaceService {
 
 
 fun main(){
-	//WorkspaceService().createWorkspace()
+	WorkspaceService().createWorkspace()
 	//WorkspaceService().updateWorkspace()
 	//WorkspaceService().deleteWorkspace()
-	WorkspaceService().getWorkspace()
+	//WorkspaceService().getWorkspace()
 }
