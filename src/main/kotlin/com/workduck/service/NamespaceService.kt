@@ -13,7 +13,7 @@ class NamespaceService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val namespaceRepository : NamespaceRepository = NamespaceRepository(mapper)
+	private val namespaceRepository : NamespaceRepository = NamespaceRepository(dynamoDB, mapper)
 	private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository)
 
 
@@ -47,11 +47,18 @@ class NamespaceService {
 		repository.delete(NamespaceIdentifier("NMSPC1"), "elementsTableTest")
 
 	}
+
+	fun getAllNodesWithNamespaceID(){
+		val namespaceID = "NAMESPACELH65W9RM3BQ62FLLFEST1PSHDQ"
+		val namespaceIdentifier : NamespaceIdentifier = NamespaceIdentifier(namespaceID)
+		namespaceRepository.getAllNodesWithNamespaceID(namespaceIdentifier, "elementsTableTest")
+	}
 }
 
 fun main(){
 	//NamespaceService().createNamespace()
-	println(NamespaceService().getNamespace())
+	//NamespaceService().getNamespace()
 	//NamespaceService().updateNamespace()
 	//NamespaceService().deleteNamespace()
+	NamespaceService().getAllNodesWithNamespaceID()
 }
