@@ -38,7 +38,7 @@ class WorkspaceRepository(
 			.withValueMap(expressionAttributeValues)
 
 		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
-		
+
 		val iterator: Iterator<Item> = items!!.iterator()
 
 		while (iterator.hasNext()) {
