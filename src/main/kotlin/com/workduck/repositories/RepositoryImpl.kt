@@ -10,7 +10,6 @@ import com.workduck.models.*
 import kotlin.collections.HashMap
 
 class RepositoryImpl<T: Entity>(
-    //val amazonDynamoDB: AmazonDynamoDB
     private val dynamoDB: DynamoDB,
     private val mapper: DynamoDBMapper,
     private val repository: Repository<T>

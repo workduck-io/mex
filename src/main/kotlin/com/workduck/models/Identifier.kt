@@ -8,12 +8,13 @@ import com.workduck.utils.Helper
 
 enum class IdentifierType(s: String) {
     OWNER("OWN"),
-    NAMESPACE("NMSPC"),
+    NAMESPACE("NAMESPACE"),
     NODE("NODE"),
     ASSOCIATED_PROPERTY("AS-PROPERTY"),
     NODE_SCHEMA("NODE-SCHEMA"),
     RELATIONSHIP("RELATIONSHIP"),
-    WORKSPACE("WORKSPACE")
+    WORKSPACE("WORKSPACE"),
+    USER("USER")
 
 }
 
@@ -28,6 +29,8 @@ enum class IdentifierType(s: String) {
     JsonSubTypes.Type(value = NodeIdentifier::class, name = "node"),
     JsonSubTypes.Type(value = AssociatedPropertyIdentifier::class, name = "as-property"),
     JsonSubTypes.Type(value = NodeSchemaIdentifier::class, name = "node-schema"),
+    JsonSubTypes.Type(value = RelationshipIdentifier::class, name = "relationship"),
+    JsonSubTypes.Type(value = WorkspaceIdentifier::class, name = "workspace"),
     JsonSubTypes.Type(value = RelationshipIdentifier::class, name = "relationship")
 
 )
@@ -73,3 +76,8 @@ data class RelationshipIdentifier(
 data class WorkspaceIdentifier(
     override var id : String = Helper.generateId(IdentifierType.WORKSPACE.name)
 ): Identifier(IdentifierType.WORKSPACE, id)
+
+@JsonTypeName("user")
+data class UserIdentifier(
+    override var id : String = Helper.generateId(IdentifierType.USER.name)
+): Identifier(IdentifierType.USER, id)
