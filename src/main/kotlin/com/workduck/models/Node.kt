@@ -2,6 +2,10 @@ package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.workduck.converters.NamespaceIdentifierConverter
+import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.NodeSchemaIdentifierConverter
+import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.utils.Helper
 import kotlin.streams.toList
 
