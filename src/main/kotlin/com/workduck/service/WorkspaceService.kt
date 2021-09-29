@@ -47,11 +47,7 @@ class WorkspaceService {
 		repository.delete(WorkspaceIdentifier("WS1234"), "elementsTableTest")
 	}
 
-	fun getAllNodesWithWorkspaceID(){
-		val workspaceID = "WS1234"
-		val workspaceIdentifier : WorkspaceIdentifier = WorkspaceIdentifier(workspaceID)
-		workspaceRepository.getAllNodesWithWorkspaceID(workspaceIdentifier, "elementsTableTest")
-	}
+
 
 
 }
@@ -63,5 +59,4 @@ fun main(){
 	//WorkspaceService().deleteWorkspace()
 	//WorkspaceService().getWorkspace()
 
-	WorkspaceService().getAllNodesWithWorkspaceID()
 }

@@ -20,35 +20,6 @@ class WorkspaceRepository(
 		return mapper.load(Workspace::class.java, identifier.id)
 	}
 
-	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier, tableName: String) {
-
-		val table: Table = dynamoDB.getTable(tableName)
-		val index: Index = table.getIndex("nodesByWorkspaceIndex")
-
-		val querySpec = QuerySpec()
-
-		val objectMapper = ObjectMapper()
-
-		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-		expressionAttributeValues[":workspaceIdentifier"] = objectMapper.writeValueAsString(identifier)
-		expressionAttributeValues[":nodePrefix"] = "Node"
-
-		querySpec.withKeyConditionExpression(
-			"workspaceIdentifier = :workspaceIdentifier and begins_with(PK, :nodePrefix)")
-			.withValueMap(expressionAttributeValues)
-
-		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
-
-		val iterator: Iterator<Item> = items!!.iterator()
-
-		while (iterator.hasNext()) {
-			val item : Item = iterator.next()
-			println(item.toJSONPretty())
-		}
-
-	}
-
-
 	override fun create(t: Workspace): Workspace {
 		TODO("Not yet implemented")
 	}

@@ -1,7 +1,8 @@
 package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
-import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
@@ -15,8 +16,8 @@ class NodeRepository(
 		return mapper.load(Node::class.java, identifier.id)
 	}
 
-	fun append(identifier: Identifier, tableName: String, elements : MutableList<Element>) {
-		val table = dynamoDB.getTable(tableName)
+	fun append(identifier: Identifier, elements : MutableList<Element>) {
+		val table = dynamoDB.getTable("elementsTableTest")
 
 		val objectMapper = ObjectMapper()
 		val elementsInStringFormat : MutableList<String> = mutableListOf()
@@ -37,6 +38,47 @@ class NodeRepository(
 
 		table.updateItem(updateItemSpec)
 	}
+
+
+	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) {
+
+		getNodesWithIdentifier(identifier, indexName = "nodesByNamespaceIndex", "namespaceIdentifier")
+
+	}
+
+
+	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) {
+
+		getNodesWithIdentifier(identifier, indexName = "nodesByWorkspaceIndex", "workspaceIdentifier")
+
+	}
+
+	private fun getNodesWithIdentifier(identifier: Identifier, indexName : String, fieldName : String){
+
+		val querySpec = QuerySpec()
+		val objectMapper = ObjectMapper()
+		val table: Table = dynamoDB.getTable("elementsTableTest")
+		val index: Index = table.getIndex(indexName)
+
+		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+		expressionAttributeValues[":identifier"] = objectMapper.writeValueAsString(identifier)
+		expressionAttributeValues[":nodePrefix"] = "Node"
+
+		querySpec.withKeyConditionExpression(
+			"$fieldName = :identifier and begins_with(PK, :nodePrefix)")
+			.withValueMap(expressionAttributeValues)
+
+
+		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
+		val iterator: Iterator<Item> = items!!.iterator()
+
+		while (iterator.hasNext()) {
+			val item : Item = iterator.next()
+			println(item.toJSONPretty())
+		}
+
+	}
+
 
 	override fun create(t: Node): Node {
 		TODO("Not yet implemented")
