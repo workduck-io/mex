@@ -6,12 +6,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 
 
 
-class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, List<Element>> {
+class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<Element>> {
 
 	private val objectMapper = ObjectMapper()
 
 	//override fun convert()
-	override fun convert(n : List<Element>): MutableList<String> {
+	override fun convert(n : MutableList<Element>): MutableList<String> {
 		val listOfData : MutableList<String> = mutableListOf()
 		for(element in n){
 			val e : String = objectMapper.writeValueAsString(element)
