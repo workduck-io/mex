@@ -14,17 +14,22 @@ class UserService {
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
 
-	private val userRepository : UserRepository = UserRepository(mapper)
+	private val userRepository : UserRepository = UserRepository(dynamoDB, mapper)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository)
 
 	fun createUser(){
-		val user : User = User(
+		val user1 : User = User(
 			id = "USER49",
 			name = "Varun",
-			workspaceIdentifiers = mutableListOf(WorkspaceIdentifier("WS1234")),
-			namespaceIdentifiers = mutableListOf(NamespaceIdentifier("NAMESPACE1"))
+			workspaceIdentifier = WorkspaceIdentifier("WORKSPACE1234")
 		)
-		repository.create(user)
+
+		val user2 : User = User(
+			id = "USER49",
+			name = "Varun",
+			namespaceIdentifier = NamespaceIdentifier("NAMESPACE1")
+		)
+		repository.create(user2)
 
 	}
 
@@ -37,15 +42,27 @@ class UserService {
 		val user : User = User(
 			id = "USER49",
 			name = "Varun Garg",
-			workspaceIdentifiers = mutableListOf(WorkspaceIdentifier("WS1234")),
-			namespaceIdentifiers = mutableListOf(NamespaceIdentifier("NAMESPACE1"))
+			workspaceIdentifier = WorkspaceIdentifier("WS1234")
 		)
 		repository.update(user)
 	}
 
 	fun deleteUser(){
-		repository.delete(UserIdentifier("USER49"), "elementsTableTest")
+		repository.delete(UserIdentifier("USER49"))
 	}
+
+	fun getAllUsersByWorkspaceID(){
+		val workspaceID = "WORKSPACE1234"
+		val workspaceIdentifier : WorkspaceIdentifier = WorkspaceIdentifier(workspaceID)
+		userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
+	}
+
+	fun getAllUsersByNamespaceID(){
+		val namespaceID = "NAMESPACE1"
+		val namespaceIdentifier : NamespaceIdentifier = NamespaceIdentifier(namespaceID)
+		userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
+	}
+
 }
 
 
@@ -53,5 +70,6 @@ fun main(){
 	//UserService().createUser()
 	//UserService().getUser()
 	//UserService().updateUser()
-	UserService().deleteUser()
+	//UserService().deleteUser()
+	UserService().getAllUsersByNamespaceID()
 }

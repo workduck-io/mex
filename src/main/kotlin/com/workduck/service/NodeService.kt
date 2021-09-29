@@ -50,8 +50,9 @@ class NodeService {
         val node = Node(
             id = "NodeF873GEFPVJQKV43NQMWQEJQGLF", //Helper.generateId("Node"),
             version = "xyz",
-            namespaceIdentifier = NamespaceIdentifier(Helper.generateId(IdentifierType.NAMESPACE.name)),
+            namespaceIdentifier = NamespaceIdentifier("NAMESPACE1"),
             nodeSchemaIdentifier = NodeSchemaIdentifier(Helper.generateId(IdentifierType.NODE_SCHEMA.name)),
+            workspaceIdentifier = WorkspaceIdentifier("WORKSPACE1234"),
             //status = NodeStatus.LINKED,
             data = listOf(pe),
             createdAt = 1231444
@@ -68,7 +69,7 @@ class NodeService {
     }
     fun deleteNode() {
 
-        repository.delete(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest")
+        repository.delete(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"))
     }
 
     fun append() {
@@ -226,7 +227,7 @@ class NodeService {
 }
 
 fun main(){
-    //NodeService().createNode()
+    NodeService().createNode()
     // NodeService().getNode()
     // NodeService().updateNode()
     //NodeService().deleteNode()
@@ -234,8 +235,8 @@ fun main(){
     //NodeService().jsonToElement()
     //NodeService().append()
 
-    NodeService().getAllNodesWithNamespaceID()
-    NodeService().getAllNodesWithWorkspaceID()
+    //NodeService().getAllNodesWithNamespaceID()
+    //NodeService().getAllNodesWithWorkspaceID()
 
 
 }

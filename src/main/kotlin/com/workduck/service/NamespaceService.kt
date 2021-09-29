@@ -20,7 +20,7 @@ class NamespaceService {
 
 	fun createNamespace(){
 		val ns : Namespace = Namespace(
-			id = "NMSPC1",
+			id = "NAMESPACE1",
 			name = "Engineering",
 			workspaceIdentifier = WorkspaceIdentifier("WS1234"),
 			createdAt = System.currentTimeMillis(),
@@ -44,14 +44,14 @@ class NamespaceService {
 	}
 
 	fun deleteNamespace(){
-		repository.delete(NamespaceIdentifier("NMSPC1"), "elementsTableTest")
+		repository.delete(NamespaceIdentifier("NAMESPACE1"))
 
 	}
 
 }
 
 fun main(){
-	//NamespaceService().createNamespace()
+	NamespaceService().createNamespace()
 	//NamespaceService().getNamespace()
 	//NamespaceService().updateNamespace()
 	//NamespaceService().deleteNamespace()

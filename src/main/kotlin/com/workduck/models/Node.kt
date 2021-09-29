@@ -14,16 +14,22 @@ enum class NodeStatus{
     UNLINKED
 }
 
-@DynamoDBTable(tableName="elementsTableTest")
+@DynamoDBTable(tableName="sampleData")
 data class Node (
 
     @JsonProperty("id")
     @DynamoDBHashKey(attributeName="PK")
     var id: String = Helper.generateId(IdentifierType.NODE.name),
 
+
+    @JsonProperty("idCopy")
+    @DynamoDBHashKey(attributeName="SK")
+    var idCopy: String = id,
+
+
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBAttribute(attributeName="SK")
+    @DynamoDBAttribute(attributeName="nodeData")
     var data: List<Element> = mutableListOf(),
 
     @JsonProperty("version")
