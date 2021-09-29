@@ -19,11 +19,8 @@ class RepositoryImpl<T: Entity>(
         return repository.get(identifier)
     }
 
-    override fun delete(identifier: Identifier, tableName : String) {
-        val table = dynamoDB.getTable(tableName)
-        /* currently there's just one record per primary key hence this is feasible. Will need to change this in future */
-        val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec().withPrimaryKey("PK", identifier.id)
-        table.deleteItem(deleteItemSpec)
+    override fun delete(identifier: Identifier) {
+        repository.delete(identifier)
     }
 
     override fun create(t: T): T {

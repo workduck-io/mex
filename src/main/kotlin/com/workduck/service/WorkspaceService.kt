@@ -22,7 +22,7 @@ class WorkspaceService {
 
 	fun createWorkspace(){
 		val ws : Workspace = Workspace(
-			id = "WS1234",
+			id = "WORKSPACE1234",
 			name = "WorkDuck"
 		)
 		repository.create(ws)
@@ -36,7 +36,7 @@ class WorkspaceService {
 
 	fun updateWorkspace(){
 		val ws : Workspace = Workspace(
-			id = "WS1234",
+			id = "WORKSPACE1234",
 			name = "WorkDuck Pvt Ltd"
 		)
 
@@ -44,7 +44,7 @@ class WorkspaceService {
 	}
 
 	fun deleteWorkspace(){
-		repository.delete(WorkspaceIdentifier("WS1234"), "elementsTableTest")
+		repository.delete(WorkspaceIdentifier("WORKSPACE1234"))
 	}
 
 
@@ -54,7 +54,7 @@ class WorkspaceService {
 
 
 fun main(){
-	//WorkspaceService().createWorkspace()
+	WorkspaceService().createWorkspace()
 	//WorkspaceService().updateWorkspace()
 	//WorkspaceService().deleteWorkspace()
 	//WorkspaceService().getWorkspace()

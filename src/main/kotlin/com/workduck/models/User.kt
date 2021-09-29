@@ -1,36 +1,42 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
+import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.workduck.converters.NamespaceIdentifierConverter
 import com.workduck.converters.NamespaceIdentifierListConverter
+import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierListConverter
+import com.workduck.utils.Helper
 
 
-@DynamoDBTable(tableName="elementsTableTest")
+@DynamoDBTable(tableName="sampleData")
 class User(
 
 	@JsonProperty("id")
 	@DynamoDBHashKey(attributeName="PK")
-	var id : String = "",
+	var id : String = Helper.generateId(IdentifierType.USER.name),
+
+
+	/* Can't create multiple entries with same PK,SK so keeping SK unique */
+	@JsonProperty("uniqueID")
+	@DynamoDBRangeKey(attributeName="SK")
+	var uniqueID : String = Helper.generateId("$id#"),
 
 	@JsonProperty("name")
 	@DynamoDBAttribute(attributeName="userName")
 	var name : String = "John Doe",
 
 
-	@JsonProperty("workspaces")
-	@DynamoDBTypeConverted(converter = WorkspaceIdentifierListConverter::class)
-	@DynamoDBAttribute(attributeName="workspaces")
-	var workspaceIdentifiers: MutableList<WorkspaceIdentifier>?= null,
+	@JsonProperty("workspaceIdentifier")
+	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+	@DynamoDBAttribute(attributeName="workspaceIdentifier")
+	var workspaceIdentifier: WorkspaceIdentifier?= null,
 
 
-	@JsonProperty("namespaces")
-	@DynamoDBTypeConverted(converter = NamespaceIdentifierListConverter::class)
-	@DynamoDBAttribute(attributeName="namespaces")
-	var namespaceIdentifiers: MutableList<NamespaceIdentifier>?= null,
+	@JsonProperty("namespaceIdentifier")
+	@DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
+	@DynamoDBAttribute(attributeName="namespaceIdentifier")
+	var namespaceIdentifier: NamespaceIdentifier?= null,
 
 
 	@JsonProperty("createdAt")

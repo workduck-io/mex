@@ -2,6 +2,7 @@ package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.Entity
@@ -20,11 +21,16 @@ class WorkspaceRepository(
 		return mapper.load(Workspace::class.java, identifier.id)
 	}
 
-	override fun create(t: Workspace): Workspace {
-		TODO("Not yet implemented")
+	override fun delete(identifier: Identifier) {
+		val table = dynamoDB.getTable("sampleData")
+
+		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
+			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
+
+		table.deleteItem(deleteItemSpec)
 	}
 
-	override fun delete(identifier: Identifier, tableName: String) {
+	override fun create(t: Workspace): Workspace {
 		TODO("Not yet implemented")
 	}
 
