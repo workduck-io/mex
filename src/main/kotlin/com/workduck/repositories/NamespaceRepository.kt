@@ -16,36 +16,6 @@ class NamespaceRepository(
 		return mapper.load(Namespace::class.java, identifier.id)
 	}
 
-	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier, tableName: String) {
-
-		val table: Table = dynamoDB.getTable(tableName)
-		val index: Index = table.getIndex("nodesByNamespaceIndex")
-
-		val querySpec = QuerySpec()
-
-		val objectMapper = ObjectMapper()
-
-		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-		expressionAttributeValues[":namespaceIdentifier"] = objectMapper.writeValueAsString(identifier)
-		expressionAttributeValues[":nodePrefix"] = "Node"
-
-		querySpec.withKeyConditionExpression(
-			"namespaceIdentifier = :namespaceIdentifier and begins_with(PK, :nodePrefix)")
-			.withValueMap(expressionAttributeValues)
-
-		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
-
-		val iterator: Iterator<Item> = items!!.iterator()
-
-		while (iterator.hasNext()) {
-			val item : Item = iterator.next()
-			println(item.toJSONPretty())
-		}
-
-	}
-
-
-
 	override fun create(t: Namespace): Namespace {
 		TODO("Not yet implemented")
 	}

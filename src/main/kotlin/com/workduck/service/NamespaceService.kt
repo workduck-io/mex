@@ -48,11 +48,6 @@ class NamespaceService {
 
 	}
 
-	fun getAllNodesWithNamespaceID(){
-		val namespaceID = "NAMESPACELH65W9RM3BQ62FLLFEST1PSHDQ"
-		val namespaceIdentifier : NamespaceIdentifier = NamespaceIdentifier(namespaceID)
-		namespaceRepository.getAllNodesWithNamespaceID(namespaceIdentifier, "elementsTableTest")
-	}
 }
 
 fun main(){
@@ -60,5 +55,5 @@ fun main(){
 	//NamespaceService().getNamespace()
 	//NamespaceService().updateNamespace()
 	//NamespaceService().deleteNamespace()
-	NamespaceService().getAllNodesWithNamespaceID()
+
 }

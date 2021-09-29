@@ -107,7 +107,7 @@ class NodeService {
         val objectMapper = ObjectMapper().registerKotlinModule()
         val elements: MutableList<Element> = objectMapper.readValue(jsonString)
         println(elements)
-        nodeRepository.append(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), "elementsTableTest", elements)
+        nodeRepository.append(NodeIdentifier("NodeF873GEFPVJQKV43NQMWQEJQGLF"), elements)
 
     }
 
@@ -138,6 +138,22 @@ class NodeService {
         )
         repository.update(node)
     }
+
+
+    fun getAllNodesWithWorkspaceID(){
+        val workspaceID = "WS1234"
+        val workspaceIdentifier : WorkspaceIdentifier = WorkspaceIdentifier(workspaceID)
+        nodeRepository.getAllNodesWithWorkspaceID(workspaceIdentifier)
+    }
+
+    fun getAllNodesWithNamespaceID(){
+        val namespaceID = "NAMESPACELH65W9RM3BQ62FLLFEST1PSHDQ"
+        val namespaceIdentifier : NamespaceIdentifier = NamespaceIdentifier(namespaceID)
+        nodeRepository.getAllNodesWithNamespaceID(namespaceIdentifier)
+    }
+
+
+
     fun jsonToObjectMapper() {
         val jsonString = """
 		{
@@ -217,4 +233,9 @@ fun main(){
     //NodeService().jsonToObjectMapper()
     //NodeService().jsonToElement()
     //NodeService().append()
+
+    NodeService().getAllNodesWithNamespaceID()
+    NodeService().getAllNodesWithWorkspaceID()
+
+
 }
