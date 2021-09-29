@@ -1,14 +1,15 @@
-package com.workduck.models
+package com.workduck.converters
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.workduck.models.NamespaceIdentifier
 
-class WorkspaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<WorkspaceIdentifier>> {
+class NamespaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<NamespaceIdentifier>> {
 
 	private val objectMapper = ObjectMapper()
 
-	override fun convert(l : MutableList<WorkspaceIdentifier>): MutableList<String> {
+	override fun convert(l : MutableList<NamespaceIdentifier>): MutableList<String> {
 		val listOfIdentifiers : MutableList<String> = mutableListOf()
 		for(identifier in l){
 			val i : String = objectMapper.writeValueAsString(identifier)
@@ -18,10 +19,10 @@ class WorkspaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<Strin
 
 	}
 
-	override fun unconvert(l: MutableList<String>): MutableList<WorkspaceIdentifier> {
-		val listOfIdentifiers : MutableList<WorkspaceIdentifier> = mutableListOf()
+	override fun unconvert(l: MutableList<String>): MutableList<NamespaceIdentifier> {
+		val listOfIdentifiers : MutableList<NamespaceIdentifier> = mutableListOf()
 		for(identifier in l){
-			val i : WorkspaceIdentifier = objectMapper.readValue(identifier)
+			val i : NamespaceIdentifier = objectMapper.readValue(identifier)
 			listOfIdentifiers += i
 		}
 		return listOfIdentifiers
