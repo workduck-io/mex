@@ -142,14 +142,14 @@ class NodeService {
 
 
     fun getAllNodesWithWorkspaceID(){
-        val workspaceID = "WS1234"
-        val workspaceIdentifier : WorkspaceIdentifier = WorkspaceIdentifier(workspaceID)
+        val workspaceID = "WORKSPACE1234"
+        val workspaceIdentifier  = WorkspaceIdentifier(workspaceID)
         nodeRepository.getAllNodesWithWorkspaceID(workspaceIdentifier)
     }
 
     fun getAllNodesWithNamespaceID(){
-        val namespaceID = "NAMESPACELH65W9RM3BQ62FLLFEST1PSHDQ"
-        val namespaceIdentifier : NamespaceIdentifier = NamespaceIdentifier(namespaceID)
+        val namespaceID = "NAMESPACE1"
+        val namespaceIdentifier  = NamespaceIdentifier(namespaceID)
         nodeRepository.getAllNodesWithNamespaceID(namespaceIdentifier)
     }
 
@@ -185,23 +185,6 @@ class NodeService {
     }
 
 
-    fun connectToDynamo() {
-        val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-
-        val dynamoDB: DynamoDB = DynamoDB(client)
-
-        val table: Table = dynamoDB.getTable("usersTable")
-
-       // val mapValues: Map<String, AttributeValue> = HashMap()
-        val item : Item = Item()
-            .withPrimaryKey("email", "varun.iitp@gmail.com")
-            .withString("name", "VarunGarg")
-
-        val outcome = table.putItem(item)
-        //private val repository: Repository<Node> = RepositoryImpl(dynamoDB);
-
-    }
-
     fun jsonToElement()  {
         val jsonString = """
         {
@@ -227,7 +210,7 @@ class NodeService {
 }
 
 fun main(){
-    NodeService().createNode()
+   // NodeService().createNode()
     // NodeService().getNode()
     // NodeService().updateNode()
     //NodeService().deleteNode()
@@ -235,8 +218,8 @@ fun main(){
     //NodeService().jsonToElement()
     //NodeService().append()
 
-    //NodeService().getAllNodesWithNamespaceID()
-    //NodeService().getAllNodesWithWorkspaceID()
+    NodeService().getAllNodesWithNamespaceID()
+    NodeService().getAllNodesWithWorkspaceID()
 
 
 }
