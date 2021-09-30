@@ -9,60 +9,60 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
 import kotlin.collections.HashMap
 
-class RepositoryImpl<T: Entity>(
-    private val dynamoDB: DynamoDB,
-    private val mapper: DynamoDBMapper,
-    private val repository: Repository<T>
-): Repository<T> {
+class RepositoryImpl<T : Entity>(
+	private val dynamoDB: DynamoDB,
+	private val mapper: DynamoDBMapper,
+	private val repository: Repository<T>
+) : Repository<T> {
 
-    override fun get(identifier: Identifier): Entity {
-        return repository.get(identifier)
-    }
+	override fun get(identifier: Identifier): Entity {
+		return repository.get(identifier)
+	}
 
-    override fun delete(identifier: Identifier) {
-        repository.delete(identifier)
-    }
+	override fun delete(identifier: Identifier) {
+		repository.delete(identifier)
+	}
 
-    override fun create(t: T): T {
-        mapper.save(t)
-        return t
-    }
+	override fun create(t: T): T {
+		mapper.save(t)
+		return t
+	}
 
-    override fun update(t: T): T {
-        mapper.save(t)
-        return t;
-    }
+	override fun update(t: T): T {
+		mapper.save(t)
+		return t;
+	}
 
 
-    /*
-    override fun create(node: Node): Node {
-        // TODO("Not yet implemented")
-        val table: Table = dynamoDB.getTable("elementsTable")
+	/*
+	override fun create(node: Node): Node {
+		// TODO("Not yet implemented")
+		val table: Table = dynamoDB.getTable("elementsTable")
 
-        for( element in node.data){
+		for( element in node.data){
 
-            val children : List<Element> = element.getChildren()
-            val myMap = mutableMapOf<String,String>()
+			val children : List<Element> = element.getChildren()
+			val myMap = mutableMapOf<String,String>()
 
-            for( child in children ){
-                //map.put("CHILD#${child.getID()}")
-                myMap["CHILD#${child.getID()}"] = "Content#" + child.content() + "Type#" + child.getElementType()
+			for( child in children ){
+				//map.put("CHILD#${child.getID()}")
+				myMap["CHILD#${child.getID()}"] = "Content#" + child.content() + "Type#" + child.getElementType()
 
-            }
+			}
 
-            val item : Item = Item()
-                .withPrimaryKey("PK", node.id)
-                .withString("SK", "PARENT#${element.getID()}")
-                .withMap("ChildrenInfo", myMap)
-                .withString("ParentElementType", element.getElementType())
+			val item : Item = Item()
+				.withPrimaryKey("PK", node.id)
+				.withString("SK", "PARENT#${element.getID()}")
+				.withMap("ChildrenInfo", myMap)
+				.withString("ParentElementType", element.getElementType())
 
-            table.putItem(item)
-        }
+			table.putItem(item)
+		}
 
-        table.putItem(node)
-        return node
-    }
-    */
+		table.putItem(node)
+		return node
+	}
+	*/
 
 }
 

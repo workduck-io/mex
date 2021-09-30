@@ -17,25 +17,25 @@ class WorkspaceService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val workspaceRepository : WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper)
+	private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper)
 	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository)
 
-	fun createWorkspace(){
-		val ws : Workspace = Workspace(
+	fun createWorkspace() {
+		val ws: Workspace = Workspace(
 			id = "WORKSPACE1234",
 			name = "WorkDuck"
 		)
 		repository.create(ws)
 	}
 
-	fun getWorkspace(){
-		val workspace : Entity = repository.get(WorkspaceIdentifier("WS1234"))
+	fun getWorkspace() {
+		val workspace: Entity = repository.get(WorkspaceIdentifier("WS1234"))
 		println(workspace)
 	}
 
 
-	fun updateWorkspace(){
-		val ws : Workspace = Workspace(
+	fun updateWorkspace() {
+		val ws: Workspace = Workspace(
 			id = "WORKSPACE1234",
 			name = "WorkDuck Pvt Ltd"
 		)
@@ -43,17 +43,15 @@ class WorkspaceService {
 		repository.update(ws)
 	}
 
-	fun deleteWorkspace(){
+	fun deleteWorkspace() {
 		repository.delete(WorkspaceIdentifier("WORKSPACE1234"))
 	}
-
-
 
 
 }
 
 
-fun main(){
+fun main() {
 	WorkspaceService().createWorkspace()
 	//WorkspaceService().updateWorkspace()
 	//WorkspaceService().deleteWorkspace()

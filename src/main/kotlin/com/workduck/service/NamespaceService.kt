@@ -13,13 +13,12 @@ class NamespaceService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val namespaceRepository : NamespaceRepository = NamespaceRepository(dynamoDB, mapper)
+	private val namespaceRepository: NamespaceRepository = NamespaceRepository(dynamoDB, mapper)
 	private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository)
 
 
-
-	fun createNamespace(){
-		val ns : Namespace = Namespace(
+	fun createNamespace() {
+		val ns: Namespace = Namespace(
 			id = "NAMESPACE1",
 			name = "Engineering",
 			workspaceIdentifier = WorkspaceIdentifier("WS1234"),
@@ -28,14 +27,14 @@ class NamespaceService {
 		repository.create(ns)
 	}
 
-	fun getNamespace(){
-		val namespace : Entity = repository.get(NamespaceIdentifier("NMSPC1"))
+	fun getNamespace() {
+		val namespace: Entity = repository.get(NamespaceIdentifier("NMSPC1"))
 		println(namespace)
 	}
 
 	/* we'll need createdAt field's value else default value defined in model would be picked up */
-	fun updateNamespace(){
-		val ns : Namespace = Namespace(
+	fun updateNamespace() {
+		val ns: Namespace = Namespace(
 			id = "NMSPC1",
 			name = "Engineering 2.0",
 			workspaceIdentifier = WorkspaceIdentifier("WS1234")
@@ -43,14 +42,14 @@ class NamespaceService {
 		repository.update(ns)
 	}
 
-	fun deleteNamespace(){
+	fun deleteNamespace() {
 		repository.delete(NamespaceIdentifier("NAMESPACE1"))
 
 	}
 
 }
 
-fun main(){
+fun main() {
 	NamespaceService().createNamespace()
 	//NamespaceService().getNamespace()
 	//NamespaceService().updateNamespace()

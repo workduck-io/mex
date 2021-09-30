@@ -9,10 +9,10 @@ class NamespaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<Strin
 
 	private val objectMapper = ObjectMapper()
 
-	override fun convert(l : MutableList<NamespaceIdentifier>): MutableList<String> {
-		val listOfIdentifiers : MutableList<String> = mutableListOf()
-		for(identifier in l){
-			val i : String = objectMapper.writeValueAsString(identifier)
+	override fun convert(l: MutableList<NamespaceIdentifier>): MutableList<String> {
+		val listOfIdentifiers: MutableList<String> = mutableListOf()
+		for (identifier in l) {
+			val i: String = objectMapper.writeValueAsString(identifier)
 			listOfIdentifiers += i
 		}
 		return listOfIdentifiers
@@ -20,9 +20,9 @@ class NamespaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<Strin
 	}
 
 	override fun unconvert(l: MutableList<String>): MutableList<NamespaceIdentifier> {
-		val listOfIdentifiers : MutableList<NamespaceIdentifier> = mutableListOf()
-		for(identifier in l){
-			val i : NamespaceIdentifier = objectMapper.readValue(identifier)
+		val listOfIdentifiers: MutableList<NamespaceIdentifier> = mutableListOf()
+		for (identifier in l) {
+			val i: NamespaceIdentifier = objectMapper.readValue(identifier)
 			listOfIdentifiers += i
 		}
 		return listOfIdentifiers

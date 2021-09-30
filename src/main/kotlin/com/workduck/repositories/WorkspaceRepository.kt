@@ -24,7 +24,7 @@ class WorkspaceRepository(
 	override fun delete(identifier: Identifier) {
 		val table = dynamoDB.getTable("sampleData")
 
-		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
+		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
 		table.deleteItem(deleteItemSpec)
@@ -37,7 +37,6 @@ class WorkspaceRepository(
 	override fun update(t: Workspace): Workspace {
 		TODO("Not yet implemented")
 	}
-
 
 
 }

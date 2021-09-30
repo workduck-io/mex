@@ -9,7 +9,7 @@ class WorkspaceIdentifierConverter : DynamoDBTypeConverter<String, WorkspaceIden
 
 	private val objectMapper = ObjectMapper()
 
-	override fun convert(n : WorkspaceIdentifier?): String? {
+	override fun convert(n: WorkspaceIdentifier?): String? {
 		return objectMapper.writeValueAsString(n)
 	}
 

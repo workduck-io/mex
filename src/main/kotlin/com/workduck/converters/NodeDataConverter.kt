@@ -11,10 +11,10 @@ class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList
 	private val objectMapper = ObjectMapper()
 
 	//override fun convert()
-	override fun convert(n : MutableList<Element>): MutableList<String> {
-		val listOfData : MutableList<String> = mutableListOf()
-		for(element in n){
-			val e : String = objectMapper.writeValueAsString(element)
+	override fun convert(n: MutableList<Element>): MutableList<String> {
+		val listOfData: MutableList<String> = mutableListOf()
+		for (element in n) {
+			val e: String = objectMapper.writeValueAsString(element)
 			listOfData += e
 		}
 		return listOfData
@@ -23,9 +23,9 @@ class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList
 	}
 
 	override fun unconvert(nodeData: MutableList<String>): MutableList<Element> {
-		val listOfElements : MutableList<Element> = mutableListOf()
-		for(string in nodeData){
-			val element : Element = objectMapper.readValue(string)
+		val listOfElements: MutableList<Element> = mutableListOf()
+		for (string in nodeData) {
+			val element: Element = objectMapper.readValue(string)
 			listOfElements += element
 		}
 		return listOfElements

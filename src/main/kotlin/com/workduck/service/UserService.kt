@@ -14,17 +14,17 @@ class UserService {
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
 
-	private val userRepository : UserRepository = UserRepository(dynamoDB, mapper)
+	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository)
 
-	fun createUser(){
-		val user1 : User = User(
+	fun createUser() {
+		val user1: User = User(
 			id = "USER49",
 			name = "Varun",
 			workspaceIdentifier = WorkspaceIdentifier("WORKSPACE1234")
 		)
 
-		val user2 : User = User(
+		val user2: User = User(
 			id = "USER49",
 			name = "Varun",
 			namespaceIdentifier = NamespaceIdentifier("NAMESPACE1")
@@ -33,13 +33,13 @@ class UserService {
 
 	}
 
-	fun getUser(){
-		val user : Entity = repository.get(UserIdentifier("USER49"))
+	fun getUser() {
+		val user: Entity = repository.get(UserIdentifier("USER49"))
 		println(user)
 	}
 
-	fun updateUser(){
-		val user : User = User(
+	fun updateUser() {
+		val user: User = User(
 			id = "USER49",
 			name = "Varun Garg",
 			workspaceIdentifier = WorkspaceIdentifier("WS1234")
@@ -47,17 +47,17 @@ class UserService {
 		repository.update(user)
 	}
 
-	fun deleteUser(){
+	fun deleteUser() {
 		repository.delete(UserIdentifier("USER49"))
 	}
 
-	fun getAllUsersByWorkspaceID(){
+	fun getAllUsersByWorkspaceID() {
 		val workspaceID = "WORKSPACE1234"
 		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
 		userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
 	}
 
-	fun getAllUsersByNamespaceID(){
+	fun getAllUsersByNamespaceID() {
 		val namespaceID = "NAMESPACE1"
 		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
 		userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
@@ -66,7 +66,7 @@ class UserService {
 }
 
 
-fun main(){
+fun main() {
 	//UserService().createUser()
 	//UserService().getUser()
 	//UserService().updateUser()

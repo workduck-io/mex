@@ -8,22 +8,22 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.workduck.utils.Helper
 
 
-@DynamoDBTable(tableName="sampleData")
+@DynamoDBTable(tableName = "sampleData")
 class Workspace(
 
 	@JsonProperty("id")
-	@DynamoDBHashKey(attributeName="PK")
-	var id : String = Helper.generateId(IdentifierType.WORKSPACE.name),
+	@DynamoDBHashKey(attributeName = "PK")
+	var id: String = Helper.generateId(IdentifierType.WORKSPACE.name),
 
 
 	@JsonProperty("idCopy")
-	@DynamoDBRangeKey(attributeName="SK")
-	var idCopy : String = id,
+	@DynamoDBRangeKey(attributeName = "SK")
+	var idCopy: String = id,
 
 
 	@JsonProperty("name")
-	@DynamoDBAttribute(attributeName="workspaceName")
-	var name : String = "Sample Workspace Name"
+	@DynamoDBAttribute(attributeName = "workspaceName")
+	var name: String = "Sample Workspace Name"
 ) : Entity {
 
 }

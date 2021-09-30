@@ -19,7 +19,7 @@ class NodeRepository(
 	}
 
 	fun append(identifier: Identifier, elements : MutableList<Element>) {
-		val table = dynamoDB.getTable("elementsTableTest")
+		val table = dynamoDB.getTable("sampleData")
 
 		val objectMapper = ObjectMapper()
 		val elementsInStringFormat : MutableList<String> = mutableListOf()
@@ -42,51 +42,20 @@ class NodeRepository(
 	}
 
 
-	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) {
+	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) : MutableList<Any> {
 
-		DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
-			"namespaceIdentifier-PK-index", "Node", dynamoDB )
-		//getNodesWithIdentifier(identifier, indexName = "nodesByNamespaceIndex", "namespaceIdentifier")
-
-	}
-
-
-	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) {
-		DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
-			"workspaceIdentifier-PK-index", "Node", dynamoDB )
-
-		//getNodesWithIdentifier(identifier, indexName = "nodesByWorkspaceIndex", "workspaceIdentifier")
-
-	}
-
-	private fun getNodesWithIdentifier(identifier: Identifier, indexName : String, fieldName : String){
-
-
-		val querySpec = QuerySpec()
-		val objectMapper = ObjectMapper()
-		val table: Table = dynamoDB.getTable("elementsTableTest")
-		val index: Index = table.getIndex(indexName)
-
-		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-		expressionAttributeValues[":identifier"] = objectMapper.writeValueAsString(identifier)
-		expressionAttributeValues[":nodePrefix"] = "Node"
-
-		querySpec.withKeyConditionExpression(
-			"$fieldName = :identifier and begins_with(PK, :nodePrefix)")
-			.withValueMap(expressionAttributeValues)
-
-
-		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
-		val iterator: Iterator<Item> = items!!.iterator()
-
-		while (iterator.hasNext()) {
-			val item : Item = iterator.next()
-			println(item.toJSONPretty())
-		}
+		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
+			"namespaceIdentifier-PK-index", "NODE", dynamoDB )
 
 	}
 
 
+	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) : MutableList<Any> {
+
+		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
+			"workspaceIdentifier-PK-index", "NODE", dynamoDB )
+
+	}
 
 	override fun delete(identifier: Identifier) {
 		val table = dynamoDB.getTable("sampleData")

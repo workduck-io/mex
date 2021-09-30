@@ -10,7 +10,7 @@ class NamespaceIdentifierConverter : DynamoDBTypeConverter<String, NamespaceIden
 
 	private val objectMapper = ObjectMapper()
 
-	override fun convert(n : NamespaceIdentifier?): String? {
+	override fun convert(n: NamespaceIdentifier?): String? {
 		return objectMapper.writeValueAsString(n)
 	}
 

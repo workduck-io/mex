@@ -8,24 +8,28 @@ import com.workduck.utils.DDBHelper
 class UserRepository(
 	private val dynamoDB: DynamoDB,
 	private val mapper: DynamoDBMapper
-) : Repository<User>{
+) : Repository<User> {
 
 	override fun get(identifier: Identifier): Entity {
 		return mapper.load(User::class.java, identifier.id)
 	}
 
-	fun getAllUsersWithNamespaceID(identifier: NamespaceIdentifier){
+	fun getAllUsersWithNamespaceID(identifier: NamespaceIdentifier): MutableList<Any> {
 
-		DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
-			"namespaceIdentifier-PK-index", "USER", dynamoDB )
+		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(
+			identifier, "namespaceIdentifier",
+			"namespaceIdentifier-PK-index", "USER", dynamoDB
+		)
 
 	}
 
 
-	fun getAllUsersWithWorkspaceID(identifier: WorkspaceIdentifier){
+	fun getAllUsersWithWorkspaceID(identifier: WorkspaceIdentifier): MutableList<Any> {
 
-		DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
-			"workspaceIdentifier-PK-index", "USER", dynamoDB )
+		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(
+			identifier, "workspaceIdentifier",
+			"workspaceIdentifier-PK-index", "USER", dynamoDB
+		)
 
 	}
 

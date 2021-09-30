@@ -9,10 +9,10 @@ class WorkspaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<Strin
 
 	private val objectMapper = ObjectMapper()
 
-	override fun convert(l : MutableList<WorkspaceIdentifier>): MutableList<String> {
-		val listOfIdentifiers : MutableList<String> = mutableListOf()
-		for(identifier in l){
-			val i : String = objectMapper.writeValueAsString(identifier)
+	override fun convert(l: MutableList<WorkspaceIdentifier>): MutableList<String> {
+		val listOfIdentifiers: MutableList<String> = mutableListOf()
+		for (identifier in l) {
+			val i: String = objectMapper.writeValueAsString(identifier)
 			listOfIdentifiers += i
 		}
 		return listOfIdentifiers
@@ -20,9 +20,9 @@ class WorkspaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<Strin
 	}
 
 	override fun unconvert(l: MutableList<String>): MutableList<WorkspaceIdentifier> {
-		val listOfIdentifiers : MutableList<WorkspaceIdentifier> = mutableListOf()
-		for(identifier in l){
-			val i : WorkspaceIdentifier = objectMapper.readValue(identifier)
+		val listOfIdentifiers: MutableList<WorkspaceIdentifier> = mutableListOf()
+		for (identifier in l) {
+			val i: WorkspaceIdentifier = objectMapper.readValue(identifier)
 			listOfIdentifiers += i
 		}
 		return listOfIdentifiers
