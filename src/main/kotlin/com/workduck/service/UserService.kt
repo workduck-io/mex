@@ -53,13 +53,13 @@ class UserService {
 
 	fun getAllUsersByWorkspaceID(){
 		val workspaceID = "WORKSPACE1234"
-		val workspaceIdentifier : WorkspaceIdentifier = WorkspaceIdentifier(workspaceID)
+		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
 		userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
 	}
 
 	fun getAllUsersByNamespaceID(){
 		val namespaceID = "NAMESPACE1"
-		val namespaceIdentifier : NamespaceIdentifier = NamespaceIdentifier(namespaceID)
+		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
 		userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
 	}
 
@@ -72,4 +72,5 @@ fun main(){
 	//UserService().updateUser()
 	//UserService().deleteUser()
 	UserService().getAllUsersByNamespaceID()
+	UserService().getAllUsersByWorkspaceID()
 }

@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
+import com.workduck.utils.DDBHelper
 
 class NodeRepository(
 	private val mapper: DynamoDBMapper,
@@ -43,18 +44,23 @@ class NodeRepository(
 
 	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) {
 
-		getNodesWithIdentifier(identifier, indexName = "nodesByNamespaceIndex", "namespaceIdentifier")
+		DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
+			"namespaceIdentifier-PK-index", "Node", dynamoDB )
+		//getNodesWithIdentifier(identifier, indexName = "nodesByNamespaceIndex", "namespaceIdentifier")
 
 	}
 
 
 	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) {
+		DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
+			"workspaceIdentifier-PK-index", "Node", dynamoDB )
 
-		getNodesWithIdentifier(identifier, indexName = "nodesByWorkspaceIndex", "workspaceIdentifier")
+		//getNodesWithIdentifier(identifier, indexName = "nodesByWorkspaceIndex", "workspaceIdentifier")
 
 	}
 
 	private fun getNodesWithIdentifier(identifier: Identifier, indexName : String, fieldName : String){
+
 
 		val querySpec = QuerySpec()
 		val objectMapper = ObjectMapper()
