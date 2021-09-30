@@ -11,63 +11,63 @@ import kotlin.streams.toList
 
 
 enum class NodeStatus {
-    LINKED,
-    UNLINKED
+	LINKED,
+	UNLINKED
 }
 
-@DynamoDBTable(tableName="sampleData")
-data class Node (
+@DynamoDBTable(tableName = "sampleData")
+data class Node(
 
-    @JsonProperty("id")
-    @DynamoDBHashKey(attributeName="PK")
-    var id: String = Helper.generateId(IdentifierType.NODE.name),
-
-
-    @JsonProperty("idCopy")
-    @DynamoDBHashKey(attributeName="SK")
-    var idCopy: String = id,
+	@JsonProperty("id")
+	@DynamoDBHashKey(attributeName = "PK")
+	var id: String = Helper.generateId(IdentifierType.NODE.name),
 
 
-    @JsonProperty("data")
-    @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBAttribute(attributeName="nodeData")
-    var data: List<Element> = mutableListOf(),
+	@JsonProperty("idCopy")
+	@DynamoDBHashKey(attributeName = "SK")
+	var idCopy: String = id,
 
-    @JsonProperty("version")
-    @DynamoDBAttribute(attributeName="version")
-    var version: String? = null,
 
-    @JsonProperty("namespaceIdentifier")
-    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName="namespaceIdentifier")
-    var namespaceIdentifier: NamespaceIdentifier? = null,
+	@JsonProperty("data")
+	@DynamoDBTypeConverted(converter = NodeDataConverter::class)
+	@DynamoDBAttribute(attributeName = "nodeData")
+	var data: List<Element> = mutableListOf(),
 
-    @JsonProperty("workspaceIdentifier")
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName="workspaceIdentifier")
-    var workspaceIdentifier: WorkspaceIdentifier? = null,
+	@JsonProperty("version")
+	@DynamoDBAttribute(attributeName = "version")
+	var version: String? = null,
 
-    @JsonProperty("nodeSchemaIdentifier")
-    @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName="nodeSchemaIdentifier")
-    var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
+	@JsonProperty("namespaceIdentifier")
+	@DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
+	@DynamoDBAttribute(attributeName = "namespaceIdentifier")
+	var namespaceIdentifier: NamespaceIdentifier? = null,
 
-    //@JsonProperty("status")
-    //val status: NodeStatus = NodeStatus.LINKED,
-    //val associatedProperties: Set<AssociatedProperty>,
+	@JsonProperty("workspaceIdentifier")
+	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
+	var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName="createdAt")
-    var createdAt: Long = System.currentTimeMillis()
+	@JsonProperty("nodeSchemaIdentifier")
+	@DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
+	@DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")
+	var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
 
-): Entity{
+	//@JsonProperty("status")
+	//val status: NodeStatus = NodeStatus.LINKED,
+	//val associatedProperties: Set<AssociatedProperty>,
 
-    @JsonProperty("updatedAt")
-    @DynamoDBAttribute(attributeName="updatedAt")
-    var updatedAt : Long = System.currentTimeMillis()
+	@JsonProperty("createdAt")
+	@DynamoDBAttribute(attributeName = "createdAt")
+	var createdAt: Long = System.currentTimeMillis()
 
-    //override val entityID: String = id
+) : Entity {
 
-    //override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
+	@JsonProperty("updatedAt")
+	@DynamoDBAttribute(attributeName = "updatedAt")
+	var updatedAt: Long = System.currentTimeMillis()
+
+	//override val entityID: String = id
+
+	//override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 
 }

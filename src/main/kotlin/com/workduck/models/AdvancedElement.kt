@@ -5,26 +5,28 @@ import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 
-enum class ElementTypes(val type : String) {
+enum class ElementTypes(val type: String) {
 
 	PARAGRAPH("paragraph");
 
 	companion object {
 		private val codes = ElementTypes.values().associateBy(ElementTypes::type)
-		@JvmStatic @JsonCreator fun from (value: String) = codes[value]
+		@JvmStatic
+		@JsonCreator
+		fun from(value: String) = codes[value]
 	}
 }
 
-class AdvancedElement (
+class AdvancedElement(
 
 	@JsonProperty("id")
 	private var id: String = "defaultValue",
 
 	@JsonProperty("type")
-	private var type : String? = "AdvancedElement",
+	private var type: String? = "AdvancedElement",
 
 	@JsonProperty("parentID")
-	private var parentID : String? = null,
+	private var parentID: String? = null,
 
 	@JsonProperty("content")
 	private var content: String? = null,
@@ -33,7 +35,7 @@ class AdvancedElement (
 	private var children: List<Element>? = listOf(),
 
 	@JsonProperty("elementType")
-	private var elementType : String? = "parapgraph",
+	private var elementType: String? = "parapgraph",
 ) : Element {
 	override fun getContent(): String {
 		if (content != null) return content as String
@@ -46,6 +48,6 @@ class AdvancedElement (
 
 	fun getElementType(): String? = elementType
 
-	override fun getType() : String? = type
+	override fun getType(): String? = type
 
 }

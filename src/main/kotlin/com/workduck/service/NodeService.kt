@@ -48,7 +48,7 @@ class NodeService {
         )
 
         val node = Node(
-            id = "NodeF873GEFPVJQKV43NQMWQEJQGLF", //Helper.generateId("Node"),
+            id = "NODEF873GEFPVJQKV43NQMWQEJQGLF", //Helper.generateId("Node"),
             version = "xyz",
             namespaceIdentifier = NamespaceIdentifier("NAMESPACE1"),
             nodeSchemaIdentifier = NodeSchemaIdentifier(Helper.generateId(IdentifierType.NODE_SCHEMA.name)),
@@ -218,7 +218,7 @@ fun main(){
     //NodeService().jsonToElement()
     //NodeService().append()
 
-    NodeService().getAllNodesWithNamespaceID()
+    //NodeService().getAllNodesWithNamespaceID()
     NodeService().getAllNodesWithWorkspaceID()
 
 

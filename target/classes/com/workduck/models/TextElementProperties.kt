@@ -6,22 +6,23 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import com.google.common.base.Preconditions
 
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type")
+	use = JsonTypeInfo.Id.NAME,
+	include = JsonTypeInfo.As.PROPERTY,
+	property = "type"
+)
 @JsonSubTypes(
-    JsonSubTypes.Type(value = Bold::class, name = "bold")
+	JsonSubTypes.Type(value = Bold::class, name = "bold")
 
 )
 sealed class TextElementProperties
 
 @JsonTypeName("bold")
 data class Bold(
-    val level: Int
-) : TextElementProperties(){
-    init {
-        Preconditions.checkArgument(level in 100..700){
-            "Boldness should be between 100 and 700"
-        }
-    }
+	val level: Int
+) : TextElementProperties() {
+	init {
+		Preconditions.checkArgument(level in 100..700) {
+			"Boldness should be between 100 and 700"
+		}
+	}
 }
