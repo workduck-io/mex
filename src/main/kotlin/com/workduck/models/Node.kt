@@ -2,10 +2,9 @@ package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.workduck.converters.NamespaceIdentifierConverter
-import com.workduck.converters.NodeDataConverter
-import com.workduck.converters.NodeSchemaIdentifierConverter
-import com.workduck.converters.WorkspaceIdentifierConverter
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.workduck.converters.*
 import com.workduck.utils.Helper
 import kotlin.streams.toList
 
@@ -16,6 +15,7 @@ enum class NodeStatus {
 }
 
 @DynamoDBTable(tableName = "sampleData")
+//@JsonDeserialize(using = NodeJsonDeserializer::class)
 data class Node(
 
 	@JsonProperty("id")
@@ -23,26 +23,31 @@ data class Node(
 	var id: String = Helper.generateId(IdentifierType.NODE.name),
 
 
+	/* For convenient deletion */
 	@JsonProperty("idCopy")
-	@DynamoDBHashKey(attributeName = "SK")
-	var idCopy: String = id,
+	@DynamoDBRangeKey(attributeName = "SK")
+	var idCopy: String? = id,
 
 
 	@JsonProperty("data")
 	@DynamoDBTypeConverted(converter = NodeDataConverter::class)
 	@DynamoDBAttribute(attributeName = "nodeData")
-	var data: List<Element> = mutableListOf(),
+	var data: List<Element>? = null,
 
 	@JsonProperty("version")
 	@DynamoDBAttribute(attributeName = "version")
 	var version: String? = null,
 
 	@JsonProperty("namespaceIdentifier")
+	@JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
+	@JsonSerialize(converter = IdentifierSerializer::class)
 	@DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
 	@DynamoDBAttribute(attributeName = "namespaceIdentifier")
 	var namespaceIdentifier: NamespaceIdentifier? = null,
 
 	@JsonProperty("workspaceIdentifier")
+	@JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+	@JsonSerialize(converter = IdentifierSerializer::class)
 	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
 	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
 	var workspaceIdentifier: WorkspaceIdentifier? = null,
@@ -58,7 +63,7 @@ data class Node(
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long = System.currentTimeMillis()
+	var createdAt: Long? = System.currentTimeMillis()
 
 ) : Entity {
 

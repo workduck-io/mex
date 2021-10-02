@@ -25,3 +25,10 @@ hs_err_pid*
 # IDE files
 *.iml
 .idea
+
+.env
+
+.serverless*
+*.DS_Store
+
+*/target/**

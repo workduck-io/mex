@@ -18,7 +18,7 @@ class WorkspaceRepository(
 ) : Repository<Workspace> {
 
 	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Workspace::class.java, identifier.id)
+		return mapper.load(Workspace::class.java, identifier.id, identifier.id)
 	}
 
 	override fun delete(identifier: Identifier) {

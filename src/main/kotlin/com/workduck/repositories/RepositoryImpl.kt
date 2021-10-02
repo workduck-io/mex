@@ -2,12 +2,12 @@ package com.workduck.repositories
 
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveBehavior
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.workduck.models.*
-import kotlin.collections.HashMap
+import com.workduck.models.Entity
+import com.workduck.models.Identifier
+
 
 class RepositoryImpl<T : Entity>(
 	private val dynamoDB: DynamoDB,
@@ -29,7 +29,13 @@ class RepositoryImpl<T : Entity>(
 	}
 
 	override fun update(t: T): T {
-		mapper.save(t)
+
+		val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+			.withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
+			.withSaveBehavior(SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+			.build()
+
+		mapper.save(t, dynamoDBMapperConfig)
 		return t;
 	}
 

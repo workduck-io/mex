@@ -25,8 +25,9 @@ class Namespace(
 	@DynamoDBHashKey(attributeName = "PK")
 	var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
 
+	/* For convenient deletion */
 	@JsonProperty("idCopy")
-	@DynamoDBHashKey(attributeName = "SK")
+	@DynamoDBRangeKey(attributeName = "SK")
 	var idCopy: String = id,
 
 
@@ -43,8 +44,10 @@ class Namespace(
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long = System.currentTimeMillis(),
+	var createdAt: Long = System.currentTimeMillis()
+
 	//val status: NamespaceStatus = NamespaceStatus.ACTIVE
+
 ) : Entity {
 
 	@JsonProperty("updatedAt")

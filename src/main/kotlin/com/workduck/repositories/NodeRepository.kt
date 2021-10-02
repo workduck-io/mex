@@ -15,7 +15,7 @@ class NodeRepository(
 ) : Repository<Node>  {
 
 	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Node::class.java, identifier.id)
+		return mapper.load(Node::class.java, identifier.id, identifier.id)
 	}
 
 	fun append(identifier: Identifier, elements : MutableList<Element>) {
@@ -33,8 +33,8 @@ class NodeRepository(
 		expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
 
-		val updateItemSpec : UpdateItemSpec = UpdateItemSpec().withPrimaryKey("PK", identifier.id)
-			.withUpdateExpression("set SK = list_append(if_not_exists(SK, :empty_list), :val1)")
+		val updateItemSpec : UpdateItemSpec = UpdateItemSpec().withPrimaryKey("PK", identifier.id, "SK", identifier.id)
+			.withUpdateExpression("set nodeData = list_append(if_not_exists(nodeData, :empty_list), :val1)")
 			.withValueMap(expressionAttributeValues)
 
 

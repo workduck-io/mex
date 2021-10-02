@@ -22,7 +22,7 @@ class NamespaceService {
 			id = "NAMESPACE1",
 			name = "Engineering",
 			workspaceIdentifier = WorkspaceIdentifier("WS1234"),
-			createdAt = System.currentTimeMillis(),
+			createdAt = System.currentTimeMillis()
 		)
 		repository.create(ns)
 	}
@@ -50,8 +50,8 @@ class NamespaceService {
 }
 
 fun main() {
-	NamespaceService().createNamespace()
-	//NamespaceService().getNamespace()
+	//NamespaceService().createNamespace()
+	NamespaceService().getNamespace()
 	//NamespaceService().updateNamespace()
 	//NamespaceService().deleteNamespace()
 
