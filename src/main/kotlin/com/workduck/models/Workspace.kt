@@ -15,7 +15,7 @@ class Workspace(
 	@DynamoDBHashKey(attributeName = "PK")
 	var id: String = Helper.generateId(IdentifierType.WORKSPACE.name),
 
-
+	/* For convenient deletion */
 	@JsonProperty("idCopy")
 	@DynamoDBRangeKey(attributeName = "SK")
 	var idCopy: String = id,
@@ -23,7 +23,17 @@ class Workspace(
 
 	@JsonProperty("name")
 	@DynamoDBAttribute(attributeName = "workspaceName")
-	var name: String = "Sample Workspace Name"
+	var name: String = "DEFAULT_WORKSPACE",
+
+
+	@JsonProperty("createdAt")
+	@DynamoDBAttribute(attributeName = "createdAt")
+	var createdAt: Long = System.currentTimeMillis()
+
 ) : Entity {
+
+	@JsonProperty("updatedAt")
+	@DynamoDBAttribute(attributeName = "updatedAt")
+	var updatedAt: Long = System.currentTimeMillis()
 
 }

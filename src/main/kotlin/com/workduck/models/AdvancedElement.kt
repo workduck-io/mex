@@ -35,7 +35,7 @@ class AdvancedElement(
 	private var children: List<Element>? = listOf(),
 
 	@JsonProperty("elementType")
-	private var elementType: String? = "parapgraph",
+	private var elementType: String? = "paragraph"
 ) : Element {
 	override fun getContent(): String {
 		if (content != null) return content as String

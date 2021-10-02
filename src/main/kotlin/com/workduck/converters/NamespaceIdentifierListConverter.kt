@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.NamespaceIdentifier
 
+/* Not being used anywhere as of now */
 class NamespaceIdentifierListConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<NamespaceIdentifier>> {
 
 	private val objectMapper = ObjectMapper()

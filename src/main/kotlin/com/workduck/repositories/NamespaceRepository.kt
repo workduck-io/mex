@@ -14,7 +14,7 @@ class NamespaceRepository(
 ) : Repository<Namespace> {
 
 	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Namespace::class.java, identifier.id)
+		return mapper.load(Namespace::class.java, identifier.id, identifier.id)
 	}
 
 	override fun create(t: Namespace): Namespace {

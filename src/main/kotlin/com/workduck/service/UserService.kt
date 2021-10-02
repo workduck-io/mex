@@ -68,9 +68,9 @@ class UserService {
 
 fun main() {
 	//UserService().createUser()
-	//UserService().getUser()
+	UserService().getUser()
 	//UserService().updateUser()
 	//UserService().deleteUser()
-	UserService().getAllUsersByNamespaceID()
-	UserService().getAllUsersByWorkspaceID()
+	//UserService().getAllUsersByNamespaceID()
+	//UserService().getAllUsersByWorkspaceID()
 }
