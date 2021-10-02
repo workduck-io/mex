@@ -72,16 +72,17 @@ class NodeService {
     }
 
 
-    fun getAllNodesWithWorkspaceID(){
-        val workspaceID = "WORKSPACE1234"
+    fun getAllNodesWithWorkspaceID(workspaceID : String) : MutableList<String> {
+
         val workspaceIdentifier  = WorkspaceIdentifier(workspaceID)
-        nodeRepository.getAllNodesWithWorkspaceID(workspaceIdentifier)
+        return nodeRepository.getAllNodesWithWorkspaceID(workspaceIdentifier) as MutableList<String>
     }
 
-    fun getAllNodesWithNamespaceID(){
-        val namespaceID = "NAMESPACE1"
+    fun getAllNodesWithNamespaceID(namespaceID : String) : MutableList<String> {
+
         val namespaceIdentifier  = NamespaceIdentifier(namespaceID)
-        nodeRepository.getAllNodesWithNamespaceID(namespaceIdentifier)
+        return nodeRepository.getAllNodesWithNamespaceID(namespaceIdentifier) as MutableList<String>
+
     }
 
 
@@ -184,16 +185,17 @@ fun main(){
 
 
     //NodeService().createNode(jsonString)
-     NodeService().getNode("NODE1234")
+    // NodeService().getNode("NODE1234")
     // NodeService().updateNode(jsonString1)
     //NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
    // NodeService().jsonToObjectMapper(jsonString1)
     //NodeService().jsonToElement()
     //NodeService().append(jsonForAppend)
 
-    //NodeService().getAllNodesWithNamespaceID()
-    //NodeService().getAllNodesWithWorkspaceID()
 
+    println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1"))
+    println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
+    TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 
 }
 

@@ -94,6 +94,20 @@ functions:
       - httpApi:
           path: /node/append
           method: post
+
+  getAllNodesWithNamespaceID:
+    handler: com.serverless.GetAllNodesWithNamespaceID
+    events:
+      - httpApi:
+          path: /node/namespace/{id}
+          method: get
+
+  getAllNodesWithWorkspaceID:
+    handler: com.serverless.GetAllNodesWithWorkspaceID
+    events:
+      - httpApi:
+          path: /node/workspace/{id}
+          method: get
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
