@@ -186,7 +186,26 @@ functions:
           path: /user/{id}
           method: delete
 
+  createUserIdentifierMappingRecord:
+    handler: com.serverless.userIdentifierMappingHandlers.CreateUserIdentifierMappingRecord
+    events:
+      - httpApi:
+          path: /userIdentifierMappingRecord
+          method: post
 
+  deleteUserIdentifierMappingRecord:
+    handler: com.serverless.userIdentifierMappingHandlers.DeleteUserIdentifierMappingRecord
+    events:
+      - httpApi:
+          path: /userIdentifierMappingRecord/{userID}/{identifierID}
+          method: delete
+
+  getUserRecords:
+    handler: com.serverless.userIdentifierMappingHandlers.GetUserRecords
+    events:
+      - httpApi:
+          path: /userRecords/{id}
+          method: get
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
