@@ -15,7 +15,14 @@ import java.io.IOException
 
 class IdentifierDeserializer : StdConverter<String?, Identifier?>(){
     override fun convert(value: String?): Identifier? {
-        return null
+        return if (value != null) {
+            if(value.startsWith("NAMESPACE")){
+                NamespaceIdentifier(value)
+            } else{
+                WorkspaceIdentifier(value)
+            }
+
+        } else null
     }
 
 }
