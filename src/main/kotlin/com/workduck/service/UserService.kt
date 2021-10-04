@@ -3,6 +3,9 @@ package com.workduck.service
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.*
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
@@ -17,38 +20,39 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository)
 
-	fun createUser() {
-		val user1: User = User(
-			id = "USER49",
-			name = "Varun",
-			workspaceIdentifier = WorkspaceIdentifier("WORKSPACE1234")
-		)
+	fun createUser(jsonString : String) {
 
-		val user2: User = User(
-			id = "USER49",
-			name = "Varun",
-			namespaceIdentifier = NamespaceIdentifier("NAMESPACE1")
-		)
-		repository.create(user2)
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		val user: User = objectMapper.readValue(jsonString)
+
+		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
+		user.idCopy = user.id
+
+		repository.create(user)
 
 	}
 
-	fun getUser() {
-		val user: Entity = repository.get(UserIdentifier("USER49"))
-		println(user)
+	fun getUser(userID : String) : String {
+		val user: Entity = repository.get(UserIdentifier(userID))
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		return objectMapper.writeValueAsString(user)
 	}
 
-	fun updateUser() {
-		val user: User = User(
-			id = "USER49",
-			name = "Varun Garg",
-			workspaceIdentifier = WorkspaceIdentifier("WS1234")
-		)
+	fun updateUser(jsonString: String) {
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		val user: User = objectMapper.readValue(jsonString)
+
+		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
+		user.idCopy = user.id
+
+		/* to avoid updating createdAt un-necessarily */
+		user.createdAt = null
+
 		repository.update(user)
 	}
 
-	fun deleteUser() {
-		repository.delete(UserIdentifier("USER49"))
+	fun deleteUser(userID: String) {
+		repository.delete(UserIdentifier(userID))
 	}
 
 	fun getAllUsersByWorkspaceID() {
@@ -67,10 +71,27 @@ class UserService {
 
 
 fun main() {
-	//UserService().createUser()
-	UserService().getUser()
-	//UserService().updateUser()
-	//UserService().deleteUser()
+
+	val json : String = """
+		{
+			"id" : "USER49",
+			"name" : "Varun",
+			"email" : "varun.iitp@gmail.com"		
+		}
+		"""
+
+	val jsonUpdated : String = """
+		{
+			"id" : "USER49",
+			"name" : "Varun Garg",
+			"email" : "varun.garg@workduck.io"
+		}
+		"""
+
+	//UserService().createUser(json)
+	//println(UserService().getUser("USER49"))
+	//UserService().updateUser(jsonUpdated)
+	UserService().deleteUser("USER49")
 	//UserService().getAllUsersByNamespaceID()
 	//UserService().getAllUsersByWorkspaceID()
 }

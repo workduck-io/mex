@@ -16,32 +16,21 @@ class User(
 	@DynamoDBHashKey(attributeName = "PK")
 	var id: String = Helper.generateId(IdentifierType.USER.name),
 
-
-	/* Can't create multiple entries with same PK,SK so keeping SK unique */
 	@JsonProperty("uniqueID")
 	@DynamoDBRangeKey(attributeName = "SK")
-	var uniqueID: String = Helper.generateId("$id#"),
+	var idCopy: String? = id,
 
 	@JsonProperty("name")
 	@DynamoDBAttribute(attributeName = "userName")
-	var name: String = "John Doe",
+	var name: String?= null,
 
-
-	@JsonProperty("workspaceIdentifier")
-	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
-	var workspaceIdentifier: WorkspaceIdentifier? = null,
-
-
-	@JsonProperty("namespaceIdentifier")
-	@DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-	@DynamoDBAttribute(attributeName = "namespaceIdentifier")
-	var namespaceIdentifier: NamespaceIdentifier? = null,
-
+	@JsonProperty("email")
+	@DynamoDBAttribute(attributeName = "userEmail")
+	var email: String?= null,
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long = System.currentTimeMillis()
+	var createdAt: Long? = System.currentTimeMillis()
 ) : Entity {
 
 	@JsonProperty("updatedAt")

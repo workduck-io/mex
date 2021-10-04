@@ -25,9 +25,6 @@ class NamespaceRepository(
 		val table = dynamoDB.getTable("sampleData")
 
 
-		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-		expressionAttributeValues[":namespaceID"] = identifier.id
-
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
