@@ -161,6 +161,31 @@ functions:
           method: delete
 
 
+  getUser:
+    handler: com.serverless.userHandlers.GetUser
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: get
+  createUser:
+    handler: com.serverless.userHandlers.CreateUser
+    events:
+      - httpApi:
+          path: /user
+          method: post
+  updateUser:
+    handler: com.serverless.userHandlers.UpdateUser
+    events:
+      - httpApi:
+          path: /user/update
+          method: post
+  deleteUser:
+    handler: com.serverless.userHandlers.DeleteUser
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: delete
+
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
