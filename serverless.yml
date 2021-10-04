@@ -135,6 +135,31 @@ functions:
             path: /namespace/{id}
             method: delete
 
+  getWorkspace:
+    handler: com.serverless.workspaceHandlers.GetWorkspace
+    events:
+      - httpApi:
+          path: /workspace/{id}
+          method: get
+  createWorkspace:
+    handler: com.serverless.workspaceHandlers.CreateWorkspace
+    events:
+      - httpApi:
+          path: /workspace
+          method: post
+  updateWorkspace:
+    handler: com.serverless.workspaceHandlers.UpdateWorkspace
+    events:
+      - httpApi:
+          path: /workspace/update
+          method: post
+  deleteWorkspace:
+    handler: com.serverless.workspaceHandlers.DeleteWorkspace
+    events:
+      - httpApi:
+          path: /workspace/{id}
+          method: delete
+
 
 
 #    The following are a few example events you can configure
