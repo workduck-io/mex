@@ -1,20 +1,22 @@
-package com.serverless
+package com.serverless.namespaceHandlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import com.workduck.service.NodeService
+import com.serverless.ApiGatewayResponse
+import com.serverless.Response
+import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
 
 
-class GetAllNodesWithWorkspaceID:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
-	override fun handleRequest(input:Map<String, Any>, context:Context):ApiGatewayResponse {
+class DeleteNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+	override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
-		val nodeID = pathParameters!!["id"] as String
+		val namespaceID = pathParameters!!["id"] as String
 
-		println(NodeService().getAllNodesWithWorkspaceID(nodeID))
+		println(NamespaceService().deleteNamespace(namespaceID))
 		LOG.info("received: " + input.keys.toString())
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)
@@ -25,6 +27,6 @@ class GetAllNodesWithWorkspaceID:RequestHandler<Map<String, Any>, ApiGatewayResp
 		}
 	}
 	companion object {
-		private val LOG = LogManager.getLogger(GetAllNodesWithWorkspaceID::class.java)
+		private val LOG = LogManager.getLogger(DeleteNamespace::class.java)
 	}
 }

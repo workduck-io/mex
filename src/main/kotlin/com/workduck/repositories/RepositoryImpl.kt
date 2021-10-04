@@ -39,8 +39,10 @@ class RepositoryImpl<T : Entity>(
 		return t;
 	}
 
+}
 
-	/*
+
+/*
 	override fun create(node: Node): Node {
 		// TODO("Not yet implemented")
 		val table: Table = dynamoDB.getTable("elementsTable")
@@ -69,7 +71,4 @@ class RepositoryImpl<T : Entity>(
 		return node
 	}
 	*/
-
-}
-
 
