@@ -2,7 +2,11 @@ package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.WorkspaceIdentifierConverter
+import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
 /**
@@ -32,19 +36,21 @@ class Namespace(
 
 
 	@JsonProperty("workspaceIdentifier")
+	@JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+	@JsonSerialize(converter = IdentifierSerializer::class)
 	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
 	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
 	var workspaceIdentifier: WorkspaceIdentifier? = null,
 
 	@JsonProperty("name")
 	@DynamoDBAttribute(attributeName = "namespaceName")
-	var name: String = "DEFAULT_NAMESPACE",
+	var name: String ? = null,
 
 	//val owner: OwnerIdentifier,
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long = System.currentTimeMillis()
+	var createdAt: Long? = System.currentTimeMillis()
 
 	//val status: NamespaceStatus = NamespaceStatus.ACTIVE
 

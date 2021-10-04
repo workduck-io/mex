@@ -3,6 +3,9 @@ package com.workduck.service
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.*
 import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
@@ -17,42 +20,63 @@ class NamespaceService {
 	private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository)
 
 
-	fun createNamespace() {
-		val ns: Namespace = Namespace(
-			id = "NAMESPACE1",
-			name = "Engineering",
-			workspaceIdentifier = WorkspaceIdentifier("WS1234"),
-			createdAt = System.currentTimeMillis()
-		)
-		repository.create(ns)
+	fun createNamespace(jsonString : String) {
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		val namespace: Namespace = objectMapper.readValue(jsonString)
+
+		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
+		namespace.idCopy = namespace.id
+
+		repository.create(namespace)
 	}
 
-	fun getNamespace() {
-		val namespace: Entity = repository.get(NamespaceIdentifier("NMSPC1"))
-		println(namespace)
+	fun getNamespace(namespaceID : String): String {
+		val namespace: Entity = repository.get(NamespaceIdentifier(namespaceID))
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		return objectMapper.writeValueAsString(namespace)
 	}
 
-	/* we'll need createdAt field's value else default value defined in model would be picked up */
-	fun updateNamespace() {
-		val ns: Namespace = Namespace(
-			id = "NMSPC1",
-			name = "Engineering 2.0",
-			workspaceIdentifier = WorkspaceIdentifier("WS1234")
-		)
-		repository.update(ns)
+
+	fun updateNamespace(jsonString: String) {
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		val namespace: Namespace = objectMapper.readValue(jsonString)
+
+		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
+		namespace.idCopy = namespace.id
+
+		/* to avoid updating createdAt un-necessarily */
+		namespace.createdAt = null
+
+		repository.update(namespace)
 	}
 
-	fun deleteNamespace() {
-		repository.delete(NamespaceIdentifier("NAMESPACE1"))
-
+	fun deleteNamespace(namespaceID : String) {
+		repository.delete(NamespaceIdentifier(namespaceID))
 	}
 
 }
 
 fun main() {
-	//NamespaceService().createNamespace()
-	NamespaceService().getNamespace()
-	//NamespaceService().updateNamespace()
-	//NamespaceService().deleteNamespace()
+
+	val json : String = """
+		{
+			"id": "NAMESPACE1",
+            "workspaceIdentifier" : "WORKSPACE1", 
+			"name": "Engineering"
+		}
+		"""
+
+	val jsonUpdate : String = """
+		{
+			"id" : "NAMESPACE1",
+			"name": "Engineering - Team 1"
+		
+		}
+		"""
+
+	//NamespaceService().createNamespace(json)
+	//println(NamespaceService().getNamespace("NAMESPACE1"))
+	//NamespaceService().updateNamespace(jsonUpdate)
+	println(NamespaceService().deleteNamespace("NAMESPACE1"))
 
 }
