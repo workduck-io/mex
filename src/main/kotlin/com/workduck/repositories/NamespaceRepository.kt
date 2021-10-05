@@ -35,5 +35,19 @@ class NamespaceRepository(
 		TODO("Not yet implemented")
 	}
 
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>{
+		val namespaceJsonList : MutableList<String>  = mutableListOf()
+		val objectMapper = ObjectMapper()
+		for(namespaceID in namespaceIDList ) {
+			val namespace : Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID)
+			if(namespace!=null) {
+				val namespaceJson = objectMapper.writeValueAsString(namespace)
+				namespaceJsonList += namespaceJson
+			}
+		}
+		return namespaceJsonList
+		TODO("we also need to have some sort of filter which filters out all the non-namespace ids")
+		TODO("this code can be reused for similar workspace functionality")
+	}
 
 }

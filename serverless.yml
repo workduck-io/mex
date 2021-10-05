@@ -135,6 +135,13 @@ functions:
             path: /namespace/{id}
             method: delete
 
+  getNamespaceData:
+    handler: com.serverless.namespaceHandlers.GetNamespaceData
+    events:
+      - httpApi:
+          path: /namespace/data/{ids}
+          method: get
+
   getWorkspace:
     handler: com.serverless.workspaceHandlers.GetWorkspace
     events:
@@ -159,6 +166,13 @@ functions:
       - httpApi:
           path: /workspace/{id}
           method: delete
+
+  getWorkspaceData:
+    handler: com.serverless.workspaceHandlers.GetWorkspaceData
+    events:
+      - httpApi:
+          path: /workspace/data/{ids}
+          method: get
 
 
   getUser:
