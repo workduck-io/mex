@@ -38,5 +38,19 @@ class WorkspaceRepository(
 		TODO("Not yet implemented")
 	}
 
+	fun getWorkspaceData(workspaceIDList : List<String>) : MutableList<String>{
+		val workspaceJsonList : MutableList<String>  = mutableListOf()
+		val objectMapper = ObjectMapper()
+		for(workspaceID in workspaceIDList ) {
+			val workspace : Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID)
+			if(workspace!=null) {
+				val workspaceJson = objectMapper.writeValueAsString(workspace)
+				workspaceJsonList += workspaceJson
+			}
+		}
+		return workspaceJsonList
+		TODO("we also need to have some sort of filter which filters out all the non-workspace ids")
+	}
+
 
 }
