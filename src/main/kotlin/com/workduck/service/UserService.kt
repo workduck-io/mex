@@ -2,6 +2,7 @@ package com.workduck.service
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -17,8 +18,14 @@ class UserService {
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
 
-	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper)
-	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository)
+	private val tableName: String = System.getenv("TABLE_NAME")
+
+	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+		.build()
+
+	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
+	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
 	fun createUser(jsonString : String) {
 
@@ -62,7 +69,7 @@ class UserService {
 	}
 
 	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
-
+		println("TABLE :  " + System.getenv("TABLE_NAME"))
 		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
 		return userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
 	}

@@ -12,10 +12,13 @@ import com.workduck.models.Identifier
 class RepositoryImpl<T : Entity>(
 	private val dynamoDB: DynamoDB,
 	private val mapper: DynamoDBMapper,
-	private val repository: Repository<T>
+	private val repository: Repository<T>,
+	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<T> {
 
 	override fun get(identifier: Identifier): Entity {
+		val tableName: String = System.getenv("TABLE_NAME")
+
 		return repository.get(identifier)
 	}
 
@@ -24,7 +27,7 @@ class RepositoryImpl<T : Entity>(
 	}
 
 	override fun create(t: T): T {
-		mapper.save(t)
+		mapper.save(t, dynamoDBMapperConfig)
 		return t
 	}
 
@@ -33,6 +36,7 @@ class RepositoryImpl<T : Entity>(
 		val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 			.withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
 			.withSaveBehavior(SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+			.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(System.getenv("TABLE_NAME")))
 			.build()
 
 		mapper.save(t, dynamoDBMapperConfig)

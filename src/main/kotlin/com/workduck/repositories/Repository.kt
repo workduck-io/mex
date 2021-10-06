@@ -1,5 +1,6 @@
 package com.workduck.repositories
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.workduck.models.Element
 import com.workduck.models.Entity
 import com.workduck.models.Identifier

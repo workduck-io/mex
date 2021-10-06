@@ -27,6 +27,7 @@ provider:
   environment:
     AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
 
 package:
   artifact: target/mex-dev.jar
@@ -45,4 +46,4 @@ functions:
 useDotenv: true
 
 resources:
-  - ${file(src/main/resources/sample-data.yml)}
+  - ${file(src/main/resources/mex.yml)}

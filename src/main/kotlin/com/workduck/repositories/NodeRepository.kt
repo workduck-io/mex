@@ -1,6 +1,7 @@
 package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
@@ -11,15 +12,16 @@ import com.workduck.utils.DDBHelper
 
 class NodeRepository(
 	private val mapper: DynamoDBMapper,
-	private val dynamoDB: DynamoDB
+	private val dynamoDB: DynamoDB,
+	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<Node>  {
 
 	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Node::class.java, identifier.id, identifier.id)
+		return mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 	}
 
 	fun append(identifier: Identifier, elements : MutableList<Element>) {
-		val table = dynamoDB.getTable("sampleData")
+		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 
 		val objectMapper = ObjectMapper()
 		val elementsInStringFormat : MutableList<String> = mutableListOf()
@@ -58,7 +60,7 @@ class NodeRepository(
 	}
 
 	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable("sampleData")
+		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 
 		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)

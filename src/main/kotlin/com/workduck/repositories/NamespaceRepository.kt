@@ -1,6 +1,7 @@
 package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
@@ -9,7 +10,8 @@ import com.workduck.models.*
 
 class NamespaceRepository(
 	private val dynamoDB: DynamoDB,
-	private val mapper: DynamoDBMapper
+	private val mapper: DynamoDBMapper,
+	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 
 ) : Repository<Namespace> {
 
@@ -22,8 +24,7 @@ class NamespaceRepository(
 	}
 
 	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable("sampleData")
-
+		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)

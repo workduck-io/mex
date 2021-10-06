@@ -1,6 +1,7 @@
 package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
@@ -14,7 +15,8 @@ import com.workduck.models.UserIdentifierRecord
 
 class UserIdentifierMappingRepository(
 	private val dynamoDB: DynamoDB,
-	private val mapper: DynamoDBMapper
+	private val mapper: DynamoDBMapper,
+	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<UserIdentifierRecord> {
 	override fun create(t: UserIdentifierRecord): UserIdentifierRecord {
 		TODO("Not yet implemented")
@@ -33,7 +35,7 @@ class UserIdentifierMappingRepository(
 	}
 
 	fun getRecordsByUserID(userID: String) {
-		val table = dynamoDB.getTable("sampleData")
+		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 		val querySpec = QuerySpec()
 
 		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -55,7 +57,7 @@ class UserIdentifierMappingRepository(
 	}
 
 	fun deleteUserIdentifierMapping(userID: String, identifier: Identifier){
-		val table = dynamoDB.getTable("sampleData")
+		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 
 		val objectMapper = ObjectMapper()
 
