@@ -13,8 +13,12 @@ class AppendDataToNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val json = input["body"] as String
         println("BODY STARTS" + json + "BODY ENDS")
-        NodeService().append(json)
 
+		val pathParameters = input["pathParameters"] as Map<*, *>?
+		val nodeID = pathParameters!!["id"] as String
+		println("NODE ID : $nodeID")
+
+		NodeService().append(nodeID, json)
 
         LOG.info("received: " + input.keys.toString())
 

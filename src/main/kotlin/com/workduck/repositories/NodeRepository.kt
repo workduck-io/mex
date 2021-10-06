@@ -20,7 +20,7 @@ class NodeRepository(
 		return mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 	}
 
-	fun append(identifier: Identifier, elements : MutableList<Element>) {
+	fun append(nodeID : String, elements : MutableList<Element>) {
 		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 
 		val objectMapper = ObjectMapper()
@@ -35,7 +35,7 @@ class NodeRepository(
 		expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
 
-		val updateItemSpec : UpdateItemSpec = UpdateItemSpec().withPrimaryKey("PK", identifier.id, "SK", identifier.id)
+		val updateItemSpec : UpdateItemSpec = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
 			.withUpdateExpression("set nodeData = list_append(if_not_exists(nodeData, :empty_list), :val1)")
 			.withValueMap(expressionAttributeValues)
 
