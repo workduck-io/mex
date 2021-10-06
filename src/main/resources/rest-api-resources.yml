@@ -1,0 +1,181 @@
+getNode:
+  handler: com.serverless.nodeHandlers.GetNode
+  events:
+    - httpApi:
+        path: /node/{id}
+        method: get
+
+createNode:
+  handler: com.serverless.nodeHandlers.CreateNode
+  events:
+    - httpApi:
+        path: /node
+        method: post
+
+updateNode:
+  handler: com.serverless.nodeHandlers.UpdateNode
+  events:
+    - httpApi:
+        path: /node/update
+        method: post
+
+deleteNode:
+  handler: com.serverless.nodeHandlers.DeleteNode
+  events:
+    - httpApi:
+        path: /node/{id}
+        method: delete
+
+appendDataToNode:
+  handler: com.serverless.nodeHandlers.AppendDataToNode
+  events:
+    - httpApi:
+        path: /node/append
+        method: post
+
+getAllNodesWithNamespaceID:
+  handler: com.serverless.nodeHandlers.GetAllNodesWithNamespaceID
+  events:
+    - httpApi:
+        path: /node/namespace/{id}
+        method: get
+
+getAllNodesWithWorkspaceID:
+  handler: com.serverless.nodeHandlers.GetAllNodesWithWorkspaceID
+  events:
+    - httpApi:
+        path: /node/workspace/{id}
+        method: get
+
+
+getNamespace:
+  handler: com.serverless.namespaceHandlers.GetNamespace
+  events:
+    - httpApi:
+        path: /namespace/{id}
+        method: get
+
+createNamespace:
+  handler: com.serverless.namespaceHandlers.CreateNamespace
+  events:
+    - httpApi:
+        path: /namespace
+        method: post
+
+updateNamespace:
+  handler: com.serverless.namespaceHandlers.UpdateNamespace
+  events:
+    - httpApi:
+        path: /namespace/update
+        method: post
+deleteNamespace:
+  handler: com.serverless.namespaceHandlers.DeleteNamespace
+  events:
+    - httpApi:
+        path: /namespace/{id}
+        method: delete
+
+getNamespaceData:
+  handler: com.serverless.namespaceHandlers.GetNamespaceData
+  events:
+    - httpApi:
+        path: /namespace/data/{ids}
+        method: get
+
+getWorkspace:
+  handler: com.serverless.workspaceHandlers.GetWorkspace
+  events:
+    - httpApi:
+        path: /workspace/{id}
+        method: get
+
+createWorkspace:
+  handler: com.serverless.workspaceHandlers.CreateWorkspace
+  events:
+    - httpApi:
+        path: /workspace
+        method: post
+
+updateWorkspace:
+  handler: com.serverless.workspaceHandlers.UpdateWorkspace
+  events:
+    - httpApi:
+        path: /workspace/update
+        method: post
+
+deleteWorkspace:
+  handler: com.serverless.workspaceHandlers.DeleteWorkspace
+  events:
+    - httpApi:
+        path: /workspace/{id}
+        method: delete
+
+getWorkspaceData:
+  handler: com.serverless.workspaceHandlers.GetWorkspaceData
+  events:
+    - httpApi:
+        path: /workspace/data/{ids}
+        method: get
+
+getUser:
+  handler: com.serverless.userHandlers.GetUser
+  events:
+    - httpApi:
+        path: /user/{id}
+        method: get
+
+createUser:
+  handler: com.serverless.userHandlers.CreateUser
+  events:
+    - httpApi:
+        path: /user
+        method: post
+
+updateUser:
+  handler: com.serverless.userHandlers.UpdateUser
+  events:
+    - httpApi:
+        path: /user/update
+        method: post
+
+deleteUser:
+  handler: com.serverless.userHandlers.DeleteUser
+  events:
+    - httpApi:
+        path: /user/{id}
+        method: delete
+
+getAllUsersWithNamespaceID:
+  handler: com.serverless.userHandlers.GetAllUsersWithNamespaceID
+  events:
+    - httpApi:
+        path: /user/namespace/{id}
+        method: get
+
+getAllUsersWithWorkspaceID:
+  handler: com.serverless.userHandlers.GetAllUsersWithWorkspaceID
+  events:
+    - httpApi:
+        path: /user/workspace/{id}
+        method: get
+
+createUserIdentifierMappingRecord:
+  handler: com.serverless.userIdentifierMappingHandlers.CreateUserIdentifierMappingRecord
+  events:
+    - httpApi:
+        path: /userIdentifierMappingRecord
+        method: post
+
+deleteUserIdentifierMappingRecord:
+  handler: com.serverless.userIdentifierMappingHandlers.DeleteUserIdentifierMappingRecord
+  events:
+    - httpApi:
+        path: /userIdentifierMappingRecord/{userID}/{identifierID}
+        method: delete
+
+getUserRecords:
+  handler: com.serverless.userIdentifierMappingHandlers.GetUserRecords
+  events:
+    - httpApi:
+        path: /userRecords/{id}
+        method: get
