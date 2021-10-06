@@ -45,21 +45,4 @@ functions:
 useDotenv: true
 
 resources:
-  Resources:
-    sampleData:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: sampleData
-        AttributeDefinitions:
-          - AttributeName: PK
-            AttributeType: S
-          - AttributeName: SK
-            AttributeType: S
-        KeySchema:
-          - AttributeName: PK
-            KeyType: HASH
-          - AttributeName: SK
-            KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+  - ${file(src/main/resources/sample-data.yml)}

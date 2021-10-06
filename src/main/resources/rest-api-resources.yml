@@ -1,49 +1,61 @@
 getNode:
   handler: com.serverless.nodeHandlers.GetNode
   events:
-    - httpApi:
+    - http:
         path: /node/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 createNode:
   handler: com.serverless.nodeHandlers.CreateNode
   events:
-    - httpApi:
+    - http:
         path: /node
         method: post
+        cors: true
+        authorizer: aws_iam
 
 updateNode:
   handler: com.serverless.nodeHandlers.UpdateNode
   events:
-    - httpApi:
+    - http:
         path: /node/update
         method: post
+        cors: true
+        authorizer: aws_iam
 
 deleteNode:
   handler: com.serverless.nodeHandlers.DeleteNode
   events:
-    - httpApi:
+    - http:
         path: /node/{id}
         method: delete
+        cors: true
+        authorizer: aws_iam
 
 appendDataToNode:
   handler: com.serverless.nodeHandlers.AppendDataToNode
   events:
-    - httpApi:
+    - http:
         path: /node/append
         method: post
+        cors: true
+        authorizer: aws_iam
 
 getAllNodesWithNamespaceID:
   handler: com.serverless.nodeHandlers.GetAllNodesWithNamespaceID
   events:
-    - httpApi:
+    - http:
         path: /node/namespace/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 getAllNodesWithWorkspaceID:
   handler: com.serverless.nodeHandlers.GetAllNodesWithWorkspaceID
   events:
-    - httpApi:
+    - http:
         path: /node/workspace/{id}
         method: get
 
@@ -51,131 +63,170 @@ getAllNodesWithWorkspaceID:
 getNamespace:
   handler: com.serverless.namespaceHandlers.GetNamespace
   events:
-    - httpApi:
+    - http:
         path: /namespace/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 createNamespace:
   handler: com.serverless.namespaceHandlers.CreateNamespace
   events:
-    - httpApi:
+    - http:
         path: /namespace
         method: post
+        cors: true
+        authorizer: aws_iam
 
 updateNamespace:
   handler: com.serverless.namespaceHandlers.UpdateNamespace
   events:
-    - httpApi:
+    - http:
         path: /namespace/update
         method: post
+        cors: true
+        authorizer: aws_iam
+
 deleteNamespace:
   handler: com.serverless.namespaceHandlers.DeleteNamespace
   events:
-    - httpApi:
+    - http:
         path: /namespace/{id}
         method: delete
+        cors: true
+        authorizer: aws_iam
 
 getNamespaceData:
   handler: com.serverless.namespaceHandlers.GetNamespaceData
   events:
-    - httpApi:
+    - http:
         path: /namespace/data/{ids}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 getWorkspace:
   handler: com.serverless.workspaceHandlers.GetWorkspace
   events:
-    - httpApi:
+    - http:
         path: /workspace/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 createWorkspace:
   handler: com.serverless.workspaceHandlers.CreateWorkspace
   events:
-    - httpApi:
+    - http:
         path: /workspace
         method: post
+        cors: true
+        authorizer: aws_iam
 
 updateWorkspace:
   handler: com.serverless.workspaceHandlers.UpdateWorkspace
   events:
-    - httpApi:
+    - http:
         path: /workspace/update
         method: post
+        cors: true
+        authorizer: aws_iam
 
 deleteWorkspace:
   handler: com.serverless.workspaceHandlers.DeleteWorkspace
   events:
-    - httpApi:
+    - http:
         path: /workspace/{id}
         method: delete
+        cors: true
+        authorizer: aws_iam
 
 getWorkspaceData:
   handler: com.serverless.workspaceHandlers.GetWorkspaceData
   events:
-    - httpApi:
+    - http:
         path: /workspace/data/{ids}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 getUser:
   handler: com.serverless.userHandlers.GetUser
   events:
-    - httpApi:
+    - http:
         path: /user/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 createUser:
   handler: com.serverless.userHandlers.CreateUser
   events:
-    - httpApi:
+    - http:
         path: /user
         method: post
+        cors: true
+        authorizer: aws_iam
 
 updateUser:
   handler: com.serverless.userHandlers.UpdateUser
   events:
-    - httpApi:
+    - http:
         path: /user/update
         method: post
+        cors: true
+        authorizer: aws_iam
 
 deleteUser:
   handler: com.serverless.userHandlers.DeleteUser
   events:
-    - httpApi:
+    - http:
         path: /user/{id}
         method: delete
+        cors: true
+        authorizer: aws_iam
 
 getAllUsersWithNamespaceID:
   handler: com.serverless.userHandlers.GetAllUsersWithNamespaceID
   events:
-    - httpApi:
+    - http:
         path: /user/namespace/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 getAllUsersWithWorkspaceID:
   handler: com.serverless.userHandlers.GetAllUsersWithWorkspaceID
   events:
-    - httpApi:
+    - http:
         path: /user/workspace/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
 
 createUserIdentifierMappingRecord:
   handler: com.serverless.userIdentifierMappingHandlers.CreateUserIdentifierMappingRecord
   events:
-    - httpApi:
+    - http:
         path: /userIdentifierMappingRecord
         method: post
+        cors: true
+        authorizer: aws_iam
 
 deleteUserIdentifierMappingRecord:
   handler: com.serverless.userIdentifierMappingHandlers.DeleteUserIdentifierMappingRecord
   events:
-    - httpApi:
+    - http:
         path: /userIdentifierMappingRecord/{userID}/{identifierID}
         method: delete
+        cors: true
+        authorizer: aws_iam
 
 getUserRecords:
   handler: com.serverless.userIdentifierMappingHandlers.GetUserRecords
   events:
-    - httpApi:
+    - http:
         path: /userRecords/{id}
         method: get
+        cors: true
+        authorizer: aws_iam
