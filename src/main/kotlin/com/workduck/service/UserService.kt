@@ -55,16 +55,16 @@ class UserService {
 		repository.delete(UserIdentifier(userID))
 	}
 
-	fun getAllUsersByWorkspaceID() {
-		val workspaceID = "WORKSPACE1234"
+	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
+
 		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
-		userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
+		return userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
 	}
 
-	fun getAllUsersByNamespaceID() {
-		val namespaceID = "NAMESPACE1"
+	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
+
 		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
-		userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
+		return userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
 	}
 
 }
@@ -91,7 +91,7 @@ fun main() {
 	//UserService().createUser(json)
 	//println(UserService().getUser("USER49"))
 	//UserService().updateUser(jsonUpdated)
-	UserService().deleteUser("USER49")
-	//UserService().getAllUsersByNamespaceID()
+	//UserService().deleteUser("USER49")
+	println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
 	//UserService().getAllUsersByWorkspaceID()
 }

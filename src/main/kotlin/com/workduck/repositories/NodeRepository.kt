@@ -42,7 +42,7 @@ class NodeRepository(
 	}
 
 
-	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) : MutableList<Any> {
+	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) : MutableList<String> {
 
 		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
 			"namespaceIdentifier-PK-index", "NODE", dynamoDB )
@@ -50,7 +50,7 @@ class NodeRepository(
 	}
 
 
-	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) : MutableList<Any> {
+	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) : MutableList<String> {
 
 		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
 			"workspaceIdentifier-PK-index", "NODE", dynamoDB )

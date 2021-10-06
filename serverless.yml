@@ -200,6 +200,20 @@ functions:
           path: /user/{id}
           method: delete
 
+  getAllUsersWithNamespaceID:
+    handler: com.serverless.userHandlers.GetAllUsersWithNamespaceID
+    events:
+      - httpApi:
+          path: /user/namespace/{id}
+          method: get
+
+  getAllUsersWithWorkspaceID:
+    handler: com.serverless.userHandlers.GetAllUsersWithWorkspaceID
+    events:
+      - httpApi:
+          path: /user/workspace/{id}
+          method: get
+
   createUserIdentifierMappingRecord:
     handler: com.serverless.userIdentifierMappingHandlers.CreateUserIdentifierMappingRecord
     events:
