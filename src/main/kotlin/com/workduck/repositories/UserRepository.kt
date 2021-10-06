@@ -1,6 +1,7 @@
 package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
@@ -10,11 +11,12 @@ import com.workduck.utils.DDBHelper
 
 class UserRepository(
 	private val dynamoDB: DynamoDB,
-	private val mapper: DynamoDBMapper
+	private val mapper: DynamoDBMapper,
+	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<User> {
 
 	override fun get(identifier: Identifier): Entity {
-		return mapper.load(User::class.java, identifier.id, identifier.id)
+		return mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 	}
 
 	fun getAllUsersWithNamespaceID(identifier: NamespaceIdentifier): MutableList<String> {
@@ -73,7 +75,7 @@ class UserRepository(
 	}
 
 	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable("sampleData")
+		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)

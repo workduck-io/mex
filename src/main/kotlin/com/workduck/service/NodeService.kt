@@ -2,6 +2,7 @@ package com.workduck.service
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -23,12 +24,19 @@ class NodeService {
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
-    private val nodeRepository : NodeRepository = NodeRepository(mapper, dynamoDB)
-    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository)
+
+    private val tableName: String = System.getenv("TABLE_NAME")
+
+    private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+        .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+        .build()
+
+    private val nodeRepository : NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig)
+    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
 
     fun createNode(jsonString : String){
-
+        println("Should be created in the table : $tableName")
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
 
@@ -185,17 +193,17 @@ fun main(){
 
 
     //NodeService().createNode(jsonString)
-    // NodeService().getNode("NODE1234")
-    // NodeService().updateNode(jsonString1)
+    //NodeService().getNode("NODE1234")
+    //NodeService().updateNode(jsonString1)
     //NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
-   // NodeService().jsonToObjectMapper(jsonString1)
+    //NodeService().jsonToObjectMapper(jsonString1)
     //NodeService().jsonToElement()
     //NodeService().append(jsonForAppend)
+    println(System.getenv("PRIMARY_TABLE"))
 
-
-    println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1"))
-    println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
-    TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
+    //println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1"))
+    //println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
+    //TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 
 }
 

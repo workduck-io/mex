@@ -2,7 +2,7 @@ Resources:
   sampleData:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: sampleData
+      TableName: "${opt:stage, 'local'}-mex"
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S

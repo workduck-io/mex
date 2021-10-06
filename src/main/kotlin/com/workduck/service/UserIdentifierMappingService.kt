@@ -2,6 +2,7 @@ package com.workduck.service
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -19,8 +20,15 @@ class UserIdentifierMappingService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val userIdentifierMappingRepository: UserIdentifierMappingRepository = UserIdentifierMappingRepository(dynamoDB, mapper)
-	private val repository: Repository<UserIdentifierRecord> = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository)
+
+	private val tableName: String = System.getenv("TABLE_NAME")
+
+	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+		.build()
+
+	private val userIdentifierMappingRepository: UserIdentifierMappingRepository = UserIdentifierMappingRepository(dynamoDB, mapper, dynamoDBMapperConfig)
+	private val repository: Repository<UserIdentifierRecord> = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository, dynamoDBMapperConfig)
 
 
 	fun createUserIdentifierRecord(jsonString: String){

@@ -2,6 +2,7 @@ package com.workduck.service
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -19,8 +20,16 @@ class WorkspaceService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper)
-	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository)
+
+	private val tableName: String = System.getenv("TABLE_NAME")
+
+	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+		.build()
+
+
+	private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
+	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
 	fun createWorkspace(jsonString : String) {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())

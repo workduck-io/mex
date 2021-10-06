@@ -30,7 +30,7 @@ object DDBHelper {
 
 		val querySpec = QuerySpec()
 		val objectMapper = ObjectMapper()
-		val table: Table = dynamoDB.getTable("sampleData")
+		val table: Table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
 		val index: Index = table.getIndex(indexName)
 
 		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
