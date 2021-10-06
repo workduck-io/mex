@@ -14,9 +14,9 @@ class GetAllNodesWithNamespaceID:RequestHandler<Map<String, Any>, ApiGatewayResp
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
-		val nodeID = pathParameters!!["id"] as String
+		val namespaceID = pathParameters!!["id"] as String
 
-		println(NodeService().getAllNodesWithNamespaceID(nodeID))
+		println(NodeService().getAllNodesWithNamespaceID(namespaceID))
 		LOG.info("received: " + input.keys.toString())
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

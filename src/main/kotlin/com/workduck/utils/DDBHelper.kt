@@ -24,9 +24,9 @@ object DDBHelper {
 	** Currently works for Specifiers : Namespace Identifier and Workspace Identifier & Prefixes : NODE and USER
 	*/
 	fun getAllEntitiesWithIdentifierAndPrefix(
-		identifier: Identifier, identifierName: String, indexName: String,
+		identifier: Identifier, fieldName: String, indexName: String,
 		prefix: String, dynamoDB: DynamoDB
-	): MutableList<Any> {
+	): MutableList<String> {
 
 		val querySpec = QuerySpec()
 		val objectMapper = ObjectMapper()
@@ -38,7 +38,7 @@ object DDBHelper {
 		expressionAttributeValues[":prefix"] = prefix
 
 		querySpec.withKeyConditionExpression(
-			"$identifierName = :identifier and begins_with(PK, :prefix)"
+			"$fieldName = :identifier and begins_with(PK, :prefix)"
 		)
 			.withValueMap(expressionAttributeValues)
 
@@ -46,7 +46,7 @@ object DDBHelper {
 		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
 		val iterator: Iterator<Item> = items!!.iterator()
 
-		val listOfJSON: MutableList<Any> = mutableListOf()
+		val listOfJSON: MutableList<String> = mutableListOf()
 		while (iterator.hasNext()) {
 			val item: Item = iterator.next()
 			listOfJSON += item.toJSON()
