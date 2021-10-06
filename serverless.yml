@@ -10,8 +10,7 @@
 #    docs.serverless.com
 #
 # Happy Coding!
-
-service: sample-kotlin
+service: mex-backend
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -22,23 +21,42 @@ frameworkVersion: '2'
 
 provider:
   name: aws
-  runtime: java8
+  runtime: java11
   lambdaHashingVersion: 20201221
   environment:
-    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+#    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+#    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
-
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+            - dynamodb:Query
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:DescribeTable
+            - dynamodb:BatchWriteItem
+            - dynamodb:BatchGetItem
+          Resource: 'arn:aws:dynamodb:us-east-1:*:*'
 package:
   artifact: target/mex-dev.jar
 
 plugins:
   - serverless-offline
+  - serverless-domain-manager
 
 custom:
   serverless-offline:
     noPrependStageInUrl: true
-
+  customDomain:
+    domainName: api.workduck.io
+    basePath: 'mex'
+    stage: ${opt:stage, self:provider.stage}
+    createRoute53Record: true
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
 
@@ -46,4 +64,5 @@ functions:
 useDotenv: true
 
 resources:
+  - ${file(src/main/resources/api-gateway-errors.yml)}
   - ${file(src/main/resources/mex.yml)}
