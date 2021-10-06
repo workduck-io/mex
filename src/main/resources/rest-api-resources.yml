@@ -38,7 +38,7 @@ appendDataToNode:
   handler: com.serverless.nodeHandlers.AppendDataToNode
   events:
     - http:
-        path: /node/append
+        path: /node/{id}/append
         method: post
         cors: true
         authorizer: aws_iam

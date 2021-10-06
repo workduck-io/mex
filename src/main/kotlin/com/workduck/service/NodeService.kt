@@ -59,12 +59,12 @@ class NodeService {
         repository.delete(NodeIdentifier(nodeID))
     }
 
-    fun append(jsonString: String) {
+    fun append(nodeID: String, jsonString: String) {
 
         val objectMapper = ObjectMapper().registerKotlinModule()
         val elements: MutableList<Element> = objectMapper.readValue(jsonString)
         println(elements)
-        nodeRepository.append(NodeIdentifier("NODE1234"), elements)
+        nodeRepository.append(nodeID, elements)
 
     }
 
