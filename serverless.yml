@@ -22,6 +22,7 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: java11
+  timeout: 15
   lambdaHashingVersion: 20201221
   environment:
 #    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
