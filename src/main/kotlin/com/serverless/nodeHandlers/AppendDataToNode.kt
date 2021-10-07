@@ -9,6 +9,8 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class AppendDataToNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val nodeService = NodeService()
     override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
         val json = input["body"] as String
@@ -18,7 +20,7 @@ class AppendDataToNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val nodeID = pathParameters!!["id"] as String
 		println("NODE ID : $nodeID")
 
-		NodeService().append(nodeID, json)
+		nodeService.append(nodeID, json)
 
         LOG.info("received: " + input.keys.toString())
 

@@ -19,12 +19,17 @@ class WorkspaceRepository(
 
 ) : Repository<Workspace> {
 
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
+
 	override fun get(identifier: Identifier): Entity {
 		return mapper.load(Workspace::class.java, identifier.id, identifier.id)
 	}
 
 	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)

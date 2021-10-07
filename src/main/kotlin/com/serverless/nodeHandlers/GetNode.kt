@@ -10,13 +10,16 @@ import java.util.*
 
 
 class GetNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val nodeService = NodeService()
+
     override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
         val nodeID = pathParameters!!["id"] as String
 
-        println(NodeService().getNode(nodeID))
+        println(nodeService.getNode(nodeID))
         LOG.info("received: " + input.keys.toString())
 
         val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

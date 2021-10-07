@@ -14,7 +14,6 @@ enum class NodeStatus {
 }
 
 @DynamoDBTable(tableName = "sampleData")
-//@JsonDeserialize(using = NodeJsonDeserializer::class)
 data class Node(
 
 	@JsonProperty("id")
@@ -31,7 +30,7 @@ data class Node(
 	@JsonProperty("data")
 	@DynamoDBTypeConverted(converter = NodeDataConverter::class)
 	@DynamoDBAttribute(attributeName = "nodeData")
-	var data: List<Element>? = null,
+	var data: List<AdvancedElement>? = null,
 
 	@JsonProperty("version")
 	@DynamoDBAttribute(attributeName = "version")
@@ -44,12 +43,18 @@ data class Node(
 	@DynamoDBAttribute(attributeName = "namespaceIdentifier")
 	var namespaceIdentifier: NamespaceIdentifier? = null,
 
+
+
 	@JsonProperty("workspaceIdentifier")
 	@JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
 	@JsonSerialize(converter = IdentifierSerializer::class)
 	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
 	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
 	var workspaceIdentifier: WorkspaceIdentifier? = null,
+
+	/* WORKSPACE_ID#NAMESPACE_ID */
+	@DynamoDBAttribute(attributeName = "AK")
+	var ak : String?= null,
 
 	@JsonProperty("nodeSchemaIdentifier")
 	@DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
@@ -59,6 +64,10 @@ data class Node(
 	//@JsonProperty("status")
 	//val status: NodeStatus = NodeStatus.LINKED,
 	//val associatedProperties: Set<AssociatedProperty>,
+
+	@JsonProperty("itemType")
+	@DynamoDBAttribute(attributeName = "itemType")
+	var itemType : String = "Node",
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")

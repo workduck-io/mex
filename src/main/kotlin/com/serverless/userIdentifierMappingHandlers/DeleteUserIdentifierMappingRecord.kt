@@ -10,13 +10,15 @@ import java.util.*
 
 class DeleteUserIdentifierMappingRecord : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
+	private val userIdentifierMappingService = UserIdentifierMappingService()
+
 	override fun handleRequest(input:Map<String, Any>, context: Context): ApiGatewayResponse {
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val userID = pathParameters!!["userID"] as String
 		val identifierID = pathParameters!!["identifierID"] as String
 
-		UserIdentifierMappingService().deleteUserIdentifierMapping(userID, identifierID)
+		userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)
 		return ApiGatewayResponse.build {

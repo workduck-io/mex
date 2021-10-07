@@ -9,12 +9,15 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class DeleteNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val nodeService = NodeService()
+
     override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
         val nodeID = pathParameters!!["id"] as String
 
-        println(NodeService().deleteNode(nodeID))
+        println(nodeService.deleteNode(nodeID))
 
         val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)
         return ApiGatewayResponse.build {

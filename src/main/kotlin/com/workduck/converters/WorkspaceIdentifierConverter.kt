@@ -7,14 +7,12 @@ import com.workduck.models.WorkspaceIdentifier
 
 class WorkspaceIdentifierConverter : DynamoDBTypeConverter<String, WorkspaceIdentifier?> {
 
-	private val objectMapper = ObjectMapper()
-
 	override fun convert(n: WorkspaceIdentifier?): String? {
-		return objectMapper.writeValueAsString(n)
+		return n?.id
 	}
 
-	override fun unconvert(workspaceIdentifierString: String): WorkspaceIdentifier {
-		return objectMapper.readValue<WorkspaceIdentifier>(workspaceIdentifierString)
+	override fun unconvert(workspaceID: String): WorkspaceIdentifier {
+		return WorkspaceIdentifier(workspaceID)
 
 	}
 

@@ -16,9 +16,12 @@ class RepositoryImpl<T : Entity>(
 	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<T> {
 
-	override fun get(identifier: Identifier): Entity {
-		val tableName: String = System.getenv("TABLE_NAME")
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
 
+	override fun get(identifier: Identifier): Entity {
 		return repository.get(identifier)
 	}
 
@@ -36,7 +39,7 @@ class RepositoryImpl<T : Entity>(
 		val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 			.withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
 			.withSaveBehavior(SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
-			.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(System.getenv("TABLE_NAME")))
+			.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
 			.build()
 
 		mapper.save(t, dynamoDBMapperConfig)
@@ -44,35 +47,4 @@ class RepositoryImpl<T : Entity>(
 	}
 
 }
-
-
-/*
-	override fun create(node: Node): Node {
-		// TODO("Not yet implemented")
-		val table: Table = dynamoDB.getTable("elementsTable")
-
-		for( element in node.data){
-
-			val children : List<Element> = element.getChildren()
-			val myMap = mutableMapOf<String,String>()
-
-			for( child in children ){
-				//map.put("CHILD#${child.getID()}")
-				myMap["CHILD#${child.getID()}"] = "Content#" + child.content() + "Type#" + child.getElementType()
-
-			}
-
-			val item : Item = Item()
-				.withPrimaryKey("PK", node.id)
-				.withString("SK", "PARENT#${element.getID()}")
-				.withMap("ChildrenInfo", myMap)
-				.withString("ParentElementType", element.getElementType())
-
-			table.putItem(item)
-		}
-
-		table.putItem(node)
-		return node
-	}
-	*/
 

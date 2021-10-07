@@ -18,9 +18,9 @@ data class Heading(
 		TODO("Not yet implemented")
 	}
 
-	override fun getType(): String {
-		TODO("Not yet implemented")
-	}
+//	override fun getType(): String {
+//		TODO("Not yet implemented")
+//	}
 
 	fun getElementType(): String {
 		TODO("Not yet implemented")

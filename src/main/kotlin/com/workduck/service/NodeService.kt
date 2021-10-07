@@ -25,7 +25,11 @@ class NodeService {
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
 
-    private val tableName: String = System.getenv("TABLE_NAME")
+    private val tableName: String = when(System.getenv("TABLE_NAME")) {
+            null -> "local-mex" /* for local testing without serverless offline */
+        else -> System.getenv("TABLE_NAME")
+    }
+
 
     private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -42,6 +46,7 @@ class NodeService {
 
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
+        node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         println(node)
         repository.create(node)
@@ -82,51 +87,16 @@ class NodeService {
 
     fun getAllNodesWithWorkspaceID(workspaceID : String) : MutableList<String> {
 
-        val workspaceIdentifier  = WorkspaceIdentifier(workspaceID)
-        return nodeRepository.getAllNodesWithWorkspaceID(workspaceIdentifier) as MutableList<String>
+        return nodeRepository.getAllNodesWithWorkspaceID(workspaceID) as MutableList<String>
     }
 
-    fun getAllNodesWithNamespaceID(namespaceID : String) : MutableList<String> {
+    fun getAllNodesWithNamespaceID(namespaceID : String, workspaceID: String) : MutableList<String> {
 
-        val namespaceIdentifier  = NamespaceIdentifier(namespaceID)
-        return nodeRepository.getAllNodesWithNamespaceID(namespaceIdentifier) as MutableList<String>
+        return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID) as MutableList<String>
 
-    }
-
-
-
-    fun jsonToObjectMapper(jsonString : String) {
-
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-
-        val node: Node = objectMapper.readValue(jsonString)
-        println(node)
     }
 
 
-    fun jsonToElement()  {
-        val jsonString = """
-        {
-            "type" : "AdvancedElement",
-            "id": "sampleParentID",
-            "namespaceIdentifier" : "1"
-            "content": "Sample Content 2",
-            "elementType" : "list",
-            "childrenElements": [
-            {
-                "type" : "BasicTextElement",
-                "id" : "sampleChildID",
-                "content" : "sample child content"
-            }
-            ]
-        }
-        """
-
-        val objectMapper = ObjectMapper()
-        val element: Element =objectMapper.readValue(jsonString, Element::class.java)
-        println(element)
-
-    }
 }
 
 fun main(){
@@ -134,23 +104,21 @@ fun main(){
 		{
 			"id": "NODE1234",
             "namespaceIdentifier" : "NAMESPACE1",
+            "workspaceIdentifier" : "WORKSPACE1",
 			"data": [
 			{
-                "type" : "AdvancedElement",
 				"id": "sampleParentID",
-				"content": "Sample Content",
                 "elementType": "list",
                 "childrenElements": [
                 {
-                    "type" : "BasicTextElement",
                     "id" : "sampleChildID",
-                    "content" : "sample child content"
+                    "content" : "sample child content",
+                    "elementType": "list",
+                    "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
 			}
-			],
-            "createdAt": 1234,
-            "updatedAt": 1234
+			]
 		}
 		"""
 
@@ -164,25 +132,23 @@ fun main(){
     val jsonForAppend : String = """
         [
             {
-            "type" : "AdvancedElement",
+            
             "id": "sampleParentID2",
             "content": "Sample Content 2",
             "elementType" : "list",
             "childrenElements": [
             {
-                "type" : "BasicTextElement",
+               
                 "id" : "sampleChildID2",
                 "content" : "sample child content"
             }
             ]},
             {
-            "type" : "AdvancedElement",
             "id": "sampleParentID3",
             "content": "Sample Content 3",
             "elementType" : "random element type",
             "childrenElements": [
             {
-                "type" : "BasicTextElement",
                 "id" : "sampleChildID3",
                 "content" : "sample child content"
             }
@@ -193,44 +159,17 @@ fun main(){
 
 
     //NodeService().createNode(jsonString)
-    //NodeService().getNode("NODE1234")
+    //println(NodeService().getNode("NODE1234"))
     //NodeService().updateNode(jsonString1)
     //NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     //NodeService().jsonToObjectMapper(jsonString1)
     //NodeService().jsonToElement()
     //NodeService().append(jsonForAppend)
-    println(System.getenv("PRIMARY_TABLE"))
+    //println(System.getenv("PRIMARY_TABLE"))
 
-    //println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1"))
+    println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     //println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     //TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 
 }
 
-
-/*
-   val ce : Element = BasicTextElement(
-       type = "BasicTextElement",
-       id = "sameBSEid",
-       content = "Child Element Content"
-   )
-   val pe : Element = AdvancedElement(
-       type = "AdvancedElement",
-       id = "sampleParentID",
-       parentID = "exampleID",
-       content = "Sample Content",
-       children = mutableListOf(ce),
-       elementType = "paragraph"
-   )
-
-   val node = Node(
-       id = "NODEF873GEFPVJQKV43NQMWQEJQGLF", //Helper.generateId("Node"),
-       version = "xyz",
-       namespaceIdentifier = NamespaceIdentifier("NAMESPACE1"),
-       nodeSchemaIdentifier = NodeSchemaIdentifier(Helper.generateId(IdentifierType.NODE_SCHEMA.name)),
-       workspaceIdentifier = WorkspaceIdentifier("WORKSPACE1234"),
-       //status = NodeStatus.LINKED,
-       data = listOf(pe),
-       createdAt = 1231444
-   )
-   */

@@ -10,13 +10,16 @@ import java.util.*
 
 
 class GetWorkspace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val workspaceService = WorkspaceService()
+
 	override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val workspaceID = pathParameters!!["id"] as String
 
-		println(WorkspaceService().getWorkspace(workspaceID))
+		println(workspaceService.getWorkspace(workspaceID))
 		LOG.info("received: " + input.keys.toString())
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

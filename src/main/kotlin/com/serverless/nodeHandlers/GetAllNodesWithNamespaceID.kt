@@ -10,13 +10,17 @@ import java.util.*
 
 
 class GetAllNodesWithNamespaceID:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val nodeService = NodeService()
+
 	override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
-		val namespaceID = pathParameters!!["id"] as String
+		val namespaceID = pathParameters!!["namespaceID"] as String
+		val workspaceID = pathParameters!!["workspaceID"] as String
 
-		println(NodeService().getAllNodesWithNamespaceID(namespaceID))
+		println(nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID))
 		LOG.info("received: " + input.keys.toString())
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

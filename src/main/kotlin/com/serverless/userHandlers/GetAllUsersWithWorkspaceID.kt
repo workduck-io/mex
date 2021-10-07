@@ -10,13 +10,15 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class GetAllUsersWithWorkspaceID: RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+	private val userService = UserService()
+
 	override fun handleRequest(input:Map<String, Any>, context: Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val workspaceID = pathParameters!!["id"] as String
 
-		println(UserService().getAllUsersWithWorkspaceID(workspaceID))
+		//println(userService.getAllUsersWithWorkspaceID(workspaceID))
 		LOG.info("received: " + input.keys.toString())
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

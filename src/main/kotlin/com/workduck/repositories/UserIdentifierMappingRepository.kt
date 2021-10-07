@@ -18,6 +18,12 @@ class UserIdentifierMappingRepository(
 	private val mapper: DynamoDBMapper,
 	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<UserIdentifierRecord> {
+
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
+
 	override fun create(t: UserIdentifierRecord): UserIdentifierRecord {
 		TODO("Not yet implemented")
 	}
@@ -57,7 +63,7 @@ class UserIdentifierMappingRepository(
 	}
 
 	fun deleteUserIdentifierMapping(userID: String, identifier: Identifier){
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+		val table = dynamoDB.getTable(tableName)
 
 		val objectMapper = ObjectMapper()
 

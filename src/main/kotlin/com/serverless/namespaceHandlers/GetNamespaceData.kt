@@ -9,13 +9,16 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class GetNamespaceData : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val namespaceService = NamespaceService()
+
 	override fun handleRequest(input:Map<String, Any>, context: Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 
 		val namespaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-		println(NamespaceService().getNamespaceData(namespaceIDList))
+		println(namespaceService.getNamespaceData(namespaceIDList))
 
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

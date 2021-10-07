@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
@@ -16,12 +15,17 @@ class NodeRepository(
 	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<Node>  {
 
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
+
 	override fun get(identifier: Identifier): Entity {
 		return mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 	}
 
 	fun append(nodeID : String, elements : MutableList<Element>) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+		val table = dynamoDB.getTable(tableName)
 
 		val objectMapper = ObjectMapper()
 		val elementsInStringFormat : MutableList<String> = mutableListOf()
@@ -44,23 +48,21 @@ class NodeRepository(
 	}
 
 
-	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) : MutableList<String> {
+	fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String> {
 
-		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
-			"namespaceIdentifier-PK-index", "NODE", dynamoDB )
+		val akValue = "$workspaceID#$namespaceID"
+		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
 
 	}
 
+	fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
 
-	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) : MutableList<String> {
-
-		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
-			"workspaceIdentifier-PK-index", "NODE", dynamoDB )
+		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
 
 	}
 
 	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)

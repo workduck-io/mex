@@ -18,7 +18,10 @@ class UserService {
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
 
-	private val tableName: String = System.getenv("TABLE_NAME")
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
 
 	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -62,17 +65,17 @@ class UserService {
 		repository.delete(UserIdentifier(userID))
 	}
 
-	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
-
-		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
-		return userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
-	}
-
-	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
-		println("TABLE :  " + System.getenv("TABLE_NAME"))
-		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
-		return userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
-	}
+//	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
+//
+//		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
+//		return userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
+//	}
+//
+//	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
+//		println("TABLE :  " + System.getenv("TABLE_NAME"))
+//		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
+//		return userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
+//	}
 
 }
 
@@ -99,6 +102,6 @@ fun main() {
 	//println(UserService().getUser("USER49"))
 	//UserService().updateUser(jsonUpdated)
 	//UserService().deleteUser("USER49")
-	println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
+	//println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
 	//UserService().getAllUsersByWorkspaceID()
 }

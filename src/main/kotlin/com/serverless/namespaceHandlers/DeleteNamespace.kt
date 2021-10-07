@@ -10,13 +10,16 @@ import java.util.*
 
 
 class DeleteNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val namespaceService = NamespaceService()
 	override fun handleRequest(input:Map<String, Any>, context:Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val namespaceID = pathParameters!!["id"] as String
 
-		println(NamespaceService().deleteNamespace(namespaceID))
+		println(namespaceService.deleteNamespace(namespaceID))
+
 		LOG.info("received: " + input.keys.toString())
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

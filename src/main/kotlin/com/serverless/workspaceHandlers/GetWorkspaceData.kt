@@ -9,13 +9,16 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class GetWorkspaceData : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+
+	private val workspaceService = WorkspaceService()
+
 	override fun handleRequest(input:Map<String, Any>, context: Context): ApiGatewayResponse {
 
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 
 		val workspaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-		println(WorkspaceService().getWorkspaceData(workspaceIDList))
+		println(workspaceService.getWorkspaceData(workspaceIDList))
 
 
 		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)

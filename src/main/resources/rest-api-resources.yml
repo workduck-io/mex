@@ -47,7 +47,7 @@ getAllNodesWithNamespaceID:
   handler: com.serverless.nodeHandlers.GetAllNodesWithNamespaceID
   events:
     - http:
-        path: /node/namespace/{id}
+        path: /node/workspace/{workspaceID}/namespace/{namespaceID}
         method: get
         cors: true
         authorizer: aws_iam
