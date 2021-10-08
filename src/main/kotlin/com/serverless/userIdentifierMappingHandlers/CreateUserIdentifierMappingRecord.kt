@@ -21,7 +21,6 @@ class CreateUserIdentifierMappingRecord: RequestHandler<Map<String, Any>, ApiGat
 		return ApiGatewayResponse.build {
 			statusCode = 200
 			objectBody = responseBody
-			headers = Collections.singletonMap<String, String>("X-Powered-By", "AWS Lambda & serverless")
 		}
 	}
 	companion object {
