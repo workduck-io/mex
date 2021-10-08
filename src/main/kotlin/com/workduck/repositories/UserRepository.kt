@@ -24,24 +24,23 @@ class UserRepository(
 		return mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 	}
 
-//	fun getAllUsersWithNamespaceID(identifier: NamespaceIdentifier): MutableList<String> {
-//
-//		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(
-//			identifier, "SK",
-//			"SK-PK-index", "USER", dynamoDB
-//		)
-//
-//	}
-//
-//
-//	fun getAllUsersWithWorkspaceID(identifier: WorkspaceIdentifier): MutableList<String> {
-//
-//		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(
-//			identifier, "SK",
-//			"SK-PK-index", "USER", dynamoDB
-//		)
-//
-//	}
+	fun getAllUsersWithNamespaceID(namespaceID: String): MutableList<String> {
+
+		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(
+			namespaceID, "itemType-AK-index",
+			dynamoDB, "UserIdentifierRecord")
+
+
+	}
+
+
+	fun getAllUsersWithWorkspaceID(workspaceID: String): MutableList<String> {
+
+		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(
+			workspaceID, "itemType-AK-index",
+			dynamoDB, "UserIdentifierRecord")
+
+	}
 
 	override fun create(t: User): User {
 		TODO("Not yet implemented")

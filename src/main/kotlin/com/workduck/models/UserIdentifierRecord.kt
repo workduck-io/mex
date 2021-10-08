@@ -22,9 +22,23 @@ class UserIdentifierRecord(
 	@DynamoDBTypeConverted(converter = IdentifierConverter::class)
 	var identifier : Identifier?= null,
 
+
+	/* AK = IdentifierID
+	** Making this so that we don't have to create itemType-SK index. We can leverage already existing itemType-AK index
+	*/
+	@DynamoDBAttribute(attributeName = "AK")
+	var ak : String?= identifier?.id,
+
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long? = System.currentTimeMillis()
+	var createdAt: Long? = System.currentTimeMillis(),
+
+
+	@JsonProperty("itemType")
+	@DynamoDBAttribute(attributeName = "itemType")
+	var itemType: String = "UserIdentifierRecord"
+
+
 ) : Entity {
 
 	@JsonProperty("updatedAt")

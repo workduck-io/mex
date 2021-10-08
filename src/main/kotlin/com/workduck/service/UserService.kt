@@ -65,17 +65,13 @@ class UserService {
 		repository.delete(UserIdentifier(userID))
 	}
 
-//	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
-//
-//		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
-//		return userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
-//	}
-//
-//	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
-//		println("TABLE :  " + System.getenv("TABLE_NAME"))
-//		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
-//		return userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
-//	}
+	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
+		return userRepository.getAllUsersWithWorkspaceID(workspaceID)
+	}
+
+	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
+		return userRepository.getAllUsersWithNamespaceID(namespaceID)
+	}
 
 }
 

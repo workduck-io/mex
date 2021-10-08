@@ -41,7 +41,7 @@ class UserIdentifierMappingRepository(
 	}
 
 	fun getRecordsByUserID(userID: String) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+		val table = dynamoDB.getTable(tableName)
 		val querySpec = QuerySpec()
 
 		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
