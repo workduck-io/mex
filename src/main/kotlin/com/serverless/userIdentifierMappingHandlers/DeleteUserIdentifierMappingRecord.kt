@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
+import com.serverless.StandardResponse
 import com.workduck.service.UserIdentifierMappingService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -18,12 +19,22 @@ class DeleteUserIdentifierMappingRecord : RequestHandler<Map<String, Any>, ApiGa
 		val userID = pathParameters!!["userID"] as String
 		val identifierID = pathParameters!!["identifierID"] as String
 
-		userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
+		val map = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
 
-		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)
-		return ApiGatewayResponse.build {
-			statusCode = 200
-			objectBody = responseBody
+		if (map != null) {
+			val responseBody = StandardResponse(map.toString())
+			return ApiGatewayResponse.build {
+				statusCode = 200
+				objectBody = responseBody
+			}
+		}
+		else{
+			val responseBody = StandardResponse("Error deleting userIdentifierRecord!")
+			return ApiGatewayResponse.build {
+				statusCode = 500
+				objectBody = responseBody
+				headers = Collections.singletonMap<String, String>("X-Powered-By", "AWS Lambda & serverless")
+			}
 		}
 	}
 	companion object {

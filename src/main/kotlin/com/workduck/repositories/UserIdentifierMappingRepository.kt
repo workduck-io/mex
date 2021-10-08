@@ -36,11 +36,11 @@ class UserIdentifierMappingRepository(
 		TODO("Not yet implemented")
 	}
 
-	override fun delete(identifier: Identifier) {
+	override fun delete(identifier: Identifier): String? {
 		TODO("Not yet implemented")
 	}
 
-	fun getRecordsByUserID(userID: String) {
+	fun getRecordsByUserID(userID: String) : MutableList<String> {
 		val table = dynamoDB.getTable(tableName)
 		val querySpec = QuerySpec()
 
@@ -53,16 +53,17 @@ class UserIdentifierMappingRepository(
 		val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
 		val iterator: Iterator<Item> = items!!.iterator()
 
-		val listOfJSON: MutableList<Any> = mutableListOf()
+		val listOfJSON: MutableList<String> = mutableListOf()
 		while (iterator.hasNext()) {
 			val item: Item = iterator.next()
 			listOfJSON += item.toJSON()
 			println(item.toJSONPretty())
 		}
+		return listOfJSON
 
 	}
 
-	fun deleteUserIdentifierMapping(userID: String, identifier: Identifier){
+	fun deleteUserIdentifierMapping(userID: String, identifier: Identifier) : Map<String, String>? {
 		val table = dynamoDB.getTable(tableName)
 
 		val objectMapper = ObjectMapper()
@@ -70,7 +71,12 @@ class UserIdentifierMappingRepository(
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", userID, "SK", objectMapper.writeValueAsString(identifier))
 
-		table.deleteItem(deleteItemSpec)
+		return try {
+			table.deleteItem(deleteItemSpec)
+			mapOf("userID" to userID, "identifierID"  to identifier.id)
+		} catch ( e : Exception) {
+			null
+		}
 	}
 
 
