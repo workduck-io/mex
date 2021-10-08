@@ -1,0 +1,8 @@
+{
+  "name": "my-hello",
+  "version": "1.0.0",
+  "devDependencies": {
+    "serverless-domain-manager": "^5.1.5",
+    "serverless-offline": "^8.2.0"
+  }
+}

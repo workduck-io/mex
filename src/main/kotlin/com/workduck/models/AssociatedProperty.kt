@@ -9,25 +9,33 @@ import com.workduck.utils.Helper
 /**
  * All associated property type
  */
-enum class AssociatedPropertyType{
-    TAG
+enum class AssociatedPropertyType {
+	TAG
 }
 
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type")
+	use = JsonTypeInfo.Id.NAME,
+	include = JsonTypeInfo.As.PROPERTY,
+	property = "type"
+)
 @JsonSubTypes(
-    JsonSubTypes.Type(value = Tag::class, name = "tag")
+	JsonSubTypes.Type(value = Tag::class, name = "tag")
 )
 sealed class AssociatedProperty(
-    propertyType: AssociatedPropertyType
+	propertyType: AssociatedPropertyType
 )
+
 @JsonTypeName("tag")
 data class Tag(
-    val id: String = Helper.generateId("TAG"),
-    val name: String,
-    val ownerIdentifier: OwnerIdentifier,
-    val expireAt: Long? = null,
-    val metaData: JsonNode? = null
-) : AssociatedProperty(AssociatedPropertyType.TAG), Entity
+	val id: String = Helper.generateId("TAG"),
+	val name: String,
+	val ownerIdentifier: OwnerIdentifier,
+	val expireAt: Long? = null,
+	val metaData: JsonNode? = null
+) : AssociatedProperty(AssociatedPropertyType.TAG), Entity {
+//    override val partitionKey: String
+//        get() = TODO("Not yet implemented")
+//
+//    override val sortKey: List<String>
+//        get() = TODO("Not yet implemented")
+}
