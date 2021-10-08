@@ -30,7 +30,7 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
-	fun createUser(jsonString : String) {
+	fun createUser(jsonString : String) : User? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
@@ -38,17 +38,17 @@ class UserService {
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		user.idCopy = user.id
 
-		repository.create(user)
+		return repository.create(user)
 
 	}
 
-	fun getUser(userID : String) : String {
-		val user: Entity = repository.get(UserIdentifier(userID))
+	fun getUser(userID : String) : String? {
+		val user: Entity = repository.get(UserIdentifier(userID)) ?: return null
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		return objectMapper.writeValueAsString(user)
 	}
 
-	fun updateUser(jsonString: String) {
+	fun updateUser(jsonString: String) : User? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
@@ -58,18 +58,18 @@ class UserService {
 		/* to avoid updating createdAt un-necessarily */
 		user.createdAt = null
 
-		repository.update(user)
+		return repository.update(user)
 	}
 
-	fun deleteUser(userID: String) {
-		repository.delete(UserIdentifier(userID))
+	fun deleteUser(userID: String) : String? {
+		return repository.delete(UserIdentifier(userID))
 	}
 
-	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
+	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String>? {
 		return userRepository.getAllUsersWithWorkspaceID(workspaceID)
 	}
 
-	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
+	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String>? {
 		return userRepository.getAllUsersWithNamespaceID(namespaceID)
 	}
 

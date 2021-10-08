@@ -20,25 +20,32 @@ class UserRepository(
 		else -> System.getenv("TABLE_NAME")
 	}
 
-	override fun get(identifier: Identifier): Entity {
-		return mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+	override fun get(identifier: Identifier): Entity? {
+		return try {
+			mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+		} catch (e : Exception) {
+			null
+		}
 	}
 
-	fun getAllUsersWithNamespaceID(namespaceID: String): MutableList<String> {
+	fun getAllUsersWithNamespaceID(namespaceID: String): MutableList<String>? {
 
-		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(
-			namespaceID, "itemType-AK-index",
-			dynamoDB, "UserIdentifierRecord")
-
+		return try {
+			DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(namespaceID, "itemType-AK-index", dynamoDB, "UserIdentifierRecord")
+		} catch( e: Exception){
+			null
+		}
 
 	}
 
 
-	fun getAllUsersWithWorkspaceID(workspaceID: String): MutableList<String> {
+	fun getAllUsersWithWorkspaceID(workspaceID: String): MutableList<String>? {
 
-		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(
-			workspaceID, "itemType-AK-index",
-			dynamoDB, "UserIdentifierRecord")
+		return try {
+			DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "UserIdentifierRecord")
+		} catch( e: Exception) {
+			null
+		}
 
 	}
 
@@ -50,13 +57,18 @@ class UserRepository(
 		TODO("Not yet implemented")
 	}
 
-	override fun delete(identifier: Identifier) {
+	override fun delete(identifier: Identifier) : String? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-		table.deleteItem(deleteItemSpec)
+		return try {
+			table.deleteItem(deleteItemSpec)
+			identifier.id
+		} catch( e: Exception){
+			null
+		}
 	}
 
 }

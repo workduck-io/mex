@@ -43,7 +43,7 @@ class NamespaceService {
 	}
 
 	fun getNamespace(namespaceID : String): String? {
-		val namespace: Entity? = repository.get(NamespaceIdentifier(namespaceID))
+		val namespace: Entity = repository.get(NamespaceIdentifier(namespaceID)) ?: return null
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		return objectMapper.writeValueAsString(namespace)
 	}

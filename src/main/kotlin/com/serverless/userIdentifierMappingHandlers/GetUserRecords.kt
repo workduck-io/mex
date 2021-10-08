@@ -16,7 +16,7 @@ class GetUserRecords: RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val userID = pathParameters!!["userID"] as String
-		//val identifierID = pathParameters!!["identifierID"] as String
+
 
 		userIdentifierMappingService.getUserRecords(userID)
 

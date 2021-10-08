@@ -45,7 +45,7 @@ class WorkspaceService {
 	}
 
 	fun getWorkspace(workspaceID : String) : String? {
-		val workspace: Entity? = repository.get(WorkspaceIdentifier(workspaceID))
+		val workspace: Entity = repository.get(WorkspaceIdentifier(workspaceID))?: return null
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		return objectMapper.writeValueAsString(workspace)
 	}
