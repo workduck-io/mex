@@ -50,7 +50,12 @@ class Namespace(
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long? = System.currentTimeMillis()
+	var createdAt: Long? = System.currentTimeMillis(),
+
+	@JsonProperty("itemType")
+	@DynamoDBAttribute(attributeName = "itemType")
+	override val itemType: String = "Workspace"
+
 
 	//val status: NamespaceStatus = NamespaceStatus.ACTIVE
 

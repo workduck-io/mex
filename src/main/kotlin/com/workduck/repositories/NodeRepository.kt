@@ -20,11 +20,15 @@ class NodeRepository(
 		else -> System.getenv("TABLE_NAME")
 	}
 
-	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+	override fun get(identifier: Identifier): Entity? {
+		return try {
+			mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+		} catch (e : Exception){
+			null
+		}
 	}
 
-	fun append(nodeID : String, elements : MutableList<Element>) {
+	fun append(nodeID : String, elements : MutableList<Element>) : Map<String, Any>? {
 		val table = dynamoDB.getTable(tableName)
 
 		val objectMapper = ObjectMapper()
@@ -43,31 +47,48 @@ class NodeRepository(
 			.withUpdateExpression("set nodeData = list_append(if_not_exists(nodeData, :empty_list), :val1)")
 			.withValueMap(expressionAttributeValues)
 
-
-		table.updateItem(updateItemSpec)
+		return try {
+			table.updateItem(updateItemSpec)
+			mapOf("nodeID" to nodeID, "elements" to elementsInStringFormat)
+		} catch ( e : Exception) {
+			null
+		}
 	}
 
 
-	fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String> {
+	fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
 		val akValue = "$workspaceID#$namespaceID"
-		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
+		return try {
+			DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
+		} catch( e: Exception){
+			null
+		}
 
 	}
 
-	fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
+	fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
 
-		return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
+		return try {
+			return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
+		} catch ( e : Exception){
+			null
+		}
 
 	}
 
-	override fun delete(identifier: Identifier) {
+	override fun delete(identifier: Identifier) : String? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-		table.deleteItem(deleteItemSpec)
+		try {
+			table.deleteItem(deleteItemSpec)
+			return identifier.id
+		} catch (e : Exception) {
+			return null
+		}
 	}
 
 

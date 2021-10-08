@@ -11,28 +11,27 @@ import com.workduck.models.Identifier
 
 object DDBHelper {
 
-	fun createDDBConnection(): AmazonDynamoDB {
-		println("Connection function!!!")
-		return AmazonDynamoDBClientBuilder
-			.standard()
-			//TODO: read from config file
-			.withRegion(Regions.US_EAST_1)
-			.build()
+	fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder
+		.standard()
+		//TODO: read from config file
+		.withRegion(Regions.US_EAST_1)
+		.build()
 
-	}
 
 	/*
 	** Currently works for : NamespaceID and WorkspaceID
 	*/
 	fun getAllEntitiesWithIdentifierIDAndPrefix(
-		akValue: String,  indexName: String,
-		dynamoDB: DynamoDB, itemType : String
+		akValue: String,
+		indexName: String,
+		dynamoDB: DynamoDB,
+		itemType: String
 	): MutableList<String> {
 
 		val querySpec = QuerySpec()
 		val objectMapper = ObjectMapper()
 
-		val tableName: String = when(System.getenv("TABLE_NAME")) {
+		val tableName: String = when (System.getenv("TABLE_NAME")) {
 			null -> "local-mex" /* for local testing without serverless offline */
 			else -> System.getenv("TABLE_NAME")
 		}
@@ -45,7 +44,8 @@ object DDBHelper {
 		expressionAttributeValues[":itemType"] = itemType
 
 		querySpec.withKeyConditionExpression(
-			"itemType = :itemType and begins_with(AK, :akValue)")
+			"itemType = :itemType and begins_with(AK, :akValue)"
+		)
 			.withValueMap(expressionAttributeValues)
 
 

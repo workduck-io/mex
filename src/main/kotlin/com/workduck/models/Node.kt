@@ -67,7 +67,7 @@ data class Node(
 
 	@JsonProperty("itemType")
 	@DynamoDBAttribute(attributeName = "itemType")
-	var itemType : String = "Node",
+	override var itemType : String = "Node",
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")

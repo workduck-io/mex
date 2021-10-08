@@ -7,6 +7,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveB
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import java.lang.Exception
+import java.util.logging.Logger
 
 
 class RepositoryImpl<T : Entity>(
@@ -21,20 +23,24 @@ class RepositoryImpl<T : Entity>(
 		else -> System.getenv("TABLE_NAME")
 	}
 
-	override fun get(identifier: Identifier): Entity {
+	override fun get(identifier: Identifier): Entity? {
 		return repository.get(identifier)
 	}
 
-	override fun delete(identifier: Identifier) {
-		repository.delete(identifier)
+	override fun delete(identifier: Identifier) : String? {
+		return repository.delete(identifier)
 	}
 
-	override fun create(t: T): T {
-		mapper.save(t, dynamoDBMapperConfig)
-		return t
+	override fun create(t: T): T? {
+		return try {
+			mapper.save(t, dynamoDBMapperConfig)
+			t
+		} catch (e : Exception) {
+			null
+		}
 	}
 
-	override fun update(t: T): T {
+	override fun update(t: T): T? {
 
 		val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 			.withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
@@ -42,8 +48,12 @@ class RepositoryImpl<T : Entity>(
 			.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
 			.build()
 
-		mapper.save(t, dynamoDBMapperConfig)
-		return t;
+		return try {
+			mapper.save(t, dynamoDBMapperConfig)
+			t
+		} catch (e : Exception){
+			null
+		}
 	}
 
 }

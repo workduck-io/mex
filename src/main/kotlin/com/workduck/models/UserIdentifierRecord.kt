@@ -36,7 +36,7 @@ class UserIdentifierRecord(
 
 	@JsonProperty("itemType")
 	@DynamoDBAttribute(attributeName = "itemType")
-	var itemType: String = "UserIdentifierRecord"
+	override var itemType: String = "UserIdentifierRecord"
 
 
 ) : Entity {

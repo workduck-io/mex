@@ -24,6 +24,10 @@ class User(
 	@DynamoDBAttribute(attributeName = "userEmail")
 	var email: String?= null,
 
+	@JsonProperty("itemType")
+	@DynamoDBAttribute(attributeName = "itemType")
+	override var itemType : String = "Relationship",
+
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
 	var createdAt: Long? = System.currentTimeMillis()

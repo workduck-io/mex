@@ -39,7 +39,7 @@ class NodeService {
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
 
-    fun createNode(jsonString : String){
+    fun createNode(jsonString : String) : Node?{
         println("Should be created in the table : $tableName")
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
@@ -49,31 +49,31 @@ class NodeService {
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         println(node)
-        repository.create(node)
+        return repository.create(node)
+
     }
 
 
-    fun getNode(nodeID: String): String {
-        val node: Entity = repository.get(NodeIdentifier(nodeID))
+    fun getNode(nodeID: String): String? {
+        val node: Entity = repository.get(NodeIdentifier(nodeID)) ?: return null
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         return objectMapper.writeValueAsString(node)
     }
 
 
-    fun deleteNode(nodeID : String) {
-        repository.delete(NodeIdentifier(nodeID))
+    fun deleteNode(nodeID : String) : String? {
+        return repository.delete(NodeIdentifier(nodeID))
     }
 
-    fun append(nodeID: String, jsonString: String) {
+    fun append(nodeID: String, jsonString: String) : Map<String, Any>? {
 
         val objectMapper = ObjectMapper().registerKotlinModule()
         val elements: MutableList<Element> = objectMapper.readValue(jsonString)
-        println(elements)
-        nodeRepository.append(nodeID, elements)
+        return nodeRepository.append(nodeID, elements)
 
     }
 
-    fun updateNode(jsonString: String) {
+    fun updateNode(jsonString: String) : Node? {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
 
@@ -81,18 +81,18 @@ class NodeService {
         node.idCopy = node.id
         node.createdAt = null
 
-        repository.update(node)
+        return repository.update(node)
     }
 
 
-    fun getAllNodesWithWorkspaceID(workspaceID : String) : MutableList<String> {
+    fun getAllNodesWithWorkspaceID(workspaceID : String) : MutableList<String>? {
 
-        return nodeRepository.getAllNodesWithWorkspaceID(workspaceID) as MutableList<String>
+        return nodeRepository.getAllNodesWithWorkspaceID(workspaceID)
     }
 
-    fun getAllNodesWithNamespaceID(namespaceID : String, workspaceID: String) : MutableList<String> {
+    fun getAllNodesWithNamespaceID(namespaceID : String, workspaceID: String) : MutableList<String>? {
 
-        return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID) as MutableList<String>
+        return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
 
     }
 

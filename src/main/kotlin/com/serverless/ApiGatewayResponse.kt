@@ -10,7 +10,7 @@ import java.util.*
 class ApiGatewayResponse(
         val statusCode: Int = 200,
         var body: String? = null,
-        val headers: Map<String, String>? = Collections.emptyMap(),
+        val headers: Map<String, Any>? = Collections.emptyMap(),
         val isBase64Encoded: Boolean = false
 ) {
     private constructor(builder: Builder) : this(
@@ -30,8 +30,8 @@ class ApiGatewayResponse(
 
         var statusCode: Int = 200
         var rawBody: String? = null
-        var headers: Map<String, String>? = Collections.emptyMap()
-        var objectBody: Response? = null
+        var headers: Map<String, Any>? = Collections.emptyMap()
+        var objectBody: Responses? = null
         var binaryBody: ByteArray? = null
         var base64Encoded: Boolean = false
 
