@@ -6,10 +6,7 @@ import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
-import com.workduck.models.Workspace
-import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.*
 
 
 class WorkspaceRepository(
@@ -24,17 +21,26 @@ class WorkspaceRepository(
 		else -> System.getenv("TABLE_NAME")
 	}
 
-	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Workspace::class.java, identifier.id, identifier.id)
+	override fun get(identifier: Identifier): Entity? {
+		return try {
+			return mapper.load(Workspace::class.java, identifier.id, identifier.id)
+		} catch (e : Exception){
+			null
+		}
 	}
 
-	override fun delete(identifier: Identifier) {
+	override fun delete(identifier: Identifier) : String? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-		table.deleteItem(deleteItemSpec)
+		return try {
+			table.deleteItem(deleteItemSpec)
+			identifier.id
+		} catch ( e : Exception){
+			null
+		}
 	}
 
 	override fun create(t: Workspace): Workspace {
@@ -45,17 +51,22 @@ class WorkspaceRepository(
 		TODO("Not yet implemented")
 	}
 
-	fun getWorkspaceData(workspaceIDList : List<String>) : MutableList<String>{
+	fun getWorkspaceData(workspaceIDList : List<String>) : MutableList<String>? {
 		val workspaceJsonList : MutableList<String>  = mutableListOf()
 		val objectMapper = ObjectMapper()
-		for(workspaceID in workspaceIDList ) {
-			val workspace : Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)
-			if(workspace!=null) {
-				val workspaceJson = objectMapper.writeValueAsString(workspace)
-				workspaceJsonList += workspaceJson
+		return try {
+			for (workspaceID in workspaceIDList) {
+				val workspace: Workspace? =
+					mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)
+				if (workspace != null) {
+					val workspaceJson = objectMapper.writeValueAsString(workspace)
+					workspaceJsonList += workspaceJson
+				}
 			}
+			workspaceJsonList
+		} catch ( e : Exception) {
+			null
 		}
-		return workspaceJsonList
 		TODO("we also need to have some sort of filter which filters out all the non-workspace ids")
 	}
 

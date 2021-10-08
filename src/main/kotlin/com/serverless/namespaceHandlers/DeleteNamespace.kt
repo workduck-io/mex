@@ -33,7 +33,7 @@ class DeleteNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 			}
 		}
 		else{
-			val responseBody = StandardResponse("Error deleting node!")
+			val responseBody = StandardResponse("Error deleting namespace!")
 			return ApiGatewayResponse.build {
 				statusCode = 500
 				objectBody = responseBody
