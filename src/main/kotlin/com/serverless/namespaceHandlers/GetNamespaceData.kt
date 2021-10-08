@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
+import com.serverless.StandardResponse
 import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -18,14 +19,27 @@ class GetNamespaceData : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 
 		val namespaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-		println(namespaceService.getNamespaceData(namespaceIDList))
+		val namespaces : MutableList<String>? = namespaceService.getNamespaceData(namespaceIDList)
 
 
-		val responseBody = Response("Go!!!!!! Serverless v1.x! Your Kotlin function executed successfully!", input)
-		return ApiGatewayResponse.build {
-			statusCode = 200
-			objectBody = responseBody
-			headers = Collections.singletonMap<String, String>("X-Powered-By", "AWS Lambda & serverless")
+		if (namespaces != null) {
+			val responseBody = StandardResponse(namespaces.toString())
+			return ApiGatewayResponse.build {
+				statusCode = 200
+				objectBody = responseBody
+				headers = mapOf(
+					"Access-Control-Allow-Origin" to "*",
+					"Access-Control-Allow-Credentials" to  true
+				)
+			}
+		}
+		else{
+			val responseBody = StandardResponse("Error getting namespaces!")
+			return ApiGatewayResponse.build {
+				statusCode = 500
+				objectBody = responseBody
+				headers = Collections.singletonMap<String, String>("X-Powered-By", "AWS Lambda & serverless")
+			}
 		}
 	}
 	companion object {

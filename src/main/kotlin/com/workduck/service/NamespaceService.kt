@@ -32,24 +32,24 @@ class NamespaceService {
 
 
 
-	fun createNamespace(jsonString : String) {
+	fun createNamespace(jsonString : String) : Namespace? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		namespace.idCopy = namespace.id
 
-		repository.create(namespace)
+		return repository.create(namespace)
 	}
 
-	fun getNamespace(namespaceID : String): String {
-		val namespace: Entity = repository.get(NamespaceIdentifier(namespaceID))
+	fun getNamespace(namespaceID : String): String? {
+		val namespace: Entity? = repository.get(NamespaceIdentifier(namespaceID))
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		return objectMapper.writeValueAsString(namespace)
 	}
 
 
-	fun updateNamespace(jsonString: String) {
+	fun updateNamespace(jsonString: String) : Namespace? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
@@ -59,14 +59,14 @@ class NamespaceService {
 		/* to avoid updating createdAt un-necessarily */
 		namespace.createdAt = null
 
-		repository.update(namespace)
+		return repository.update(namespace)
 	}
 
-	fun deleteNamespace(namespaceID : String) {
-		repository.delete(NamespaceIdentifier(namespaceID))
+	fun deleteNamespace(namespaceID : String) : String? {
+		return repository.delete(NamespaceIdentifier(namespaceID))
 	}
 
-	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>{
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>? {
 		return namespaceRepository.getNamespaceData(namespaceIDList)
 	}
 
