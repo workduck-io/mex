@@ -34,10 +34,13 @@ class UserIdentifierMappingService {
 	private val repository: Repository<UserIdentifierRecord> = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository, dynamoDBMapperConfig)
 
 
-	fun createUserIdentifierRecord(jsonString: String) : UserIdentifierRecord? {
+	fun createUserIdentifierRecord(jsonString: String) : String? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val userIdentifierRecord: UserIdentifierRecord = objectMapper.readValue(jsonString)
-		return repository.create(userIdentifierRecord)
+
+		val createdUserIdentifierRecord = repository.create(userIdentifierRecord) ?: return null
+		return objectMapper.writeValueAsString(createdUserIdentifierRecord)
+
 
 	}
 

@@ -20,7 +20,7 @@ class UpdateNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         val node = nodeService.updateNode(json)
 
 		if (node != null) {
-			val responseBody = StandardResponse(node.toString())
+			val responseBody = StandardResponse(node)
 			return ApiGatewayResponse.build {
 				statusCode = 200
 				objectBody = responseBody

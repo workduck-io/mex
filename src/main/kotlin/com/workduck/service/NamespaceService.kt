@@ -32,14 +32,15 @@ class NamespaceService {
 
 
 
-	fun createNamespace(jsonString : String) : Namespace? {
+	fun createNamespace(jsonString : String) : String? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		namespace.idCopy = namespace.id
 
-		return repository.create(namespace)
+		val createdNamespace = repository.create(namespace) ?: return null
+		return objectMapper.writeValueAsString(createdNamespace)
 	}
 
 	fun getNamespace(namespaceID : String): String? {
@@ -49,7 +50,7 @@ class NamespaceService {
 	}
 
 
-	fun updateNamespace(jsonString: String) : Namespace? {
+	fun updateNamespace(jsonString: String) : String? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
@@ -59,7 +60,8 @@ class NamespaceService {
 		/* to avoid updating createdAt un-necessarily */
 		namespace.createdAt = null
 
-		return repository.update(namespace)
+		val updatedNamespace = repository.update(namespace) ?: return null
+		return objectMapper.writeValueAsString(updatedNamespace)
 	}
 
 	fun deleteNamespace(namespaceID : String) : String? {

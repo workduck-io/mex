@@ -20,7 +20,7 @@ class CreateWorkspace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val workspace = workspaceService.createWorkspace(json)
 
 		if (workspace != null) {
-			val responseBody = StandardResponse(workspace.toString())
+			val responseBody = StandardResponse(workspace)
 			return ApiGatewayResponse.build {
 				statusCode = 200
 				objectBody = responseBody
