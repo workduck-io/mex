@@ -1,8 +1,6 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument
 import com.fasterxml.jackson.annotation.*
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 
 enum class ElementTypes(val type: String) {
@@ -22,8 +20,8 @@ class AdvancedElement(
 	@JsonProperty("id")
 	private var id: String = "defaultValue",
 
-	@JsonProperty("type")
-	private var type: String? = "AdvancedElement",
+//	@JsonProperty("type")
+//	private var type: String? = "AdvancedElement",
 
 	@JsonProperty("parentID")
 	private var parentID: String? = null,
@@ -32,10 +30,14 @@ class AdvancedElement(
 	private var content: String? = null,
 
 	@JsonProperty("childrenElements")
-	private var children: List<Element>? = listOf(),
+	private var children: List<AdvancedElement>? = listOf(),
 
 	@JsonProperty("elementType")
-	private var elementType: String? = "paragraph"
+	private var elementType: String? = "paragraph",
+
+	@JsonProperty("properties")
+	private var properties: Map<String, Any>? = null
+
 ) : Element {
 	override fun getContent(): String {
 		if (content != null) return content as String
@@ -48,6 +50,8 @@ class AdvancedElement(
 
 	fun getElementType(): String? = elementType
 
-	override fun getType(): String? = type
+	//override fun getType(): String? = type
+
+	fun getProperties() : Map<String, Any>? = properties
 
 }

@@ -7,6 +7,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveB
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import java.lang.Exception
+import java.util.logging.Logger
 
 
 class RepositoryImpl<T : Entity>(
@@ -16,63 +18,43 @@ class RepositoryImpl<T : Entity>(
 	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<T> {
 
-	override fun get(identifier: Identifier): Entity {
-		val tableName: String = System.getenv("TABLE_NAME")
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
 
+	override fun get(identifier: Identifier): Entity? {
 		return repository.get(identifier)
 	}
 
-	override fun delete(identifier: Identifier) {
-		repository.delete(identifier)
+	override fun delete(identifier: Identifier) : String? {
+		return repository.delete(identifier)
 	}
 
-	override fun create(t: T): T {
-		mapper.save(t, dynamoDBMapperConfig)
-		return t
+	override fun create(t: T): T? {
+		return try {
+			mapper.save(t, dynamoDBMapperConfig)
+			t
+		} catch (e : Exception) {
+			null
+		}
 	}
 
-	override fun update(t: T): T {
+	override fun update(t: T): T? {
 
 		val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 			.withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
 			.withSaveBehavior(SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
-			.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(System.getenv("TABLE_NAME")))
+			.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
 			.build()
 
-		mapper.save(t, dynamoDBMapperConfig)
-		return t;
+		return try {
+			mapper.save(t, dynamoDBMapperConfig)
+			t
+		} catch (e : Exception){
+			null
+		}
 	}
 
 }
-
-
-/*
-	override fun create(node: Node): Node {
-		// TODO("Not yet implemented")
-		val table: Table = dynamoDB.getTable("elementsTable")
-
-		for( element in node.data){
-
-			val children : List<Element> = element.getChildren()
-			val myMap = mutableMapOf<String,String>()
-
-			for( child in children ){
-				//map.put("CHILD#${child.getID()}")
-				myMap["CHILD#${child.getID()}"] = "Content#" + child.content() + "Type#" + child.getElementType()
-
-			}
-
-			val item : Item = Item()
-				.withPrimaryKey("PK", node.id)
-				.withString("SK", "PARENT#${element.getID()}")
-				.withMap("ChildrenInfo", myMap)
-				.withString("ParentElementType", element.getElementType())
-
-			table.putItem(item)
-		}
-
-		table.putItem(node)
-		return node
-	}
-	*/
 

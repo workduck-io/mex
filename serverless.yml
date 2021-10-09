@@ -22,11 +22,10 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: java11
-  timeout: 15
   lambdaHashingVersion: 20201221
   environment:
-#    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
-#    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
   iam:
     role:

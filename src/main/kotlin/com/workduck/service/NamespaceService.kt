@@ -17,7 +17,11 @@ class NamespaceService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
-	private val tableName: String = System.getenv("TABLE_NAME")
+
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
 
 	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -28,24 +32,24 @@ class NamespaceService {
 
 
 
-	fun createNamespace(jsonString : String) {
+	fun createNamespace(jsonString : String) : Namespace? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		namespace.idCopy = namespace.id
 
-		repository.create(namespace)
+		return repository.create(namespace)
 	}
 
-	fun getNamespace(namespaceID : String): String {
-		val namespace: Entity = repository.get(NamespaceIdentifier(namespaceID))
+	fun getNamespace(namespaceID : String): String? {
+		val namespace: Entity = repository.get(NamespaceIdentifier(namespaceID)) ?: return null
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		return objectMapper.writeValueAsString(namespace)
 	}
 
 
-	fun updateNamespace(jsonString: String) {
+	fun updateNamespace(jsonString: String) : Namespace? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
@@ -55,14 +59,14 @@ class NamespaceService {
 		/* to avoid updating createdAt un-necessarily */
 		namespace.createdAt = null
 
-		repository.update(namespace)
+		return repository.update(namespace)
 	}
 
-	fun deleteNamespace(namespaceID : String) {
-		repository.delete(NamespaceIdentifier(namespaceID))
+	fun deleteNamespace(namespaceID : String) : String? {
+		return repository.delete(NamespaceIdentifier(namespaceID))
 	}
 
-	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>{
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>? {
 		return namespaceRepository.getNamespaceData(namespaceIDList)
 	}
 
@@ -87,8 +91,8 @@ fun main() {
 		"""
 
 	//NamespaceService().createNamespace(json)
-	//println(NamespaceService().getNamespace("NAMESPACE1"))
+	println(NamespaceService().getNamespace("NAMESPACE1"))
 	//NamespaceService().updateNamespace(jsonUpdate)
-	println(NamespaceService().deleteNamespace("NAMESPACE1"))
+	//println(NamespaceService().deleteNamespace("NAMESPACE1"))
 
 }

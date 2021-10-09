@@ -3,15 +3,16 @@ package com.workduck.converters
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 
 
-class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<Element>> {
+class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<AdvancedElement>> {
 
 	private val objectMapper = ObjectMapper()
 
 	//override fun convert()
-	override fun convert(n: MutableList<Element>): MutableList<String> {
+	override fun convert(n: MutableList<AdvancedElement>): MutableList<String> {
 		val listOfData: MutableList<String> = mutableListOf()
 		for (element in n) {
 			val e: String = objectMapper.writeValueAsString(element)
@@ -22,10 +23,10 @@ class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList
 
 	}
 
-	override fun unconvert(nodeData: MutableList<String>): MutableList<Element> {
-		val listOfElements: MutableList<Element> = mutableListOf()
+	override fun unconvert(nodeData: MutableList<String>): MutableList<AdvancedElement> {
+		val listOfElements: MutableList<AdvancedElement> = mutableListOf()
 		for (string in nodeData) {
-			val element: Element = objectMapper.readValue(string)
+			val element: AdvancedElement = objectMapper.readValue(string)
 			listOfElements += element
 		}
 		return listOfElements

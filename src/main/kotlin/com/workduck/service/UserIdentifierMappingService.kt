@@ -21,7 +21,10 @@ class UserIdentifierMappingService {
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
 
-	private val tableName: String = System.getenv("TABLE_NAME")
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
 
 	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -31,21 +34,25 @@ class UserIdentifierMappingService {
 	private val repository: Repository<UserIdentifierRecord> = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository, dynamoDBMapperConfig)
 
 
-	fun createUserIdentifierRecord(jsonString: String){
+	fun createUserIdentifierRecord(jsonString: String) : UserIdentifierRecord? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val userIdentifierRecord: UserIdentifierRecord = objectMapper.readValue(jsonString)
-		repository.create(userIdentifierRecord)
+		return repository.create(userIdentifierRecord)
 
 	}
 
 	/* returns user details data + user mapping with namespace + user mapping with workspace */
-	fun getUserRecords(userID : String){
-		userIdentifierMappingRepository.getRecordsByUserID(userID)
+	fun getUserRecords(userID : String) : MutableList<String>? {
+		return try {
+			userIdentifierMappingRepository.getRecordsByUserID(userID)
+		} catch( e: Exception){
+			null
+		}
 	}
 
 
-	fun deleteUserIdentifierMapping(userID: String, identifierID : String){
-		if(identifierID.startsWith("NAMESPACE"))
+	fun deleteUserIdentifierMapping(userID: String, identifierID : String) : Map<String, String>? {
+		return if(identifierID.startsWith("NAMESPACE"))
 			userIdentifierMappingRepository.deleteUserIdentifierMapping(userID, NamespaceIdentifier(identifierID))
 		else
 			userIdentifierMappingRepository.deleteUserIdentifierMapping(userID, WorkspaceIdentifier(identifierID))
@@ -63,6 +70,6 @@ fun main(){
 		}
 		"""
 	//UserIdentifierMappingService().createUserIdentifierRecord(json)
-	//UserIdentifierMappingService().getUserRecords("USER49")
+	UserIdentifierMappingService().getUserRecords("USER49")
 	//UserIdentifierMappingService().deleteUserIdentifierMapping("USER49", "NAMESPACE1")
 }

@@ -5,40 +5,46 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
-import com.amazonaws.services.s3.model.JSONOutput
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.Identifier
 
 
 object DDBHelper {
-	fun createDDBConnection(): AmazonDynamoDB =
-		AmazonDynamoDBClientBuilder
-			.standard()
-			//TODO: read from config file
-			.withRegion(Regions.US_EAST_1)
-			.build()
+
+	fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder
+		.standard()
+		//TODO: read from config file
+		.withRegion(Regions.US_EAST_1)
+		.build()
 
 
 	/*
-	** Currently works for Specifiers : Namespace Identifier and Workspace Identifier & Prefixes : NODE and USER
+	** Currently works for : NamespaceID and WorkspaceID
 	*/
-	fun getAllEntitiesWithIdentifierAndPrefix(
-		identifier: Identifier, fieldName: String, indexName: String,
-		prefix: String, dynamoDB: DynamoDB
+	fun getAllEntitiesWithIdentifierIDAndPrefix(
+		akValue: String,
+		indexName: String,
+		dynamoDB: DynamoDB,
+		itemType: String
 	): MutableList<String> {
 
 		val querySpec = QuerySpec()
 		val objectMapper = ObjectMapper()
-		val table: Table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+
+		val tableName: String = when (System.getenv("TABLE_NAME")) {
+			null -> "local-mex" /* for local testing without serverless offline */
+			else -> System.getenv("TABLE_NAME")
+		}
+
+		val table: Table = dynamoDB.getTable(tableName)
 		val index: Index = table.getIndex(indexName)
 
 		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-		expressionAttributeValues[":identifier"] = objectMapper.writeValueAsString(identifier)
-		expressionAttributeValues[":prefix"] = prefix
+		expressionAttributeValues[":akValue"] = akValue
+		expressionAttributeValues[":itemType"] = itemType
 
 		querySpec.withKeyConditionExpression(
-			"$fieldName = :identifier and begins_with(PK, :prefix)"
+			"itemType = :itemType and begins_with(AK, :akValue)"
 		)
 			.withValueMap(expressionAttributeValues)
 

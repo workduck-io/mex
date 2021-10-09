@@ -1,5 +1,6 @@
 package com.workduck.models
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.google.common.base.Preconditions
 import com.workduck.utils.Helper
 
@@ -15,7 +16,8 @@ data class Relationship(
 	val endNode: NodeIdentifier,
 	val status: RelationshipStatus = RelationshipStatus.ACTIVE,
 	val authorizations: Set<Auth>,
-	val createdAt: Long
+	val createdAt: Long,
+	override var itemType : String = "Relationship"
 ) : Entity {
 	val updatedAt = System.currentTimeMillis()
 

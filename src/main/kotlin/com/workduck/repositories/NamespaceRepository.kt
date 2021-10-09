@@ -15,38 +15,56 @@ class NamespaceRepository(
 
 ) : Repository<Namespace> {
 
-	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Namespace::class.java, identifier.id, identifier.id)
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
+
+	override fun get(identifier: Identifier): Entity? {
+		return try {
+			return mapper.load(Namespace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+		} catch (e : Exception){
+			null
+		}
 	}
 
 	override fun create(t: Namespace): Namespace {
 		TODO("Not yet implemented")
 	}
 
-	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+	override fun delete(identifier: Identifier) : String? {
+		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-		table.deleteItem(deleteItemSpec)
+		return try {
+			table.deleteItem(deleteItemSpec)
+			identifier.id
+		} catch ( e : Exception){
+			null
+		}
 	}
 
 	override fun update(t: Namespace): Namespace {
 		TODO("Not yet implemented")
 	}
 
-	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>{
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>? {
 		val namespaceJsonList : MutableList<String>  = mutableListOf()
 		val objectMapper = ObjectMapper()
-		for(namespaceID in namespaceIDList ) {
-			val namespace : Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID)
-			if(namespace!=null) {
-				val namespaceJson = objectMapper.writeValueAsString(namespace)
-				namespaceJsonList += namespaceJson
+		return try {
+			for (namespaceID in namespaceIDList) {
+				val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID, dynamoDBMapperConfig)
+				if (namespace != null) {
+					val namespaceJson = objectMapper.writeValueAsString(namespace)
+					namespaceJsonList += namespaceJson
+				}
 			}
+			namespaceJsonList
+		} catch (e : Exception){
+			null
 		}
-		return namespaceJsonList
 		TODO("we also need to have some sort of filter which filters out all the non-namespace ids")
 		TODO("this code can be reused for similar workspace functionality")
 	}

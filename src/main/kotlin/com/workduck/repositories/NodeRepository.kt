@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.workduck.models.*
@@ -16,12 +15,21 @@ class NodeRepository(
 	private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<Node>  {
 
-	override fun get(identifier: Identifier): Entity {
-		return mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
 	}
 
-	fun append(nodeID : String, elements : MutableList<Element>) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+	override fun get(identifier: Identifier): Entity? {
+		return try {
+			mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+		} catch (e : Exception){
+			null
+		}
+	}
+
+	fun append(nodeID : String, elements : MutableList<AdvancedElement>) : Map<String, Any>? {
+		val table = dynamoDB.getTable(tableName)
 
 		val objectMapper = ObjectMapper()
 		val elementsInStringFormat : MutableList<String> = mutableListOf()
@@ -39,33 +47,48 @@ class NodeRepository(
 			.withUpdateExpression("set nodeData = list_append(if_not_exists(nodeData, :empty_list), :val1)")
 			.withValueMap(expressionAttributeValues)
 
-
-		table.updateItem(updateItemSpec)
+		return try {
+			table.updateItem(updateItemSpec)
+			mapOf("nodeID" to nodeID, "elements" to elementsInStringFormat)
+		} catch ( e : Exception) {
+			null
+		}
 	}
 
 
-	fun getAllNodesWithNamespaceID(identifier: NamespaceIdentifier) : MutableList<String> {
+	fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
-		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "namespaceIdentifier",
-			"namespaceIdentifier-PK-index", "NODE", dynamoDB )
-
-	}
-
-
-	fun getAllNodesWithWorkspaceID(identifier: WorkspaceIdentifier) : MutableList<String> {
-
-		return DDBHelper.getAllEntitiesWithIdentifierAndPrefix(identifier, "workspaceIdentifier",
-			"workspaceIdentifier-PK-index", "NODE", dynamoDB )
+		val akValue = "$workspaceID#$namespaceID"
+		return try {
+			DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
+		} catch( e: Exception){
+			null
+		}
 
 	}
 
-	override fun delete(identifier: Identifier) {
-		val table = dynamoDB.getTable(System.getenv("TABLE_NAME"))
+	fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
+
+		return try {
+			return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
+		} catch ( e : Exception){
+			null
+		}
+
+	}
+
+	override fun delete(identifier: Identifier) : String? {
+		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-		table.deleteItem(deleteItemSpec)
+		try {
+			table.deleteItem(deleteItemSpec)
+			return identifier.id
+		} catch (e : Exception) {
+			return null
+		}
 	}
 
 

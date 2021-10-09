@@ -8,8 +8,8 @@ class BasicTextElement(
 	@JsonProperty("id")
 	private var id: String = "defaultBSE",
 
-	@JsonProperty("type")
-	private var type: String? = "BasicTextElement",
+//	@JsonProperty("type")
+//	private var type: String? = "BasicTextElement",
 
 	@JsonProperty("content")
 	private var content: String = "",
@@ -25,5 +25,5 @@ class BasicTextElement(
 	override fun getChildren(): List<Element>? = children
 
 	//fun getElementType(): String = "BASIC_TEXT_ELEMENT"
-	override fun getType(): String? = type
+	//override fun getType(): String? = type
 }

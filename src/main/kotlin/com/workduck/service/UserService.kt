@@ -18,7 +18,10 @@ class UserService {
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
 
-	private val tableName: String = System.getenv("TABLE_NAME")
+	private val tableName: String = when(System.getenv("TABLE_NAME")) {
+		null -> "local-mex" /* for local testing without serverless offline */
+		else -> System.getenv("TABLE_NAME")
+	}
 
 	private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
 		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -27,7 +30,7 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
-	fun createUser(jsonString : String) {
+	fun createUser(jsonString : String) : User? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
@@ -35,17 +38,17 @@ class UserService {
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		user.idCopy = user.id
 
-		repository.create(user)
+		return repository.create(user)
 
 	}
 
-	fun getUser(userID : String) : String {
-		val user: Entity = repository.get(UserIdentifier(userID))
+	fun getUser(userID : String) : String? {
+		val user: Entity = repository.get(UserIdentifier(userID)) ?: return null
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		return objectMapper.writeValueAsString(user)
 	}
 
-	fun updateUser(jsonString: String) {
+	fun updateUser(jsonString: String) : User? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
@@ -55,23 +58,19 @@ class UserService {
 		/* to avoid updating createdAt un-necessarily */
 		user.createdAt = null
 
-		repository.update(user)
+		return repository.update(user)
 	}
 
-	fun deleteUser(userID: String) {
-		repository.delete(UserIdentifier(userID))
+	fun deleteUser(userID: String) : String? {
+		return repository.delete(UserIdentifier(userID))
 	}
 
-	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String> {
-
-		val workspaceIdentifier = WorkspaceIdentifier(workspaceID)
-		return userRepository.getAllUsersWithWorkspaceID(workspaceIdentifier)
+	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String>? {
+		return userRepository.getAllUsersWithWorkspaceID(workspaceID)
 	}
 
-	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String> {
-		println("TABLE :  " + System.getenv("TABLE_NAME"))
-		val namespaceIdentifier = NamespaceIdentifier(namespaceID)
-		return userRepository.getAllUsersWithNamespaceID(namespaceIdentifier)
+	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String>? {
+		return userRepository.getAllUsersWithNamespaceID(namespaceID)
 	}
 
 }
@@ -99,6 +98,6 @@ fun main() {
 	//println(UserService().getUser("USER49"))
 	//UserService().updateUser(jsonUpdated)
 	//UserService().deleteUser("USER49")
-	println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
+	//println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
 	//UserService().getAllUsersByWorkspaceID()
 }

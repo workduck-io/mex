@@ -8,14 +8,12 @@ import com.workduck.models.NamespaceIdentifier
 
 class NamespaceIdentifierConverter : DynamoDBTypeConverter<String, NamespaceIdentifier?> {
 
-	private val objectMapper = ObjectMapper()
-
 	override fun convert(n: NamespaceIdentifier?): String? {
-		return objectMapper.writeValueAsString(n)
+		return n?.id
 	}
 
-	override fun unconvert(nameSpaceIdentifierString: String): NamespaceIdentifier {
-		return objectMapper.readValue<NamespaceIdentifier>(nameSpaceIdentifierString)
+	override fun unconvert(nameSpaceID: String): NamespaceIdentifier {
+		return NamespaceIdentifier(nameSpaceID)
 
 	}
 

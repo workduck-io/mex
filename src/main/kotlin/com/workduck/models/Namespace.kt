@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.IdentifierSerializer
+import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
@@ -50,7 +51,13 @@ class Namespace(
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long? = System.currentTimeMillis()
+	var createdAt: Long? = System.currentTimeMillis(),
+
+	@JsonProperty("itemType")
+	@DynamoDBAttribute(attributeName = "itemType")
+	@DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+	override var itemType: String = "Namespace"
+
 
 	//val status: NamespaceStatus = NamespaceStatus.ACTIVE
 
