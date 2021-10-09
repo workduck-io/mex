@@ -39,7 +39,7 @@ class NodeService {
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
 
-    fun createNode(jsonString : String) : Node?{
+    fun createNode(jsonString : String) : String?{
         println("Should be created in the table : $tableName")
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
@@ -49,7 +49,8 @@ class NodeService {
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         println(node)
-        return repository.create(node)
+        val createdNode = repository.create(node) ?: return null
+        return objectMapper.writeValueAsString(createdNode)
 
     }
 
@@ -73,7 +74,7 @@ class NodeService {
 
     }
 
-    fun updateNode(jsonString: String) : Node? {
+    fun updateNode(jsonString: String) : String? {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
 
@@ -84,7 +85,9 @@ class NodeService {
         /* In case workspace/ namespace have been updated, AK needs to be updated as well */
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
-        return repository.update(node)
+
+        val updatedNode = repository.update(node) ?: return null
+        return objectMapper.writeValueAsString(updatedNode)
     }
 
 

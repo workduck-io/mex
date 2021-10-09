@@ -21,7 +21,7 @@ class UpdateNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val namespace = namespaceService.updateNamespace(json)
 
 		if (namespace != null) {
-			val responseBody = StandardResponse(namespace.toString())
+			val responseBody = StandardResponse(namespace)
 			return ApiGatewayResponse.build {
 				statusCode = 200
 				objectBody = responseBody

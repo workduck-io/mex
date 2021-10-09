@@ -23,7 +23,7 @@ class CreateUser: RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val user = userService.createUser(json)
 
 		if (user != null) {
-			val responseBody = StandardResponse(user.toString())
+			val responseBody = StandardResponse(user)
 			return ApiGatewayResponse.build {
 				statusCode = 200
 				objectBody = responseBody

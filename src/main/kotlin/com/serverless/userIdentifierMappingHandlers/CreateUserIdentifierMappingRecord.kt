@@ -19,7 +19,7 @@ class CreateUserIdentifierMappingRecord: RequestHandler<Map<String, Any>, ApiGat
 		val userIdentifierRecord = userIdentifierMappingService.createUserIdentifierRecord(json)
 
 		if (userIdentifierRecord != null) {
-			val responseBody = StandardResponse(userIdentifierRecord.toString())
+			val responseBody = StandardResponse(userIdentifierRecord)
 			return ApiGatewayResponse.build {
 				statusCode = 200
 				objectBody = responseBody

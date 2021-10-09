@@ -30,7 +30,7 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
-	fun createUser(jsonString : String) : User? {
+	fun createUser(jsonString : String) : String? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
@@ -38,7 +38,8 @@ class UserService {
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		user.idCopy = user.id
 
-		return repository.create(user)
+		val createdUser = repository.create(user)?: return null
+		return objectMapper.writeValueAsString(createdUser)
 
 	}
 
@@ -48,7 +49,7 @@ class UserService {
 		return objectMapper.writeValueAsString(user)
 	}
 
-	fun updateUser(jsonString: String) : User? {
+	fun updateUser(jsonString: String) : String? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
@@ -58,7 +59,8 @@ class UserService {
 		/* to avoid updating createdAt un-necessarily */
 		user.createdAt = null
 
-		return repository.update(user)
+		val updatedUser =  repository.update(user) ?: return null
+		return objectMapper.writeValueAsString(updatedUser)
 	}
 
 	fun deleteUser(userID: String) : String? {
@@ -93,6 +95,7 @@ fun main() {
 			"email" : "varun.garg@workduck.io"
 		}
 		"""
+
 
 	//UserService().createUser(json)
 	//println(UserService().getUser("USER49"))

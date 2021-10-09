@@ -34,14 +34,15 @@ class WorkspaceService {
 	private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
-	fun createWorkspace(jsonString : String) : Workspace? {
+	fun createWorkspace(jsonString : String) : String? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val workspace: Workspace = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		workspace.idCopy = workspace.id
 
-		return repository.create(workspace)
+		val createdWorkspace = repository.create(workspace) ?: return null
+		return objectMapper.writeValueAsString(createdWorkspace)
 	}
 
 	fun getWorkspace(workspaceID : String) : String? {
@@ -51,7 +52,7 @@ class WorkspaceService {
 	}
 
 
-	fun updateWorkspace(jsonString: String) : Workspace? {
+	fun updateWorkspace(jsonString: String) : String? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val workspace: Workspace = objectMapper.readValue(jsonString)
@@ -62,7 +63,9 @@ class WorkspaceService {
 		/* to avoid updating createdAt un-necessarily */
 		workspace.createdAt = null
 
-		return repository.update(workspace)
+
+		val updatedWorkspace = repository.update(workspace) ?: return null
+		return objectMapper.writeValueAsString(updatedWorkspace)
 	}
 
 	fun deleteWorkspace(workspaceID: String) : String? {
