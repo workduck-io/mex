@@ -226,7 +226,7 @@ getUserRecords:
   handler: com.serverless.userIdentifierMappingHandlers.GetUserRecords
   events:
     - http:
-        path: /userRecords/{id}
+        path: /userRecords/{userID}
         method: get
         cors: true
         authorizer: aws_iam

@@ -68,7 +68,7 @@ class NodeService {
     fun append(nodeID: String, jsonString: String) : Map<String, Any>? {
 
         val objectMapper = ObjectMapper().registerKotlinModule()
-        val elements: MutableList<Element> = objectMapper.readValue(jsonString)
+        val elements: MutableList<AdvancedElement> = objectMapper.readValue(jsonString)
         return nodeRepository.append(nodeID, elements)
 
     }
@@ -80,6 +80,9 @@ class NodeService {
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
         node.createdAt = null
+
+        /* In case workspace/ namespace have been updated, AK needs to be updated as well */
+        node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         return repository.update(node)
     }

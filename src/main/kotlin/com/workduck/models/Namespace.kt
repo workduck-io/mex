@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.IdentifierSerializer
+import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
@@ -54,7 +55,8 @@ class Namespace(
 
 	@JsonProperty("itemType")
 	@DynamoDBAttribute(attributeName = "itemType")
-	override val itemType: String = "Workspace"
+	@DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+	override var itemType: String = "Namespace"
 
 
 	//val status: NamespaceStatus = NamespaceStatus.ACTIVE

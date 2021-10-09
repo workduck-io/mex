@@ -91,8 +91,8 @@ fun main() {
 		"""
 
 	//NamespaceService().createNamespace(json)
-	//println(NamespaceService().getNamespace("NAMESPACE1"))
+	println(NamespaceService().getNamespace("NAMESPACE1"))
 	//NamespaceService().updateNamespace(jsonUpdate)
-	println(NamespaceService().deleteNamespace("NAMESPACE1"))
+	//println(NamespaceService().deleteNamespace("NAMESPACE1"))
 
 }

@@ -23,7 +23,7 @@ class WorkspaceRepository(
 
 	override fun get(identifier: Identifier): Entity? {
 		return try {
-			return mapper.load(Workspace::class.java, identifier.id, identifier.id)
+			return mapper.load(Workspace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 		} catch (e : Exception){
 			null
 		}

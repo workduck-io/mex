@@ -28,7 +28,7 @@ class NodeRepository(
 		}
 	}
 
-	fun append(nodeID : String, elements : MutableList<Element>) : Map<String, Any>? {
+	fun append(nodeID : String, elements : MutableList<AdvancedElement>) : Map<String, Any>? {
 		val table = dynamoDB.getTable(tableName)
 
 		val objectMapper = ObjectMapper()

@@ -25,10 +25,6 @@ class CreateNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 			return ApiGatewayResponse.build {
 				statusCode = 200
 				objectBody = responseBody
-				headers = mapOf(
-					"Access-Control-Allow-Origin" to "*",
-					"Access-Control-Allow-Credentials" to  true
-				)
 			}
 		}
 		else{

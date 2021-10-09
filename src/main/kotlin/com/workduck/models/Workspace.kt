@@ -1,10 +1,9 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
+import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.workduck.converters.ItemTypeConverter
+import com.workduck.converters.NamespaceIdentifierConverter
 import com.workduck.utils.Helper
 
 
@@ -32,7 +31,8 @@ class Workspace(
 
 	@JsonProperty("itemType")
 	@DynamoDBAttribute(attributeName = "itemType")
-	override val itemType: String = "Workspace"
+	@DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+	override var itemType: String = "Workspace"
 
 ) : Entity {
 

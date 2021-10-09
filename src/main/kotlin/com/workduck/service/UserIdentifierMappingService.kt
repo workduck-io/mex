@@ -69,7 +69,7 @@ fun main(){
 			"identifier" : "NAMESPACE1"
 		}
 		"""
-	UserIdentifierMappingService().createUserIdentifierRecord(json)
-	//UserIdentifierMappingService().getUserRecords("USER49")
+	//UserIdentifierMappingService().createUserIdentifierRecord(json)
+	UserIdentifierMappingService().getUserRecords("USER49")
 	//UserIdentifierMappingService().deleteUserIdentifierMapping("USER49", "NAMESPACE1")
 }

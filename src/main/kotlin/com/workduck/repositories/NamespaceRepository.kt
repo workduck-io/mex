@@ -22,7 +22,7 @@ class NamespaceRepository(
 
 	override fun get(identifier: Identifier): Entity? {
 		return try {
-			return mapper.load(Namespace::class.java, identifier.id, identifier.id)
+			return mapper.load(Namespace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 		} catch (e : Exception){
 			null
 		}
@@ -55,7 +55,7 @@ class NamespaceRepository(
 		val objectMapper = ObjectMapper()
 		return try {
 			for (namespaceID in namespaceIDList) {
-				val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID)
+				val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID, dynamoDBMapperConfig)
 				if (namespace != null) {
 					val namespaceJson = objectMapper.writeValueAsString(namespace)
 					namespaceJsonList += namespaceJson

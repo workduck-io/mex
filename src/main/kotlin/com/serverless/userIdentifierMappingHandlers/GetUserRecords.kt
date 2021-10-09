@@ -18,8 +18,8 @@ class GetUserRecords: RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val userID = pathParameters!!["userID"] as String
 
-
-		val userRecords = userIdentifierMappingService.getUserRecords(userID)
+		println("Calling the service now")
+		val userRecords : MutableList<String>? = userIdentifierMappingService.getUserRecords(userID)
 
 		if (userRecords != null) {
 			val responseBody = StandardResponse(userRecords.toString())

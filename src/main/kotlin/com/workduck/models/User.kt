@@ -26,7 +26,7 @@ class User(
 
 	@JsonProperty("itemType")
 	@DynamoDBAttribute(attributeName = "itemType")
-	override var itemType : String = "Relationship",
+	override var itemType : String = "User",
 
 	@JsonProperty("createdAt")
 	@DynamoDBAttribute(attributeName = "createdAt")

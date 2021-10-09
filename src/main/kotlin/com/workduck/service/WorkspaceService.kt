@@ -94,6 +94,6 @@ fun main() {
 	//WorkspaceService().createWorkspace(json)
 	//WorkspaceService().updateWorkspace(jsonUpdate)
 	//WorkspaceService().deleteWorkspace("WORKSPACE1")
-	//println(WorkspaceService().getWorkspace("WORKSPACE1"))
+	println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 
 }
