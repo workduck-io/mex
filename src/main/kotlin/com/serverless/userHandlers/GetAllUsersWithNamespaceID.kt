@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.NodeService
 import com.workduck.service.UserService
 import org.apache.logging.log4j.LogManager
@@ -20,14 +21,13 @@ class GetAllUsersWithNamespaceID: RequestHandler<Map<String, Any>, ApiGatewayRes
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val namespaceID = pathParameters!!["id"] as String
 
-		val users  = userService.getAllUsersWithNamespaceID(namespaceID)
+		val users : MutableList<String>?  = userService.getAllUsersWithNamespaceID(namespaceID)
 
 
 		if (users != null) {
-			val responseBody = StandardResponse(users.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = users
 			}
 		}
 		else{

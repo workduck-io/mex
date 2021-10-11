@@ -64,7 +64,7 @@ class NamespaceService {
 		return repository.delete(NamespaceIdentifier(namespaceID))
 	}
 
-	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>? {
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableMap<String, Namespace?>? {
 		return namespaceRepository.getNamespaceData(namespaceIDList)
 	}
 

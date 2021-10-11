@@ -57,7 +57,6 @@ class UserIdentifierMappingRepository(
 		while (iterator.hasNext()) {
 			val item: Item = iterator.next()
 			listOfJSON += item.toJSON()
-			println(item.toJSONPretty())
 		}
 		return listOfJSON
 

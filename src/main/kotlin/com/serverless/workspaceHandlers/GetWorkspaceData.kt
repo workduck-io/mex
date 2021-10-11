@@ -5,6 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Namespace
+import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -19,7 +21,7 @@ class GetWorkspaceData : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 
 		val workspaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-		val workspaces : MutableList<String>? = workspaceService.getWorkspaceData(workspaceIDList)
+		val workspaces : MutableMap<String, Workspace?>? = workspaceService.getWorkspaceData(workspaceIDList)
 
 
 		if (workspaces != null) {

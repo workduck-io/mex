@@ -69,6 +69,6 @@ fun main(){
 		}
 		"""
 	//UserIdentifierMappingService().createUserIdentifierRecord(json)
-	UserIdentifierMappingService().getUserRecords("USER49")
+	println(UserIdentifierMappingService().getUserRecords("USER49").toString())
 	//UserIdentifierMappingService().deleteUserIdentifierMapping("USER49", "NAMESPACE1")
 }

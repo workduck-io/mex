@@ -68,7 +68,7 @@ class WorkspaceService {
 		return repository.delete(WorkspaceIdentifier(workspaceID))
 	}
 
-	fun getWorkspaceData(workspaceIDList : List<String>) : MutableList<String>? {
+	fun getWorkspaceData(workspaceIDList : List<String>) : MutableMap<String, Workspace?>? {
 		return workspaceRepository.getWorkspaceData(workspaceIDList)
 	}
 

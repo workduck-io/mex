@@ -19,14 +19,13 @@ class GetAllUsersWithWorkspaceID: RequestHandler<Map<String, Any>, ApiGatewayRes
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val workspaceID = pathParameters!!["id"] as String
 
-		val users = userService.getAllUsersWithWorkspaceID(workspaceID)
+		val users : MutableList<String>? = userService.getAllUsersWithWorkspaceID(workspaceID)
 
 
 		if (users != null) {
-			val responseBody = StandardResponse(users.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = users
 			}
 		}
 		else{

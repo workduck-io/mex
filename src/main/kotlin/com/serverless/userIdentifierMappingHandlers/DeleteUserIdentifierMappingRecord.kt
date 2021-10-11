@@ -19,13 +19,12 @@ class DeleteUserIdentifierMappingRecord : RequestHandler<Map<String, Any>, ApiGa
 		val userID = pathParameters!!["userID"] as String
 		val identifierID = pathParameters!!["identifierID"] as String
 
-		val map = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
+		val map : Map<String, String>? = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
 
 		if (map != null) {
-			val responseBody = StandardResponse(map.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = map
 			}
 		}
 		else{

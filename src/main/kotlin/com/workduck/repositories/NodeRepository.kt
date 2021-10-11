@@ -49,7 +49,7 @@ class NodeRepository(
 
 		return try {
 			table.updateItem(updateItemSpec)
-			mapOf("nodeID" to nodeID, "elements" to elementsInStringFormat)
+			mapOf("nodeID" to nodeID, "appendedElements" to elements)
 		} catch ( e : Exception) {
 			null
 		}

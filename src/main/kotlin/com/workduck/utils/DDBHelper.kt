@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.workduck.models.Entity
 import com.workduck.models.Identifier
 
 
@@ -19,7 +20,7 @@ object DDBHelper {
 
 
 	/*
-	** Currently works for : NamespaceID and WorkspaceID
+	** Currently works for : NamespaceID and WorkspaceID. Return List of Strings, not objects
 	*/
 	fun getAllEntitiesWithIdentifierIDAndPrefix(
 		akValue: String,
@@ -29,7 +30,6 @@ object DDBHelper {
 	): MutableList<String> {
 
 		val querySpec = QuerySpec()
-		val objectMapper = ObjectMapper()
 
 		val tableName: String = when (System.getenv("TABLE_NAME")) {
 			null -> "local-mex" /* for local testing without serverless offline */
@@ -52,15 +52,12 @@ object DDBHelper {
 		val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
 		val iterator: Iterator<Item> = items!!.iterator()
 
-		val listOfJSON: MutableList<String> = mutableListOf()
+		var itemList: MutableList<String> = mutableListOf()
 		while (iterator.hasNext()) {
 			val item: Item = iterator.next()
-			listOfJSON += item.toJSON()
-			//println(item.toJSONPretty())
+			itemList = (itemList + (item["PK"] as String)).toMutableList()
 		}
-
-		return listOfJSON
-
+		return itemList
 
 	}
 }
