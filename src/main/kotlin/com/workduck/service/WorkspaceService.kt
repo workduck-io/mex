@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.Entity
+import com.workduck.models.Identifier
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.Repository
@@ -34,26 +35,23 @@ class WorkspaceService {
 	private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
-	fun createWorkspace(jsonString : String) : String? {
+	fun createWorkspace(jsonString : String) : Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val workspace: Workspace = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		workspace.idCopy = workspace.id
 
-		val createdWorkspace = repository.create(workspace) ?: return null
-		return objectMapper.writeValueAsString(createdWorkspace)
+		return repository.create(workspace)
 	}
 
-	fun getWorkspace(workspaceID : String) : String? {
-		val workspace: Entity = repository.get(WorkspaceIdentifier(workspaceID))?: return null
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
-		return objectMapper.writeValueAsString(workspace)
+	fun getWorkspace(workspaceID : String) : Entity? {
+		return repository.get(WorkspaceIdentifier(workspaceID))
+
 	}
 
 
-	fun updateWorkspace(jsonString: String) : String? {
-
+	fun updateWorkspace(jsonString: String) : Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val workspace: Workspace = objectMapper.readValue(jsonString)
 
@@ -63,12 +61,10 @@ class WorkspaceService {
 		/* to avoid updating createdAt un-necessarily */
 		workspace.createdAt = null
 
-
-		val updatedWorkspace = repository.update(workspace) ?: return null
-		return objectMapper.writeValueAsString(updatedWorkspace)
+		return repository.update(workspace)
 	}
 
-	fun deleteWorkspace(workspaceID: String) : String? {
+	fun deleteWorkspace(workspaceID: String) : Identifier? {
 		return repository.delete(WorkspaceIdentifier(workspaceID))
 	}
 

@@ -29,7 +29,7 @@ class WorkspaceRepository(
 		}
 	}
 
-	override fun delete(identifier: Identifier) : String? {
+	override fun delete(identifier: Identifier) : Identifier? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
@@ -37,7 +37,7 @@ class WorkspaceRepository(
 
 		return try {
 			table.deleteItem(deleteItemSpec)
-			identifier.id
+			identifier
 		} catch ( e : Exception){
 			null
 		}

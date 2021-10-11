@@ -34,7 +34,7 @@ class ApiGatewayResponse(
             "Access-Control-Allow-Origin" to "*",
             "Access-Control-Allow-Credentials" to  true
         )
-        var objectBody: Responses? = null
+        var objectBody: Any? = null
         var binaryBody: ByteArray? = null
         var base64Encoded: Boolean = false
 
@@ -46,6 +46,7 @@ class ApiGatewayResponse(
             }
             else if (objectBody != null) {
                 try {
+                    println("Inside the builderrrrrrrr")
                     body = objectMapper.writeValueAsString(objectBody)
                 } catch (e: JsonProcessingException) {
                     LOG.error("failed to serialize object", e)

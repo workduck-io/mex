@@ -30,7 +30,7 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
-	fun createUser(jsonString : String) : String? {
+	fun createUser(jsonString : String) : Entity? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
@@ -38,18 +38,14 @@ class UserService {
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		user.idCopy = user.id
 
-		val createdUser = repository.create(user)?: return null
-		return objectMapper.writeValueAsString(createdUser)
-
+		return repository.create(user)
 	}
 
-	fun getUser(userID : String) : String? {
-		val user: Entity = repository.get(UserIdentifier(userID)) ?: return null
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
-		return objectMapper.writeValueAsString(user)
+	fun getUser(userID : String) : Entity? {
+		return repository.get(UserIdentifier(userID))
 	}
 
-	fun updateUser(jsonString: String) : String? {
+	fun updateUser(jsonString: String) : Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
@@ -59,11 +55,10 @@ class UserService {
 		/* to avoid updating createdAt un-necessarily */
 		user.createdAt = null
 
-		val updatedUser =  repository.update(user) ?: return null
-		return objectMapper.writeValueAsString(updatedUser)
+		return repository.update(user)
 	}
 
-	fun deleteUser(userID: String) : String? {
+	fun deleteUser(userID: String) : Identifier? {
 		return repository.delete(UserIdentifier(userID))
 	}
 

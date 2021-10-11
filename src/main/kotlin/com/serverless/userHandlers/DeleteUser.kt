@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Identifier
 import com.workduck.service.UserService
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
@@ -20,13 +21,12 @@ class DeleteUser: RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val userID = pathParameters!!["id"] as String
 
-		val id = userService.deleteUser(userID)
+		val identifier : Identifier? = userService.deleteUser(userID)
 
-		if (id != null) {
-			val responseBody = StandardResponse(id)
+		if (identifier != null) {
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = identifier
 			}
 		}
 		else{

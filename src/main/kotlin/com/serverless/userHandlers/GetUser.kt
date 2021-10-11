@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.UserService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -20,14 +21,13 @@ class GetUser:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val userID = pathParameters!!["id"] as String
 
-		val user : String? = userService.getUser(userID)
+		val user : Entity? = userService.getUser(userID)
 
 
 		if (user != null) {
-			val responseBody = StandardResponse(user)
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = user
 			}
 		}
 		else{

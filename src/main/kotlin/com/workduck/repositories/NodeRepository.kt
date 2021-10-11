@@ -77,17 +77,18 @@ class NodeRepository(
 
 	}
 
-	override fun delete(identifier: Identifier) : String? {
+
+	override fun delete(identifier: Identifier) : Identifier? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec : DeleteItemSpec =  DeleteItemSpec()
 			.withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-		try {
+		return try {
 			table.deleteItem(deleteItemSpec)
-			return identifier.id
+			identifier
 		} catch (e : Exception) {
-			return null
+			null
 		}
 	}
 

@@ -36,7 +36,7 @@ class UserIdentifierMappingRepository(
 		TODO("Not yet implemented")
 	}
 
-	override fun delete(identifier: Identifier): String? {
+	override fun delete(identifier: Identifier): Identifier? {
 		TODO("Not yet implemented")
 	}
 
