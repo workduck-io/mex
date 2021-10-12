@@ -1,3 +1,13 @@
+ping:
+  handler: com.serverless.pingHandler.Ping
+  events:
+    - http:
+        path: /ping
+        method: get
+        cors: true
+        authorizer: aws_iam
+
+
 getNode:
   handler: com.serverless.nodeHandlers.GetNode
   events:
