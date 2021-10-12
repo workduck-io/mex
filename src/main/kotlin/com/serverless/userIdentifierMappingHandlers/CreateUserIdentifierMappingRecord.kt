@@ -5,6 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
+import com.workduck.models.UserIdentifierRecord
 import com.workduck.service.UserIdentifierMappingService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -16,13 +18,12 @@ class CreateUserIdentifierMappingRecord: RequestHandler<Map<String, Any>, ApiGat
 
 		val json = input["body"] as String
 
-		val userIdentifierRecord = userIdentifierMappingService.createUserIdentifierRecord(json)
+		val userIdentifierRecord : Entity? = userIdentifierMappingService.createUserIdentifierRecord(json)
 
 		if (userIdentifierRecord != null) {
-			val responseBody = StandardResponse(userIdentifierRecord.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = userIdentifierRecord
 			}
 		}
 		else{

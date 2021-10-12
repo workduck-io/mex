@@ -32,7 +32,7 @@ class NamespaceRepository(
 		TODO("Not yet implemented")
 	}
 
-	override fun delete(identifier: Identifier) : String? {
+	override fun delete(identifier: Identifier) : Identifier? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
@@ -40,7 +40,7 @@ class NamespaceRepository(
 
 		return try {
 			table.deleteItem(deleteItemSpec)
-			identifier.id
+			identifier
 		} catch ( e : Exception){
 			null
 		}
@@ -50,18 +50,14 @@ class NamespaceRepository(
 		TODO("Not yet implemented")
 	}
 
-	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>? {
-		val namespaceJsonList : MutableList<String>  = mutableListOf()
-		val objectMapper = ObjectMapper()
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableMap<String, Namespace?>? {
+		val namespaceMap : MutableMap<String, Namespace?>  = mutableMapOf()
 		return try {
 			for (namespaceID in namespaceIDList) {
 				val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID, dynamoDBMapperConfig)
-				if (namespace != null) {
-					val namespaceJson = objectMapper.writeValueAsString(namespace)
-					namespaceJsonList += namespaceJson
-				}
+				namespaceMap[namespaceID] = namespace
 			}
-			namespaceJsonList
+			namespaceMap
 		} catch (e : Exception){
 			null
 		}

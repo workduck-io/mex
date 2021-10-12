@@ -7,10 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.Identifier
-import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.UserIdentifierRecord
-import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.*
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserIdentifierMappingRepository
@@ -34,10 +31,12 @@ class UserIdentifierMappingService {
 	private val repository: Repository<UserIdentifierRecord> = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository, dynamoDBMapperConfig)
 
 
-	fun createUserIdentifierRecord(jsonString: String) : UserIdentifierRecord? {
+	fun createUserIdentifierRecord(jsonString: String) : Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val userIdentifierRecord: UserIdentifierRecord = objectMapper.readValue(jsonString)
+
 		return repository.create(userIdentifierRecord)
+
 
 	}
 
@@ -70,6 +69,6 @@ fun main(){
 		}
 		"""
 	//UserIdentifierMappingService().createUserIdentifierRecord(json)
-	UserIdentifierMappingService().getUserRecords("USER49")
+	println(UserIdentifierMappingService().getUserRecords("USER49").toString())
 	//UserIdentifierMappingService().deleteUserIdentifierMapping("USER49", "NAMESPACE1")
 }

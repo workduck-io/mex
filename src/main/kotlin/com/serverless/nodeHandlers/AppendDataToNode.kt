@@ -22,10 +22,9 @@ class AppendDataToNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val map : Map<String, Any>? = nodeService.append(nodeID, json)
 
 		if (map != null) {
-			val responseBody = StandardResponse(map.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = map
 			}
 		}
 		else{

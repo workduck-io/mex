@@ -8,6 +8,8 @@ Resources:
           AttributeType: S
         - AttributeName: SK
           AttributeType: S
+        - AttributeName: AK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -28,22 +30,11 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
-        - IndexName: namespaceIdentifier-PK-index
+        - IndexName: itemType-AK-index
           KeySchema:
-            - AttributeName: namespaceIdentifier
+            - AttributeName: itemType
               KeyType: HASH
-            - AttributeName: PK
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
-        - IndexName: workspaceIdentifier-PK-index
-          KeySchema:
-            - AttributeName: workspaceIdentifier
-              KeyType: HASH
-            - AttributeName: PK
+            - AttributeName: AK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

@@ -22,6 +22,7 @@ class ApiGatewayResponse(
 
     companion object {
         inline fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
+        inline fun buildWithJsonList(block: Builder.() -> Unit) = Builder().apply(block).buildWithJsonList()
     }
 
     class Builder {
@@ -34,7 +35,7 @@ class ApiGatewayResponse(
             "Access-Control-Allow-Origin" to "*",
             "Access-Control-Allow-Credentials" to  true
         )
-        var objectBody: Responses? = null
+        var objectBody: Any? = null
         var binaryBody: ByteArray? = null
         var base64Encoded: Boolean = false
 
@@ -47,6 +48,27 @@ class ApiGatewayResponse(
             else if (objectBody != null) {
                 try {
                     body = objectMapper.writeValueAsString(objectBody)
+                } catch (e: JsonProcessingException) {
+                    LOG.error("failed to serialize object", e)
+                    throw RuntimeException(e)
+                }
+            } else if (binaryBody != null) {
+                body = String(Base64.getEncoder().encode(binaryBody), StandardCharsets.UTF_8)
+            }
+            return ApiGatewayResponse(statusCode, body, headers, base64Encoded)
+        }
+
+        fun buildWithJsonList(): ApiGatewayResponse {
+            var body: String? = null
+
+            if (rawBody != null) {
+                body = rawBody as String
+            }
+            else if (objectBody != null) {
+                try {
+                    println("In buildWithList")
+                    body = objectBody.toString()
+                    println("Now, body : $body")
                 } catch (e: JsonProcessingException) {
                     LOG.error("failed to serialize object", e)
                     throw RuntimeException(e)

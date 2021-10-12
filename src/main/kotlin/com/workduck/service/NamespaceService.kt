@@ -31,8 +31,7 @@ class NamespaceService {
 	private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)
 
 
-
-	fun createNamespace(jsonString : String) : Namespace? {
+	fun createNamespace(jsonString: String): Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
@@ -42,14 +41,12 @@ class NamespaceService {
 		return repository.create(namespace)
 	}
 
-	fun getNamespace(namespaceID : String): String? {
-		val namespace: Entity = repository.get(NamespaceIdentifier(namespaceID)) ?: return null
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
-		return objectMapper.writeValueAsString(namespace)
+	fun getNamespace(namespaceID: String): Entity? {
+		return repository.get(NamespaceIdentifier(namespaceID))
 	}
 
 
-	fun updateNamespace(jsonString: String) : Namespace? {
+	fun updateNamespace(jsonString: String) : Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val namespace: Namespace = objectMapper.readValue(jsonString)
 
@@ -60,13 +57,14 @@ class NamespaceService {
 		namespace.createdAt = null
 
 		return repository.update(namespace)
+
 	}
 
-	fun deleteNamespace(namespaceID : String) : String? {
+	fun deleteNamespace(namespaceID : String) : Identifier? {
 		return repository.delete(NamespaceIdentifier(namespaceID))
 	}
 
-	fun getNamespaceData(namespaceIDList : List<String>) : MutableList<String>? {
+	fun getNamespaceData(namespaceIDList : List<String>) : MutableMap<String, Namespace?>? {
 		return namespaceRepository.getNamespaceData(namespaceIDList)
 	}
 

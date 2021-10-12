@@ -36,7 +36,7 @@ class UserIdentifierMappingRepository(
 		TODO("Not yet implemented")
 	}
 
-	override fun delete(identifier: Identifier): String? {
+	override fun delete(identifier: Identifier): Identifier? {
 		TODO("Not yet implemented")
 	}
 
@@ -57,7 +57,6 @@ class UserIdentifierMappingRepository(
 		while (iterator.hasNext()) {
 			val item: Item = iterator.next()
 			listOfJSON += item.toJSON()
-			println(item.toJSONPretty())
 		}
 		return listOfJSON
 

@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.NodeService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -17,13 +18,12 @@ class UpdateNode:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val json = input["body"] as String
 
-        val node = nodeService.updateNode(json)
+        val node : Entity? = nodeService.updateNode(json)
 
 		if (node != null) {
-			val responseBody = StandardResponse(node.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = node
 			}
 		}
 		else{

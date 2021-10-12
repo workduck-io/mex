@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -20,14 +21,13 @@ class GetWorkspace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val workspaceID = pathParameters!!["id"] as String
 
-		val workspace : String? = workspaceService.getWorkspace(workspaceID)
+		val workspace : Entity? = workspaceService.getWorkspace(workspaceID)
 
 
 		if (workspace != null) {
-			val responseBody = StandardResponse(workspace)
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = workspace
 			}
 		}
 		else{

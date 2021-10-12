@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -18,13 +19,12 @@ class CreateNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
 		val json = input["body"] as String
 
-		val namespace = namespaceService.createNamespace(json)
+		val namespace : Entity? = namespaceService.createNamespace(json)
 
 		if (namespace != null) {
-			val responseBody = StandardResponse(namespace.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = namespace
 			}
 		}
 		else{

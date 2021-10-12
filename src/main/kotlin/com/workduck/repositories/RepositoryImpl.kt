@@ -27,7 +27,7 @@ class RepositoryImpl<T : Entity>(
 		return repository.get(identifier)
 	}
 
-	override fun delete(identifier: Identifier) : String? {
+	override fun delete(identifier: Identifier) : Identifier? {
 		return repository.delete(identifier)
 	}
 

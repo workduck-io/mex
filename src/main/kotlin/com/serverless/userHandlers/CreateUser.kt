@@ -6,6 +6,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
 import com.serverless.workspaceHandlers.CreateWorkspace
+import com.workduck.models.Entity
 import com.workduck.service.UserService
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
@@ -20,13 +21,12 @@ class CreateUser: RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val json = input["body"] as String
 		println("BODY STARTS" + json + "BODY ENDS")
 
-		val user = userService.createUser(json)
+		val user : Entity? = userService.createUser(json)
 
 		if (user != null) {
-			val responseBody = StandardResponse(user.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = user
 			}
 		}
 		else{

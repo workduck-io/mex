@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -17,13 +18,12 @@ class UpdateWorkspace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
 		val json = input["body"] as String
 
-		val workspace = workspaceService.updateWorkspace(json)
+		val workspace : Entity? = workspaceService.updateWorkspace(json)
 
 		if (workspace != null) {
-			val responseBody = StandardResponse(workspace.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = workspace
 			}
 		}
 		else{

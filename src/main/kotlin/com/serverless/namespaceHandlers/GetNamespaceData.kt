@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -19,14 +20,13 @@ class GetNamespaceData : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 
 		val namespaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-		val namespaces : MutableList<String>? = namespaceService.getNamespaceData(namespaceIDList)
+		val namespaces : MutableMap<String, Namespace?>? = namespaceService.getNamespaceData(namespaceIDList)
 
 
 		if (namespaces != null) {
-			val responseBody = StandardResponse(namespaces.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = namespaces
 			}
 		}
 		else{

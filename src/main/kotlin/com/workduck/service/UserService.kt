@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Item
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -30,7 +31,7 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
-	fun createUser(jsonString : String) : User? {
+	fun createUser(jsonString : String) : Entity? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
@@ -39,16 +40,13 @@ class UserService {
 		user.idCopy = user.id
 
 		return repository.create(user)
-
 	}
 
-	fun getUser(userID : String) : String? {
-		val user: Entity = repository.get(UserIdentifier(userID)) ?: return null
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
-		return objectMapper.writeValueAsString(user)
+	fun getUser(userID : String) : Entity? {
+		return repository.get(UserIdentifier(userID))
 	}
 
-	fun updateUser(jsonString: String) : User? {
+	fun updateUser(jsonString: String) : Entity? {
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
@@ -61,7 +59,7 @@ class UserService {
 		return repository.update(user)
 	}
 
-	fun deleteUser(userID: String) : String? {
+	fun deleteUser(userID: String) : Identifier? {
 		return repository.delete(UserIdentifier(userID))
 	}
 
@@ -94,10 +92,11 @@ fun main() {
 		}
 		"""
 
+
 	//UserService().createUser(json)
 	//println(UserService().getUser("USER49"))
 	//UserService().updateUser(jsonUpdated)
 	//UserService().deleteUser("USER49")
-	//println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
+	println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
 	//UserService().getAllUsersByWorkspaceID()
 }

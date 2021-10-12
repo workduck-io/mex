@@ -29,7 +29,7 @@ class WorkspaceRepository(
 		}
 	}
 
-	override fun delete(identifier: Identifier) : String? {
+	override fun delete(identifier: Identifier) : Identifier? {
 		val table = dynamoDB.getTable(tableName)
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
@@ -37,7 +37,7 @@ class WorkspaceRepository(
 
 		return try {
 			table.deleteItem(deleteItemSpec)
-			identifier.id
+			identifier
 		} catch ( e : Exception){
 			null
 		}
@@ -51,19 +51,14 @@ class WorkspaceRepository(
 		TODO("Not yet implemented")
 	}
 
-	fun getWorkspaceData(workspaceIDList : List<String>) : MutableList<String>? {
-		val workspaceJsonList : MutableList<String>  = mutableListOf()
-		val objectMapper = ObjectMapper()
+	fun getWorkspaceData(workspaceIDList : List<String>) : MutableMap<String, Workspace?>? {
+		val workspaceMap : MutableMap<String, Workspace?>  = mutableMapOf()
 		return try {
 			for (workspaceID in workspaceIDList) {
-				val workspace: Workspace? =
-					mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)
-				if (workspace != null) {
-					val workspaceJson = objectMapper.writeValueAsString(workspace)
-					workspaceJsonList += workspaceJson
-				}
+				val workspace: Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)
+				workspaceMap[workspaceID] = workspace
 			}
-			workspaceJsonList
+			return workspaceMap
 		} catch ( e : Exception) {
 			null
 		}

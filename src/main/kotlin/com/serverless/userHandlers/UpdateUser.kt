@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.UserService
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -18,17 +19,12 @@ class UpdateUser : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val json = input["body"] as String
 		println("BODY STARTS" + json + "BODY ENDS")
 
-		val user = userService.updateUser(json)
+		val user : Entity? = userService.updateUser(json)
 
 		if (user != null) {
-			val responseBody = StandardResponse(user.toString())
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
-				headers = mapOf(
-					"Access-Control-Allow-Origin" to "*",
-					"Access-Control-Allow-Credentials" to  true
-				)
+				objectBody = user
 			}
 		}
 		else{

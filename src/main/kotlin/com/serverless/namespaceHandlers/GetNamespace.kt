@@ -3,11 +3,12 @@ package com.serverless.namespaceHandlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
-import com.serverless.Response
 import com.serverless.StandardResponse
+import com.workduck.models.Entity
 import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 import java.util.*
+
 
 
 class GetNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
@@ -19,13 +20,12 @@ class GetNamespace:RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val namespaceID = pathParameters!!["id"] as String
 
-		val namespace : String? = namespaceService.getNamespace(namespaceID)
+		val namespace : Entity? = namespaceService.getNamespace(namespaceID)
 
 		if (namespace != null) {
-			val responseBody = StandardResponse(namespace)
 			return ApiGatewayResponse.build {
 				statusCode = 200
-				objectBody = responseBody
+				objectBody = namespace
 			}
 		}
 		else{
