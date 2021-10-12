@@ -65,10 +65,9 @@ class UserIdentifierMappingRepository(
 	fun deleteUserIdentifierMapping(userID: String, identifier: Identifier) : Map<String, String>? {
 		val table = dynamoDB.getTable(tableName)
 
-		val objectMapper = ObjectMapper()
 
 		val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-			.withPrimaryKey("PK", userID, "SK", objectMapper.writeValueAsString(identifier))
+			.withPrimaryKey("PK", userID, "SK", identifier.id)
 
 		return try {
 			table.deleteItem(deleteItemSpec)
