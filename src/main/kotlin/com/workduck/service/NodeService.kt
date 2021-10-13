@@ -166,7 +166,6 @@ fun main(){
     //NodeService().jsonToElement()
     //NodeService().append(jsonForAppend)
     //println(System.getenv("PRIMARY_TABLE"))
-
     println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     //println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     //TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
