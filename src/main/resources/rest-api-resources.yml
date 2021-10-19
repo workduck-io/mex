@@ -48,8 +48,7 @@ Node:
     - http:
         path: /node/{id}/block/update
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
 
 Namespace:
