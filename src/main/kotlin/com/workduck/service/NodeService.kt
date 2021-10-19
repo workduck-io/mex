@@ -96,6 +96,22 @@ class NodeService {
 
     }
 
+    fun updateNodeBlock(nodeID : String, blockData : String) : Entity? {
+        val objectMapper = ObjectMapper().registerModule(KotlinModule())
+        val element: AdvancedElement = objectMapper.readValue(blockData)
+        val node : Node = getNode(nodeID) as Node
+
+        for((index, block) in node.data!!.withIndex()){
+            if(block.getID() == element.getID()){
+                node.data!![index] = element
+            }
+        }
+
+        node.updatedAt = System.currentTimeMillis()
+        return  repository.update(node)
+
+    }
+
 
 }
 
@@ -157,6 +173,20 @@ fun main(){
         ]
         """
 
+    val jsonForEditBlock = """
+        {
+            "id" : "sampleParentID,
+            "elementType": "list",
+            "childrenElements": [
+              {
+                  "id" : "sampleChildID",
+                  "content" : "edited child content",
+                  "elementType": "list",
+                  "properties" :  { "bold" : true, "italic" : true  }
+              }
+                ]
+        }
+      """
 
     //NodeService().createNode(jsonString)
     //println(NodeService().getNode("NODE1234"))
@@ -166,7 +196,8 @@ fun main(){
     //NodeService().jsonToElement()
     //NodeService().append(jsonForAppend)
     //println(System.getenv("PRIMARY_TABLE"))
-    println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
+    //println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
+    NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
     //println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     //TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 

@@ -45,6 +45,12 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    - http:
+        path: /node/{id}/block/update
+        method: post
+        cors: true
+        authorizer: aws_iam
+
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
