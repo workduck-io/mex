@@ -22,10 +22,13 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: java11
+  stage: local
   lambdaHashingVersion: 20201221
+  timeout: 20
+  memorySize: 512
   environment:
-    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    #    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    #    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
   iam:
     role:
@@ -42,6 +45,20 @@ provider:
             - dynamodb:BatchWriteItem
             - dynamodb:BatchGetItem
           Resource: 'arn:aws:dynamodb:us-east-1:*:*'
+  httpApi:
+    cors: true
+    authorizers:
+      mexAuthorizer:
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ''
+            - - 'https://cognito-idp.'
+              - '${opt:region, self:provider.region}'
+              - '.amazonaws.com/'
+              - 'us-east-1_Zu7FAh7hj' #userpool id
+        audience:
+          - '2ihj64grcq87pe3svecr5hafk2'
 package:
   artifact: target/mex-dev.jar
 
@@ -53,10 +70,19 @@ custom:
   serverless-offline:
     noPrependStageInUrl: true
   customDomain:
-    domainName: api.workduck.io
-    basePath: 'mex'
-    stage: ${opt:stage, self:provider.stage}
-    createRoute53Record: true
+    rest:
+      domainName: api.workduck.io
+      basePath: 'mex'
+      stage: ${opt:stage, self:provider.stage}
+      createRoute53Record: true
+    http:
+      domainName: http.workduck.io
+      basePath: 'mex'
+      stage: ${opt:stage, self:provider.stage}
+      createRoute53Record: true
+      endpointType: regional
+      apiType: http
+
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
 

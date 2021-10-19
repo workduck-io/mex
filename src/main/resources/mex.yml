@@ -1,5 +1,5 @@
 Resources:
-  sampleData:
+  mexData:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
@@ -9,6 +9,8 @@ Resources:
         - AttributeName: SK
           AttributeType: S
         - AttributeName: AK
+          AttributeType: S
+        - AttributeName: itemType
           AttributeType: S
       KeySchema:
         - AttributeName: PK

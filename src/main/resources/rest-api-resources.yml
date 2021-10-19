@@ -3,183 +3,156 @@ Ping:
   events:
     - http:
         path: /ping
-        method: get
         cors: true
-        authorizer: aws_iam
+        method: get
 
 
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
   events:
-    - http:
+    - httpApi:
         path: /node/{id}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /node
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /node/update
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /node/{id}
         method: delete
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /node/{id}/append
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /node/workspace/{workspaceID}/namespace/{namespaceID}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
-        path: /node/workspace/{id}
+    - httpApi:
+        path: /node/workspace/{workspaceId}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
   events:
-    - http:
+    - httpApi:
         path: /namespace/{id}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /namespace
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /namespace/update
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /namespace/{id}
         method: delete
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /namespace/data/{ids}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
 
 
 Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
   events:
-    - http:
+    - httpApi:
         path: /workspace/{id}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /workspace
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /workspace/update
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /workspace/{id}
         method: delete
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /workspace/data/{ids}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
 User:
   handler: com.serverless.userHandlers.UserHandler
   events:
-    - http:
+    - httpApi:
         path: /user/{id}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /user
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /user/update
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /user/{id}
         method: delete
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /user/namespace/{id}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /user/workspace/{id}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
 
 
 UserIdentifierRecord:
   handler: com.serverless.userIdentifierMappingHandlers.UserIdentifierMappingHandler
   events:
-    - http:
+    - httpApi:
         path: /userIdentifierMappingRecord
         method: post
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /userIdentifierMappingRecord/{userID}/{identifierID}
         method: delete
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
 
-    - http:
+    - httpApi:
         path: /userRecords/{userID}
         method: get
-        cors: true
-        authorizer: aws_iam
+        authorizer: mexAuthorizer
