@@ -21,6 +21,8 @@ class NodeStrategyFactory {
 
 		val getNodesByWorkspaceObject : RequestObject = RequestObject("GET", "/node/workspace/{workspaceID}")
 
+		val updateNodeBlock : RequestObject = RequestObject("POST", "/node/{id}/block/update")
+
 
 		val nodeRegistry: Map<RequestObject, NodeStrategy> = mapOf(
 			getNodeObject to GetNodeStrategy(),
@@ -29,7 +31,8 @@ class NodeStrategyFactory {
 			deleteNodeObject to DeleteNodeStrategy(),
 			appendToNodeObject to AppendToNodeStrategy(),
 			getNodesByNamespaceObject to GetNodesByNamespaceStrategy(),
-			getNodesByWorkspaceObject to GetNodesByWorkspaceStrategy()
+			getNodesByWorkspaceObject to GetNodesByWorkspaceStrategy(),
+			updateNodeBlock to UpdateNodeBlockStrategy()
 		)
 
 

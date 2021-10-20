@@ -45,6 +45,11 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    - http:
+        path: /node/{id}/block/update
+        method: post
+        authorizer: mexAuthorizer
+
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
