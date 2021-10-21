@@ -3,8 +3,8 @@ package com.serverless.userHandlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
-import com.serverless.RequestObject
 import com.serverless.StandardResponse
+import com.serverless.nodeHandlers.NodeStrategyFactory
 import com.workduck.service.UserService
 import org.apache.logging.log4j.LogManager
 
@@ -14,12 +14,9 @@ class UserHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
 	override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-		val method = input["httpMethod"] as String
-		val resource = input["resource"] as String
+		val routeKey = input["routeKey"] as String
 
-		val requestObject = RequestObject(method, resource)
-
-		val strategy = UserStrategyFactory.getUserStrategy(requestObject)
+		val strategy = UserStrategyFactory.getUserStrategy(routeKey)
 
 		if (strategy == null ){
 			val responseBody = StandardResponse("Request type not recognized")

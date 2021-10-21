@@ -15,7 +15,7 @@ class UpdateNodeBlockStrategy: NodeStrategy {
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val nodeID = pathParameters!!["id"] as String
-		val blockIndex = pathParameters!!["blockIndex"] as Int
+		val blockIndex = (pathParameters!!["blockIndex"] as String).toInt()
 
 		val element : AdvancedElement? = nodeService.updateNodeBlock(nodeID, json, blockIndex)
 		return ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)

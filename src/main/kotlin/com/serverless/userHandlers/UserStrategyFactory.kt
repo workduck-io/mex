@@ -1,24 +1,22 @@
 package com.serverless.userHandlers
 
-import com.serverless.RequestObject
-
 class UserStrategyFactory {
 	companion object {
 
-		val getUserObject: RequestObject = RequestObject("GET", "/user/{id}")
+		const val getUserObject = "GET /user/{id}"
 
-		val createUserObject: RequestObject = RequestObject("POST", "/user")
+		const val createUserObject = "POST /user"
 
-		val updateUserObject: RequestObject = RequestObject("POST", "/user/update")
+		const val updateUserObject = "POST /user/update"
 
-		val deleteUserObject: RequestObject = RequestObject("DELETE", "/user/{id}")
+		const val deleteUserObject = "DELETE /user/{id}"
 
-		val getUsersByNamespaceObject : RequestObject = RequestObject("GET", "/user/namespace/{namespaceID}")
+		const val getUsersByNamespaceObject = "GET /user/namespace/{namespaceID}"
 
-		val getUsersByWorkspaceObject : RequestObject = RequestObject("GET", "/user/workspace/{workspaceID}")
+		const val getUsersByWorkspaceObject = "GET /user/workspace/{workspaceID}"
 
 
-		val userRegistry: Map<RequestObject, UserStrategy> = mapOf(
+		private val userRegistry: Map<String, UserStrategy> = mapOf(
 			getUserObject to GetUserStrategy(),
 			createUserObject to CreateUserStrategy(),
 			updateUserObject to UpdateUserStrategy(),
@@ -28,8 +26,8 @@ class UserStrategyFactory {
 		)
 
 
-		fun getUserStrategy(requestObject: RequestObject): UserStrategy? {
-			return userRegistry[requestObject]
+		fun getUserStrategy(routeKey: String): UserStrategy? {
+			return userRegistry[routeKey]
 		}
 	}
 
