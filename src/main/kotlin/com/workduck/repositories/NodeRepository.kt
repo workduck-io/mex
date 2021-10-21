@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.*
 import com.workduck.utils.DDBHelper
 
@@ -99,6 +100,28 @@ class NodeRepository(
 
 	override fun update(t: Node): Node {
 		TODO("Not yet implemented")
+	}
+
+
+	fun updateNodeBlock(nodeID: String, updatedBlock : String, blockIndex : Int) : AdvancedElement? {
+		val table = dynamoDB.getTable(tableName)
+		val objectMapper = ObjectMapper()
+
+		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+		expressionAttributeValues[":updatedBlock"] = updatedBlock
+
+		val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+			.withUpdateExpression("SET nodeData[$blockIndex] = :updatedBlock")
+			.withValueMap(expressionAttributeValues)
+
+		return try {
+			table.updateItem(u)
+			objectMapper.readValue(updatedBlock)
+		} catch (e : Exception) {
+			null
+		}
+
+
 	}
 
 }
