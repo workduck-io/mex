@@ -43,7 +43,7 @@ class NodeService {
         println("Should be created in the table : $tableName")
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
-
+        println(node)
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"

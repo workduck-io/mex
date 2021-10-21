@@ -36,6 +36,7 @@ class RepositoryImpl<T : Entity>(
 			mapper.save(t, dynamoDBMapperConfig)
 			t
 		} catch (e : Exception) {
+			println(e)
 			null
 		}
 	}
