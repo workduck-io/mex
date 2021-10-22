@@ -23,35 +23,55 @@ class NodeRepository(
 
 	override fun get(identifier: Identifier): Entity? {
 		return try {
-			mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+			val node = mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+			orderBlocks(node)
+			return node
 		} catch (e : Exception){
 			null
 		}
 	}
 
-	fun append(nodeID : String, elements : MutableList<AdvancedElement>) : Map<String, Any>? {
+	private fun orderBlocks(node : Node) : Entity {
+		val listOfElements = mutableListOf<AdvancedElement>()
+		for( blockID in node.dataOrder!!){
+			for( element in node.data!!){
+				if( blockID == element.getID()) listOfElements += element
+			}
+		}
+		node.data = listOfElements
+		return node
+	}
+
+	fun append(nodeID : String, elements : MutableList<AdvancedElement>, orderList : MutableList<String>) : Map<String, Any>? {
 		val table = dynamoDB.getTable(tableName)
 
+		/* this is to ensure correct ordering of blocks/ elements */
+		var updateExpression  = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList)"
+
 		val objectMapper = ObjectMapper()
-		val elementsInStringFormat : MutableList<String> = mutableListOf()
-		for(e in elements){
-			val entry : String = objectMapper.writeValueAsString(e)
-			elementsInStringFormat += entry
-		}
 
 		val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-		expressionAttributeValues[":val1"] = elementsInStringFormat
+
+		/* we build updateExpression to enable appending of multiple key value pairs to the map with just one query */
+		for((counter, e) in elements.withIndex()){
+			val entry : String = objectMapper.writeValueAsString(e)
+			updateExpression += ", nodeData.${e.getID()} = :val$counter"
+			expressionAttributeValues[":val$counter"] = entry
+		}
+
+		expressionAttributeValues[":orderList"] = orderList
 		expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
 
 		val updateItemSpec : UpdateItemSpec = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-			.withUpdateExpression("set nodeData = list_append(if_not_exists(nodeData, :empty_list), :val1)")
+			.withUpdateExpression(updateExpression)
 			.withValueMap(expressionAttributeValues)
 
 		return try {
 			table.updateItem(updateItemSpec)
 			mapOf("nodeID" to nodeID, "appendedElements" to elements)
 		} catch ( e : Exception) {
+			println(e)
 			null
 		}
 	}
@@ -103,7 +123,7 @@ class NodeRepository(
 	}
 
 
-	fun updateNodeBlock(nodeID: String, updatedBlock : String, blockIndex : Int) : AdvancedElement? {
+	fun updateNodeBlock(nodeID: String, updatedBlock : String, blockID : String) : AdvancedElement? {
 		val table = dynamoDB.getTable(tableName)
 		val objectMapper = ObjectMapper()
 
@@ -111,13 +131,14 @@ class NodeRepository(
 		expressionAttributeValues[":updatedBlock"] = updatedBlock
 
 		val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-			.withUpdateExpression("SET nodeData[$blockIndex] = :updatedBlock")
+			.withUpdateExpression("SET nodeData.$blockID = :updatedBlock")
 			.withValueMap(expressionAttributeValues)
 
 		return try {
 			table.updateItem(u)
 			objectMapper.readValue(updatedBlock)
 		} catch (e : Exception) {
+			println(e)
 			null
 		}
 
