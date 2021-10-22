@@ -7,26 +7,25 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 
 
-class NodeDataConverter : DynamoDBTypeConverter<MutableList<String>, MutableList<AdvancedElement>> {
+class NodeDataConverter : DynamoDBTypeConverter<MutableMap<String, String>, MutableList<AdvancedElement>> {
 
 	private val objectMapper = ObjectMapper()
 
 	//override fun convert()
-	override fun convert(n: MutableList<AdvancedElement>): MutableList<String> {
-		val listOfData: MutableList<String> = mutableListOf()
+	override fun convert(n: MutableList<AdvancedElement>): MutableMap<String, String> {
+		val mapOfData: MutableMap<String, String> = mutableMapOf()
 		for (element in n) {
-			val e: String = objectMapper.writeValueAsString(element)
-			listOfData += e
+			mapOfData[element.getID()] = objectMapper.writeValueAsString(element)
 		}
-		return listOfData
+		return mapOfData
 		//return objectMapper.writeValueAsString(n)
 
 	}
 
-	override fun unconvert(nodeData: MutableList<String>): MutableList<AdvancedElement> {
+	override fun unconvert(nodeData: MutableMap<String, String>): MutableList<AdvancedElement> {
 		val listOfElements: MutableList<AdvancedElement> = mutableListOf()
-		for (string in nodeData) {
-			val element: AdvancedElement = objectMapper.readValue(string)
+		for ((_, v) in nodeData) {
+			val element: AdvancedElement = objectMapper.readValue(v)
 			listOfElements += element
 		}
 		return listOfElements

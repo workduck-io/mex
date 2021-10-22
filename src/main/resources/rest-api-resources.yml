@@ -45,8 +45,8 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
-    - http:
-        path: /node/{id}/block/update
+    - httpApi:
+        path: /node/{id}/block/{blockIndex}/update
         method: post
         authorizer: mexAuthorizer
 

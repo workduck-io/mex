@@ -1,24 +1,21 @@
 package com.serverless.namespaceHandlers
 
-import com.serverless.RequestObject
-
-
 
 class NamespaceStrategyFactory{
 
 	companion object {
 
-		val getNamespaceObject: RequestObject = RequestObject("GET", "/namespace/{id}")
+		const val getNamespaceObject = "GET /namespace/{id}"
 
-		val createNamespaceObject: RequestObject = RequestObject("POST", "/namespace")
+		const val createNamespaceObject = "POST /namespace"
 
-		val updateNamespaceObject: RequestObject = RequestObject("POST", "/namespace/update")
+		const val updateNamespaceObject = "POST /namespace/update"
 
-		val deleteNamespaceObject: RequestObject = RequestObject("DELETE", "/namespace/{id}")
+		const val deleteNamespaceObject = "DELETE /namespace/{id}"
 
-		val getNamespaceDataObject: RequestObject = RequestObject("GET", "/namespace/data/{ids}")
+		const val getNamespaceDataObject = "GET /namespace/data/{ids}"
 
-		val namespaceRegistry: Map<RequestObject, NamespaceStrategy> = mapOf(
+		private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
 			getNamespaceObject to GetNamespaceStrategy(),
 			createNamespaceObject to CreateNamespaceStrategy(),
 			updateNamespaceObject to UpdateNamespaceStrategy(),
@@ -27,8 +24,8 @@ class NamespaceStrategyFactory{
 		)
 
 
-		fun getNamespaceStrategy(requestObject: RequestObject): NamespaceStrategy? {
-			return namespaceRegistry[requestObject]
+		fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {
+			return namespaceRegistry[routeKey]
 		}
 	}
 

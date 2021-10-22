@@ -1,24 +1,21 @@
 package com.serverless.workspaceHandlers
 
-import com.serverless.RequestObject
-
-
 
 class WorkspaceStrategyFactory{
 
 	companion object {
 
-		val getWorkspaceObject: RequestObject = RequestObject("GET", "/workspace/{id}")
+		const val getWorkspaceObject = "GET /workspace/{id}"
 
-		val createWorkspaceObject: RequestObject = RequestObject("POST", "/workspace")
+		const val createWorkspaceObject = "POST /workspace"
 
-		val updateWorkspaceObject: RequestObject = RequestObject("POST", "/workspace/update")
+		const val updateWorkspaceObject = "POST /workspace/update"
 
-		val deleteWorkspaceObject: RequestObject = RequestObject("DELETE", "/workspace/{id}")
+		const val deleteWorkspaceObject = "DELETE /workspace/{id}"
 
-		val getWorkspaceDataObject: RequestObject = RequestObject("GET", "/workspace/data/{ids}")
+		const val getWorkspaceDataObject = "GET /workspace/data/{ids}"
 
-		val workspaceRegistry: Map<RequestObject, WorkspaceStrategy> = mapOf(
+		private val workspaceRegistry: Map<String, WorkspaceStrategy> = mapOf(
 			getWorkspaceObject to GetWorkspaceStrategy(),
 			createWorkspaceObject to CreateWorkspaceStrategy(),
 			updateWorkspaceObject to UpdateWorkspaceStrategy(),
@@ -27,8 +24,8 @@ class WorkspaceStrategyFactory{
 		)
 
 
-		fun getWorkspaceStrategy(requestObject: RequestObject): WorkspaceStrategy? {
-			return workspaceRegistry[requestObject]
+		fun getWorkspaceStrategy(routeKey: String): WorkspaceStrategy? {
+			return workspaceRegistry[routeKey]
 		}
 	}
 

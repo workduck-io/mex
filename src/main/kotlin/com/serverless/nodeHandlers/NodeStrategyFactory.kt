@@ -1,30 +1,29 @@
 package com.serverless.nodeHandlers
 
-import com.serverless.RequestObject
 
 class NodeStrategyFactory {
 
 
 	companion object {
 
-		val getNodeObject: RequestObject = RequestObject("GET", "/node/{id}")
+		const val getNodeObject = "GET /node/{id}"
 
-		val createNodeObject: RequestObject = RequestObject("POST", "/node")
+		const val createNodeObject = "POST /node"
 
-		val updateNodeObject: RequestObject = RequestObject("POST", "/node/update")
+		const val updateNodeObject = "POST /node/update"
 
-		val deleteNodeObject: RequestObject = RequestObject("DELETE", "/node/{id}")
+		const val deleteNodeObject = "DELETE /node/{id}"
 
-		val appendToNodeObject : RequestObject = RequestObject("POST", "/node/{id}/append")
+		const val appendToNodeObject = "POST /node/{id}/append"
 
-		val getNodesByNamespaceObject : RequestObject = RequestObject("GET", "/node/workspace/{workspaceID}/namespace/{namespaceID}")
+		const val getNodesByNamespaceObject = "GET /node/workspace/{workspaceID}/namespace/{namespaceID}"
 
-		val getNodesByWorkspaceObject : RequestObject = RequestObject("GET", "/node/workspace/{workspaceID}")
+		const val getNodesByWorkspaceObject = "GET /node/workspace/{workspaceID}"
 
-		val updateNodeBlock : RequestObject = RequestObject("POST", "/node/{id}/block/update")
+		const val updateNodeBlock = "POST /node/{id}/block/{blockIndex}/update"
 
 
-		val nodeRegistry: Map<RequestObject, NodeStrategy> = mapOf(
+		private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
 			getNodeObject to GetNodeStrategy(),
 			createNodeObject to CreateNodeStrategy(),
 			updateNodeObject to UpdateNodeStrategy(),
@@ -36,8 +35,8 @@ class NodeStrategyFactory {
 		)
 
 
-		fun getNodeStrategy(requestObject: RequestObject): NodeStrategy? {
-			return nodeRegistry[requestObject]
+		fun getNodeStrategy(routeKey : String): NodeStrategy? {
+			return nodeRegistry[routeKey]
 		}
 	}
 

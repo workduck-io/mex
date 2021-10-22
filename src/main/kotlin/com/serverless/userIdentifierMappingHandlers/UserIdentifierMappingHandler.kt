@@ -3,7 +3,6 @@ package com.serverless.userIdentifierMappingHandlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
-import com.serverless.RequestObject
 import com.serverless.StandardResponse
 import com.workduck.service.UserIdentifierMappingService
 import org.apache.logging.log4j.LogManager
@@ -14,12 +13,9 @@ class UserIdentifierMappingHandler : RequestHandler<Map<String, Any>, ApiGateway
 
 	override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-		val method = input["httpMethod"] as String
-		val resource = input["resource"] as String
+		val routeKey = input["routeKey"] as String
 
-		val requestObject = RequestObject(method, resource)
-
-		val strategy = UserIdentifierMappingStrategyFactory.getUserIdentifierMappingStrategy(requestObject)
+		val strategy = UserIdentifierMappingStrategyFactory.getUserIdentifierMappingStrategy(routeKey)
 
 		if (strategy == null ){
 			val responseBody = StandardResponse("Request type not recognized")

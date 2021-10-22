@@ -2,6 +2,7 @@ package com.serverless.nodeHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
 import com.workduck.service.NodeService
 
@@ -14,8 +15,9 @@ class UpdateNodeBlockStrategy: NodeStrategy {
 
 		val pathParameters = input["pathParameters"] as Map<*, *>?
 		val nodeID = pathParameters!!["id"] as String
+		val blockIndex = (pathParameters!!["blockIndex"] as String).toInt()
 
-		val node : Entity? = nodeService.updateNodeBlock(nodeID, json)
-		return ApiResponseHelper.generateStandardResponse(node as Any?, errorMessage)
+		val element : AdvancedElement? = nodeService.updateNodeBlock(nodeID, json)
+		return ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)
 	}
 }
