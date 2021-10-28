@@ -28,6 +28,10 @@ data class Node(
     @DynamoDBAttribute(attributeName = "lastEditedBy")
     var lastEditedBy: String? = null,
 
+    @JsonProperty("createBy")
+    @DynamoDBAttribute(attributeName = "createBy")
+    var createBy: String? = null,
+
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")

@@ -42,11 +42,11 @@ class NodeRepository(
         return node
     }
 
-    fun append(nodeID: String, elements: MutableList<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+    fun append(nodeID: String, userID: String, elements: MutableList<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
-        var updateExpression = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList)"
+        var updateExpression = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList), lastEditedBy = :userID"
 
         val objectMapper = ObjectMapper()
 
@@ -59,6 +59,7 @@ class NodeRepository(
             expressionAttributeValues[":val$counter"] = entry
         }
 
+        expressionAttributeValues[":userID"] = userID
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 

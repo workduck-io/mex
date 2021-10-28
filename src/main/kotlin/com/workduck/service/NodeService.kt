@@ -47,6 +47,7 @@ class NodeService {
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         node.dataOrder = createDataOrderForNode(node)
+        node.createBy = node.lastEditedBy
 
         computeHashOfNodeData(node)
 
@@ -83,11 +84,19 @@ class NodeService {
         val elements: MutableList<AdvancedElement> = objectMapper.readValue(jsonString)
 
         val orderList = mutableListOf<String>()
+        var userID : String = ""
         for (e in elements) {
             orderList += e.getID()
+
+            e.lastEditedBy = e.createdBy
+            e.createdAt = System.currentTimeMillis()
+            e.updatedAt = e.createdAt
+            userID = e.createdBy as String
         }
 
-        return nodeRepository.append(nodeID, elements, orderList)
+
+
+        return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
     fun updateNode(jsonString: String): Entity? {
@@ -244,7 +253,7 @@ fun main() {
     val jsonForAppend: String = """
         [
             {
-            
+            "createdBy" : "Varun",
             "id": "xyz",
             "content": "Sample Content 4",
             "elementType" : "list",
@@ -256,6 +265,7 @@ fun main() {
             }
             ]},
             {
+            "createdBy" : "Varun",
             "id": "abc",
             "content": "Sample Content 5",
             "elementType" : "random element type",
@@ -284,13 +294,13 @@ fun main() {
         }
       """
 
-    // NodeService().createNode(jsonString)
+    //NodeService().createNode(jsonString)
     // println(NodeService().getNode("NODE1"))
-    NodeService().updateNode(jsonString1)
+    //NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
-    // NodeService().append("NODE1",jsonForAppend)
+    NodeService().append("NODE1",jsonForAppend)
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
