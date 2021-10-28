@@ -7,42 +7,37 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
-
 @DynamoDBTable(tableName = "sampleData")
 class UserIdentifierRecord(
 
-	@JsonProperty("userID")
-	@DynamoDBHashKey(attributeName = "PK")
-	var userID : String = Helper.generateId("USER"),
+    @JsonProperty("userID")   
+    @DynamoDBHashKey(attributeName = "PK")   
+    var userID: String = Helper.generateId("USER"),
 
-	@JsonProperty("identifier")
-	@DynamoDBRangeKey(attributeName = "SK")
-	@JsonDeserialize(converter = IdentifierDeserializer::class)
-	@JsonSerialize(converter = IdentifierSerializer::class)
-	@DynamoDBTypeConverted(converter = IdentifierConverter::class)
-	var identifier : Identifier?= null,
-
+    @JsonProperty("identifier")   
+    @DynamoDBRangeKey(attributeName = "SK")   
+    @JsonDeserialize(converter = IdentifierDeserializer::class)   
+    @JsonSerialize(converter = IdentifierSerializer::class)   
+    @DynamoDBTypeConverted(converter = IdentifierConverter::class)   
+    var identifier: Identifier? = null,
 
 	/* AK = IdentifierID
 	** Making this so that we don't have to create itemType-SK index. We can leverage already existing itemType-AK index
 	*/
-	@DynamoDBAttribute(attributeName = "AK")
-	var ak : String?= identifier?.id,
+    @DynamoDBAttribute(attributeName = "AK")   
+    var ak: String? = identifier?.id,
 
-	@JsonProperty("createdAt")
-	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long? = System.currentTimeMillis(),
+    @JsonProperty("createdAt")   
+    @DynamoDBAttribute(attributeName = "createdAt")   
+    var createdAt: Long? = System.currentTimeMillis(),
 
-
-	@JsonProperty("itemType")
-	@DynamoDBAttribute(attributeName = "itemType")
-	override var itemType: String = "UserIdentifierRecord"
-
+    @JsonProperty("itemType")   
+    @DynamoDBAttribute(attributeName = "itemType")   
+    override var itemType: String = "UserIdentifierRecord"
 
 ) : Entity {
 
-	@JsonProperty("updatedAt")
-	@DynamoDBAttribute(attributeName = "updatedAt")
-	var updateAt: Long = System.currentTimeMillis()
-
+    @JsonProperty("updatedAt")
+    @DynamoDBAttribute(attributeName = "updatedAt")
+    var updateAt: Long = System.currentTimeMillis()
 }

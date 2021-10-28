@@ -7,13 +7,12 @@ import com.workduck.service.NamespaceService
 
 class CreateNamespaceStrategy : NamespaceStrategy {
 
-	override fun apply(input: Map<String, Any>, namespaceService : NamespaceService): ApiGatewayResponse {
-		val errorMessage = "Error creating namespace"
+    override fun apply(input: Map<String, Any>, namespaceService: NamespaceService): ApiGatewayResponse {
+        val errorMessage = "Error creating namespace"
 
-		val json = input["body"] as String
-		val namespace : Entity? = namespaceService.createNamespace(json)
+        val json = input["body"] as String
+        val namespace: Entity? = namespaceService.createNamespace(json)
 
-		return ApiResponseHelper.generateStandardResponse(namespace as Any?, errorMessage)
-	}
-
+        return ApiResponseHelper.generateStandardResponse(namespace as Any?, errorMessage)
+    }
 }

@@ -7,84 +7,81 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
-
 enum class NodeStatus {
-	LINKED,
-	UNLINKED
+    LINKED,
+    UNLINKED
 }
 
 @DynamoDBTable(tableName = "sampleData")
 data class Node(
 
-	@JsonProperty("id")
-	@DynamoDBHashKey(attributeName = "PK")
-	var id: String = Helper.generateId(IdentifierType.NODE.name),
+    @JsonProperty("id")   
+    @DynamoDBHashKey(attributeName = "PK")   
+    var id: String = Helper.generateId(IdentifierType.NODE.name),
 
+    /* For convenient deletion */
+    @JsonProperty("idCopy")   
+    @DynamoDBRangeKey(attributeName = "SK")   
+    var idCopy: String? = id,
 
-	/* For convenient deletion */
-	@JsonProperty("idCopy")
-	@DynamoDBRangeKey(attributeName = "SK")
-	var idCopy: String? = id,
+    @JsonProperty("lastEditedBy")   
+    @DynamoDBAttribute(attributeName = "lastEditedBy")   
+    var lastEditedBy: String? = null,
 
+    @JsonProperty("data")   
+    @DynamoDBTypeConverted(converter = NodeDataConverter::class)   
+    @DynamoDBAttribute(attributeName = "nodeData")   
+    var data: MutableList<AdvancedElement>? = null,
 
-	@JsonProperty("data")
-	@DynamoDBTypeConverted(converter = NodeDataConverter::class)
-	@DynamoDBAttribute(attributeName = "nodeData")
-	var data: MutableList<AdvancedElement>? = null,
+    @DynamoDBAttribute(attributeName = "nodeDataOrder")   
+    var dataOrder: MutableList<String>? = null,
 
+    @JsonProperty("version")   
+    @DynamoDBAttribute(attributeName = "version")   
+    var version: String? = null,
 
-	@DynamoDBAttribute(attributeName = "nodeDataOrder")
-	var dataOrder : MutableList<String>? = null,
+    @JsonProperty("namespaceIdentifier")   
+    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)   
+    @JsonSerialize(converter = IdentifierSerializer::class)   
+    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)   
+    @DynamoDBAttribute(attributeName = "namespaceIdentifier")   
+    var namespaceIdentifier: NamespaceIdentifier? = null,
 
-	@JsonProperty("version")
-	@DynamoDBAttribute(attributeName = "version")
-	var version: String? = null,
+    @JsonProperty("workspaceIdentifier")   
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)   
+    @JsonSerialize(converter = IdentifierSerializer::class)   
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)   
+    @DynamoDBAttribute(attributeName = "workspaceIdentifier")   
+    var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-	@JsonProperty("namespaceIdentifier")
-	@JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-	@JsonSerialize(converter = IdentifierSerializer::class)
-	@DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-	@DynamoDBAttribute(attributeName = "namespaceIdentifier")
-	var namespaceIdentifier: NamespaceIdentifier? = null,
+    /* WORKSPACE_ID#NAMESPACE_ID */
+    @DynamoDBAttribute(attributeName = "AK")   
+    var ak: String? = null,
 
+    @JsonProperty("nodeSchemaIdentifier")   
+    @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)   
+    @DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")   
+    var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
 
+    // @JsonProperty("status")
+    // val status: NodeStatus = NodeStatus.LINKED,
+    // val associatedProperties: Set<AssociatedProperty>,
 
-	@JsonProperty("workspaceIdentifier")
-	@JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-	@JsonSerialize(converter = IdentifierSerializer::class)
-	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
-	var workspaceIdentifier: WorkspaceIdentifier? = null,
+    @JsonProperty("itemType")   
+    @DynamoDBAttribute(attributeName = "itemType")   
+    override var itemType: String = "Node",
 
-	/* WORKSPACE_ID#NAMESPACE_ID */
-	@DynamoDBAttribute(attributeName = "AK")
-	var ak : String?= null,
-
-	@JsonProperty("nodeSchemaIdentifier")
-	@DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
-	@DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")
-	var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
-
-	//@JsonProperty("status")
-	//val status: NodeStatus = NodeStatus.LINKED,
-	//val associatedProperties: Set<AssociatedProperty>,
-
-	@JsonProperty("itemType")
-	@DynamoDBAttribute(attributeName = "itemType")
-	override var itemType : String = "Node",
-
-	@JsonProperty("createdAt")
-	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long? = System.currentTimeMillis()
+    @JsonProperty("createdAt")   
+    @DynamoDBAttribute(attributeName = "createdAt")   
+    var createdAt: Long? = System.currentTimeMillis()
 
 ) : Entity {
 
-	@JsonProperty("updatedAt")
-	@DynamoDBAttribute(attributeName = "updatedAt")
-	var updatedAt: Long = System.currentTimeMillis()
+    @JsonProperty("updatedAt")
+    @DynamoDBAttribute(attributeName = "updatedAt")
+    var updatedAt: Long = System.currentTimeMillis()
 
-	//override val entityID: String = id
+    // override val entityID: String = id
 
-	//override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
-
+    // override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 }

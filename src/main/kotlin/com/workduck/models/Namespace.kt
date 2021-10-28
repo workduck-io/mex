@@ -14,8 +14,8 @@ import com.workduck.utils.Helper
  * namespace status
  */
 enum class NamespaceStatus {
-	ACTIVE,
-	INACTIVE
+    ACTIVE,
+    INACTIVE
 }
 
 /**
@@ -24,46 +24,44 @@ enum class NamespaceStatus {
 
 @DynamoDBTable(tableName = "sampleData")
 class Namespace(
-	//val authorizations : Set<Auth>,
+    // val authorizations : Set<Auth>,
 
-	@JsonProperty("id")
-	@DynamoDBHashKey(attributeName = "PK")
-	var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
+    @JsonProperty("id")   
+    @DynamoDBHashKey(attributeName = "PK")   
+    var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
 
-	/* For convenient deletion */
-	@JsonProperty("idCopy")
-	@DynamoDBRangeKey(attributeName = "SK")
-	var idCopy: String = id,
+    /* For convenient deletion */
+    @JsonProperty("idCopy")   
+    @DynamoDBRangeKey(attributeName = "SK")   
+    var idCopy: String = id,
 
+    @JsonProperty("workspaceIdentifier")   
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)   
+    @JsonSerialize(converter = IdentifierSerializer::class)   
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)   
+    @DynamoDBAttribute(attributeName = "workspaceIdentifier")   
+    var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-	@JsonProperty("workspaceIdentifier")
-	@JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-	@JsonSerialize(converter = IdentifierSerializer::class)
-	@DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-	@DynamoDBAttribute(attributeName = "workspaceIdentifier")
-	var workspaceIdentifier: WorkspaceIdentifier? = null,
+    @JsonProperty("name")   
+    @DynamoDBAttribute(attributeName = "namespaceName")   
+    var name: String ? = null,
 
-	@JsonProperty("name")
-	@DynamoDBAttribute(attributeName = "namespaceName")
-	var name: String ? = null,
+    // val owner: OwnerIdentifier,
 
-	//val owner: OwnerIdentifier,
+    @JsonProperty("createdAt")   
+    @DynamoDBAttribute(attributeName = "createdAt")   
+    var createdAt: Long? = System.currentTimeMillis(),
 
-	@JsonProperty("createdAt")
-	@DynamoDBAttribute(attributeName = "createdAt")
-	var createdAt: Long? = System.currentTimeMillis(),
+    @JsonProperty("itemType")   
+    @DynamoDBAttribute(attributeName = "itemType")   
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)   
+    override var itemType: String = "Namespace"
 
-	@JsonProperty("itemType")
-	@DynamoDBAttribute(attributeName = "itemType")
-	@DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-	override var itemType: String = "Namespace"
-
-
-	//val status: NamespaceStatus = NamespaceStatus.ACTIVE
+    // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 
 ) : Entity {
 
-	@JsonProperty("updatedAt")
-	@DynamoDBAttribute(attributeName = "updatedAt")
-	var updatedAt = System.currentTimeMillis()
+    @JsonProperty("updatedAt")
+    @DynamoDBAttribute(attributeName = "updatedAt")
+    var updatedAt = System.currentTimeMillis()
 }

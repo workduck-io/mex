@@ -9,27 +9,25 @@ import org.apache.logging.log4j.LogManager
 
 class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-	private val nodeService = NodeService()
+    private val nodeService = NodeService()
 
-	override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
+    override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-		val routeKey = input["routeKey"] as String
+        val routeKey = input["routeKey"] as String
 
-		val strategy = NodeStrategyFactory.getNodeStrategy(routeKey)
+        val strategy = NodeStrategyFactory.getNodeStrategy(routeKey)
 
-		if (strategy == null ){
-			val responseBody = StandardResponse("Request type not recognized")
-			return ApiGatewayResponse.build {
-				statusCode = 500
-				objectBody = responseBody
-			}
+        if (strategy == null) {
+            val responseBody = StandardResponse("Request type not recognized")
+            return ApiGatewayResponse.build {
+                statusCode = 500
+                objectBody = responseBody
+            }
+        }
+        return strategy.apply(input, nodeService)
+    }
 
-		}
-		return strategy.apply(input, nodeService)
-
-	}
-
-	companion object {
-		private val LOG = LogManager.getLogger(NodeHandler::class.java)
-	}
+    companion object {
+        private val LOG = LogManager.getLogger(NodeHandler::class.java)
+    }
 }

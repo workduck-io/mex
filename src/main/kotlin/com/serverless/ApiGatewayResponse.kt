@@ -8,16 +8,16 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 class ApiGatewayResponse(
-        val statusCode: Int = 200,
-        var body: String? = null,
-        val headers: Map<String, Any>? = Collections.emptyMap(),
-        val isBase64Encoded: Boolean = false
+    val statusCode: Int = 200,
+    var body: String? = null,
+    val headers: Map<String, Any>? = Collections.emptyMap(),
+    val isBase64Encoded: Boolean = false
 ) {
     private constructor(builder: Builder) : this(
-            builder.statusCode,
-            builder.rawBody,
-            builder.headers,
-            builder.base64Encoded
+        builder.statusCode,
+        builder.rawBody,
+        builder.headers,
+        builder.base64Encoded
     )
 
     companion object {
@@ -33,7 +33,7 @@ class ApiGatewayResponse(
         var rawBody: String? = null
         var headers: Map<String, Any>? = mapOf(
             "Access-Control-Allow-Origin" to "*",
-            "Access-Control-Allow-Credentials" to  true
+            "Access-Control-Allow-Credentials" to true
         )
         var objectBody: Any? = null
         var binaryBody: ByteArray? = null
@@ -44,8 +44,7 @@ class ApiGatewayResponse(
 
             if (rawBody != null) {
                 body = rawBody as String
-            }
-            else if (objectBody != null) {
+            } else if (objectBody != null) {
                 try {
                     body = objectMapper.writeValueAsString(objectBody)
                 } catch (e: JsonProcessingException) {
@@ -63,8 +62,7 @@ class ApiGatewayResponse(
 
             if (rawBody != null) {
                 body = rawBody as String
-            }
-            else if (objectBody != null) {
+            } else if (objectBody != null) {
                 try {
                     println("In buildWithList")
                     body = objectBody.toString()

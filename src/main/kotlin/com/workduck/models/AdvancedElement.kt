@@ -2,56 +2,72 @@ package com.workduck.models
 
 import com.fasterxml.jackson.annotation.*
 
-
 enum class ElementTypes(val type: String) {
 
-	PARAGRAPH("paragraph");
+    PARAGRAPH("paragraph");
 
-	companion object {
-		private val codes = ElementTypes.values().associateBy(ElementTypes::type)
-		@JvmStatic
-		@JsonCreator
-		fun from(value: String) = codes[value]
-	}
+    companion object {
+        private val codes = ElementTypes.values().associateBy(ElementTypes::type)
+        @JvmStatic
+        @JsonCreator
+        fun from(value: String) = codes[value]
+    }
 }
 
-class AdvancedElement(
+data class AdvancedElement(
 
-	@JsonProperty("id")
-	private var id: String = "defaultValue",
+    @JsonProperty("id")   
+    private var id: String = "defaultValue",
 
-//	@JsonProperty("type")
-//	private var type: String? = "AdvancedElement",
+// 	@JsonProperty("type")
+// 	private var type: String? = "AdvancedElement",
 
-	@JsonProperty("parentID")
-	private var parentID: String? = null,
+    @JsonProperty("parentID")   
+    private var parentID: String? = null,
 
-	@JsonProperty("content")
-	private var content: String? = null,
+    @JsonProperty("content")   
+    private var content: String? = null,
 
-	@JsonProperty("childrenElements")
-	private var children: List<AdvancedElement>? = listOf(),
+    @JsonProperty("childrenElements")   
+    private var children: List<AdvancedElement>? = listOf(),
 
-	@JsonProperty("elementType")
-	private var elementType: String? = "paragraph",
+    @JsonProperty("elementType")   
+    private var elementType: String? = "paragraph",
 
-	@JsonProperty("properties")
-	private var properties: Map<String, Any>? = null
+    @JsonProperty("properties")   
+    private var properties: Map<String, Any>? = null,
+
+    /* don't consider createdBy,lastEditedBy, createdAt, updatedAt */
+    @JsonProperty("hashCode")   
+    var hashCode: Int? = null,
+
+    @JsonProperty("createdBy")   
+    var createdBy: String? = null,
+
+    @JsonProperty("lastEditedBy")   
+    var lastEditedBy: String? = null,
+
+    @JsonProperty("createdAt")   
+    var createdAt: Long? = null
 
 ) : Element {
-	override fun getContent(): String {
-		if (content != null) return content as String
-		return ""
-	}
 
-	override fun getID(): String = id
+    /* a certain block may not always be updated  */
+    @JsonProperty("updatedAt")
+    var updatedAt: Long? = null
 
-	override fun getChildren(): List<Element>? = children
+    override fun getContent(): String {
+        if (content != null) return content as String
+        return ""
+    }
 
-	fun getElementType(): String? = elementType
+    override fun getID(): String = id
 
-	//override fun getType(): String? = type
+    override fun getChildren(): List<Element>? = children
 
-	fun getProperties() : Map<String, Any>? = properties
+    fun getElementType(): String? = elementType
 
+    // override fun getType(): String? = type
+
+    fun getProperties(): Map<String, Any>? = properties
 }

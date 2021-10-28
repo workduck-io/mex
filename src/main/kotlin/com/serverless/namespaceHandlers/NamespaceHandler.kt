@@ -9,28 +9,25 @@ import org.apache.logging.log4j.LogManager
 
 class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-	private val namespaceService = NamespaceService()
+    private val namespaceService = NamespaceService()
 
-	override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
+    override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
+        val routeKey = input["routeKey"] as String
 
-		val routeKey = input["routeKey"] as String
+        val strategy = NamespaceStrategyFactory.getNamespaceStrategy(routeKey)
 
-		val strategy = NamespaceStrategyFactory.getNamespaceStrategy(routeKey)
+        if (strategy == null) {
+            val responseBody = StandardResponse("Request type not recognized")
+            return ApiGatewayResponse.build {
+                statusCode = 500
+                objectBody = responseBody
+            }
+        }
+        return strategy.apply(input, namespaceService)
+    }
 
-		if (strategy == null ){
-			val responseBody = StandardResponse("Request type not recognized")
-			return ApiGatewayResponse.build {
-				statusCode = 500
-				objectBody = responseBody
-			}
-
-		}
-		return strategy.apply(input, namespaceService)
-
-	}
-
-	companion object {
-		private val LOG = LogManager.getLogger(NamespaceHandler::class.java)
-	}
+    companion object {
+        private val LOG = LogManager.getLogger(NamespaceHandler::class.java)
+    }
 }
