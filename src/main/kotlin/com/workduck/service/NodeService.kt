@@ -139,7 +139,8 @@ class NodeService {
         val element: AdvancedElement = objectMapper.readValue(blockJson)
 
         val blockData = objectMapper.writeValueAsString(element)
-        return nodeRepository.updateNodeBlock(nodeID, blockData, element.getID())
+
+        return nodeRepository.updateNodeBlock(nodeID, blockData, element.getID(), element.lastEditedBy as String)
     }
 
     private fun computeHashOfNodeData(node: Node) {
@@ -296,11 +297,11 @@ fun main() {
 
     //NodeService().createNode(jsonString)
     // println(NodeService().getNode("NODE1"))
-    //NodeService().updateNode(jsonString1)
+    NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
-    NodeService().append("NODE1",jsonForAppend)
+    //NodeService().append("NODE1",jsonForAppend)
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)

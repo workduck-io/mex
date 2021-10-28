@@ -117,15 +117,16 @@ class NodeRepository(
         TODO("Not yet implemented")
     }
 
-    fun updateNodeBlock(nodeID: String, updatedBlock: String, blockID: String): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
         val table = dynamoDB.getTable(tableName)
         val objectMapper = ObjectMapper()
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedBlock"] = updatedBlock
+        expressionAttributeValues[":userID"] = userID
 
         val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-            .withUpdateExpression("SET nodeData.$blockID = :updatedBlock")
+            .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
             .withValueMap(expressionAttributeValues)
 
         return try {
