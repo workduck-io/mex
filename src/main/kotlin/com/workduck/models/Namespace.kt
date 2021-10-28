@@ -26,35 +26,35 @@ enum class NamespaceStatus {
 class Namespace(
     // val authorizations : Set<Auth>,
 
-    @JsonProperty("id")   
-    @DynamoDBHashKey(attributeName = "PK")   
+    @JsonProperty("id")
+    @DynamoDBHashKey(attributeName = "PK")
     var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
 
     /* For convenient deletion */
-    @JsonProperty("idCopy")   
-    @DynamoDBRangeKey(attributeName = "SK")   
+    @JsonProperty("idCopy")
+    @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String = id,
 
-    @JsonProperty("workspaceIdentifier")   
-    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)   
-    @JsonSerialize(converter = IdentifierSerializer::class)   
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)   
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")   
+    @JsonProperty("workspaceIdentifier")
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
     var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-    @JsonProperty("name")   
-    @DynamoDBAttribute(attributeName = "namespaceName")   
+    @JsonProperty("name")
+    @DynamoDBAttribute(attributeName = "namespaceName")
     var name: String ? = null,
 
     // val owner: OwnerIdentifier,
 
-    @JsonProperty("createdAt")   
-    @DynamoDBAttribute(attributeName = "createdAt")   
+    @JsonProperty("createdAt")
+    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = System.currentTimeMillis(),
 
-    @JsonProperty("itemType")   
-    @DynamoDBAttribute(attributeName = "itemType")   
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)   
+    @JsonProperty("itemType")
+    @DynamoDBAttribute(attributeName = "itemType")
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: String = "Namespace"
 
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE

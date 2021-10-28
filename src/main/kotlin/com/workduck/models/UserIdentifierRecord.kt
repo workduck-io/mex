@@ -10,29 +10,29 @@ import com.workduck.utils.Helper
 @DynamoDBTable(tableName = "sampleData")
 class UserIdentifierRecord(
 
-    @JsonProperty("userID")   
-    @DynamoDBHashKey(attributeName = "PK")   
+    @JsonProperty("userID")
+    @DynamoDBHashKey(attributeName = "PK")
     var userID: String = Helper.generateId("USER"),
 
-    @JsonProperty("identifier")   
-    @DynamoDBRangeKey(attributeName = "SK")   
-    @JsonDeserialize(converter = IdentifierDeserializer::class)   
-    @JsonSerialize(converter = IdentifierSerializer::class)   
-    @DynamoDBTypeConverted(converter = IdentifierConverter::class)   
+    @JsonProperty("identifier")
+    @DynamoDBRangeKey(attributeName = "SK")
+    @JsonDeserialize(converter = IdentifierDeserializer::class)
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @DynamoDBTypeConverted(converter = IdentifierConverter::class)
     var identifier: Identifier? = null,
 
 	/* AK = IdentifierID
 	** Making this so that we don't have to create itemType-SK index. We can leverage already existing itemType-AK index
 	*/
-    @DynamoDBAttribute(attributeName = "AK")   
+    @DynamoDBAttribute(attributeName = "AK")
     var ak: String? = identifier?.id,
 
-    @JsonProperty("createdAt")   
-    @DynamoDBAttribute(attributeName = "createdAt")   
+    @JsonProperty("createdAt")
+    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = System.currentTimeMillis(),
 
-    @JsonProperty("itemType")   
-    @DynamoDBAttribute(attributeName = "itemType")   
+    @JsonProperty("itemType")
+    @DynamoDBAttribute(attributeName = "itemType")
     override var itemType: String = "UserIdentifierRecord"
 
 ) : Entity {

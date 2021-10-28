@@ -4,19 +4,19 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 class BasicTextElement(
 
-    @JsonProperty("id")   
+    @JsonProperty("id")
     private var id: String = "defaultBSE",
 
 // 	@JsonProperty("type")
 // 	private var type: String? = "BasicTextElement",
 
-    @JsonProperty("content")   
+    @JsonProperty("content")
     private var content: String = "",
 
-    @JsonProperty("children")   
+    @JsonProperty("children")
     private var children: List<Element>? = null,
 
-    @JsonProperty("properties")   
+    @JsonProperty("properties")
     val properties: Set<TextElementProperties>? = null
 ) : Element {
     override fun getContent(): String = content

@@ -8,26 +8,26 @@ import com.workduck.utils.Helper
 @DynamoDBTable(tableName = "sampleData")
 class Workspace(
 
-    @JsonProperty("id")   
-    @DynamoDBHashKey(attributeName = "PK")   
+    @JsonProperty("id")
+    @DynamoDBHashKey(attributeName = "PK")
     var id: String = Helper.generateId(IdentifierType.WORKSPACE.name),
 
     /* For convenient deletion */
-    @JsonProperty("idCopy")   
-    @DynamoDBRangeKey(attributeName = "SK")   
+    @JsonProperty("idCopy")
+    @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String = id,
 
-    @JsonProperty("name")   
-    @DynamoDBAttribute(attributeName = "workspaceName")   
+    @JsonProperty("name")
+    @DynamoDBAttribute(attributeName = "workspaceName")
     var name: String = "DEFAULT_WORKSPACE",
 
-    @JsonProperty("createdAt")   
-    @DynamoDBAttribute(attributeName = "createdAt")   
+    @JsonProperty("createdAt")
+    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = System.currentTimeMillis(),
 
-    @JsonProperty("itemType")   
-    @DynamoDBAttribute(attributeName = "itemType")   
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)   
+    @JsonProperty("itemType")
+    @DynamoDBAttribute(attributeName = "itemType")
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: String = "Workspace"
 
 ) : Entity {
