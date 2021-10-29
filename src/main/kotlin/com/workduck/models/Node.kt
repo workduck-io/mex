@@ -41,8 +41,8 @@ data class Node(
     var dataOrder: MutableList<String>? = null,
 
     @JsonProperty("version")
-    @DynamoDBAttribute(attributeName = "version")
-    var version: String? = null,
+    @DynamoDBVersionAttribute(attributeName = "version")
+    var version: Long? = null,
 
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
@@ -84,6 +84,14 @@ data class Node(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
+
+//    fun getVersion(): Long? {
+//        return version
+//    }
+//
+//    fun setVersion(version: Long?) {
+//        this.version = version
+//    }
 
     // override val entityID: String = id
 

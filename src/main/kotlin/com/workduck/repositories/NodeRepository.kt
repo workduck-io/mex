@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.*
@@ -113,8 +114,25 @@ class NodeRepository(
         TODO("Not yet implemented")
     }
 
-    override fun update(t: Node): Node {
-        TODO("Not yet implemented")
+    override fun update(t: Node): Node? {
+        val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+            .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
+            .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+            .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+            .build()
+
+        return try {
+            mapper.save(t, dynamoDBMapperConfig)
+            t
+        } catch (e: ConditionalCheckFailedException) {
+            /* Will happen only in race condition because we're making the versions same in the service */
+            /* What should be the flow from here on? Call NodeService().update()? */
+            println("Version mismatch!!")
+            null
+        } catch (e: java.lang.Exception) {
+            println(e)
+            null
+        }
     }
 
     fun updateNodeBlock(nodeID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {

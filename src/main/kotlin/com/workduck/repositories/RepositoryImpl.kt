@@ -42,7 +42,7 @@ class RepositoryImpl<T : Entity>(
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
-            .withSaveBehavior(SaveBehavior.UPDATE)
+            .withSaveBehavior(SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
             .build()
 
@@ -50,6 +50,7 @@ class RepositoryImpl<T : Entity>(
             mapper.save(t, dynamoDBMapperConfig)
             t
         } catch (e: Exception) {
+            println(e)
             null
         }
     }

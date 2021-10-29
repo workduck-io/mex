@@ -84,7 +84,7 @@ class NodeService {
         val elements: MutableList<AdvancedElement> = objectMapper.readValue(jsonString)
 
         val orderList = mutableListOf<String>()
-        var userID : String = ""
+        var userID: String = ""
         for (e in elements) {
             orderList += e.getID()
 
@@ -93,9 +93,6 @@ class NodeService {
             e.updatedAt = e.createdAt
             userID = e.createdBy as String
         }
-
-
-
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
@@ -118,9 +115,13 @@ class NodeService {
 
         val storedNode: Node = getNode(node.id) as Node
 
+        /* to update block level details for accountability */
         compareNodeWithStoredNode(node, storedNode)
 
-        return repository.update(node)
+        /* to make the versions same */
+        mergeNodeVersions(node, storedNode)
+
+        return nodeRepository.update(node)
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
@@ -153,6 +154,40 @@ class NodeService {
             clonedElement.hashCode = null
             e.hashCode = clonedElement.hashCode()
         }
+    }
+
+    private fun mergeNodeVersions(node: Node, storedNode: Node) {
+
+        /* currently just handling when more blocks have been added */
+
+        /* not handling the case when
+            1. same block(s) has/have been edited
+            2. some blocks deleted either by user1 or user2
+        */
+        val storedNodeDataOrder = storedNode.dataOrder
+        val sentDataOrder = node.dataOrder
+        val finalDataOrder = mutableListOf<String>()
+        for ((index, nodeID) in storedNodeDataOrder!!.withIndex()) {
+            if (nodeID == sentDataOrder!![index]) {
+                finalDataOrder.add(nodeID)
+            } else {
+                if (sentDataOrder[index] !in finalDataOrder)
+                    finalDataOrder.add(sentDataOrder[index])
+
+                if (nodeID !in finalDataOrder)
+                    finalDataOrder.add(nodeID)
+            }
+        }
+
+        var remaining = storedNodeDataOrder.size
+        while (remaining < sentDataOrder!!.size) {
+            if (sentDataOrder[remaining] !in finalDataOrder)
+                finalDataOrder.add(sentDataOrder[remaining])
+            remaining++
+        }
+
+        node.dataOrder = finalDataOrder
+        node.version = storedNode.version
     }
 
     private fun compareNodeWithStoredNode(node: Node, storedNode: Node) {
@@ -209,6 +244,18 @@ fun main() {
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
+			},
+            {
+				"id": "1234",
+                "elementType": "list",
+                "childrenElements": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content",
+                    "elementType": "list",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
 			}
 			]
 		}
@@ -234,13 +281,24 @@ fun main() {
             }
             ]
         },
-        
         {
             "id": "sampleParentID2",
             "elementType": "list",
             "childrenElements": [
             {
                 "id" : "sampleChildID2",
+                "content" : "sample child content",
+                "elementType": "list",
+                "properties" :  { "bold" : true, "italic" : true  }
+            }
+            ]
+        },
+        {
+            "id": "1234",
+            "elementType": "list",
+            "childrenElements": [
+            {
+                "id" : "sampleChildID",
                 "content" : "sample child content",
                 "elementType": "list",
                 "properties" :  { "bold" : true, "italic" : true  }
@@ -295,13 +353,13 @@ fun main() {
         }
       """
 
-    //NodeService().createNode(jsonString)
+    // NodeService().createNode(jsonString)
     // println(NodeService().getNode("NODE1"))
     NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
-    //NodeService().append("NODE1",jsonForAppend)
+    // NodeService().append("NODE1",jsonForAppend)
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
