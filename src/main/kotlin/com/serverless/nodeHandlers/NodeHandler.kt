@@ -25,6 +25,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 			}
 
 		}
+
 		return strategy.apply(input, nodeService)
 
 	}

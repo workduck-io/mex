@@ -15,7 +15,6 @@ class UserHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 	override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
 		val routeKey = input["routeKey"] as String
-
 		val strategy = UserStrategyFactory.getUserStrategy(routeKey)
 
 		if (strategy == null ){
