@@ -15,6 +15,8 @@ class UserStrategyFactory {
 
 		const val getUsersByWorkspaceObject = "GET /user/workspace/{workspaceID}"
 
+		const val registerUserObject = "POST /user/register"
+
 
 		private val userRegistry: Map<String, UserStrategy> = mapOf(
 			getUserObject to GetUserStrategy(),
@@ -22,7 +24,8 @@ class UserStrategyFactory {
 			updateUserObject to UpdateUserStrategy(),
 			deleteUserObject to DeleteUserStrategy(),
 			getUsersByNamespaceObject to GetUsersByNamespaceStrategy(),
-			getUsersByWorkspaceObject to GetUsersByWorkspaceStrategy()
+			getUsersByWorkspaceObject to GetUsersByWorkspaceStrategy(),
+			registerUserObject to RegisterUserStrategy()
 		)
 
 

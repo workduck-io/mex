@@ -30,6 +30,7 @@ provider:
     #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
+    STAGE: ${opt:stage, 'dev'}
   iam:
     role:
       statements:
@@ -44,6 +45,7 @@ provider:
             - dynamodb:DescribeTable
             - dynamodb:BatchWriteItem
             - dynamodb:BatchGetItem
+            - lambda:InvokeFunction
           Resource: 'arn:aws:dynamodb:us-east-1:*:*'
   httpApi:
     cors: true

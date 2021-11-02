@@ -96,6 +96,7 @@ class NodeService {
         node.idCopy = node.id
         node.createdAt = null
 
+
         /* In case workspace/ namespace have been updated, AK needs to be updated as well */
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 

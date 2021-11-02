@@ -13,6 +13,7 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserRepository
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 
 class UserService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
@@ -30,6 +31,7 @@ class UserService {
 
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
+
 
 	fun createUser(jsonString : String) : Entity? {
 
@@ -58,6 +60,21 @@ class UserService {
 
 		return repository.update(user)
 	}
+
+	fun registerUser(jsonString: String, workspaceName: String?): Entity?{
+		val objectMapper = ObjectMapper().registerModule(KotlinModule())
+		val user: User = objectMapper.readValue(jsonString)
+
+		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))
+		val jsonForWorkspaceCreation : String = """{
+			"id": "$workspaceID",
+			"name": "$workspaceName"
+		}"""
+
+		return WorkspaceService().createWorkspace(jsonForWorkspaceCreation)
+
+	}
+
 
 	fun deleteUser(userID: String) : Identifier? {
 		return repository.delete(UserIdentifier(userID))
@@ -92,11 +109,11 @@ fun main() {
 		}
 		"""
 
-
+	UserService().registerUser(json, "WD")
 	//UserService().createUser(json)
 	//println(UserService().getUser("USER49"))
 	//UserService().updateUser(jsonUpdated)
 	//UserService().deleteUser("USER49")
-	println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
+	//println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
 	//UserService().getAllUsersByWorkspaceID()
 }
