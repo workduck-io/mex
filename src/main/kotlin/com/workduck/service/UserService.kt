@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Item
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -32,8 +31,7 @@ class UserService {
 	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
 
-
-	fun createUser(jsonString : String) : Entity? {
+    fun createUser(jsonString: String): Entity? {
 
 		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)

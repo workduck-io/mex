@@ -6,11 +6,11 @@ import com.workduck.models.Entity
 import com.workduck.service.NodeService
 
 class CreateNodeStrategy : NodeStrategy {
-	override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
-		val errorMessage = "Error creating node"
+    override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
+        val errorMessage = "Error creating node"
 
-		val json = input["body"] as String
-		val node : Entity? = nodeService.createNode(json)
-		return ApiResponseHelper.generateStandardResponse(node as Any?, errorMessage)
-	}
+        val json = input["body"] as String
+        val node: Entity? = nodeService.createNode(json)
+        return ApiResponseHelper.generateStandardResponse(node as Any?, errorMessage)
+    }
 }

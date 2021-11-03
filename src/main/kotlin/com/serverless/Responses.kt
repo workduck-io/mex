@@ -1,4 +1,3 @@
 package com.serverless
 
-interface Responses {
-}
+interface Responses
