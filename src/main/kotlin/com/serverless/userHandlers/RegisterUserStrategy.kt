@@ -34,8 +34,9 @@ class RegisterUserStrategy : UserStrategy {
 
 
         val payload = """{
-			"userID" : "${obj.user?.id}",
-			"groupID" : "$workspaceID",
+			"id" : "${obj.user?.id}",
+            "name" : "${obj.user?.name}",
+			"group" : "$workspaceID",
 			"tag" : "MEX",
             "properties" : $userJson
 			}
