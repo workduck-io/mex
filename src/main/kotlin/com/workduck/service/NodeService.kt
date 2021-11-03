@@ -106,6 +106,7 @@ class NodeService {
         /* createdAt should not be updated in updateNode flow */
         node.createdAt = null
 
+
         /* In case workspace/ namespace have been updated, AK needs to be updated as well */
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 

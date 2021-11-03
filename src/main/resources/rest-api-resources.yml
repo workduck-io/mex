@@ -142,6 +142,11 @@ User:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path : /user/register
+        method: post
+        authorizer: mexAuthorizer
+
 
 
 UserIdentifierRecord:
