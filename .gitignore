@@ -27,7 +27,7 @@ hs_err_pid*
 .idea
 
 .env
-
+package-lock.json
 .serverless*
 *.DS_Store
 **/.DS_Store
