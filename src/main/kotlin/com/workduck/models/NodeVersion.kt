@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.*
 
-@DynamoDBTable(tableName = "local-mex-history")
+@DynamoDBTable(tableName = "local-mex")
 data class NodeVersion(
 
         @JsonProperty("id")

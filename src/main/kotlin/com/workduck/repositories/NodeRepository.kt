@@ -15,6 +15,9 @@ import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.DDBTransactionHelper
+import java.util.*
+
 import org.apache.logging.log4j.LogManager
 
 class NodeRepository(
@@ -126,16 +129,46 @@ class NodeRepository(
         TODO("Not yet implemented")
     }
 
+
+    fun createNode(node: Node, nodeVersion: NodeVersion): Node? {
+        return try {
+            val transactionWriteRequest = TransactionWriteRequest()
+            transactionWriteRequest.addPut(node)
+            transactionWriteRequest.addPut(nodeVersion)
+            mapper.transactionWrite(transactionWriteRequest)
+            node
+        } catch (e: Exception) {
+            println(e)
+            null
+        }
+    }
+
     override fun update(t: Node): Node? {
-        val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+        TODO("Not yet implemented")
+    }
+
+
+    fun updateNode(node: Node, nodeVersion: NodeVersion): Node? {
+        val dynamoDBMapperConfig1 = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
             .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
             .build()
 
+        val dynamoDBMapperConfig2 = DynamoDBMapperConfig.Builder()
+                .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
+                .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+                .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(versioningTableName))
+                .build()
+
+        val configList : List<DynamoDBMapperConfig> = listOf(dynamoDBMapperConfig1, dynamoDBMapperConfig2)
+
         return try {
-            mapper.save(t, dynamoDBMapperConfig)
-            t
+            val transactionWriteRequest = TransactionWriteRequest()
+            transactionWriteRequest.addUpdate(node)
+            transactionWriteRequest.addPut(nodeVersion)
+            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, configList)
+            node
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */
             /* What should be the flow from here on? Call NodeService().update()? */

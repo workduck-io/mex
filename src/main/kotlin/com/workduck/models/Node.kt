@@ -12,7 +12,7 @@ enum class NodeStatus {
     UNLINKED
 }
 
-@DynamoDBTable(tableName = "sampleData")
+@DynamoDBTable(tableName = "local-mex")
 data class Node(
 
     @JsonProperty("id")

@@ -18,8 +18,8 @@ import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
+import com.workduck.utils.Helper
 
 /**
  * contains all node related logic
@@ -63,7 +63,23 @@ class NodeService {
 
         LOG.info("Creating node : $node")
 
-        return repository.create(node)
+        //return repository.create(node)
+
+        val nodeVersion : NodeVersion = createNodeVersionFromNode(node)
+
+        return nodeRepository.createNode(node, nodeVersion)
+    }
+
+    private fun createNodeVersionFromNode(node: Node) : NodeVersion {
+        val nodeVersion = NodeVersion(
+                id = node.id, lastEditedBy = node.lastEditedBy, createBy = node.createBy,
+                data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
+                workspaceIdentifier = node.workspaceIdentifier, updatedAt = node.updatedAt
+        )
+
+        nodeVersion.version = Helper.generateId("version")
+
+        return nodeVersion
     }
 
     fun createAndUpdateNode(nodeRequest: WDRequest?) : Entity? {
@@ -144,7 +160,10 @@ class NodeService {
         mergeNodeVersions(node, storedNode)
 
         LOG.info("Updating node : $node")
-        return nodeRepository.update(node)
+        //return nodeRepository.update(node)
+        val nodeVersion = createNodeVersionFromNode(node)
+
+        return nodeRepository.updateNode(node, nodeVersion)
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
