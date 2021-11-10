@@ -11,7 +11,8 @@ import java.util.*
 /**
  * This is a custom helper for transactions ( code taken from DynamoDBMapper.java class ).
  * Due to some inconsistencies with aws library for transactions, we're using this helper to tweak the code as per our own use case.
- * Use cases :  using dynamic table names for different configs, adhering save to specific save behaviour etc.
+ * Bug reported : https://github.com/aws/aws-sdk-java/issues/2664
+ * Use cases this helper solves :  using dynamic table names for different configs, adhering save to specific save behaviour etc.
  * @author Varun Garg
  */
 class DDBTransactionHelper(
@@ -190,6 +191,7 @@ class DDBTransactionHelper(
             if (field.keyType() != null) {
                 keyAttributeValueMap[field.name()] = nonKeyNonNullAttributeValueMap.remove(field.name())
             } else if (nonKeyNonNullAttributeValueMap[field.name()] == null) {
+                /* Uncomment below line to remove current null fields of model from DDB Table */
                 // nullValuedNonKeyAttributeNames.add(field.name())
                 nonKeyNonNullAttributeValueMap.remove(field.name())
             }

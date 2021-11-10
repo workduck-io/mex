@@ -51,6 +51,7 @@ class NodeService {
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
         node.dataOrder = createDataOrderForNode(node)
         node.createBy = node.lastEditedBy
+        node.lastVersionCreatedAt = node.createdAt
 
         //computeHashOfNodeData(node)
 
@@ -61,6 +62,7 @@ class NodeService {
             e.updatedAt = node.createdAt
         }
 
+        val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
         LOG.info("Creating node : $node")
 
         //return repository.create(node)
@@ -70,11 +72,11 @@ class NodeService {
         return nodeRepository.createNode(node, nodeVersion)
     }
 
-    private fun createNodeVersionFromNode(node: Node) : NodeVersion {
+    private fun createNodeVersionFromNode(node: Node): NodeVersion {
         val nodeVersion = NodeVersion(
-                id = node.id, lastEditedBy = node.lastEditedBy, createBy = node.createBy,
-                data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
-                workspaceIdentifier = node.workspaceIdentifier, updatedAt = node.updatedAt
+            id = node.id, lastEditedBy = node.lastEditedBy, createBy = node.createBy,
+            data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
+            workspaceIdentifier = node.workspaceIdentifier, updatedAt = node.updatedAt
         )
 
         nodeVersion.version = Helper.generateId("version")
@@ -161,7 +163,20 @@ class NodeService {
 
         LOG.info("Updating node : $node")
         //return nodeRepository.update(node)
+
+        /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
+        if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
+            node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
+            return repository.update(node)
+        }
+
+
+        node.lastVersionCreatedAt = node.updatedAt
+
         val nodeVersion = createNodeVersionFromNode(node)
+
+        nodeVersion.createdAt = storedNode.createdAt
+        nodeVersion.createBy = storedNode.createBy
 
         return nodeRepository.updateNode(node, nodeVersion)
     }

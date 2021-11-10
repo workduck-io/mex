@@ -91,6 +91,18 @@ data class Node(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
 
+
+    @JsonProperty("lastVersionCreatedAt")
+    @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
+    var lastVersionCreatedAt: Long? = null
+
+//    fun getVersion(): Long? {
+//        return version
+//    }
+//
+//    fun setVersion(version: Long?) {
+//        this.version = version
+//    }
     companion object {
         fun populateNodeWithSkAkAndCreatedAtNull(node : Node) {
             node.idCopy = node.id
