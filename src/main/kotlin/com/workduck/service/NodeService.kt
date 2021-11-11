@@ -341,12 +341,13 @@ fun main() {
 
     val jsonForEditBlock = """
         {
+            "lastEditedBy" : "Varun",
             "id" : "sampleParentID",
             "elementType": "list",
             "childrenElements": [
               {
                   "id" : "sampleChildID",
-                  "content" : "edited child content - direct set - second try",
+                  "content" : "edited child content - direct set - second tryy",
                   "elementType": "list",
                   "properties" :  { "bold" : true, "italic" : true  }
               }
