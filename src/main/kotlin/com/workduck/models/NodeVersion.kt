@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.*
 
-@DynamoDBTable(tableName = "local-mex-history")
+@DynamoDBTable(tableName = "local-mex")
 data class NodeVersion(
 
         @JsonProperty("id")
@@ -16,7 +16,7 @@ data class NodeVersion(
         /* For convenient deletion */
         @JsonProperty("updatedAt")
         @DynamoDBRangeKey(attributeName = "SK")
-        var updatedAt: Long? = null,
+        var updatedAt: String? = null,
 
         @JsonProperty("lastEditedBy")
         @DynamoDBAttribute(attributeName = "lastEditedBy")
@@ -67,7 +67,7 @@ data class NodeVersion(
 
         @JsonProperty("itemType")
         @DynamoDBAttribute(attributeName = "itemType")
-        override var itemType: String = "Node",
+        override var itemType: String = "Node Version",
 
         @JsonProperty("createdAt")
         @DynamoDBAttribute(attributeName = "createdAt")
@@ -75,17 +75,8 @@ data class NodeVersion(
 
 ) : Entity {
 
+        @JsonProperty("ttl")
+        @DynamoDBAttribute(attributeName = "ttl")
+        var ttl: Long? = null
 
-
-//    fun getVersion(): Long? {
-//        return version
-//    }
-//
-//    fun setVersion(version: Long?) {
-//        this.version = version
-//    }
-
-    // override val entityID: String = id
-
-    // override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 }

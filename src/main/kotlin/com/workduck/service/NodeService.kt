@@ -20,6 +20,8 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import kotlinx.coroutines.*
+
 
 /**
  * contains all node related logic
@@ -69,14 +71,16 @@ class NodeService {
 
         val nodeVersion : NodeVersion = createNodeVersionFromNode(node)
 
+        node.nodeVersionCount = 1
+
         return nodeRepository.createNode(node, nodeVersion)
     }
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
         val nodeVersion = NodeVersion(
-            id = node.id, lastEditedBy = node.lastEditedBy, createBy = node.createBy,
+            id = "${node.id}#VERSION", lastEditedBy = node.lastEditedBy, createBy = node.createBy,
             data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
-            workspaceIdentifier = node.workspaceIdentifier, updatedAt = node.updatedAt
+            workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
         )
 
         nodeVersion.version = Helper.generateId("version")
@@ -173,12 +177,46 @@ class NodeService {
 
         node.lastVersionCreatedAt = node.updatedAt
 
+        println("Thread ID before run blocking : " + Thread.currentThread().id)
+
+
+
+        //println("Thread ID inside run blocking : " + Thread.currentThread().id)
+        checkNodeVersionCount(node, storedNode.nodeVersionCount)
+
+
+
         val nodeVersion = createNodeVersionFromNode(node)
 
         nodeVersion.createdAt = storedNode.createdAt
         nodeVersion.createBy = storedNode.createBy
 
+        println("Before DAO Call!!")
         return nodeRepository.updateNode(node, nodeVersion)
+    }
+
+
+    fun checkNodeVersionCount(node: Node, storedNodeVersionCount: Long)  {
+        if(storedNodeVersionCount < 25 ) {
+            node.nodeVersionCount = storedNodeVersionCount + 1
+            println(Thread.currentThread().id)
+        }
+        else {
+            node.nodeVersionCount = 25
+            GlobalScope.launch {
+                println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
+
+                println("Thread ID inside launch : " + Thread.currentThread().id)
+                setTTLForOldestVersion()
+                println("After delay")
+
+            }
+            println("Hello") // main coroutine continues while a previous one is delayed
+        }
+    }
+
+    private fun setTTLForOldestVersion(){
+
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
@@ -436,6 +474,13 @@ fun main() {
         }
       """
 
+    // NodeService().createNode(jsonString)
+    // println(NodeService().getNode("NODE1"))
+    println("HELLO")
+//    runBlocking {
+//        println("WORLD")
+//        NodeService().updateNode(jsonString1)
+//    }
     val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
      NodeService().createAndUpdateNode(nodeRequest)
     // println(NodeService().getNode("NODE2"))
@@ -446,7 +491,7 @@ fun main() {
     // NodeService().append("NODE1",jsonForAppend)
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
-    // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
+     NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
 
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))

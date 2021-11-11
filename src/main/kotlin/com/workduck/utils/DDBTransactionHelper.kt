@@ -31,11 +31,11 @@ class DDBTransactionHelper(
         }
     }
 
-    fun transactionWrite(transactionWriteRequest: TransactionWriteRequest?, configList: List<DynamoDBMapperConfig>?) {
+    fun transactionWrite(transactionWriteRequest: TransactionWriteRequest?, config: DynamoDBMapperConfig) {
         if (transactionWriteRequest == null || transactionWriteRequest.transactionWriteOperations.isNullOrEmpty()) {
             throw SdkClientException("Input request is null or empty")
         }
-        // val finalConfig: DynamoDBMapperConfig? = config
+        val finalConfig: DynamoDBMapperConfig = config
         val writeOperations = transactionWriteRequest.transactionWriteOperations
         val inMemoryUpdates: MutableList<ValueUpdate> = LinkedList()
         val transactWriteItemsRequest = TransactWriteItemsRequest()
@@ -46,7 +46,7 @@ class DDBTransactionHelper(
                 generateTransactWriteItem(
                     writeOperation,
                     inMemoryUpdates,
-                    configList!![index]
+                        finalConfig
                 )
             )
         }

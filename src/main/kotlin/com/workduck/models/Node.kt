@@ -96,6 +96,10 @@ data class Node(
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
     var lastVersionCreatedAt: Long? = null
 
+    @JsonProperty("nodeVersionCount")
+    @DynamoDBAttribute(attributeName = "nodeVersionCount")
+    var nodeVersionCount: Long = 0
+
 //    fun getVersion(): Long? {
 //        return version
 //    }

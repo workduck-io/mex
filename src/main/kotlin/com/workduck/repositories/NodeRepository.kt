@@ -135,7 +135,7 @@ class NodeRepository(
             val transactionWriteRequest = TransactionWriteRequest()
             transactionWriteRequest.addPut(node)
             transactionWriteRequest.addPut(nodeVersion)
-            mapper.transactionWrite(transactionWriteRequest)
+            mapper.transactionWrite(transactionWriteRequest, dynamoDBMapperConfig)
             node
         } catch (e: Exception) {
             println(e)
@@ -149,25 +149,18 @@ class NodeRepository(
 
 
     fun updateNode(node: Node, nodeVersion: NodeVersion): Node? {
-        val dynamoDBMapperConfig1 = DynamoDBMapperConfig.Builder()
+        val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
             .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
             .build()
 
-        val dynamoDBMapperConfig2 = DynamoDBMapperConfig.Builder()
-                .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
-                .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
-                .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(versioningTableName))
-                .build()
-
-        val configList : List<DynamoDBMapperConfig> = listOf(dynamoDBMapperConfig1, dynamoDBMapperConfig2)
 
         return try {
             val transactionWriteRequest = TransactionWriteRequest()
             transactionWriteRequest.addUpdate(node)
             transactionWriteRequest.addPut(nodeVersion)
-            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, configList)
+            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, dynamoDBMapperUpdateConfig)
             node
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */

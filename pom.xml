@@ -17,6 +17,7 @@
         <dynamo.version>1.12.70</dynamo.version>
         <jackson.version>2.9.10</jackson.version>
         <detekt.version>1.18.1.1</detekt.version>
+        <coroutines.version>1.5.2</coroutines.version>
     </properties>
 
     <dependencyManagement>
@@ -105,6 +106,13 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>11.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+            <version>${coroutines.version}</version>
+            <type>pom</type>
         </dependency>
     </dependencies>
 
