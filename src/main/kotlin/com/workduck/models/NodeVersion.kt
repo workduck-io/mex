@@ -71,12 +71,17 @@ data class NodeVersion(
 
         @JsonProperty("createdAt")
         @DynamoDBAttribute(attributeName = "createdAt")
-        var createdAt: Long? = System.currentTimeMillis()
+        var createdAt: Long? = System.currentTimeMillis(),
+
+
+        @JsonProperty("status")
+        @DynamoDBAttribute(attributeName = "status")
+        var versionStatus: String = "ACTIVE"
 
 ) : Entity {
 
-        @JsonProperty("ttl")
-        @DynamoDBAttribute(attributeName = "ttl")
-        var ttl: Long? = null
+        @JsonProperty("timeToLive")
+        @DynamoDBAttribute(attributeName = "timeToLive")
+        var timeToLive: Long? = null
 
 }

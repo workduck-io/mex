@@ -207,7 +207,7 @@ class NodeService {
                 println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
 
                 println("Thread ID inside launch : " + Thread.currentThread().id)
-                setTTLForOldestVersion()
+                setTTLForOldestVersion(node.id)
                 println("After delay")
 
             }
@@ -215,8 +215,21 @@ class NodeService {
         }
     }
 
-    private fun setTTLForOldestVersion(){
 
+
+    fun setTTLForOldestVersion(nodeID : String){
+
+        /*returns first element from sorted updatedAts in ascending order */
+        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)[0]
+
+        println(oldestUpdatedAt)
+
+        nodeRepository.setTTLForOldestVersion(nodeID, oldestUpdatedAt)
+
+    }
+
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>{
+        return nodeRepository.getMetaDataForActiveVersions(nodeID)
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
@@ -491,7 +504,10 @@ fun main() {
     // NodeService().append("NODE1",jsonForAppend)
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
-     NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
+    // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
+    // NodeService().getMetaDataForActiveVersions("NODE1")
+
+    NodeService().setTTLForOldestVersion("NODE1")
 
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))

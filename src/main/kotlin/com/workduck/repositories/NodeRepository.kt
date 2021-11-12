@@ -4,7 +4,11 @@ package com.workduck.repositories
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,6 +20,7 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
+import java.time.Instant
 import java.util.*
 
 import org.apache.logging.log4j.LogManager
@@ -197,4 +202,61 @@ class NodeRepository(
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
+
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String> {
+        val table = dynamoDB.getTable(tableName)
+        println("Inside getAllVersionsOfNode function")
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":pk"] = "${nodeID}#VERSION"
+        expressionAttributeValues[":status"] = "ACTIVE"
+
+        val querySpec = QuerySpec()
+                .withKeyConditionExpression("PK = :pk")
+                .withFilterExpression("versionStatus = :status")
+                .withValueMap(expressionAttributeValues)
+                .withProjectionExpression("SK")
+
+
+        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
+        val iterator: Iterator<Item> = items!!.iterator()
+
+        var itemList: MutableList<String> = mutableListOf()
+        while (iterator.hasNext()) {
+            val item: Item = iterator.next()
+            itemList = (itemList + (item["SK"] as String)).toMutableList()
+
+        }
+
+        return itemList
+
+    }
+
+    fun setTTLForOldestVersion(nodeID : String, oldestUpdatedAt : String){
+
+        val table = dynamoDB.getTable("local-mex-history")
+
+        val now: Long = Instant.now().epochSecond // unix time
+        val ttl = (60).toLong()
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":ttl"] = (now + ttl)
+        expressionAttributeValues[":status"] = "INACTIVE"
+
+
+        val u = UpdateItemSpec().withPrimaryKey("PK", "$nodeID#VERSION", "SK", oldestUpdatedAt)
+                .withUpdateExpression("SET timeToLive = :ttl, versionStatus = :status ")
+                .withValueMap(expressionAttributeValues)
+
+        try {
+            table.updateItem(u)
+        } catch (e: Exception) {
+            println(e)
+        }
+
+
+    }
+
+
+
 }
