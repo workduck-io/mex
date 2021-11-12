@@ -203,7 +203,7 @@ class NodeRepository(
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 
-    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String> {
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>? {
         val table = dynamoDB.getTable(tableName)
         println("Inside getAllVersionsOfNode function")
 
@@ -218,17 +218,20 @@ class NodeRepository(
                 .withProjectionExpression("SK")
 
 
-        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
-        val iterator: Iterator<Item> = items!!.iterator()
+        return try {
+            val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
+            val iterator: Iterator<Item> = items!!.iterator()
 
-        var itemList: MutableList<String> = mutableListOf()
-        while (iterator.hasNext()) {
-            val item: Item = iterator.next()
-            itemList = (itemList + (item["SK"] as String)).toMutableList()
-
+            var itemList: MutableList<String> = mutableListOf()
+            while (iterator.hasNext()) {
+                val item: Item = iterator.next()
+                itemList = (itemList + (item["SK"] as String)).toMutableList()
+            }
+            itemList
+        } catch (e : Exception){
+            println(e)
+            null
         }
-
-        return itemList
 
     }
 

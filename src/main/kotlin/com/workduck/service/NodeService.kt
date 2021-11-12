@@ -202,7 +202,7 @@ class NodeService {
             println(Thread.currentThread().id)
         }
         else {
-            node.nodeVersionCount = 25
+            node.nodeVersionCount = storedNodeVersionCount + 1
             GlobalScope.launch {
                 println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
 
@@ -220,15 +220,16 @@ class NodeService {
     fun setTTLForOldestVersion(nodeID : String){
 
         /*returns first element from sorted updatedAts in ascending order */
-        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)[0]
+        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)?.get(0)
 
         println(oldestUpdatedAt)
 
-        nodeRepository.setTTLForOldestVersion(nodeID, oldestUpdatedAt)
+        if(oldestUpdatedAt != null)
+            nodeRepository.setTTLForOldestVersion(nodeID, oldestUpdatedAt)
 
     }
 
-    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>{
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>?{
         return nodeRepository.getMetaDataForActiveVersions(nodeID)
     }
 
@@ -295,6 +296,8 @@ class NodeService {
 
         node.dataOrder = finalDataOrder
         node.version = storedNode.version
+
+        // TODO(explore autoMerge cmd line)
     }
 
     private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean{
@@ -507,7 +510,7 @@ fun main() {
     // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
     // NodeService().getMetaDataForActiveVersions("NODE1")
 
-    NodeService().setTTLForOldestVersion("NODE1")
+    //NodeService().setTTLForOldestVersion("NODE1")
 
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))

@@ -24,6 +24,8 @@ class NodeStrategyFactory {
 
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
+        const val getNodeVersionMetadata = "GET /node/{id}/version/metadata"
+
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
@@ -31,7 +33,9 @@ class NodeStrategyFactory {
             appendToNodeObject to AppendToNodeStrategy(),
             getNodesByNamespaceObject to GetNodesByNamespaceStrategy(),
             getNodesByWorkspaceObject to GetNodesByWorkspaceStrategy(),
-            updateNodeBlock to UpdateNodeBlockStrategy()
+            updateNodeBlock to UpdateNodeBlockStrategy(),
+            getNodeVersionMetadata to GetNodeVersionMetaDataStrategy()
+
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {

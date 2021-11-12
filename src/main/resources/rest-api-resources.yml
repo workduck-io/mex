@@ -45,6 +45,11 @@ Node:
         method: post
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /node/{id}/version/metadata
+        method: get
+        authorizer: mexAuthorizer
+
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
