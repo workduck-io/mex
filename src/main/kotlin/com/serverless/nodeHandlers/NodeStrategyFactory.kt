@@ -18,7 +18,7 @@ class NodeStrategyFactory {
 
         const val getNodesByWorkspaceObject = "GET /node/workspace/{workspaceID}"
 
-        const val updateNodeBlock = "POST /node/{id}/block/{blockIndex}/update"
+        const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
