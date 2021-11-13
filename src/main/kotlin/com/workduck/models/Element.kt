@@ -11,9 +11,9 @@ package com.workduck.models
 // 	JsonSubTypes.Type(value = BasicTextElement::class, name = "BasicTextElement")
 // )
 interface Element {
-    fun getContent(): String
-    fun getID(): String
-    fun getChildren(): List<Element>?
+    //fun getContent(): String
+    //fun getID(): String
+    //fun getChildren(): List<Element>?
     // fun getType(): String?
     // fun getElementType() : String
 }

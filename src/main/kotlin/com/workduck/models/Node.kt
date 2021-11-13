@@ -85,15 +85,4 @@ data class Node(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
 
-//    fun getVersion(): Long? {
-//        return version
-//    }
-//
-//    fun setVersion(version: Long?) {
-//        this.version = version
-//    }
-
-    // override val entityID: String = id
-
-    // override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 }
