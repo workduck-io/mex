@@ -39,18 +39,17 @@ class NodeService {
     fun createNode(node: Node): Entity? {
         println("Should be created in the table : $tableName")
         println(node)
-
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
+
         node.dataOrder = createDataOrderForNode(node)
 
         /* only when node is actually being created */
         node.createBy = node.lastEditedBy
 
-        computeHashOfNodeData(node)
+        //computeHashOfNodeData(node)
 
-        /* specific to when the node's being created */
         for (e in node.data!!) {
             e.createdBy = node.lastEditedBy
             e.lastEditedBy = node.lastEditedBy
@@ -127,12 +126,13 @@ class NodeService {
         /* createdAt should not be updated in updateNode flow */
         node.createdAt = null
 
+
         /* In case workspace/ namespace have been updated, AK needs to be updated as well */
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         node.dataOrder = createDataOrderForNode(node)
 
-        computeHashOfNodeData(node)
+        //val storedNode: Node = getNode(node.id) as Node
 
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
@@ -167,17 +167,6 @@ class NodeService {
         return nodeRepository.updateNodeBlock(nodeID, blockData, element.getID(), element.lastEditedBy as String)
     }
 
-    private fun computeHashOfNodeData(node: Node) {
-        for (e in node.data!!) {
-            val clonedElement: AdvancedElement = e
-            clonedElement.createdAt = null
-            clonedElement.updatedAt = null
-            clonedElement.lastEditedBy = null
-            clonedElement.createdBy = null
-            clonedElement.hashCode = null
-            e.hashCode = clonedElement.hashCode()
-        }
-    }
 
     private fun mergeNodeVersions(node: Node, storedNode: Node) {
 
@@ -223,7 +212,7 @@ class NodeService {
                     isPresent = true
 
                     /* if the block has not been updated */
-                    if (storedElement.hashCode == currElement.hashCode) {
+                    if (currElement == storedElement) {
                         currElement.createdAt = storedElement.createdAt
                         currElement.updatedAt = storedElement.updatedAt
                         currElement.createdBy = storedElement.createdBy
