@@ -10,9 +10,13 @@ class DeleteUserStrategy : UserStrategy {
         val errorMessage = "Error deleting user"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val userID = pathParameters!!["id"] as String
+        return if (pathParameters != null) {
+            val userID = pathParameters["id"] as String
 
-        val identifier: Identifier? = userService.deleteUser(userID)
-        return ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+            val identifier: Identifier? = userService.deleteUser(userID)
+            ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

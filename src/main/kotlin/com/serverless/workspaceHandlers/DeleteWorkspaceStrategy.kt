@@ -10,9 +10,13 @@ class DeleteWorkspaceStrategy : WorkspaceStrategy {
         val errorMessage = "Error deleting workspace"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val workspaceID = pathParameters!!["id"] as String
+        return if (pathParameters != null) {
+            val workspaceID = pathParameters["id"] as String
 
-        val identifier: Identifier? = workspaceService.deleteWorkspace(workspaceID)
-        return ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+            val identifier: Identifier? = workspaceService.deleteWorkspace(workspaceID)
+            ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

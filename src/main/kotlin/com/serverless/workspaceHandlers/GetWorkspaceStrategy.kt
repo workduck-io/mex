@@ -10,9 +10,14 @@ class GetWorkspaceStrategy : WorkspaceStrategy {
         val errorMessage = "Error getting workspace"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val workspaceID = pathParameters!!["id"] as String
 
-        val workspace: Entity? = workspaceService.getWorkspace(workspaceID)
-        return ApiResponseHelper.generateStandardResponse(workspace as Any?, errorMessage)
+        return if (pathParameters != null) {
+            val workspaceID = pathParameters["id"] as String
+
+            val workspace: Entity? = workspaceService.getWorkspace(workspaceID)
+            ApiResponseHelper.generateStandardResponse(workspace as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

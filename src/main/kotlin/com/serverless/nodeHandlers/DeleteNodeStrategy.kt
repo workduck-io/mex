@@ -10,9 +10,14 @@ class DeleteNodeStrategy : NodeStrategy {
         val errorMessage = "Error deleting node"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val nodeID = pathParameters!!["id"] as String
 
-        val identifier: Identifier? = nodeService.deleteNode(nodeID)
-        return ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+        return if (pathParameters != null) {
+            val nodeID = pathParameters["id"] as String
+
+            val identifier: Identifier? = nodeService.deleteNode(nodeID)
+            ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

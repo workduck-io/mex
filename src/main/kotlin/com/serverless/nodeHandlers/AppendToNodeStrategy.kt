@@ -9,10 +9,15 @@ class AppendToNodeStrategy : NodeStrategy {
         val errorMessage = "Error appending to node!"
         val json = input["body"] as String
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val nodeID = pathParameters!!["id"] as String
 
-        val map: Map<String, Any>? = nodeService.append(nodeID, json)
+        return if (pathParameters != null) {
+            val nodeID = pathParameters["id"] as String
 
-        return ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
+            val map: Map<String, Any>? = nodeService.append(nodeID, json)
+
+            ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

@@ -10,9 +10,13 @@ class GetWorkspaceDataStrategy : WorkspaceStrategy {
         val errorMessage = "Error getting workspaces!"
         val pathParameters = input["pathParameters"] as Map<*, *>?
 
-        val workspaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-        val workspaces: MutableMap<String, Workspace?>? = workspaceService.getWorkspaceData(workspaceIDList)
+        return if (pathParameters != null) {
+            val workspaceIDList: List<String> = (pathParameters["ids"] as String).split(",")
+            val workspaces: MutableMap<String, Workspace?>? = workspaceService.getWorkspaceData(workspaceIDList)
 
-        return ApiResponseHelper.generateStandardResponse(workspaces as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(workspaces as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

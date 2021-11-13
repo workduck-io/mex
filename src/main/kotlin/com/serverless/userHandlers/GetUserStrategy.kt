@@ -10,9 +10,13 @@ class GetUserStrategy : UserStrategy {
         val errorMessage = "Error getting user"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val userID = pathParameters!!["id"] as String
+        return if (pathParameters != null) {
+            val userID = pathParameters["id"] as String
 
-        val user: Entity? = userService.getUser(userID)
-        return ApiResponseHelper.generateStandardResponse(user as Any?, errorMessage)
+            val user: Entity? = userService.getUser(userID)
+            ApiResponseHelper.generateStandardResponse(user as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

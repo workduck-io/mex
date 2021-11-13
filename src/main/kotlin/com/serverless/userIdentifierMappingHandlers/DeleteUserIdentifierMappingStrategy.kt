@@ -12,10 +12,14 @@ class DeleteUserIdentifierMappingStrategy : UserIdentifierMappingStrategy {
         val errorMessage = "Error deleting userIdentifierMapping"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val userID = pathParameters!!["userID"] as String
-        val identifierID = pathParameters["identifierID"] as String
+        return if (pathParameters != null) {
+            val userID = pathParameters["userID"] as String
+            val identifierID = pathParameters["identifierID"] as String
 
-        val map: Map<String, String>? = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
-        return ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
+            val map: Map<String, String>? = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
+            ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

@@ -10,9 +10,14 @@ class GetNamespaceStrategy : NamespaceStrategy {
         val errorMessage = "Error getting namespace"
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val namespaceID = pathParameters!!["id"] as String
 
-        val namespace: Entity? = namespaceService.getNamespace(namespaceID)
-        return ApiResponseHelper.generateStandardResponse(namespace as Any?, errorMessage)
+        return if (pathParameters != null) {
+            val namespaceID = pathParameters["id"] as String
+
+            val namespace: Entity? = namespaceService.getNamespace(namespaceID)
+            ApiResponseHelper.generateStandardResponse(namespace as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

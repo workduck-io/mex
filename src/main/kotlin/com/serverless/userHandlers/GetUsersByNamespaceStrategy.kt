@@ -8,10 +8,14 @@ class GetUsersByNamespaceStrategy : UserStrategy {
     override fun apply(input: Map<String, Any>, userService: UserService): ApiGatewayResponse {
         val errorMessage = "Error getting users!"
         val pathParameters = input["pathParameters"] as Map<*, *>?
-        val namespaceID = pathParameters!!["id"] as String
+        return if (pathParameters != null) {
+            val namespaceID = pathParameters["id"] as String
 
-        val users: MutableList<String>? = userService.getAllUsersWithNamespaceID(namespaceID)
+            val users: MutableList<String>? = userService.getAllUsersWithNamespaceID(namespaceID)
 
-        return ApiResponseHelper.generateStandardResponse(users as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(users as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }

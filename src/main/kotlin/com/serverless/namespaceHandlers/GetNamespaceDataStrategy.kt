@@ -10,9 +10,13 @@ class GetNamespaceDataStrategy : NamespaceStrategy {
         val errorMessage = "Error getting namespaces!"
         val pathParameters = input["pathParameters"] as Map<*, *>?
 
-        val namespaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-        val namespaces: MutableMap<String, Namespace?>? = namespaceService.getNamespaceData(namespaceIDList)
+        return if (pathParameters != null) {
+            val namespaceIDList: List<String> = (pathParameters["ids"] as String).split(",")
+            val namespaces: MutableMap<String, Namespace?>? = namespaceService.getNamespaceData(namespaceIDList)
 
-        return ApiResponseHelper.generateStandardResponse(namespaces as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(namespaces as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+        }
     }
 }
