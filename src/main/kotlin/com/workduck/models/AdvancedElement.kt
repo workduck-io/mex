@@ -26,7 +26,7 @@ data class AdvancedElement(
     private var parentID: String? = null,
 
     @JsonProperty("content")
-    private var content: String? = null,
+    private var content: String = "",
 
     @JsonProperty("childrenElements")
     private var children: List<AdvancedElement>? = listOf(),
@@ -36,10 +36,6 @@ data class AdvancedElement(
 
     @JsonProperty("properties")
     private var properties: Map<String, Any>? = null,
-
-    /* don't consider createdBy,lastEditedBy, createdAt, updatedAt */
-    @JsonProperty("hashCode")
-    var hashCode: Int? = null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
@@ -67,7 +63,35 @@ data class AdvancedElement(
 
     fun getElementType(): String? = elementType
 
-    // override fun getType(): String? = type
 
     fun getProperties(): Map<String, Any>? = properties
+
+    /* Generated equals() and hashcode() functions */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AdvancedElement
+
+        if (id != other.id) return false
+        if (parentID != other.parentID) return false
+        if (content != other.content) return false
+        if (children != other.children) return false
+        if (elementType != other.elementType) return false
+        if (properties != other.properties) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + (parentID?.hashCode() ?: 0)
+        result = 31 * result + (content.hashCode() ?: 0)
+        result = 31 * result + (children?.hashCode() ?: 0)
+        result = 31 * result + (elementType?.hashCode() ?: 0)
+        result = 31 * result + (properties?.hashCode() ?: 0)
+        return result
+    }
+
+
 }

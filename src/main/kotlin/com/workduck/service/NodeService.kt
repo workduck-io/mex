@@ -49,7 +49,7 @@ class NodeService {
         node.dataOrder = createDataOrderForNode(node)
         node.createBy = node.lastEditedBy
 
-        computeHashOfNodeData(node)
+        //computeHashOfNodeData(node)
 
         for (e in node.data!!) {
             e.createdBy = node.lastEditedBy
@@ -112,8 +112,6 @@ class NodeService {
 
         node.dataOrder = createDataOrderForNode(node)
 
-        computeHashOfNodeData(node)
-
         val storedNode: Node = getNode(node.id) as Node
 
         /* to update block level details for accountability */
@@ -145,17 +143,6 @@ class NodeService {
         return nodeRepository.updateNodeBlock(nodeID, blockData, element.getID(), element.lastEditedBy as String)
     }
 
-    private fun computeHashOfNodeData(node: Node) {
-        for (e in node.data!!) {
-            val clonedElement: AdvancedElement = e
-            clonedElement.createdAt = null
-            clonedElement.updatedAt = null
-            clonedElement.lastEditedBy = null
-            clonedElement.createdBy = null
-            clonedElement.hashCode = null
-            e.hashCode = clonedElement.hashCode()
-        }
-    }
 
     private fun mergeNodeVersions(node: Node, storedNode: Node) {
 
@@ -199,7 +186,7 @@ class NodeService {
                     isPresent = true
 
                     /* if the block has not been updated */
-                    if (storedElement.hashCode == currElement.hashCode) {
+                    if (currElement == storedElement) {
                         currElement.createdAt = storedElement.createdAt
                         currElement.updatedAt = storedElement.updatedAt
                         currElement.createdBy = storedElement.createdBy
@@ -295,17 +282,17 @@ fun main() {
             ]
         },
         {
-            "id": "1234",
-            "elementType": "list",
-            "childrenElements": [
-            {
-                "id" : "sampleChildID",
-                "content" : "sample child content",
+				"id": "1234",
                 "elementType": "list",
-                "properties" :  { "bold" : true, "italic" : true  }
-            }
-            ]
-        }
+                "childrenElements": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content",
+                    "elementType": "list",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
+			}
         ]
     }
     """
@@ -357,7 +344,7 @@ fun main() {
 
     // NodeService().createNode(jsonString)
     // println(NodeService().getNode("NODE1"))
-    NodeService().updateNode(jsonString1)
+     NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
