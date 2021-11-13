@@ -44,8 +44,6 @@ class NodeService {
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         node.dataOrder = createDataOrderForNode(node)
-
-        /* only when node is actually being created */
         node.createBy = node.lastEditedBy
 
         //computeHashOfNodeData(node)
@@ -58,21 +56,6 @@ class NodeService {
         }
 
         return repository.create(node)
-
-    }
-
-    fun createAndUpdateNode(jsonString: String) : Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val node: Node = objectMapper.readValue(jsonString)
-
-        val storedNode = getNode(node.id) as Node?
-
-        return if(storedNode == null){
-            createNode(node)
-        }
-        else{
-            updateNode(node, storedNode)
-        }
     }
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
@@ -179,23 +162,30 @@ class NodeService {
         val storedNodeDataOrder = storedNode.dataOrder
         val sentDataOrder = node.dataOrder
         val finalDataOrder = mutableListOf<String>()
-        for ((index, nodeID) in storedNodeDataOrder!!.withIndex()) {
-            if (nodeID == sentDataOrder!![index]) {
-                finalDataOrder.add(nodeID)
-            } else {
-                if (sentDataOrder[index] !in finalDataOrder)
-                    finalDataOrder.add(sentDataOrder[index])
 
-                if (nodeID !in finalDataOrder)
-                    finalDataOrder.add(nodeID)
+        if(storedNodeDataOrder != null) {
+            for ((index, nodeID) in storedNodeDataOrder.withIndex()) {
+                if(sentDataOrder != null) {
+                    if (nodeID == sentDataOrder[index]) {
+                        finalDataOrder.add(nodeID)
+                    } else {
+                        if (sentDataOrder[index] !in finalDataOrder)
+                            finalDataOrder.add(sentDataOrder[index])
+
+                        if (nodeID !in finalDataOrder)
+                            finalDataOrder.add(nodeID)
+                    }
+                }
             }
         }
 
-        var remaining = storedNodeDataOrder.size
-        while (remaining < sentDataOrder!!.size) {
-            if (sentDataOrder[remaining] !in finalDataOrder)
-                finalDataOrder.add(sentDataOrder[remaining])
-            remaining++
+        var remaining = storedNodeDataOrder?.size
+        if (remaining != null && sentDataOrder != null) {
+            while (remaining < sentDataOrder.size) {
+                if (sentDataOrder[remaining] !in finalDataOrder)
+                    finalDataOrder.add(sentDataOrder[remaining])
+                remaining++
+            }
         }
 
         node.dataOrder = finalDataOrder
@@ -278,7 +268,6 @@ fun main() {
 		}
 		"""
 
-    @Suppress("UnusedPrivateMember")
     val jsonString1: String = """
         
     {
@@ -312,17 +301,17 @@ fun main() {
             ]
         },
         {
-            "id": "1234",
-            "elementType": "list",
-            "childrenElements": [
-            {
-                "id" : "sampleChildID",
-                "content" : "sample child content",
+				"id": "1234",
                 "elementType": "list",
-                "properties" :  { "bold" : true, "italic" : true  }
-            }
-            ]
-        }
+                "childrenElements": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content",
+                    "elementType": "list",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
+			}
         ]
     }
     """
@@ -356,7 +345,6 @@ fun main() {
         ]
         """
 
-    @Suppress("UnusedPrivateMember")
     val jsonForEditBlock = """
         {
             "lastEditedBy" : "Varun",

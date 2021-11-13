@@ -49,14 +49,22 @@ class UserIdentifierMappingRepository(
         querySpec.withKeyConditionExpression("PK = :userID")
             .withValueMap(expressionAttributeValues)
 
-        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
-        val iterator: Iterator<Item> = items!!.iterator()
-
         val listOfJSON: MutableList<String> = mutableListOf()
-        while (iterator.hasNext()) {
-            val item: Item = iterator.next()
-            listOfJSON += item.toJSON()
+
+        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
+
+        if(items != null) {
+            val iterator: Iterator<Item> = items.iterator()
+
+
+            while (iterator.hasNext()) {
+                val item: Item = iterator.next()
+                listOfJSON += item.toJSON()
+            }
+            return listOfJSON
         }
+
+        /* return empty list when items were null */
         return listOfJSON
     }
 

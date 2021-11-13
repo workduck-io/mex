@@ -35,9 +35,13 @@ class NodeRepository(
 
     private fun orderBlocks(node: Node): Entity {
         val listOfElements = mutableListOf<AdvancedElement>()
-        for (blockID in node.dataOrder!!) {
-            for (element in node.data!!) {
-                if (blockID == element.id) listOfElements += element
+        if(node.dataOrder != null) {
+            for (blockID in node.dataOrder!!) {
+                if(node.data != null) {
+                    for (element in node.data!!) {
+                        if (blockID == element.id) listOfElements += element
+                    }
+                }
             }
         }
         node.data = listOfElements
