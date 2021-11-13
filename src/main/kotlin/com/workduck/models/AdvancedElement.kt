@@ -69,13 +69,5 @@ data class AdvancedElement(
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + (parentID?.hashCode() ?: 0)
-        result = 31 * result + (content.hashCode() ?: 0)
-        result = 31 * result + (children?.hashCode() ?: 0)
-        result = 31 * result + (elementType?.hashCode() ?: 0)
-        result = 31 * result + (properties?.hashCode() ?: 0)
-        return result
-    }
+    //fun getProperties(): Map<String, Any>? = properties
 }
