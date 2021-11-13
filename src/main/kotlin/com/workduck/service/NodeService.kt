@@ -79,7 +79,7 @@ class NodeService {
 
         val list = mutableListOf<String>()
         for (element in node.data!!) {
-            list += element.getID()
+            list += element.id
         }
         return list
     }
@@ -109,7 +109,7 @@ class NodeService {
         val orderList = mutableListOf<String>()
         var userID: String = ""
         for (e in elements) {
-            orderList += e.getID()
+            orderList += e.id
 
             e.lastEditedBy = e.createdBy
             e.createdAt = System.currentTimeMillis()
@@ -164,7 +164,7 @@ class NodeService {
 
         val blockData = objectMapper.writeValueAsString(element)
 
-        return nodeRepository.updateNodeBlock(nodeID, blockData, element.getID(), element.lastEditedBy as String)
+        return nodeRepository.updateNodeBlock(nodeID, blockData, element.id, element.lastEditedBy as String)
     }
 
 
@@ -208,7 +208,7 @@ class NodeService {
         for (currElement in node.data!!) {
             var isPresent = false
             for (storedElement in storedNode.data!!) {
-                if (storedElement.getID() == currElement.getID()) {
+                if (storedElement.id == currElement.id) {
                     isPresent = true
 
                     /* if the block has not been updated */

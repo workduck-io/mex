@@ -37,7 +37,7 @@ class NodeRepository(
         val listOfElements = mutableListOf<AdvancedElement>()
         for (blockID in node.dataOrder!!) {
             for (element in node.data!!) {
-                if (blockID == element.getID()) listOfElements += element
+                if (blockID == element.id) listOfElements += element
             }
         }
         node.data = listOfElements
@@ -57,7 +57,7 @@ class NodeRepository(
         /* we build updateExpression to enable appending of multiple key value pairs to the map with just one query */
         for ((counter, e) in elements.withIndex()) {
             val entry: String = objectMapper.writeValueAsString(e)
-            updateExpression += ", nodeData.${e.getID()} = :val$counter"
+            updateExpression += ", nodeData.${e.id} = :val$counter"
             expressionAttributeValues[":val$counter"] = entry
         }
 

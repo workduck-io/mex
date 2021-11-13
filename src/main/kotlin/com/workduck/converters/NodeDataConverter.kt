@@ -13,7 +13,7 @@ class NodeDataConverter : DynamoDBTypeConverter<MutableMap<String, String>, Muta
     override fun convert(n: MutableList<AdvancedElement>): MutableMap<String, String> {
         val mapOfData: MutableMap<String, String> = mutableMapOf()
         for (element in n) {
-            mapOfData[element.getID()] = objectMapper.writeValueAsString(element)
+            mapOfData[element.id] = objectMapper.writeValueAsString(element)
         }
         return mapOfData
         // return objectMapper.writeValueAsString(n)

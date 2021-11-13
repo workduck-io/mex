@@ -16,7 +16,7 @@ object DDBHelper {
         .build()
 
 	/*
-	** Currently works for : NamespaceID and WorkspaceID. Return List of Strings, not objects
+	** Currently, works for : NamespaceID and WorkspaceID. Return List of Strings, not objects
 	*/
     fun getAllEntitiesWithIdentifierIDAndPrefix(
         akValue: String,

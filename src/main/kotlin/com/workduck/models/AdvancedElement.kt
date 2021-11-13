@@ -7,7 +7,7 @@ enum class ElementTypes(val type: String) {
     PARAGRAPH("paragraph");
 
     companion object {
-        private val codes = ElementTypes.values().associateBy(ElementTypes::type)
+        private val codes = values().associateBy(ElementTypes::type)
         @JvmStatic
         @JsonCreator
         fun from(value: String) = codes[value]
@@ -17,25 +17,25 @@ enum class ElementTypes(val type: String) {
 data class AdvancedElement(
 
     @JsonProperty("id")
-    private var id: String = "defaultValue",
+    var id: String = "defaultValue",
 
-// 	@JsonProperty("type")
-// 	private var type: String? = "AdvancedElement",
+    // 	@JsonProperty("type")
+    // 	private var type: String? = "AdvancedElement",
 
     @JsonProperty("parentID")
-    private var parentID: String? = null,
+    var parentID: String? = null,
 
     @JsonProperty("content")
-    private var content: String = "",
+    var content: String = "",
 
     @JsonProperty("childrenElements")
-    private var children: List<AdvancedElement>? = listOf(),
+    var children: List<AdvancedElement>? = listOf(),
 
     @JsonProperty("elementType")
-    private var elementType: String? = "paragraph",
+    var elementType: String? = "paragraph",
 
     @JsonProperty("properties")
-    private var properties: Map<String, Any>? = null,
+    var properties: Map<String, Any>? = null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
@@ -51,20 +51,6 @@ data class AdvancedElement(
     /* a certain block may not always be updated  */
     @JsonProperty("updatedAt")
     var updatedAt: Long? = null
-
-    override fun getContent(): String {
-        if (content != null) return content as String
-        return ""
-    }
-
-    override fun getID(): String = id
-
-    override fun getChildren(): List<Element>? = children
-
-    fun getElementType(): String? = elementType
-
-
-    fun getProperties(): Map<String, Any>? = properties
 
     /* Generated equals() and hashcode() functions */
     override fun equals(other: Any?): Boolean {
@@ -92,6 +78,4 @@ data class AdvancedElement(
         result = 31 * result + (properties?.hashCode() ?: 0)
         return result
     }
-
-
 }
