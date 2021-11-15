@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+    <ManuallySuppressedIssues></ManuallySuppressedIssues>
+    <CurrentIssues>
+        <ID>EmptyClassBlock:UserRegister.kt$UserRegister${ }</ID>
+        <ID>ForbiddenComment:DDBHelper.kt$DDBHelper$// TODO: read from config file</ID>
+        <ID>ForbiddenComment:NodeService.kt$NodeService$// Todo: Inject them from handlers</ID>
+        <ID>FunctionParameterNaming:Base32.kt$Base32$`val`: Long</ID>
+        <ID>LongMethod:NodeService.kt$fun main()</ID>
+        <ID>MagicNumber:ApiGatewayResponse.kt$ApiGatewayResponse.Builder$200</ID>
+        <ID>MagicNumber:ApiResponseHelper.kt$ApiResponseHelper$200</ID>
+        <ID>MagicNumber:ApiResponseHelper.kt$ApiResponseHelper$500</ID>
+        <ID>MagicNumber:NamespaceHandler.kt$NamespaceHandler$500</ID>
+        <ID>MagicNumber:NodeHandler.kt$NodeHandler$500</ID>
+        <ID>MagicNumber:Ping.kt$Ping$200</ID>
+        <ID>MagicNumber:TextElementProperties.kt$Bold$100</ID>
+        <ID>MagicNumber:TextElementProperties.kt$Bold$700</ID>
+        <ID>MagicNumber:UserHandler.kt$UserHandler$500</ID>
+        <ID>MagicNumber:UserIdentifierMappingHandler.kt$UserIdentifierMappingHandler$500</ID>
+        <ID>MagicNumber:WorkspaceHandler.kt$WorkspaceHandler$500</ID>
+        <ID>MaxLineLength:NamespaceRepository.kt$NamespaceRepository$val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID, dynamoDBMapperConfig)</ID>
+        <ID>MaxLineLength:NamespaceService.kt$NamespaceService$private val repository: Repository&lt;Namespace&gt; = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)</ID>
+        <ID>MaxLineLength:NodeRepository.kt$NodeRepository$fun</ID>
+        <ID>MaxLineLength:NodeRepository.kt$NodeRepository$var updateExpression = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList), lastEditedBy = :userID"</ID>
+        <ID>MaxLineLength:UserIdentifierMappingService.kt$UserIdentifierMappingService$private val repository: Repository&lt;UserIdentifierRecord&gt; = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository, dynamoDBMapperConfig)</ID>
+        <ID>MaxLineLength:UserIdentifierMappingService.kt$UserIdentifierMappingService$private val userIdentifierMappingRepository: UserIdentifierMappingRepository = UserIdentifierMappingRepository(dynamoDB, mapper, dynamoDBMapperConfig)</ID>
+        <ID>MaxLineLength:UserRepository.kt$UserRepository$DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(namespaceID, "itemType-AK-index", dynamoDB, "UserIdentifierRecord")</ID>
+        <ID>MaxLineLength:UserRepository.kt$UserRepository$DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "UserIdentifierRecord")</ID>
+        <ID>MaxLineLength:WorkspaceRepository.kt$WorkspaceRepository$val workspace: Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)</ID>
+        <ID>MaxLineLength:WorkspaceService.kt$WorkspaceService$private val repository: Repository&lt;Workspace&gt; = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)</ID>
+        <ID>NestedBlockDepth:NodeService.kt$NodeService$private fun compareNodeWithStoredNode(node: Node, storedNode: Node)</ID>
+        <ID>NewLineAtEndOfFile:UserRegister.kt$com.workduck.models.UserRegister.kt</ID>
+        <ID>NewLineAtEndOfFile:UserService.kt$com.workduck.service.UserService.kt</ID>
+        <ID>NewLineAtEndOfFile:UserStrategyFactory.kt$com.serverless.userHandlers.UserStrategyFactory.kt</ID>
+        <ID>SwallowedException:NamespaceRepository.kt$NamespaceRepository$catch (e: Exception) { null }</ID>
+        <ID>SwallowedException:NodeRepository.kt$NodeRepository$catch (e: ConditionalCheckFailedException) { /* Will happen only in race condition because we're making the versions same in the service */ /* What should be the flow from here on? Call NodeService().update()? */ println("Version mismatch!!") null }</ID>
+        <ID>SwallowedException:NodeRepository.kt$NodeRepository$catch (e: Exception) { null }</ID>
+        <ID>SwallowedException:UserIdentifierMappingRepository.kt$UserIdentifierMappingRepository$catch (e: Exception) { null }</ID>
+        <ID>SwallowedException:UserIdentifierMappingService.kt$UserIdentifierMappingService$catch (e: Exception) { null }</ID>
+        <ID>SwallowedException:UserRepository.kt$UserRepository$catch (e: Exception) { null }</ID>
+        <ID>SwallowedException:WorkspaceRepository.kt$WorkspaceRepository$catch (e: Exception) { null }</ID>
+        <ID>TooGenericExceptionCaught:NamespaceRepository.kt$NamespaceRepository$e: Exception</ID>
+        <ID>TooGenericExceptionCaught:NodeRepository.kt$NodeRepository$e: Exception</ID>
+        <ID>TooGenericExceptionCaught:RepositoryImpl.kt$RepositoryImpl$e: Exception</ID>
+        <ID>TooGenericExceptionCaught:UserIdentifierMappingRepository.kt$UserIdentifierMappingRepository$e: Exception</ID>
+        <ID>TooGenericExceptionCaught:UserIdentifierMappingService.kt$UserIdentifierMappingService$e: Exception</ID>
+        <ID>TooGenericExceptionCaught:UserRepository.kt$UserRepository$e: Exception</ID>
+        <ID>TooGenericExceptionCaught:WorkspaceRepository.kt$WorkspaceRepository$e: Exception</ID>
+        <ID>TooGenericExceptionThrown:ApiGatewayResponse.kt$ApiGatewayResponse.Builder$throw RuntimeException(e)</ID>
+        <ID>TooManyFunctions:NodeService.kt$NodeService</ID>
+        <ID>UnusedPrivateMember:AdvancedElement.kt$AdvancedElement$@JsonProperty("parentID") private var parentID: String? = null</ID>
+        <ID>UnusedPrivateMember:AssociatedProperty.kt$AssociatedProperty$propertyType: AssociatedPropertyType</ID>
+        <ID>UnusedPrivateMember:Base32.kt$Base32$`val`: Long</ID>
+        <ID>UnusedPrivateMember:Identifier.kt$IdentifierType$s: String</ID>
+        <ID>UnusedPrivateMember:NamespaceHandler.kt$NamespaceHandler.Companion$private val LOG = LogManager.getLogger(NamespaceHandler::class.java)</ID>
+        <ID>UnusedPrivateMember:NamespaceService.kt$val json: String = """ { "id": "NAMESPACE1", "workspaceIdentifier" : "WORKSPACE1", "name": "Engineering" } """</ID>
+        <ID>UnusedPrivateMember:NamespaceService.kt$val jsonUpdate: String = """ { "id" : "NAMESPACE1", "name": "Engineering - Team 1" } """</ID>
+        <ID>UnusedPrivateMember:NodeHandler.kt$NodeHandler.Companion$private val LOG = LogManager.getLogger(NodeHandler::class.java)</ID>
+        <ID>UnusedPrivateMember:NodeService.kt$val jsonForAppend: String = """ [ { "createdBy" : "Varun", "id": "xyz", "content": "Sample Content 4", "elementType" : "list", "childrenElements": [ { "id" : "sampleChildID4", "content" : "sample child content" } ]}, { "createdBy" : "Varun", "id": "abc", "content": "Sample Content 5", "elementType" : "random element type", "childrenElements": [ { "id" : "sampleChildID5", "content" : "sample child content" } ]} ] """</ID>
+        <ID>UnusedPrivateMember:NodeService.kt$val jsonForEditBlock = """ { "id" : "sampleParentID", "elementType": "list", "childrenElements": [ { "id" : "sampleChildID", "content" : "edited child content - direct set - second try", "elementType": "list", "properties" : { "bold" : true, "italic" : true } } ] } """</ID>
+        <ID>UnusedPrivateMember:RepositoryImpl.kt$RepositoryImpl$private val dynamoDB: DynamoDB</ID>
+        <ID>UnusedPrivateMember:UpdateNodeBlockStrategy.kt$UpdateNodeBlockStrategy$val blockIndex = (pathParameters!!["blockIndex"] as String).toInt()</ID>
+        <ID>UnusedPrivateMember:UserHandler.kt$UserHandler.Companion$private val LOG = LogManager.getLogger(UserHandler::class.java)</ID>
+        <ID>UnusedPrivateMember:UserIdentifierMappingHandler.kt$UserIdentifierMappingHandler.Companion$private val LOG = LogManager.getLogger(UserIdentifierMappingHandler::class.java)</ID>
+        <ID>UnusedPrivateMember:UserIdentifierMappingRepository.kt$UserIdentifierMappingRepository$private val dynamoDBMapperConfig: DynamoDBMapperConfig</ID>
+        <ID>UnusedPrivateMember:UserIdentifierMappingRepository.kt$UserIdentifierMappingRepository$private val mapper: DynamoDBMapper</ID>
+        <ID>UnusedPrivateMember:UserIdentifierMappingService.kt$val json: String = """ { "userID" : "USER49", "identifier" : "NAMESPACE1" } """</ID>
+        <ID>UnusedPrivateMember:UserService.kt$val jsonUpdated : String = """ { "id" : "USER49", "name" : "Varun Garg", "email" : "varun.garg@workduck.io" } """</ID>
+        <ID>UnusedPrivateMember:WorkspaceHandler.kt$WorkspaceHandler.Companion$private val LOG = LogManager.getLogger(WorkspaceHandler::class.java)</ID>
+        <ID>UnusedPrivateMember:WorkspaceService.kt$val json: String = """ { "id": "WORKSPACE1", "name": "WorkDuck" } """</ID>
+        <ID>UnusedPrivateMember:WorkspaceService.kt$val jsonUpdate: String = """ { "id" : "WORKSPACE1", "name" : "WorkDuck Pvt. Ltd." } """</ID>
+        <ID>UtilityClassWithPublicConstructor:NamespaceStrategyFactory.kt$NamespaceStrategyFactory</ID>
+        <ID>UtilityClassWithPublicConstructor:NodeStrategyFactory.kt$NodeStrategyFactory</ID>
+        <ID>UtilityClassWithPublicConstructor:UserIdentifierMappingStrategyFactory.kt$UserIdentifierMappingStrategyFactory</ID>
+        <ID>UtilityClassWithPublicConstructor:UserStrategyFactory.kt$UserStrategyFactory</ID>
+        <ID>UtilityClassWithPublicConstructor:WorkspaceStrategyFactory.kt$WorkspaceStrategyFactory</ID>
+        <ID>VariableNaming:ApiGatewayResponse.kt$ApiGatewayResponse.Builder$var LOG: Logger = LogManager.getLogger(ApiGatewayResponse.Builder::class.java)</ID>
+        <ID>WildcardImport:AdvancedElement.kt$import com.fasterxml.jackson.annotation.*</ID>
+        <ID>WildcardImport:DDBHelper.kt$import com.amazonaws.services.dynamodbv2.document.*</ID>
+        <ID>WildcardImport:Namespace.kt$import com.amazonaws.services.dynamodbv2.datamodeling.*</ID>
+        <ID>WildcardImport:NamespaceRepository.kt$import com.amazonaws.services.dynamodbv2.document.*</ID>
+        <ID>WildcardImport:NamespaceRepository.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:NamespaceService.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:Node.kt$import com.amazonaws.services.dynamodbv2.datamodeling.*</ID>
+        <ID>WildcardImport:Node.kt$import com.workduck.converters.*</ID>
+        <ID>WildcardImport:NodeRepository.kt$import com.amazonaws.services.dynamodbv2.document.*</ID>
+        <ID>WildcardImport:NodeRepository.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:NodeService.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:User.kt$import com.amazonaws.services.dynamodbv2.datamodeling.*</ID>
+        <ID>WildcardImport:UserIdentifierMappingService.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:UserIdentifierRecord.kt$import com.amazonaws.services.dynamodbv2.datamodeling.*</ID>
+        <ID>WildcardImport:UserIdentifierRecord.kt$import com.workduck.converters.*</ID>
+        <ID>WildcardImport:UserRepository.kt$import com.amazonaws.services.dynamodbv2.document.*</ID>
+        <ID>WildcardImport:UserRepository.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:UserService.kt$import com.workduck.models.*</ID>
+        <ID>WildcardImport:Workspace.kt$import com.amazonaws.services.dynamodbv2.datamodeling.*</ID>
+        <ID>WildcardImport:WorkspaceRepository.kt$import com.amazonaws.services.dynamodbv2.document.*</ID>
+        <ID>WildcardImport:WorkspaceRepository.kt$import com.workduck.models.*</ID>
+    </CurrentIssues>
+</SmellBaseline>
