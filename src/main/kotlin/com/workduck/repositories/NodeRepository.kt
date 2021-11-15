@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.*
+import com.workduck.service.UserService
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 
