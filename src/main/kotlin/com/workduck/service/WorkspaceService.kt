@@ -15,6 +15,7 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 class WorkspaceService {
 
@@ -37,36 +38,36 @@ class WorkspaceService {
     fun createWorkspace(jsonString: String): Entity? {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val workspace: Workspace = objectMapper.readValue(jsonString)
-
-        /* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-        workspace.idCopy = workspace.id
-
+        LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
 
     fun getWorkspace(workspaceID: String): Entity? {
+        LOG.info("Getting workspace with id : $workspaceID")
         return repository.get(WorkspaceIdentifier(workspaceID))
     }
 
     fun updateWorkspace(jsonString: String): Entity? {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val workspace: Workspace = objectMapper.readValue(jsonString)
+        val tempWorkspace: Workspace = objectMapper.readValue(jsonString)
 
-        /* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-        workspace.idCopy = workspace.id
-
-        /* to avoid updating createdAt un-necessarily */
-        workspace.createdAt = null
-
+        val workspace : Workspace = Workspace.createWorkspaceWithSkAndCreatedAtNull(tempWorkspace)
+        LOG.info("Updating workspace : $workspace")
         return repository.update(workspace)
     }
 
     fun deleteWorkspace(workspaceID: String): Identifier? {
+        LOG.info("Deleting workspace with id : $workspaceID")
         return repository.delete(WorkspaceIdentifier(workspaceID))
     }
 
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?>? {
+        LOG.info("Getting workspaces with ids : $workspaceIDList")
         return workspaceRepository.getWorkspaceData(workspaceIDList)
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(WorkspaceService::class.java)
     }
 }
 
@@ -84,8 +85,8 @@ fun main() {
 			"name" : "WorkDuck Pvt. Ltd."
 		}
 		"""
-    // WorkspaceService().createWorkspace(json)
+     WorkspaceService().createWorkspace(json)
     // WorkspaceService().updateWorkspace(jsonUpdate)
     // WorkspaceService().deleteWorkspace("WORKSPACE1")
-    println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
+    //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 }

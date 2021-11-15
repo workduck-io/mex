@@ -6,6 +6,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveB
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import com.workduck.service.UserService
+import org.apache.logging.log4j.LogManager
 import java.lang.Exception
 
 class RepositoryImpl<T : Entity>(
@@ -33,7 +35,7 @@ class RepositoryImpl<T : Entity>(
             mapper.save(t, dynamoDBMapperConfig)
             t
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
@@ -50,8 +52,12 @@ class RepositoryImpl<T : Entity>(
             mapper.save(t, dynamoDBMapperConfig)
             t
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(RepositoryImpl::class.java)
     }
 }

@@ -13,6 +13,7 @@ import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 /**
  * contains all node related logic
@@ -36,11 +37,11 @@ class NodeService {
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
-    fun createNode(node: Node): Entity? {
-        println("Should be created in the table : $tableName")
-        println(node)
-        /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
-        node.idCopy = node.id
+    fun createNode(jsonString: String): Entity? {
+        LOG.info("Should be created in the table : $tableName")
+        val objectMapper = ObjectMapper().registerModule(KotlinModule())
+        val node: Node = objectMapper.readValue(jsonString)
+
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
         node.dataOrder = createDataOrderForNode(node)
@@ -54,6 +55,8 @@ class NodeService {
             e.createdAt = node.createdAt
             e.updatedAt = node.createdAt
         }
+
+        LOG.info("Creating node : $node")
 
         return repository.create(node)
     }
@@ -81,6 +84,7 @@ class NodeService {
     }
 
     fun deleteNode(nodeID: String): Identifier? {
+        LOG.info("Deleting node with id : $nodeID")
         return repository.delete(NodeIdentifier(nodeID))
     }
 
@@ -123,6 +127,7 @@ class NodeService {
         /* to make the versions same */
         mergeNodeVersions(node, storedNode)
 
+        LOG.info("Updating node : $node")
         return nodeRepository.update(node)
     }
 
@@ -188,14 +193,15 @@ class NodeService {
         node.version = storedNode.version
     }
 
-    @Suppress("NestedBlockDepth")
-    private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean {
+    private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean{
         var nodeChanged = false
-        for (currElement in node.data!!) {
-            var isPresent = false
-            for (storedElement in storedNode.data!!) {
-                if (storedElement.id == currElement.id) {
-                    isPresent = true
+        if (node.data != null) {
+            for (currElement in node.data!!) {
+                var isPresent = false
+                if(storedNode.data != null) {
+                    for (storedElement in storedNode.data!!) {
+                        if (storedElement.id == currElement.id) {
+                            isPresent = true
 
                             /* if the block has not been updated */
                             if (currElement == storedElement) {
@@ -224,12 +230,16 @@ class NodeService {
                         currElement.lastEditedBy = node.lastEditedBy
                     }
                 }
-        return nodeChanged
+
             }
+        }
+        return nodeChanged
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeService::class.java)
+    }
 }
-
-
-
 
 fun main() {
     val jsonString: String = """

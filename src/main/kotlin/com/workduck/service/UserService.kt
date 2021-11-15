@@ -7,12 +7,14 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.namespaceHandlers.NamespaceHandler
 import com.workduck.models.*
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
+import org.apache.logging.log4j.LogManager
 
 class UserService {
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
@@ -38,11 +40,12 @@ class UserService {
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		user.idCopy = user.id
-
+		LOG.info("Creating user : $user")
 		return repository.create(user)
 	}
 
 	fun getUser(userID : String) : Entity? {
+		LOG.info("Getting user with id : $userID")
 		return repository.get(UserIdentifier(userID))
 	}
 
@@ -69,6 +72,8 @@ class UserService {
 			"name": "$workspaceName"
 		}"""
 
+		LOG.info("Creating workspace with json : $jsonForWorkspaceCreation")
+
 		return WorkspaceService().createWorkspace(jsonForWorkspaceCreation)
 
 	}
@@ -84,6 +89,10 @@ class UserService {
 
 	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String>? {
 		return userRepository.getAllUsersWithNamespaceID(namespaceID)
+	}
+
+	companion object {
+		private val LOG = LogManager.getLogger(UserService::class.java)
 	}
 
 }

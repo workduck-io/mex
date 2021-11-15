@@ -12,6 +12,7 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserIdentifierMappingRepository
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 class UserIdentifierMappingService {
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
@@ -77,6 +78,10 @@ class UserIdentifierMappingService {
 
     fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
         return userIdentifierMappingRepository.deleteBookmarksInBatch(userID, nodeIDList)
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(UserIdentifierMappingService::class.java)
     }
 }
 

@@ -9,6 +9,7 @@ import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
+import javax.naming.Name
 
 /**
  * namespace status
@@ -64,4 +65,12 @@ class Namespace(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt = System.currentTimeMillis()
+
+    companion object {
+        fun createNamespaceWithSkAndCreatedAtNull(namespace: Namespace) : Namespace {
+            namespace.idCopy = namespace.id
+            namespace.createdAt = null
+            return namespace
+        }
+    }
 }

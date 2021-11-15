@@ -12,6 +12,7 @@ import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 class NamespaceService {
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
@@ -33,36 +34,37 @@ class NamespaceService {
     fun createNamespace(jsonString: String): Entity? {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val namespace: Namespace = objectMapper.readValue(jsonString)
-
-        /* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-        namespace.idCopy = namespace.id
-
+        LOG.info("Creating namespace : $namespace")
         return repository.create(namespace)
     }
 
     fun getNamespace(namespaceID: String): Entity? {
+        LOG.info("Getting namespace with id : $namespaceID")
         return repository.get(NamespaceIdentifier(namespaceID))
     }
 
     fun updateNamespace(jsonString: String): Entity? {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val namespace: Namespace = objectMapper.readValue(jsonString)
+        val tempNamespace: Namespace = objectMapper.readValue(jsonString)
 
-        /* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-        namespace.idCopy = namespace.id
+        val namespace : Namespace = Namespace.createNamespaceWithSkAndCreatedAtNull(tempNamespace)
 
-        /* to avoid updating createdAt un-necessarily */
-        namespace.createdAt = null
-
+        LOG.info("Updating namespace : $namespace")
         return repository.update(namespace)
     }
 
     fun deleteNamespace(namespaceID: String): Identifier? {
+        LOG.info("Deleting namespace with id : $namespaceID")
         return repository.delete(NamespaceIdentifier(namespaceID))
     }
 
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {
+        LOG.info("Getting namespaces with ids : $namespaceIDList")
         return namespaceRepository.getNamespaceData(namespaceIDList)
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NamespaceService::class.java)
     }
 }
 

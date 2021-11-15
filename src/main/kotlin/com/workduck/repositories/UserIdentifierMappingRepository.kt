@@ -10,6 +10,8 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.UserIdentifierRecord
+import com.workduck.service.UserService
+import org.apache.logging.log4j.LogManager
 
 class UserIdentifierMappingRepository(
     private val dynamoDB: DynamoDB,
@@ -41,6 +43,7 @@ class UserIdentifierMappingRepository(
     }
 
     fun getRecordsByUserID(userID: String): MutableList<String> {
+        val table = dynamoDB.getTable(tableName)
         val querySpec = QuerySpec()
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -76,6 +79,7 @@ class UserIdentifierMappingRepository(
             table.deleteItem(deleteItemSpec)
             mapOf("userID" to userID, "identifierID" to identifier.id)
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -170,7 +174,7 @@ class UserIdentifierMappingRepository(
             val querySpec: QuerySpec = QuerySpec()
                     .withKeyConditionExpression("PK = :pk and SK = :sk")
                     .withValueMap(expressionAttributeValues)
-                    
+
             val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
 
 
@@ -267,5 +271,9 @@ class UserIdentifierMappingRepository(
             null
         }
 
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(UserIdentifierMappingRepository::class.java)
     }
 }

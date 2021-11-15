@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.*
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,
@@ -28,7 +29,7 @@ class NodeRepository(
             orderBlocks(node)
             return node
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
@@ -77,7 +78,7 @@ class NodeRepository(
             table.updateItem(updateItemSpec)
             mapOf("nodeID" to nodeID, "appendedElements" to elements)
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
@@ -88,6 +89,7 @@ class NodeRepository(
         return try {
             DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -97,6 +99,7 @@ class NodeRepository(
         return try {
             return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -111,6 +114,7 @@ class NodeRepository(
             table.deleteItem(deleteItemSpec)
             identifier
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -135,7 +139,7 @@ class NodeRepository(
             println("Version mismatch!!")
             null
         } catch (e: java.lang.Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
@@ -156,8 +160,12 @@ class NodeRepository(
             table.updateItem(u)
             objectMapper.readValue(updatedBlock)
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 }
