@@ -91,4 +91,14 @@ data class Node(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
 
+    companion object {
+        fun createNodeWithSkAkAndCreatedAtNull(node : Node) : Node {
+            node.idCopy = node.id
+            node.createdAt = null
+            node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
+            return node
+
+        }
+    }
+
 }

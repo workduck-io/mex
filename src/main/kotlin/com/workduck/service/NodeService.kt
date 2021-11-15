@@ -106,12 +106,8 @@ class NodeService {
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
 
-        /* createdAt should not be updated in updateNode flow */
-        node.createdAt = null
-
-
-        /* In case workspace/ namespace have been updated, AK needs to be updated as well */
-        node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
+        /* set idCopy = id, createdAt = null, and set AK */
+        val node = Node.createNodeWithSkAkAndCreatedAtNull(node)
 
         node.dataOrder = createDataOrderForNode(node)
 
@@ -201,36 +197,39 @@ class NodeService {
                 if (storedElement.id == currElement.id) {
                     isPresent = true
 
-                    /* if the block has not been updated */
-                    if (currElement == storedElement) {
-                        currElement.createdAt = storedElement.createdAt
-                        currElement.updatedAt = storedElement.updatedAt
-                        currElement.createdBy = storedElement.createdBy
-                        currElement.lastEditedBy = storedElement.lastEditedBy
+                            /* if the block has not been updated */
+                            if (currElement == storedElement) {
+                                currElement.createdAt = storedElement.createdAt
+                                currElement.updatedAt = storedElement.updatedAt
+                                currElement.createdBy = storedElement.createdBy
+                                currElement.lastEditedBy = storedElement.lastEditedBy
+                            }
+
+                            /* when the block has been updated */
+                            else {
+                                nodeChanged = true
+                                currElement.createdAt = storedElement.createdAt
+                                currElement.updatedAt = System.currentTimeMillis()
+                                currElement.createdBy = storedElement.createdBy
+                                currElement.lastEditedBy = node.lastEditedBy
+                            }
+                        }
                     }
 
-                    /* when the block has been updated */
-                    else {
+                    if (!isPresent) {
                         nodeChanged = true
-                        currElement.createdAt = storedElement.createdAt
-                        currElement.updatedAt = System.currentTimeMillis()
-                        currElement.createdBy = storedElement.createdBy
+                        currElement.createdAt = node.updatedAt
+                        currElement.updatedAt = node.updatedAt
+                        currElement.createdBy = node.lastEditedBy
                         currElement.lastEditedBy = node.lastEditedBy
                     }
                 }
-            }
-
-            if (!isPresent) {
-                nodeChanged = true
-                currElement.createdAt = node.updatedAt
-                currElement.updatedAt = node.updatedAt
-                currElement.createdBy = node.lastEditedBy
-                currElement.lastEditedBy = node.lastEditedBy
-            }
-        }
         return nodeChanged
-    }
+            }
 }
+
+
+
 
 fun main() {
     val jsonString: String = """
