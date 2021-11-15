@@ -117,7 +117,11 @@ class NodeService {
         val storedNode: Node = getNode(node.id) as Node
 
         /* to update block level details for accountability */
-        compareNodeWithStoredNode(node, storedNode)
+        val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
+
+        if(!nodeChanged){
+            return storedNode
+        }
 
         /* to make the versions same */
         mergeNodeVersions(node, storedNode)
@@ -191,7 +195,8 @@ class NodeService {
         node.version = storedNode.version
     }
 
-    private fun compareNodeWithStoredNode(node: Node, storedNode: Node) {
+    private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean {
+        var nodeChanged = false
         for (currElement in node.data!!) {
             var isPresent = false
             for (storedElement in storedNode.data!!) {
@@ -208,6 +213,7 @@ class NodeService {
 
                     /* when the block has been updated */
                     else {
+                        nodeChanged = true
                         currElement.createdAt = storedElement.createdAt
                         currElement.updatedAt = System.currentTimeMillis()
                         currElement.createdBy = storedElement.createdBy
@@ -217,12 +223,14 @@ class NodeService {
             }
 
             if (!isPresent) {
+                nodeChanged = true
                 currElement.createdAt = node.updatedAt
                 currElement.updatedAt = node.updatedAt
                 currElement.createdBy = node.lastEditedBy
                 currElement.lastEditedBy = node.lastEditedBy
             }
         }
+        return nodeChanged
     }
 }
 
@@ -357,7 +365,7 @@ fun main() {
 
     // NodeService().createNode(jsonString)
     // println(NodeService().getNode("NODE1"))
-    NodeService().updateNode(jsonString1)
+     NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
