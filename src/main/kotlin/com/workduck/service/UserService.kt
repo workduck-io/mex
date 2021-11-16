@@ -7,8 +7,11 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.namespaceHandlers.NamespaceHandler
-import com.workduck.models.*
+import com.workduck.models.User
+import com.workduck.models.Entity
+import com.workduck.models.UserIdentifier
+import com.workduck.models.IdentifierType
+import com.workduck.models.Identifier
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserRepository

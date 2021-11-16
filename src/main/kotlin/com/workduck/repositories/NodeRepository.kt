@@ -8,8 +8,11 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.*
-import com.workduck.service.UserService
+import com.workduck.models.Node
+import com.workduck.models.Identifier
+import com.workduck.models.Entity
+import com.workduck.models.AdvancedElement
+import com.workduck.models.Element
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 
@@ -36,7 +39,7 @@ class NodeRepository(
     }
 
     private fun orderBlocks(node: Node): Entity =
-        node.also {
+        node.apply {
             node.data?.let { data ->
                 (node.dataOrder?.mapNotNull { blockId ->
                     data.find { element -> blockId == element.id }
