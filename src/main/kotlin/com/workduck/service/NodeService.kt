@@ -41,24 +41,31 @@ class NodeService {
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val node: Node = objectMapper.readValue(jsonString)
 
-        println(node)
-        /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
-        node.idCopy = node.id
-        node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
+        val storedNode = getNode(node.id) as Node?
 
-        node.dataOrder = createDataOrderForNode(node)
-        node.createBy = node.lastEditedBy
+        if(storedNode == null) {
+            println(node)
+            /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
+            node.idCopy = node.id
+            node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
 
-        computeHashOfNodeData(node)
+            node.dataOrder = createDataOrderForNode(node)
+            node.createBy = node.lastEditedBy
 
-        for (e in node.data!!) {
-            e.createdBy = node.lastEditedBy
-            e.lastEditedBy = node.lastEditedBy
-            e.createdAt = node.createdAt
-            e.updatedAt = node.createdAt
+            computeHashOfNodeData(node)
+
+            for (e in node.data!!) {
+                e.createdBy = node.lastEditedBy
+                e.lastEditedBy = node.lastEditedBy
+                e.createdAt = node.createdAt
+                e.updatedAt = node.createdAt
+            }
+
+            return repository.create(node)
         }
-
-        return repository.create(node)
+        else{
+            return updateNode(jsonString)
+        }
     }
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
@@ -364,8 +371,8 @@ fun main() {
       """
 
     // NodeService().createNode(jsonString)
-    // println(NodeService().getNode("NODE1"))
-     NodeService().updateNode(jsonString1)
+     println(NodeService().getNode("NODE2"))
+    // NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
