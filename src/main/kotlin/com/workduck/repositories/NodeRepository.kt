@@ -35,20 +35,18 @@ class NodeRepository(
         }
     }
 
-    private fun orderBlocks(node: Node): Entity {
-        val listOfElements = mutableListOf<AdvancedElement>()
-        if(node.dataOrder != null) {
-            for (blockID in node.dataOrder!!) {
-                if(node.data != null) {
-                    for (element in node.data!!) {
-                        if (blockID == element.id) listOfElements += element
-                    }
-                }
+    private fun orderBlocks(node: Node): Entity =
+        node.also {
+            node.data?.let { data ->
+                (node.dataOrder?.mapNotNull { blockId ->
+                    data.find { element -> blockId == element.id }
+                } ?: emptyList())
+                        .also {
+                            node.data = it.toMutableList()
+                        }
             }
         }
-        node.data = listOfElements
-        return node
-    }
+
 
     fun append(nodeID: String, userID: String, elements: MutableList<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)

@@ -12,14 +12,14 @@ class UpdateNodeBlockStrategy : NodeStrategy {
 
         val json = input["body"] as String
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
+        val pathParameters = input["pathParameters"] as Map<String, String>?
         return if (pathParameters != null) {
-            val nodeID = pathParameters["id"] as String
+            val nodeID = pathParameters.getOrDefault("id", "")
 
             val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, json)
             ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)
         } else {
-            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }
     }
 }

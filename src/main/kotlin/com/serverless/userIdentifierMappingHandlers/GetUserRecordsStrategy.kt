@@ -10,15 +10,15 @@ class GetUserRecordsStrategy : UserIdentifierMappingStrategy {
         userIdentifierMappingService: UserIdentifierMappingService
     ): ApiGatewayResponse {
         val errorMessage = "Error getting user records"
-        val pathParameters = input["pathParameters"] as Map<*, *>?
+        val pathParameters = input["pathParameters"] as Map<String, String>?
 
         return if (pathParameters != null) {
-            val userID = pathParameters["userID"] as String
+            val userID = pathParameters.getOrDefault("userID", "")
 
             val userRecords: MutableList<String>? = userIdentifierMappingService.getUserRecords(userID)
             ApiResponseHelper.generateResponseWithJsonList(userRecords as Any?, errorMessage)
         } else {
-            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }
     }
 }

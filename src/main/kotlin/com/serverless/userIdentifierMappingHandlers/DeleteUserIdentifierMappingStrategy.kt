@@ -11,15 +11,15 @@ class DeleteUserIdentifierMappingStrategy : UserIdentifierMappingStrategy {
     ): ApiGatewayResponse {
         val errorMessage = "Error deleting userIdentifierMapping"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
+        val pathParameters = input["pathParameters"] as Map<String, String>?
         return if (pathParameters != null) {
-            val userID = pathParameters["userID"] as String
-            val identifierID = pathParameters["identifierID"] as String
+            val userID = pathParameters.getOrDefault("userID", "")
+            val identifierID = pathParameters.getOrDefault("identifierID", "")
 
             val map: Map<String, String>? = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
             ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
         } else {
-            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }
     }
 }

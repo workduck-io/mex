@@ -9,15 +9,15 @@ class DeleteNodeStrategy : NodeStrategy {
     override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error deleting node"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
+        val pathParameters = input["pathParameters"] as Map<String, String>?
 
         return if (pathParameters != null) {
-            val nodeID = pathParameters["id"] as String
+            val nodeID = pathParameters.getOrDefault("id", "")
 
             val identifier: Identifier? = nodeService.deleteNode(nodeID)
             ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
         } else {
-            ApiResponseHelper.generateStandardResponse(null, errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }
     }
 }
