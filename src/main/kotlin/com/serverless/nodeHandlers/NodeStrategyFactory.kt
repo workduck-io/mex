@@ -8,8 +8,6 @@ class NodeStrategyFactory {
 
         const val createNodeObject = "POST /node"
 
-        const val updateNodeObject = "POST /node/update"
-
         const val deleteNodeObject = "DELETE /node/{id}"
 
         const val appendToNodeObject = "POST /node/{id}/append"
@@ -23,7 +21,6 @@ class NodeStrategyFactory {
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
-            updateNodeObject to UpdateNodeStrategy(),
             deleteNodeObject to DeleteNodeStrategy(),
             appendToNodeObject to AppendToNodeStrategy(),
             getNodesByNamespaceObject to GetNodesByNamespaceStrategy(),

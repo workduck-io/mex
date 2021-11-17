@@ -10,7 +10,7 @@ class CreateNodeStrategy : NodeStrategy {
         val errorMessage = "Error creating node"
 
         val json = input["body"] as String
-        val node: Entity? = nodeService.createNode(json)
+        val node: Entity? = nodeService.createAndUpdateNode(json)
         return ApiResponseHelper.generateStandardResponse(node as Any?, errorMessage)
     }
 }

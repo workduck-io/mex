@@ -36,21 +36,21 @@ class NodeService {
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
-    fun createNode(jsonString: String): Entity? {
+    fun createNode(node: Node): Entity? {
         println("Should be created in the table : $tableName")
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val node: Node = objectMapper.readValue(jsonString)
-
         println(node)
+
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
-
         node.dataOrder = createDataOrderForNode(node)
+
+        /* only when node is actually being created */
         node.createBy = node.lastEditedBy
 
         computeHashOfNodeData(node)
 
+        /* specific to when the node's being created */
         for (e in node.data!!) {
             e.createdBy = node.lastEditedBy
             e.lastEditedBy = node.lastEditedBy
@@ -59,6 +59,21 @@ class NodeService {
         }
 
         return repository.create(node)
+
+    }
+
+    fun createAndUpdateNode(jsonString: String) : Entity? {
+        val objectMapper = ObjectMapper().registerModule(KotlinModule())
+        val node: Node = objectMapper.readValue(jsonString)
+
+        val storedNode = getNode(node.id) as Node?
+
+        return if(storedNode == null){
+            createNode(node)
+        }
+        else{
+            updateNode(node, storedNode)
+        }
     }
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
@@ -96,16 +111,12 @@ class NodeService {
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
-    fun updateNode(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val node: Node = objectMapper.readValue(jsonString)
-
+    fun updateNode(node : Node, storedNode: Node): Entity? {
         /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
         node.idCopy = node.id
 
         /* createdAt should not be updated in updateNode flow */
         node.createdAt = null
-
 
         /* In case workspace/ namespace have been updated, AK needs to be updated as well */
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
@@ -113,8 +124,6 @@ class NodeService {
         node.dataOrder = createDataOrderForNode(node)
 
         computeHashOfNodeData(node)
-
-        val storedNode: Node = getNode(node.id) as Node
 
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
@@ -195,6 +204,7 @@ class NodeService {
         node.version = storedNode.version
     }
 
+    @Suppress("NestedBlockDepth")
     private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean {
         var nodeChanged = false
         for (currElement in node.data!!) {
@@ -270,6 +280,7 @@ fun main() {
 		}
 		"""
 
+    @Suppress("UnusedPrivateMember")
     val jsonString1: String = """
         
     {
@@ -347,6 +358,7 @@ fun main() {
         ]
         """
 
+    @Suppress("UnusedPrivateMember")
     val jsonForEditBlock = """
         {
             "lastEditedBy" : "Varun",
@@ -364,8 +376,8 @@ fun main() {
       """
 
     // NodeService().createNode(jsonString)
-    // println(NodeService().getNode("NODE1"))
-     NodeService().updateNode(jsonString1)
+     println(NodeService().getNode("NODE2"))
+    // NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()

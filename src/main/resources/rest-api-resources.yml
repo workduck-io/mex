@@ -21,11 +21,6 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/update
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
         path: /node/{id}
         method: delete
         authorizer: mexAuthorizer
