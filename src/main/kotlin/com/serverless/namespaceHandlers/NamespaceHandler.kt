@@ -4,6 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
+import com.serverless.transformers.NamespaceTransformer
+import com.serverless.transformers.Transformer
+import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 
@@ -24,7 +27,8 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, namespaceService)
+        val transformer : Transformer<Namespace> = NamespaceTransformer()
+        return strategy.apply(input, namespaceService, transformer)
     }
 
     companion object {

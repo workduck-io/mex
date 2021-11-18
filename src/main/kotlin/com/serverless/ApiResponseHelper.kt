@@ -1,10 +1,24 @@
 package com.serverless
 
+import com.serverless.models.Response
 import java.util.Collections
 
 object ApiResponseHelper {
 
     fun generateStandardResponse(passedObject: Any?, errorMessage: String): ApiGatewayResponse {
+
+        return if (passedObject != null) {
+            ApiGatewayResponse.build {
+                statusCode = 200
+                objectBody = passedObject
+            }
+        } else {
+            generateStandardErrorResponse(errorMessage)
+        }
+    }
+
+
+    fun generateStandardResponse(passedObject: Response?, errorMessage: String): ApiGatewayResponse {
 
         return if (passedObject != null) {
             ApiGatewayResponse.build {

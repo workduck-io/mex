@@ -4,6 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
+import com.serverless.transformers.Transformer
+import com.serverless.transformers.WorkspaceTransformer
+import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
 
@@ -24,7 +27,8 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, workspaceService)
+        val transformer : Transformer<Workspace> = WorkspaceTransformer()
+        return strategy.apply(input, workspaceService, transformer)
     }
 
     companion object {

@@ -45,7 +45,7 @@ class Namespace(
 
     @JsonProperty("name")
     @DynamoDBAttribute(attributeName = "namespaceName")
-    var name: String ? = null,
+    var name: String = "DEFAULT_NAMESPACE",
 
     // val owner: OwnerIdentifier,
 
