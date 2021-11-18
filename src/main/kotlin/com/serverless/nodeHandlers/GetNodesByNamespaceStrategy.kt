@@ -7,7 +7,7 @@ import com.workduck.models.Node
 import com.workduck.service.NodeService
 
 class GetNodesByNamespaceStrategy : NodeStrategy {
-    override fun apply(input: Map<String, Any>, nodeService: NodeService, transformer: Transformer<Node>): ApiGatewayResponse {
+    override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error getting users!"
 
         val pathParameters = input["pathParameters"] as Map<String, String>?

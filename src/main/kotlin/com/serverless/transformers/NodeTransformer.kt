@@ -8,14 +8,16 @@ class NodeTransformer : Transformer<Node> {
 
     override fun transform(t: Node?): Response? {
         if (t == null) return null
-        return NodeResponse(id = t.id,
-                data = t.data,
-                lastEditedBy = t.lastEditedBy ,
-                createdBy = t.createBy,
-                createdAt = t.createdAt ,
-                updateAt = t.updatedAt,
-                version = t.version,
-                namespaceID = t.namespaceIdentifier?.id,
-                workspaceID = t.workspaceIdentifier?.id)
+        return NodeResponse(
+            id = t.id,
+            data = t.data,
+            lastEditedBy = t.lastEditedBy,
+            createdBy = t.createBy,
+            createdAt = t.createdAt,
+            updateAt = t.updatedAt,
+            version = t.version,
+            namespaceID = t.namespaceIdentifier?.id,
+            workspaceID = t.workspaceIdentifier?.id
+        )
     }
 }

@@ -6,5 +6,5 @@ import com.workduck.models.Node
 import com.workduck.service.NodeService
 
 interface NodeStrategy {
-    fun apply(input: Map<String, Any>, nodeService: NodeService, transformer: Transformer<Node>): ApiGatewayResponse
+    fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse
 }

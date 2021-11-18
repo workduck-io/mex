@@ -7,10 +7,12 @@ import com.workduck.models.Workspace
 class WorkspaceTransformer : Transformer<Workspace> {
 
     override fun transform(t: Workspace?): Response? {
-        if(t == null) return null
-        return WorkspaceResponse(id = t.id,
+        if (t == null) return null
+        return WorkspaceResponse(
+            id = t.id,
             name = t.name,
             createdAt = t.createdAt,
-            updateAt = t.updatedAt)
+            updateAt = t.updatedAt
+        )
     }
 }

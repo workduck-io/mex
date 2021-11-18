@@ -27,8 +27,8 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        val transformer : Transformer<Workspace> = WorkspaceTransformer()
-        return strategy.apply(input, workspaceService, transformer)
+
+        return strategy.apply(input, workspaceService)
     }
 
     companion object {

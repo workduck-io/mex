@@ -27,8 +27,7 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        val transformer : Transformer<Namespace> = NamespaceTransformer()
-        return strategy.apply(input, namespaceService, transformer)
+        return strategy.apply(input, namespaceService)
     }
 
     companion object {

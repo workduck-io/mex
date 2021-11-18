@@ -6,8 +6,10 @@ import com.serverless.transformers.Transformer
 import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 
-class GetNamespaceDataStrategy : NamespaceStrategy {
-    override fun apply(input: Map<String, Any>, namespaceService: NamespaceService, transformer: Transformer<Namespace>): ApiGatewayResponse {
+class GetNamespaceDataStrategy(
+        val namespaceTransformer: Transformer<Namespace>
+) : NamespaceStrategy {
+    override fun apply(input: Map<String, Any>, namespaceService: NamespaceService): ApiGatewayResponse {
         val errorMessage = "Error getting namespaces!"
         val pathParameters = input["pathParameters"] as Map<String, String>?
 
@@ -16,7 +18,7 @@ class GetNamespaceDataStrategy : NamespaceStrategy {
             val namespaces: MutableMap<String, Namespace?>? = namespaceService.getNamespaceData(namespaceIDList)
 
             val workspaceResponseMap = namespaces?.mapValues {
-                transformer.transform(it.value)
+                namespaceTransformer.transform(it.value)
             }
 
             ApiResponseHelper.generateStandardResponse(workspaceResponseMap, errorMessage)

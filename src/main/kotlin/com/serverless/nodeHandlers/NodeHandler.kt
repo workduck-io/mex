@@ -28,8 +28,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             }
         }
 
-        val transformer : Transformer<Node> = NodeTransformer()
-        return strategy.apply(input, nodeService, transformer)
+        return strategy.apply(input, nodeService)
     }
 
     companion object {
