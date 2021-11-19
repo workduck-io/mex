@@ -20,6 +20,8 @@ import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class UserService {
+
+	private val objectMapper = Helper.objectMapper
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
@@ -38,7 +40,6 @@ class UserService {
 
     fun createUser(jsonString: String): Entity? {
 
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
@@ -53,7 +54,6 @@ class UserService {
 	}
 
 	fun updateUser(jsonString: String) : Entity? {
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
@@ -66,7 +66,6 @@ class UserService {
 	}
 
 	fun registerUser(jsonString: String, workspaceName: String?): Entity?{
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
 		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))

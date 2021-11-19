@@ -15,10 +15,12 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class WorkspaceService {
 
+    private val objectMapper = Helper.objectMapper
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
@@ -36,7 +38,6 @@ class WorkspaceService {
     private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
     fun createWorkspace(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val workspace: Workspace = objectMapper.readValue(jsonString)
         LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
@@ -48,7 +49,6 @@ class WorkspaceService {
     }
 
     fun updateWorkspace(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val tempWorkspace: Workspace = objectMapper.readValue(jsonString)
 
         val workspace : Workspace = Workspace.createWorkspaceWithSkAndCreatedAtNull(tempWorkspace)

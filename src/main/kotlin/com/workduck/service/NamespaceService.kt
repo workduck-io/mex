@@ -16,9 +16,12 @@ import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService {
+
+    private val objectMapper = Helper.objectMapper
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
@@ -36,7 +39,6 @@ class NamespaceService {
     private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)
 
     fun createNamespace(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val namespace: Namespace = objectMapper.readValue(jsonString)
         LOG.info("Creating namespace : $namespace")
         return repository.create(namespace)
@@ -48,7 +50,6 @@ class NamespaceService {
     }
 
     fun updateNamespace(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val tempNamespace: Namespace = objectMapper.readValue(jsonString)
 
         val namespace : Namespace = Namespace.createNamespaceWithSkAndCreatedAtNull(tempNamespace)

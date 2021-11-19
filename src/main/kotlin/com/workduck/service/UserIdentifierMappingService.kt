@@ -16,9 +16,12 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserIdentifierMappingRepository
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class UserIdentifierMappingService {
+
+    private val objectMapper = Helper.objectMapper
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
@@ -36,7 +39,6 @@ class UserIdentifierMappingService {
     private val repository: Repository<UserIdentifierRecord> = RepositoryImpl(dynamoDB, mapper, userIdentifierMappingRepository, dynamoDBMapperConfig)
 
     fun createUserIdentifierRecord(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val userIdentifierRecord: UserIdentifierRecord = objectMapper.readValue(jsonString)
 
         return repository.create(userIdentifierRecord)
