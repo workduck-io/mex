@@ -10,7 +10,6 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.UserIdentifierRecord
-import com.workduck.service.UserService
 import org.apache.logging.log4j.LogManager
 
 class UserIdentifierMappingRepository(

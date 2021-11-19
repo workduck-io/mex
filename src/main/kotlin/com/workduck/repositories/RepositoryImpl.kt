@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveB
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
-import com.workduck.service.UserService
 import org.apache.logging.log4j.LogManager
 import java.lang.Exception
 
