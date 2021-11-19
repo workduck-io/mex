@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
  	visible = true
  )
  @JsonSubTypes(
- 	JsonSubTypes.Type(value = NodeRequest::class, name = "Node"),
+ 	JsonSubTypes.Type(value = NodeRequest::class, name = "Node")
  )
 interface WDRequest {
 
-	fun getType() : String
+	var type : String
 }
