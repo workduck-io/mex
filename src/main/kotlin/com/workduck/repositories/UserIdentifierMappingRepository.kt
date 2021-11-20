@@ -159,16 +159,10 @@ class UserIdentifierMappingRepository(
             expressionAttributeValues[":pk"] = "$userID#BOOKMARK"
             expressionAttributeValues[":sk"] = "$userID#BOOKMARK"
 
-            val nodeID = "NODE11"
-
             val querySpec: QuerySpec = QuerySpec()
                     .withKeyConditionExpression("PK = :pk and SK = :sk")
                     .withValueMap(expressionAttributeValues)
-                    .withFilterExpression("attribute_exists(bookmarkedNodes.$nodeID)")
-                    .withProjectionExpression("bookmarkedNodes.$nodeID")
-
-
-
+                    
             val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
 
 
