@@ -8,12 +8,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
  	use = JsonTypeInfo.Id.NAME,
  	include = JsonTypeInfo.As.PROPERTY,
  	property = "type",
- 	visible = true
  )
  @JsonSubTypes(
- 	JsonSubTypes.Type(value = NodeRequest::class, name = "Node")
+ 	JsonSubTypes.Type(value = NodeRequest::class, name = "NodeRequest")
  )
 interface WDRequest {
-
-	var type : String
 }

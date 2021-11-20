@@ -21,22 +21,12 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-        println(input)
-
         val wdInput : Input = Input.fromMap(input)
 
-        println("WD-Input :  $wdInput")
 
+        //val routeKey = input["routeKey"] as String
 
-        if(wdInput.body != null) {
-            val nodeResponse: NodeRequest = Helper.objectMapper.readValue(wdInput.body)
-            println(nodeResponse.toString())
-        }
-
-
-        val routeKey = input["routeKey"] as String
-
-        val strategy = NodeStrategyFactory.getNodeStrategy(routeKey)
+        val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse("Request type not recognized")
@@ -46,7 +36,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             }
         }
 
-        return strategy.apply(input, nodeService)
+        return strategy.apply(wdInput, nodeService)
     }
 
     companion object {

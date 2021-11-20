@@ -1,6 +1,7 @@
 package com.serverless.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.IdentifierSerializer
@@ -10,10 +11,8 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.WorkspaceIdentifier
 
+@JsonTypeName("NodeRequest")
 class NodeRequest(
-
-        @JsonProperty("type")
-       var type : String?,
 
         @JsonProperty("lastEditedBy")
         val lastEditedBy : String,
@@ -34,7 +33,7 @@ class NodeRequest(
         @JsonProperty("data")
         val data: List<AdvancedElement>,
 
-        )  {
+        ) : WDRequest {
 
 
 }

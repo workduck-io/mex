@@ -2,15 +2,14 @@ package com.serverless.nodeHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
-import com.serverless.transformers.Transformer
-import com.workduck.models.Node
+import com.serverless.models.Input
 import com.workduck.service.NodeService
 
 class AppendToNodeStrategy : NodeStrategy {
-    override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
+    override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error appending to node!"
-        val json = input["body"] as String
-        val pathParameters = input["pathParameters"] as Map<String, String>?
+        val json = input.body
+        val pathParameters = input.pathParameters
 
         return if (pathParameters != null) {
             val nodeID = pathParameters.getOrDefault("id", "")
