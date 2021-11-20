@@ -175,3 +175,13 @@ UserIdentifierRecord:
     - httpApi:
         path: /userIdentifierMappingRecord/bookmark/{userID}
         method: get
+
+    - httpApi:
+        path: /userIdentifierMappingRecord/bookmark/batch/{userID}/{ids}
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /userIdentifierMappingRecord/bookmark/batch/{userID}/{ids}
+        method: patch
+        authorizer: mexAuthorizer

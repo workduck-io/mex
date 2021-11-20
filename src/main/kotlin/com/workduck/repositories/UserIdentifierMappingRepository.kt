@@ -192,7 +192,78 @@ class UserIdentifierMappingRepository(
             println(e)
             return null
         }
+    }
 
+
+    fun createBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+
+        try {
+            val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+            val nodeIDMap = mutableMapOf<String, String>()
+
+            for(nodeID in nodeIDList){
+                nodeIDMap[nodeID] = nodeID
+            }
+
+            expressionAttributeValues[":map"] = nodeIDMap
+
+            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withUpdateExpression("set bookmarkedNodes = :map")
+                    .withConditionExpression("attribute_not_exists(bookmarkedNodes)")
+                    .withValueMap(expressionAttributeValues)
+
+            table.updateItem(updateItemSpec)
+
+            return nodeIDList
+
+        }
+        catch (e : ConditionalCheckFailedException){
+            val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+
+
+            var updateExpression : String = "set"
+            for((counter,nodeID) in nodeIDList.withIndex()){
+                updateExpression += " bookmarkedNodes.$nodeID = :val$counter,"
+                expressionAttributeValues[":val$counter"] = nodeID
+            }
+
+            updateExpression = updateExpression.dropLast(1)
+
+            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withUpdateExpression(updateExpression)
+                    .withValueMap(expressionAttributeValues)
+
+            table.updateItem(updateItemSpec)
+            return nodeIDList
+        }
+        catch (e : Exception){
+            println(e)
+            return null
+        }
+
+    }
+
+    fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+        return try {
+            var updateExpression : String = "remove"
+
+            for(nodeID in nodeIDList){
+                updateExpression += " bookmarkedNodes.$nodeID,"
+            }
+            updateExpression = updateExpression.dropLast(1)
+            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withUpdateExpression(updateExpression)
+
+            table.updateItem(updateItemSpec)
+            return nodeIDList
+        }
+        catch(e :  Exception){
+            println(e)
+            null
+        }
 
     }
 }

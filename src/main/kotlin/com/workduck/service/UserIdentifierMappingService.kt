@@ -70,6 +70,14 @@ class UserIdentifierMappingService {
     fun isNodeBookmarkedForUser(nodeID: String, userID: String) : Boolean? {
         return userIdentifierMappingRepository.isNodeBookmarkedForUser(nodeID, userID)
     }
+
+    fun createBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+        return userIdentifierMappingRepository.createBookmarksInBatch(userID, nodeIDList)
+    }
+
+    fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+        return userIdentifierMappingRepository.deleteBookmarksInBatch(userID, nodeIDList)
+    }
 }
 
 fun main() {
@@ -85,5 +93,10 @@ fun main() {
     //UserIdentifierMappingService().createBookmark("USER49", "NODE10")
 
     //UserIdentifierMappingService().removeBookmark("USER49", "NODE10")
-    UserIdentifierMappingService().getAllBookmarkedNodesByUser("USER49")
+    //UserIdentifierMappingService().getAllBookmarkedNodesByUser("USER49")
+
+
+    //xval list = mutableListOf("NODE11", "NODE12")
+    //UserIdentifierMappingService().createBookmarxksInBatch("USER49", list)
+    //UserIdentifierMappingService().deleteBookmarksInBatch("USER49", list)
 }

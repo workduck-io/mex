@@ -9,7 +9,7 @@ class CreateBookmarkStrategy: UserIdentifierMappingStrategy {
             input: Map<String, Any>,
             userIdentifierMappingService: UserIdentifierMappingService
     ): ApiGatewayResponse {
-        val errorMessage = "Error getting user records"
+        val errorMessage = "Error creating bookmark"
         val pathParameters = input["pathParameters"] as Map<*, *>?
         val userID = pathParameters!!["userID"] as String
         val nodeID = pathParameters["nodeID"] as String
