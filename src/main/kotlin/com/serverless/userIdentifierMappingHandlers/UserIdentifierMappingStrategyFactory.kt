@@ -9,6 +9,12 @@ class UserIdentifierMappingStrategyFactory {
 
         const val getUserRecordsObject = "GET /userRecords/{userID}"
 
+        const val createBookmarkObject = "POST /userIdentifierMappingRecord/bookmark/{userID}/{nodeID}"
+
+        const val deleteBookmarkObject = "PATCH /userIdentifierMappingRecord/bookmark/{userID}/{nodeID}"
+
+        const val getBookmarksObject = "GET /userIdentifierMappingRecord/bookmark/{userID}"
+
         private val userIdentifierMappingRegistry: Map<String, UserIdentifierMappingStrategy> = mapOf(
             getUserIdentifierMappingObject to DeleteUserIdentifierMappingStrategy(),
             createUserIdentifierMappingObject to CreateUserIdentifierMappingStrategy(),

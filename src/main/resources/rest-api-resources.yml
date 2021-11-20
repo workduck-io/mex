@@ -161,3 +161,17 @@ UserIdentifierRecord:
         path: /userRecords/{userID}
         method: get
         authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /userIdentifierMappingRecord/bookmark/{userID}/{nodeID}
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /userIdentifierMappingRecord/bookmark/{userID}/{nodeID}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /userIdentifierMappingRecord/bookmark/{userID}
+        method: get

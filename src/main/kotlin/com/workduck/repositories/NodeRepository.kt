@@ -28,6 +28,7 @@ class NodeRepository(
             orderBlocks(node)
             return node
         } catch (e: Exception) {
+            println(e)
             null
         }
     }

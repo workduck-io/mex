@@ -10,7 +10,7 @@ class GetNodesByNamespaceStrategy : NodeStrategy {
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
         val namespaceID = pathParameters!!["namespaceID"] as String
-        val workspaceID = pathParameters!!["workspaceID"] as String
+        val workspaceID = pathParameters["workspaceID"] as String
 
         val nodes: MutableList<String>? = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
 
