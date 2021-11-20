@@ -13,7 +13,8 @@ enum class IdentifierType(s: String) {
     NODE_SCHEMA("NODE-SCHEMA"),
     RELATIONSHIP("RELATIONSHIP"),
     WORKSPACE("WORKSPACE"),
-    USER("USER")
+    USER("USER"),
+    BOOKMARK("BOOKMARK")
 }
 
 @JsonTypeInfo(
@@ -30,7 +31,8 @@ enum class IdentifierType(s: String) {
     JsonSubTypes.Type(value = NodeSchemaIdentifier::class, name = "node-schema"),
     JsonSubTypes.Type(value = RelationshipIdentifier::class, name = "relationship"),
     JsonSubTypes.Type(value = WorkspaceIdentifier::class, name = "workspace"),
-    JsonSubTypes.Type(value = RelationshipIdentifier::class, name = "relationship")
+    JsonSubTypes.Type(value = RelationshipIdentifier::class, name = "relationship"),
+    JsonSubTypes.Type(value = BookmarkIdentifier::class, name = "bookmark")
 
 )
 sealed class Identifier(
@@ -73,6 +75,11 @@ data class RelationshipIdentifier(
 data class WorkspaceIdentifier(
     override var id: String = Helper.generateId(IdentifierType.WORKSPACE.name)
 ) : Identifier(IdentifierType.WORKSPACE, id)
+
+@JsonTypeName("workspace")
+data class BookmarkIdentifier(
+    override var id: String = Helper.generateId(IdentifierType.BOOKMARK.name)
+) : Identifier(IdentifierType.BOOKMARK, id)
 
 @JsonTypeName("user")
 data class UserIdentifier(

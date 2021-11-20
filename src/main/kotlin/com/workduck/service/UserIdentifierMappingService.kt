@@ -52,6 +52,32 @@ class UserIdentifierMappingService {
         else
             userIdentifierMappingRepository.deleteUserIdentifierMapping(userID, WorkspaceIdentifier(identifierID))
     }
+
+
+
+    fun createBookmark(userID: String, nodeID: String) : String?{
+        return userIdentifierMappingRepository.createBookmark(userID, nodeID)
+    }
+
+    fun deleteBookmark(userID: String, nodeID: String) : String?{
+        return userIdentifierMappingRepository.deleteBookmark(userID, nodeID)
+    }
+
+    fun getAllBookmarkedNodesByUser(userID: String) : MutableList<String>?{
+        return userIdentifierMappingRepository.getAllBookmarkedNodesByUser(userID)
+    }
+
+    fun isNodeBookmarkedForUser(nodeID: String, userID: String) : Boolean? {
+        return userIdentifierMappingRepository.isNodeBookmarkedForUser(nodeID, userID)
+    }
+
+    fun createBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+        return userIdentifierMappingRepository.createBookmarksInBatch(userID, nodeIDList)
+    }
+
+    fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+        return userIdentifierMappingRepository.deleteBookmarksInBatch(userID, nodeIDList)
+    }
 }
 
 fun main() {
@@ -62,6 +88,15 @@ fun main() {
 		}
 		"""
     // UserIdentifierMappingService().createUserIdentifierRecord(json)
-    println(UserIdentifierMappingService().getUserRecords("USER49").toString())
+    //println(UserIdentifierMappingService().getUserRecords("USER49").toString())
     // UserIdentifierMappingService().deleteUserIdentifierMapping("USER49", "NAMESPACE1")
+    //UserIdentifierMappingService().createBookmark("USER49", "NODE10")
+
+    //UserIdentifierMappingService().removeBookmark("USER49", "NODE10")
+    //UserIdentifierMappingService().getAllBookmarkedNodesByUser("USER49")
+
+
+    //xval list = mutableListOf("NODE11", "NODE12")
+    //UserIdentifierMappingService().createBookmarxksInBatch("USER49", list)
+    //UserIdentifierMappingService().deleteBookmarksInBatch("USER49", list)
 }

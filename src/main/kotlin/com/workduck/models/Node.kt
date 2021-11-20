@@ -75,6 +75,12 @@ data class Node(
     @DynamoDBAttribute(attributeName = "itemType")
     override var itemType: String = "Node",
 
+
+    @JsonProperty("isBookmarked")
+    @DynamoDBAttribute(attributeName = "isBookmarked")
+    // TODO(make it part of NodeResponse object in code cleanup)
+    var isBookmarked: Boolean? = null,
+
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = System.currentTimeMillis()

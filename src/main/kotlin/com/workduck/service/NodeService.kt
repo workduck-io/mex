@@ -85,8 +85,17 @@ class NodeService {
         return list
     }
 
-    fun getNode(nodeID: String): Entity? {
-        return repository.get(NodeIdentifier(nodeID))
+    fun getNode(nodeID: String, bookmarkInfo : Boolean? = null, userID : String? = null): Entity? {
+
+
+        val node =  repository.get(NodeIdentifier(nodeID)) as Node?
+        println("USER ID $userID")
+        if(bookmarkInfo == true && userID != null){
+            node?.isBookmarked = UserIdentifierMappingService().isNodeBookmarkedForUser(nodeID, userID)
+        }
+
+        return node
+
     }
 
     fun deleteNode(nodeID: String): Identifier? {

@@ -13,7 +13,7 @@ class DeleteUserIdentifierMappingStrategy : UserIdentifierMappingStrategy {
 
         val pathParameters = input["pathParameters"] as Map<*, *>?
         val userID = pathParameters!!["userID"] as String
-        val identifierID = pathParameters!!["identifierID"] as String
+        val identifierID = pathParameters["identifierID"] as String
 
         val map: Map<String, String>? = userIdentifierMappingService.deleteUserIdentifierMapping(userID, identifierID)
         return ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
