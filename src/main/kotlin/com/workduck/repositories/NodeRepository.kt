@@ -204,10 +204,6 @@ class NodeRepository(
         }
     }
 
-    companion object {
-        private val LOG = LogManager.getLogger(NodeRepository::class.java)
-    }
-
     fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>? {
         val table = dynamoDB.getTable(tableName)
         println("Inside getAllVersionsOfNode function")
@@ -303,6 +299,32 @@ class NodeRepository(
 
     }
 
+    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, status : String) : MutableList<String>{
+        val table: Table = dynamoDB.getTable(tableName)
 
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":active"] = status
+
+        val nodesProcessedList : MutableList<String> = mutableListOf()
+        for(nodeID in nodeIDList){
+            val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+                    .withUpdateExpression("SET itemStatus = :active")
+                    .withValueMap(expressionAttributeValues)
+
+            try{
+                table.updateItem(u)
+                nodesProcessedList += nodeID
+            }
+            catch(e : Exception){
+                println("Un-archiving Failed for nodeID : $nodeID, Exception : $e")
+            }
+        }
+
+        return nodesProcessedList
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeRepository::class.java)
+    }
 
 }

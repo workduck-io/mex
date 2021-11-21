@@ -15,7 +15,8 @@ class NodeStrategyFactory {
         const val createNodeObject = "POST /node"
 
         /* since we're not hard deleting, just moving to archive */
-        const val deleteNodeObject = "UPDATE /node/{id}"
+        const val deleteNodeObject = "POST /node/archive"
+
 
         const val appendToNodeObject = "POST /node/{id}/append"
 
@@ -25,9 +26,9 @@ class NodeStrategyFactory {
 
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
-        const val unarchiveNodeObject = "UPDATE /node/unarchive/{id}"
+        const val unarchiveNodeObject = "POST /node/unarchive"
 
-        const val deleteArchivedNodeObject = "DELETE /node/archive/{id}"
+        const val deleteArchivedNodeObject = "POST /node/archive/delete"
 
         const val getAllArchivedNodesObject = "GET /node/archive/{id}"
 

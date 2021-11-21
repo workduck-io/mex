@@ -9,10 +9,8 @@ class DeleteArchivedNodeStrategy : NodeStrategy {
     override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error deleting unarchived node"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
-        val nodeID = pathParameters!!["id"] as String
-
-        val identifier: Identifier? = nodeService.deleteArchivedNode(nodeID)
-        return ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+        val bodyJson = input["body"] as String
+        val returnedNodeIDList: MutableList<String> = nodeService.deleteArchivedNodes(bodyJson)
+        return ApiResponseHelper.generateStandardResponse(returnedNodeIDList as Any?, errorMessage)
     }
 }

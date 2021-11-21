@@ -138,6 +138,14 @@ class NodeService {
             NodeIdentifier(id = node.id)
         else null
     }
+    /* basically archive the nodes */
+    fun deleteNodes(nodeIDListJson: String): MutableList<String> {
+        val nodeIDList : List<String> = ObjectMapper().registerKotlinModule().readValue(nodeIDListJson)
+        println(nodeIDList)
+        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ARCHIVED")
+    }
+
+
 
     fun append(nodeID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
@@ -370,20 +378,22 @@ class NodeService {
         return nodeRepository.getAllArchivedNodesOfWorkspace(workspaceID)
     }
 
-    fun unarchiveNode(nodeID: String) : Entity? {
-        val node : Node? = getNode(nodeID) as Node?
-        println("Node we got : $node")
-        //val identifier : Identifier? = nodeRepository.delete(NodeIdentifier(nodeID))
-        if(node != null && node.itemStatus == "ARCHIVED"){
-            println("Will update the node now!")
-            node.itemStatus = "ACTIVE"
-            return repository.update(node)
-        }
-        return null
+
+    fun unarchiveNodes(nodeIDListJson: String) : MutableList<String> {
+        val nodeIDList : List<String> = ObjectMapper().registerKotlinModule().readValue(nodeIDListJson)
+        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ACTIVE")
     }
 
-    fun deleteArchivedNode(nodeID: String) : Identifier? {
-        return repository.delete(NodeIdentifier(nodeID))
+    fun deleteArchivedNodes(nodeIDListJson: String) : MutableList<String> {
+
+        val nodeIDList : List<String> = ObjectMapper().registerKotlinModule().readValue(nodeIDListJson)
+        val deletedNodesList : MutableList<String> = mutableListOf()
+        for(nodeID in nodeIDList) {
+            repository.delete(NodeIdentifier(nodeID))?.also{
+                deletedNodesList.add(it.id)
+            }
+        }
+        return deletedNodesList
     }
 
     companion object {

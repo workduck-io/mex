@@ -14,7 +14,7 @@ class DeleteNodeStrategy : NodeStrategy {
         val errorMessage = "Error deleting node"
 
         val nodeID = input.pathParameters?.id
-
+        val bodyJson = input["body"] as String
         return if (nodeID != null) {
             val identifier: Identifier? = nodeService.deleteNode(nodeID)
 
