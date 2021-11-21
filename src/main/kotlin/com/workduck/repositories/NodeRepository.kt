@@ -12,6 +12,8 @@ import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Index
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
+import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
@@ -331,4 +333,48 @@ class NodeRepository(
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 
+
+
+    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) : String?{
+        val table = dynamoDB.getTable(tableName)
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":true"] = accessValue
+
+        val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+                .withUpdateExpression("SET publicAccess = :true")
+                .withValueMap(expressionAttributeValues)
+
+        return try {
+            table.updateItem(u)
+            nodeID
+        } catch (e: Exception) {
+            println(e)
+            null
+        }
+
+    }
+
+    fun getPublicNode(nodeID: String) : Node? {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":true"] = AttributeValue().withN("1")
+
+
+        val queryExpression = DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("PK = :pk and SK = :sk")
+                .withFilterExpression("publicAccess = :true")
+                .withExpressionAttributeValues(expressionAttributeValues)
+
+
+        val nodeList: List<Node> = mapper.query(Node::class.java, queryExpression, dynamoDBMapperConfig)
+
+        return if(nodeList.isNotEmpty()) nodeList[0]
+        else null
+
+    }
 }
+
+//TODO(separate out table in code cleanup)

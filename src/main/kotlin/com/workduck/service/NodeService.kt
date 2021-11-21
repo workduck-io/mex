@@ -404,6 +404,18 @@ class NodeService {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
+
+    fun makeNodePublic(nodeID: String) : String?{
+        return nodeRepository.toggleNodePublicAccess(nodeID, 1)
+    }
+
+    fun makeNodePrivate(nodeID: String) : String?{
+        return nodeRepository.toggleNodePublicAccess(nodeID, 0)
+    }
+
+    fun getPublicNode(nodeID: String) : Node?{
+        return nodeRepository.getPublicNode(nodeID)
+    }
 }
 
 fun main() {
@@ -535,9 +547,11 @@ fun main() {
 
     //NodeService().setTTLForOldestVersion("NODE1")
 
-    NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
+    //NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
 
 
+    //    NodeService().makeNodePublic("NODE1")
+    NodeService().getPublicNode("NODE1")
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")

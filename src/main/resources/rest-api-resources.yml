@@ -67,6 +67,17 @@ Node:
         path: /node/archive/{id}
         method: get
         authorizer: mexAuthorizer
+    - httpApi:
+        path: /node/public/{id}
+        method: get
+
+    - httpApi:
+        path: /node/makePublic/{id}
+        method: patch
+
+    - httpApi:
+        path: /node/makePrivate/{id}
+        method: patch
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler

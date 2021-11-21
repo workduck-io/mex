@@ -1,10 +1,5 @@
 package com.serverless.nodeHandlers
 
-import com.serverless.transformers.IdentifierTransformer
-import com.serverless.transformers.NodeTransformer
-import com.serverless.transformers.Transformer
-import com.workduck.models.Identifier
-import com.workduck.models.Node
 
 class NodeStrategyFactory {
 
@@ -34,6 +29,12 @@ class NodeStrategyFactory {
 
         const val getNodeVersionMetadata = "GET /node/{id}/version/metadata"
 
+        const val makeNodePublicObject = "PATCH /node/makePublic/{id}"
+
+        const val makeNodePrivateObject = "PATCH /node/makePrivate/{id}"
+
+        const val getPublicNodeObject = "GET /node/public/{id}"
+
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
@@ -45,7 +46,11 @@ class NodeStrategyFactory {
             getNodeVersionMetadata to GetNodeVersionMetaDataStrategy(),
             unarchiveNodeObject to UnarchiveNodeStrategy(),
             deleteArchivedNodeObject to DeleteArchivedNodeStrategy(),
-            getAllArchivedNodesObject to GetAllArchivedNodesStrategy()
+            getAllArchivedNodesObject to GetAllArchivedNodesStrategy(),
+            updateNodeBlock to UpdateNodeBlockStrategy(),
+            makeNodePublicObject to MakeNodePublicStrategy(),
+            makeNodePublicObject to MakeNodePrivateStrategy(),
+            getPublicNodeObject to GetPublicNodeStrategy()
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {
