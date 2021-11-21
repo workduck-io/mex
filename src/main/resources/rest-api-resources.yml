@@ -22,7 +22,7 @@ Node:
 
     - httpApi:
         path: /node/{id}
-        method: delete
+        method: update
         authorizer: mexAuthorizer
 
     - httpApi:
@@ -50,6 +50,20 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /node/unarchive/{id}
+        method: update
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/archive/{id}
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/archive/{id}
+        method: get
+        authorizer: mexAuthorizer
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler

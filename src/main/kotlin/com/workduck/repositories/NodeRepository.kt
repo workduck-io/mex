@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
@@ -120,11 +121,13 @@ class NodeRepository(
     override fun delete(identifier: Identifier): Identifier? {
         val table = dynamoDB.getTable(tableName)
 
+
         val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
             .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
         return try {
             table.deleteItem(deleteItemSpec)
+            LOG.info("Deleted the node")
             identifier
         } catch (e: Exception) {
             LOG.info(e)
@@ -236,8 +239,44 @@ class NodeRepository(
             println(e)
             null
         }
+    }
+
+    fun getAllArchivedNodesOfWorkspace(workspaceID : String) : MutableList<String>?{
+
+        try {
+            val table: Table = dynamoDB.getTable(tableName)
+            val index: Index = table.getIndex("WS-itemStatus-Index")
+
+
+            val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+            expressionAttributeValues[":workspaceID"] = workspaceID
+            expressionAttributeValues[":archived"] = "ARCHIVED"
+            expressionAttributeValues[":node"] = "Node"
+
+            val querySpec = QuerySpec()
+                    .withKeyConditionExpression("workspaceIdentifier = :workspaceID and itemStatus = :archived")
+                    .withFilterExpression("itemType = :node")
+                    .withValueMap(expressionAttributeValues)
+                    .withProjectionExpression("PK")
+
+
+            val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
+            val iterator: Iterator<Item> = items!!.iterator()
+
+            var nodeIDList: MutableList<String> = mutableListOf()
+            while (iterator.hasNext()) {
+                val item: Item = iterator.next()
+                nodeIDList = (nodeIDList + (item["PK"] as String)).toMutableList()
+            }
+            return nodeIDList
+        }
+        catch( e: Exception){
+            println(e)
+            return null
+        }
 
     }
+
 
     fun setTTLForOldestVersion(nodeID : String, oldestUpdatedAt : String){
 

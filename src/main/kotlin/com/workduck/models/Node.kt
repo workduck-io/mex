@@ -76,6 +76,11 @@ data class Node(
     override var itemType: String = "Node",
 
 
+    @JsonProperty("itemStatus")
+    @DynamoDBAttribute(attributeName = "itemStatus")
+    var itemStatus: String = "ACTIVE",
+
+
     @JsonProperty("isBookmarked")
     @DynamoDBAttribute(attributeName = "isBookmarked")
     // TODO(make it part of NodeResponse object in code cleanup)

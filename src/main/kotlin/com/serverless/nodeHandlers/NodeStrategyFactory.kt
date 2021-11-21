@@ -14,7 +14,8 @@ class NodeStrategyFactory {
 
         const val createNodeObject = "POST /node"
 
-        const val deleteNodeObject = "DELETE /node/{id}"
+        /* since we're not hard deleting, just moving to archive */
+        const val deleteNodeObject = "UPDATE /node/{id}"
 
         const val appendToNodeObject = "POST /node/{id}/append"
 
@@ -23,6 +24,12 @@ class NodeStrategyFactory {
         const val getNodesByWorkspaceObject = "GET /node/workspace/{workspaceID}"
 
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
+
+        const val unarchiveNodeObject = "UPDATE /node/unarchive/{id}"
+
+        const val deleteArchivedNodeObject = "DELETE /node/archive/{id}"
+
+        const val getAllArchivedNodesObject = "GET /node/archive/{id}"
 
         const val getNodeVersionMetadata = "GET /node/{id}/version/metadata"
 
@@ -34,8 +41,10 @@ class NodeStrategyFactory {
             getNodesByNamespaceObject to GetNodesByNamespaceStrategy(),
             getNodesByWorkspaceObject to GetNodesByWorkspaceStrategy(),
             updateNodeBlock to UpdateNodeBlockStrategy(),
-            getNodeVersionMetadata to GetNodeVersionMetaDataStrategy()
-
+            getNodeVersionMetadata to GetNodeVersionMetaDataStrategy(),
+            unarchiveNodeObject to UnarchiveNodeStrategy(),
+            deleteArchivedNodeObject to DeleteArchivedNodeStrategy(),
+            getAllArchivedNodesObject to GetAllArchivedNodesStrategy()
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {
