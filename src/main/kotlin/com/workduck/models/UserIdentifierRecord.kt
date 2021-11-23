@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
-@DynamoDBTable(tableName = "sampleData")
+@DynamoDBTable(tableName = "local-mex")
 class UserIdentifierRecord(
 
     @JsonProperty("userID")
