@@ -26,9 +26,9 @@ data class AdvancedElement(
     var parentID: String? = null,
 
     @JsonProperty("content")
-    var content: String = "",
+    var content: String? = "",
 
-    @JsonProperty("childrenElements")
+    @JsonProperty("children")
     var children: List<AdvancedElement>? = listOf(),
 
     @JsonProperty("elementType")

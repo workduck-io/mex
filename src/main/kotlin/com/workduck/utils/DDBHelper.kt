@@ -9,11 +9,15 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 
 object DDBHelper {
 
-    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder
-        .standard()
-        // TODO: read from config file
-        .withRegion(Regions.US_EAST_1)
+    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
+        AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-east-1"))
         .build()
+
+//    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder
+//        .standard()
+//        // TODO: read from config file
+//        .withRegion(Regions.US_EAST_1)
+//        .build()
 
 	/*
 	** Currently, works for : NamespaceID and WorkspaceID. Return List of Strings, not objects
@@ -41,8 +45,8 @@ object DDBHelper {
 
         querySpec.withKeyConditionExpression(
             "itemType = :itemType and begins_with(AK, :akValue)"
-        )
-            .withValueMap(expressionAttributeValues)
+        ).withValueMap(expressionAttributeValues)
+        .withProjectionExpression("PK")
 
         val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
         val iterator: Iterator<Item> = items!!.iterator()

@@ -11,12 +11,10 @@ class GetNodesByNamespaceStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error getting users!"
 
-        val pathParameters = input["pathParameters"] as Map<String, String>?
+        val namespaceID = input.pathParameters?.namespaceID
+        val workspaceID = input.pathParameters?.workspaceID
 
-        return if (pathParameters != null) {
-            val namespaceID = pathParameters.getOrDefault("namespaceID", "")
-            val workspaceID = pathParameters.getOrDefault("workspaceID", "")
-
+        return if (workspaceID != null && namespaceID != null) {
             val nodes: MutableList<String>? = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
 
             ApiResponseHelper.generateStandardResponse(nodes as Any?, errorMessage)

@@ -9,10 +9,10 @@ class AppendToNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error appending to node!"
         val json = input.body
-        val pathParameters = input.pathParameters
+        val nodeID = input.pathParameters?.id
 
-        return if (pathParameters != null) {
-            val nodeID = pathParameters.getOrDefault("id", "")
+        //TODO(create an ElementResponse object. And , make NodeResponse.data of the type List<ElementResponse>)
+        return if (nodeID != null && json!= null) {
 
             val map: Map<String, Any>? = nodeService.append(nodeID, json)
 

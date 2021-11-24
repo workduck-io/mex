@@ -14,15 +14,13 @@ class DeleteNodeStrategy(
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error deleting node"
 
-        val pathParameters = input["pathParameters"] as Map<String, String>?
+        val nodeID = input.pathParameters?.id
 
-        return if (pathParameters != null) {
-            val nodeID = pathParameters.getOrDefault("id", "")
-
+        return if (nodeID != null) {
             val identifier: Identifier? = nodeService.deleteNode(nodeID)
 
             val identifierResponse = identifierTransformer.transform(identifier)
-            ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(identifierResponse, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }

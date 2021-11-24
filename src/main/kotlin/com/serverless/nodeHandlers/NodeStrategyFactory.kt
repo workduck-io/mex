@@ -1,8 +1,18 @@
 package com.serverless.nodeHandlers
 
+import com.serverless.transformers.IdentifierTransformer
+import com.serverless.transformers.NodeTransformer
+import com.serverless.transformers.Transformer
+import com.workduck.models.Identifier
+import com.workduck.models.Node
+
 class NodeStrategyFactory {
 
     companion object {
+
+        val nodeTransformer : Transformer<Node> = NodeTransformer()
+
+        val identifierTransformer : Transformer<Identifier> = IdentifierTransformer()
 
         const val getNodeObject = "GET /node/{id}"
 
@@ -19,9 +29,9 @@ class NodeStrategyFactory {
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
-            getNodeObject to GetNodeStrategy(),
-            createNodeObject to CreateNodeStrategy(),
-            deleteNodeObject to DeleteNodeStrategy(),
+            getNodeObject to GetNodeStrategy(nodeTransformer),
+            createNodeObject to CreateNodeStrategy(nodeTransformer),
+            deleteNodeObject to DeleteNodeStrategy(identifierTransformer),
             appendToNodeObject to AppendToNodeStrategy(),
             getNodesByNamespaceObject to GetNodesByNamespaceStrategy(),
             getNodesByWorkspaceObject to GetNodesByWorkspaceStrategy(),

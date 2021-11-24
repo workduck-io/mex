@@ -35,7 +35,7 @@ data class Node(
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
-    var data: MutableList<AdvancedElement>? = null,
+    var data: List<AdvancedElement>? = null,
 
     @DynamoDBAttribute(attributeName = "nodeDataOrder")
     var dataOrder: MutableList<String>? = null,
@@ -92,12 +92,10 @@ data class Node(
     var updatedAt: Long = System.currentTimeMillis()
 
     companion object {
-        fun createNodeWithSkAkAndCreatedAtNull(node : Node) : Node {
+        fun populateNodeWithSkAkAndCreatedAtNull(node : Node) {
             node.idCopy = node.id
             node.createdAt = null
             node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
-            return node
-
         }
     }
 

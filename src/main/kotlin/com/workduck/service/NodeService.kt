@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.serverless.models.NodeRequest
+import com.serverless.models.WDRequest
 import com.workduck.models.Node
 import com.workduck.models.Entity
 import com.workduck.models.NodeIdentifier
@@ -17,6 +19,7 @@ import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -25,6 +28,7 @@ import org.apache.logging.log4j.LogManager
 class NodeService {
     // Todo: Inject them from handlers
 
+    private val objectMapper = Helper.objectMapper
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
@@ -41,13 +45,11 @@ class NodeService {
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
-    fun createNode(jsonString: String): Entity? {
+    fun createNode(node: Node): Entity? {
         LOG.info("Should be created in the table : $tableName")
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val node: Node = objectMapper.readValue(jsonString)
+
 
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
-
         node.dataOrder = createDataOrderForNode(node)
         node.createBy = node.lastEditedBy
 
@@ -63,6 +65,19 @@ class NodeService {
         LOG.info("Creating node : $node")
 
         return repository.create(node)
+    }
+
+    fun createAndUpdateNode(nodeRequest: WDRequest?) : Entity? {
+        val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
+
+        val storedNode = getNode(node.id) as Node?
+
+        return if(storedNode == null){
+            createNode(node)
+        }
+        else{
+            updateNode(node, storedNode)
+        }
     }
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
@@ -94,7 +109,6 @@ class NodeService {
 
     fun append(nodeID: String, jsonString: String): Map<String, Any>? {
 
-        val objectMapper = ObjectMapper().registerKotlinModule()
         val elements: MutableList<AdvancedElement> = objectMapper.readValue(jsonString)
 
         val orderList = mutableListOf<String>()
@@ -111,15 +125,11 @@ class NodeService {
     }
 
     fun updateNode(node : Node, storedNode: Node): Entity? {
-        /* since idCopy is SK for Node object, it can't be null if not sent from frontend */
-        node.idCopy = node.id
 
         /* set idCopy = id, createdAt = null, and set AK */
-        val node = Node.createNodeWithSkAkAndCreatedAtNull(node)
+        Node.populateNodeWithSkAkAndCreatedAtNull(node)
 
         node.dataOrder = createDataOrderForNode(node)
-
-        //val storedNode: Node = getNode(node.id) as Node
 
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
@@ -147,7 +157,6 @@ class NodeService {
 
     fun updateNodeBlock(nodeID: String, blockJson: String): AdvancedElement? {
 
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
         val element: AdvancedElement = objectMapper.readValue(blockJson)
 
         val blockData = objectMapper.writeValueAsString(element)
@@ -240,14 +249,27 @@ class NodeService {
         return nodeChanged
     }
 
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?) : Node? {
+        return nodeRequest?.let{
+            Node(id = nodeRequest.id,
+                idCopy = nodeRequest.id,
+                namespaceIdentifier = nodeRequest.namespaceIdentifier,
+                workspaceIdentifier = nodeRequest.workspaceIdentifier,
+                lastEditedBy = nodeRequest.lastEditedBy,
+                data = nodeRequest.data)
+        }
+    }
+
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
+
 }
 
 fun main() {
     val jsonString: String = """
 		{
+            "type" : "NodeRequest",
             "lastEditedBy" : "Varun",
 			"id": "NODE1",
             "namespaceIdentifier" : "NAMESPACE1",
@@ -256,7 +278,7 @@ fun main() {
 			{
 				"id": "sampleParentID",
                 "elementType": "list",
-                "childrenElements": [
+                "children": [
                 {
                     "id" : "sampleChildID",
                     "content" : "sample child content",
@@ -268,7 +290,7 @@ fun main() {
             {
 				"id": "1234",
                 "elementType": "list",
-                "childrenElements": [
+                "children": [
                 {
                     "id" : "sampleChildID",
                     "content" : "sample child content",
@@ -284,6 +306,7 @@ fun main() {
     val jsonString1: String = """
         
     {
+        "type" : "NodeRequest",
         "lastEditedBy" : "Ruddhi",
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
@@ -292,7 +315,7 @@ fun main() {
         {
             "id": "sampleParentID",
             "elementType": "list",
-            "childrenElements": [
+            "children": [
             {
                 "id" : "sampleChildID",
                 "content" : "sample child content 1",
@@ -304,7 +327,7 @@ fun main() {
         {
             "id": "sampleParentID2",
             "elementType": "list",
-            "childrenElements": [
+            "children": [
             {
                 "id" : "sampleChildID2",
                 "content" : "sample child content",
@@ -316,7 +339,7 @@ fun main() {
         {
 				"id": "1234",
                 "elementType": "list",
-                "childrenElements": [
+                "children": [
                 {
                     "id" : "sampleChildID",
                     "content" : "sample child content",
@@ -336,7 +359,7 @@ fun main() {
             "id": "xyz",
             "content": "Sample Content 4",
             "elementType" : "list",
-            "childrenElements": [
+            "children": [
             {
                
                 "id" : "sampleChildID4",
@@ -348,7 +371,7 @@ fun main() {
             "id": "abc",
             "content": "Sample Content 5",
             "elementType" : "random element type",
-            "childrenElements": [
+            "children": [
             {
                 "id" : "sampleChildID5",
                 "content" : "sample child content"
@@ -363,7 +386,7 @@ fun main() {
             "lastEditedBy" : "Varun",
             "id" : "sampleParentID",
             "elementType": "list",
-            "childrenElements": [
+            "children": [
               {
                   "id" : "sampleChildID",
                   "content" : "edited child content - direct set - second tryy",
@@ -374,8 +397,9 @@ fun main() {
         }
       """
 
-    // NodeService().createNode(jsonString)
-     println(NodeService().getNode("NODE2"))
+    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
+     NodeService().createAndUpdateNode(nodeRequest)
+    // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
     // NodeService().jsonToObjectMapper(jsonString1)

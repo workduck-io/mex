@@ -15,10 +15,10 @@ import com.workduck.models.WorkspaceIdentifier
 class NodeRequest(
 
         @JsonProperty("lastEditedBy")
-        val lastEditedBy : String,
+        val lastEditedBy : String = "",
 
         @JsonProperty("id")
-        val id : String,
+        val id : String = "",
 
         @JsonProperty("namespaceIdentifier")
         @JsonSerialize(converter = IdentifierSerializer::class)
@@ -31,7 +31,7 @@ class NodeRequest(
         val workspaceIdentifier: WorkspaceIdentifier?= null,
 
         @JsonProperty("data")
-        val data: List<AdvancedElement>,
+        val data: List<AdvancedElement>? = null,
 
         ) : WDRequest {
 
