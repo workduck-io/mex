@@ -144,44 +144,29 @@ User:
 
 
 
-UserIdentifierRecord:
+UserBookmark:
   handler: com.serverless.userIdentifierMappingHandlers.UserIdentifierMappingHandler
   events:
     - httpApi:
-        path: /userIdentifierMappingRecord
+        path: /userBookmark/{userID}/{nodeID}
         method: post
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /userIdentifierMappingRecord/{userID}/{identifierID}
-        method: delete
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /userRecords/{userID}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /userIdentifierMappingRecord/bookmark/{userID}/{nodeID}
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /userIdentifierMappingRecord/bookmark/{userID}/{nodeID}
+        path: /userBookmark/{userID}/{nodeID}
         method: patch
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /userIdentifierMappingRecord/bookmark/{userID}
+        path: /userBookmark/{userID}
         method: get
 
     - httpApi:
-        path: /userIdentifierMappingRecord/bookmark/batch/{userID}/{ids}
+        path: /userBookmark/batch/{userID}/{ids}
         method: post
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /userIdentifierMappingRecord/bookmark/batch/{userID}/{ids}
+        path: /userBookmark/batch/{userID}/{ids}
         method: patch
         authorizer: mexAuthorizer

@@ -1,6 +1,6 @@
 package com.serverless.models
 
-class WorkspaceResponse(
+data class WorkspaceResponse(
     val id: String,
 
     val name: String,

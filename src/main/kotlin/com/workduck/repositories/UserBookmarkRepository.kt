@@ -3,20 +3,16 @@ package com.workduck.repositories
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.*
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
-import com.workduck.models.UserIdentifierRecord
 import org.apache.logging.log4j.LogManager
 
-class UserIdentifierMappingRepository(
+class UserBookmarkRepository(
     private val dynamoDB: DynamoDB,
     private val mapper: DynamoDBMapper,
     private val dynamoDBMapperConfig: DynamoDBMapperConfig
-) : Repository<UserIdentifierRecord> {
+)  {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
@@ -25,63 +21,6 @@ class UserIdentifierMappingRepository(
 
     val table: Table = dynamoDB.getTable(tableName)
 
-    override fun create(t: UserIdentifierRecord): UserIdentifierRecord {
-        TODO("Not yet implemented")
-    }
-
-    override fun update(t: UserIdentifierRecord): UserIdentifierRecord {
-        TODO("Not yet implemented")
-    }
-
-    override fun get(identifier: Identifier): Entity {
-        TODO("Not yet implemented")
-    }
-
-    override fun delete(identifier: Identifier): Identifier? {
-        TODO("Not yet implemented")
-    }
-
-    fun getRecordsByUserID(userID: String): MutableList<String> {
-        val table = dynamoDB.getTable(tableName)
-        val querySpec = QuerySpec()
-
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":userID"] = userID
-
-        querySpec.withKeyConditionExpression("PK = :userID")
-            .withValueMap(expressionAttributeValues)
-
-        val listOfJSON: MutableList<String> = mutableListOf()
-
-        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
-
-        if(items != null) {
-            val iterator: Iterator<Item> = items.iterator()
-
-
-            while (iterator.hasNext()) {
-                val item: Item = iterator.next()
-                listOfJSON += item.toJSON()
-            }
-            return listOfJSON
-        }
-
-        /* return empty list when items were null */
-        return listOfJSON
-    }
-
-    fun deleteUserIdentifierMapping(userID: String, identifier: Identifier): Map<String, String>? {
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-            .withPrimaryKey("PK", userID, "SK", identifier.id)
-
-        return try {
-            table.deleteItem(deleteItemSpec)
-            mapOf("userID" to userID, "identifierID" to identifier.id)
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
-    }
 
     fun createBookmark(userID: String, nodeID: String) : String?{
 
@@ -273,6 +212,6 @@ class UserIdentifierMappingRepository(
     }
 
     companion object {
-        private val LOG = LogManager.getLogger(UserIdentifierMappingRepository::class.java)
+        private val LOG = LogManager.getLogger(UserBookmarkRepository::class.java)
     }
 }

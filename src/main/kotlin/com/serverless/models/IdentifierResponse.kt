@@ -1,6 +1,6 @@
 package com.serverless.models
 
-class IdentifierResponse(
+data class IdentifierResponse(
     val id: String,
     val type: String
 ) : Response

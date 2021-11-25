@@ -1,6 +1,6 @@
 package com.serverless.models
 
-class NamespaceResponse(
+data class NamespaceResponse(
     val id: String,
 
     val name: String,

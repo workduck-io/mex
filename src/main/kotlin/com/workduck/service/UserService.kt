@@ -91,14 +91,6 @@ class UserService {
 		return repository.delete(UserIdentifier(userID))
 	}
 
-	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String>? {
-		return userRepository.getAllUsersWithWorkspaceID(workspaceID)
-	}
-
-	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String>? {
-		return userRepository.getAllUsersWithNamespaceID(namespaceID)
-	}
-
 	companion object {
 		private val LOG = LogManager.getLogger(UserService::class.java)
 	}

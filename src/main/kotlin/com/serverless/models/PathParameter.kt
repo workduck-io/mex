@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 data class PathParameter(
     val id: String?,
     val ids: String?,
+    val userID: String?,
+    val nodeID: String?,
     val workspaceID: String?,
     val namespaceID: String?
 )

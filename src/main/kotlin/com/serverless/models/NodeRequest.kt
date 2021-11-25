@@ -12,7 +12,7 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.WorkspaceIdentifier
 
 @JsonTypeName("NodeRequest")
-class NodeRequest(
+data class NodeRequest(
 
     @JsonProperty("lastEditedBy")
     val lastEditedBy: String = "",
