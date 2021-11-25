@@ -14,26 +14,23 @@ import com.workduck.models.WorkspaceIdentifier
 @JsonTypeName("NodeRequest")
 class NodeRequest(
 
-        @JsonProperty("lastEditedBy")
-        val lastEditedBy : String = "",
+    @JsonProperty("lastEditedBy")
+    val lastEditedBy: String = "",
 
-        @JsonProperty("id")
-        val id : String = "",
+    @JsonProperty("id")
+    val id: String = "",
 
-        @JsonProperty("namespaceIdentifier")
-        @JsonSerialize(converter = IdentifierSerializer::class)
-        @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-        val namespaceIdentifier: NamespaceIdentifier?= null,
+    @JsonProperty("namespaceIdentifier")
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
+    val namespaceIdentifier: NamespaceIdentifier? = null,
 
-        @JsonProperty("workspaceIdentifier")
-        @JsonSerialize(converter = IdentifierSerializer::class)
-        @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-        val workspaceIdentifier: WorkspaceIdentifier?= null,
+    @JsonProperty("workspaceIdentifier")
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+    val workspaceIdentifier: WorkspaceIdentifier? = null,
 
-        @JsonProperty("data")
-        val data: List<AdvancedElement>? = null,
+    @JsonProperty("data")
+    val data: List<AdvancedElement>? = null,
 
-        ) : WDRequest {
-
-
-}
+) : WDRequest

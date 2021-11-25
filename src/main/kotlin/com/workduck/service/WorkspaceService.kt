@@ -7,6 +7,8 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.WDRequest
+import com.serverless.models.WorkspaceRequest
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.Workspace
@@ -37,8 +39,9 @@ class WorkspaceService {
     private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
     private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
-    fun createWorkspace(jsonString: String): Entity? {
-        val workspace: Workspace = objectMapper.readValue(jsonString)
+    fun createWorkspace(workspaceRequest: WDRequest?): Entity? {
+        val workspace : Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
+
         LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
@@ -48,8 +51,8 @@ class WorkspaceService {
         return repository.get(WorkspaceIdentifier(workspaceID))
     }
 
-    fun updateWorkspace(jsonString: String): Entity? {
-        val tempWorkspace: Workspace = objectMapper.readValue(jsonString)
+    fun updateWorkspace(workspaceRequest: WDRequest?): Entity? {
+        val tempWorkspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
 
         val workspace : Workspace = Workspace.createWorkspaceWithSkAndCreatedAtNull(tempWorkspace)
         LOG.info("Updating workspace : $workspace")
@@ -64,6 +67,13 @@ class WorkspaceService {
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?>? {
         LOG.info("Getting workspaces with ids : $workspaceIDList")
         return workspaceRepository.getWorkspaceData(workspaceIDList)
+    }
+
+    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest : WorkspaceRequest?) : Workspace?{
+        return workspaceRequest?.let {
+            Workspace(id = workspaceRequest.id,
+                    name = workspaceRequest.name)
+        }
     }
 
     companion object {
@@ -85,7 +95,7 @@ fun main() {
 			"name" : "WorkDuck Pvt. Ltd."
 		}
 		"""
-     WorkspaceService().createWorkspace(json)
+    // WorkspaceService().createWorkspace(json)
     // WorkspaceService().updateWorkspace(jsonUpdate)
     // WorkspaceService().deleteWorkspace("WORKSPACE1")
     //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))

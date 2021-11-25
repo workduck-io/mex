@@ -10,7 +10,7 @@ object IdentifierHelper {
 
     val identifierTransformer : Transformer<Identifier> = IdentifierTransformer()
 
-    fun convertIdentifierToIdentifierResponse(identifier: Entity?) : Response? {
-        return identifierTransformer.transform(identifier as Identifier?)
+    fun convertIdentifierToIdentifierResponse(identifier: Identifier?) : Response? {
+        return identifierTransformer.transform(identifier)
     }
 }

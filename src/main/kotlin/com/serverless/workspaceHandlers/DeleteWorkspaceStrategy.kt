@@ -5,23 +5,21 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.Response
 import com.serverless.transformers.Transformer
+import com.serverless.utils.IdentifierHelper
 import com.workduck.models.Identifier
 import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
 
-class DeleteWorkspaceStrategy(
-        val identifierTransformer : Transformer<Identifier>
-) : WorkspaceStrategy {
+class DeleteWorkspaceStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error deleting workspace"
 
-        val pathParameters = input["pathParameters"] as Map<String, String>?
-        return if (pathParameters != null) {
-            val workspaceID = pathParameters.getOrDefault("id", "")
+        val workspaceID = input.pathParameters?.id
+        return if (workspaceID != null) {
 
             val identifier: Identifier? = workspaceService.deleteWorkspace(workspaceID)
 
-            val identifierResponse : Response?  = identifierTransformer.transform(identifier)
+            val identifierResponse : Response?  = IdentifierHelper.convertIdentifierToIdentifierResponse(identifier)
             ApiResponseHelper.generateStandardResponse(identifierResponse, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

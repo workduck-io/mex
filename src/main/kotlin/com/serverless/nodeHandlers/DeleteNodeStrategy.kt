@@ -9,9 +9,7 @@ import com.workduck.models.Identifier
 import com.workduck.models.Node
 import com.workduck.service.NodeService
 
-class DeleteNodeStrategy(
-        val identifierTransformer : Transformer<Identifier>
-) : NodeStrategy {
+class DeleteNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error deleting node"
 

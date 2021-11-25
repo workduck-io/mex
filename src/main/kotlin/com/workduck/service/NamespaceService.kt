@@ -7,10 +7,10 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
-import com.workduck.models.Namespace
-import com.workduck.models.NamespaceIdentifier
+import com.serverless.models.NamespaceRequest
+import com.serverless.models.WDRequest
+import com.serverless.models.WorkspaceRequest
+import com.workduck.models.*
 
 import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
@@ -38,8 +38,8 @@ class NamespaceService {
     private val namespaceRepository: NamespaceRepository = NamespaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
     private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)
 
-    fun createNamespace(jsonString: String): Entity? {
-        val namespace: Namespace = objectMapper.readValue(jsonString)
+    fun createNamespace(namespaceRequest: WDRequest?): Entity? {
+        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
         LOG.info("Creating namespace : $namespace")
         return repository.create(namespace)
     }
@@ -49,8 +49,8 @@ class NamespaceService {
         return repository.get(NamespaceIdentifier(namespaceID))
     }
 
-    fun updateNamespace(jsonString: String): Entity? {
-        val tempNamespace: Namespace = objectMapper.readValue(jsonString)
+    fun updateNamespace(namespaceRequest: WDRequest?): Entity? {
+        val tempNamespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
 
         val namespace : Namespace = Namespace.createNamespaceWithSkAndCreatedAtNull(tempNamespace)
 
@@ -66,6 +66,14 @@ class NamespaceService {
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {
         LOG.info("Getting namespaces with ids : $namespaceIDList")
         return namespaceRepository.getNamespaceData(namespaceIDList)
+    }
+
+    private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest?) : Namespace? {
+        return namespaceRequest?.let {
+            Namespace(id = it.id,
+                    name = it.name,
+                    workspaceIdentifier = WorkspaceIdentifier(it.workspaceID))
+        }
     }
 
     companion object {

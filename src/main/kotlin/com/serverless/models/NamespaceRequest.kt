@@ -3,13 +3,14 @@ package com.serverless.models
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 
-@JsonTypeName("WorkspaceRequest")
-class WorkspaceRequest(
-
+@JsonTypeName("NamespaceRequest")
+class NamespaceRequest(
     @JsonProperty("id")
     val id: String = "",
 
     @JsonProperty("name")
-    val name: String = ""
+    val name: String = "",
 
+    @JsonProperty("name")
+    val workspaceID: String = ""
 )

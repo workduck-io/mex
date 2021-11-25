@@ -11,9 +11,7 @@ import com.workduck.models.Entity
 import com.workduck.models.Node
 import com.workduck.service.NodeService
 
-class CreateNodeStrategy(
-        val nodeTransformer : Transformer<Node>
-) : NodeStrategy {
+class CreateNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error creating node"
 

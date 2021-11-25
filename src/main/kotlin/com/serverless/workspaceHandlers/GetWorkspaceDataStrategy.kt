@@ -4,25 +4,24 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.transformers.Transformer
+import com.serverless.utils.WorkspaceHelper
 import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
 
-class GetWorkspaceDataStrategy(
-        val namespaceTransformer : Transformer<Workspace>
-) : WorkspaceStrategy {
+class GetWorkspaceDataStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error getting workspaces!"
-        val pathParameters = input["pathParameters"] as Map<String, String>?
+        val workspaceIDs = input.pathParameters?.ids
 
-        return if (pathParameters != null) {
-            val workspaceIDList: List<String> = pathParameters.getOrDefault("id", "").split(",")
+        return if (workspaceIDs != null) {
+            val workspaceIDList: List<String> = workspaceIDs.split(",")
             val workspaces: MutableMap<String, Workspace?>? = workspaceService.getWorkspaceData(workspaceIDList)
 
             val workspaceResponseMap = workspaces?.mapValues {
-                namespaceTransformer.transform(it.value)
+                WorkspaceHelper.convertWorkspaceToWorkspaceResponse(it.value)
             }
 
-            ApiResponseHelper.generateStandardResponse(workspaceResponseMap, errorMessage)
+            ApiResponseHelper.generateStandardResponse(workspaceResponseMap as Any?, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }

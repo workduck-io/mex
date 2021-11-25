@@ -252,7 +252,6 @@ class NodeService {
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?) : Node? {
         return nodeRequest?.let{
             Node(id = nodeRequest.id,
-                idCopy = nodeRequest.id,
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
                 workspaceIdentifier = nodeRequest.workspaceIdentifier,
                 lastEditedBy = nodeRequest.lastEditedBy,

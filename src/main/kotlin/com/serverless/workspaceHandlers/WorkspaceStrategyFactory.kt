@@ -10,10 +10,6 @@ class WorkspaceStrategyFactory {
 
     companion object {
 
-        val namespaceTransformer : Transformer<Workspace> = WorkspaceTransformer()
-
-        val identifierTransformer : Transformer<Identifier> = IdentifierTransformer()
-
         const val getWorkspaceObject = "GET /workspace/{id}"
 
         const val createWorkspaceObject = "POST /workspace"
@@ -25,11 +21,11 @@ class WorkspaceStrategyFactory {
         const val getWorkspaceDataObject = "GET /workspace/data/{ids}"
 
         private val workspaceRegistry: Map<String, WorkspaceStrategy> = mapOf(
-            getWorkspaceObject to GetWorkspaceStrategy(namespaceTransformer),
-            createWorkspaceObject to CreateWorkspaceStrategy(namespaceTransformer),
-            updateWorkspaceObject to UpdateWorkspaceStrategy(namespaceTransformer),
-            deleteWorkspaceObject to DeleteWorkspaceStrategy(identifierTransformer),
-            getWorkspaceDataObject to GetWorkspaceDataStrategy(namespaceTransformer)
+            getWorkspaceObject to GetWorkspaceStrategy(),
+            createWorkspaceObject to CreateWorkspaceStrategy(),
+            updateWorkspaceObject to UpdateWorkspaceStrategy(),
+            deleteWorkspaceObject to DeleteWorkspaceStrategy(),
+            getWorkspaceDataObject to GetWorkspaceDataStrategy()
         )
 
         fun getWorkspaceStrategy(routeKey: String): WorkspaceStrategy? {

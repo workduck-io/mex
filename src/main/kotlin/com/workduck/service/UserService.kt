@@ -7,6 +7,8 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.WDRequest
+import com.serverless.models.WorkspaceRequest
 import com.workduck.models.User
 import com.workduck.models.Entity
 import com.workduck.models.UserIdentifier
@@ -69,14 +71,18 @@ class UserService {
 		val user: User = objectMapper.readValue(jsonString)
 
 		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))
+
 		val jsonForWorkspaceCreation : String = """{
+			"type": "WorkspaceRequest"
 			"id": "$workspaceID",
 			"name": "$workspaceName"
 		}"""
 
-		LOG.info("Creating workspace with json : $jsonForWorkspaceCreation")
+		val payload: WDRequest? = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
 
-		return WorkspaceService().createWorkspace(jsonForWorkspaceCreation)
+		//LOG.info("Creating workspace with json : $jsonForWorkspaceCreation")
+
+		return WorkspaceService().createWorkspace(payload)
 
 	}
 

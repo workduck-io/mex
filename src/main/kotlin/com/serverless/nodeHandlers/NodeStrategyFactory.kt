@@ -10,10 +10,6 @@ class NodeStrategyFactory {
 
     companion object {
 
-        val nodeTransformer : Transformer<Node> = NodeTransformer()
-
-        val identifierTransformer : Transformer<Identifier> = IdentifierTransformer()
-
         const val getNodeObject = "GET /node/{id}"
 
         const val createNodeObject = "POST /node"
@@ -29,9 +25,9 @@ class NodeStrategyFactory {
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
-            getNodeObject to GetNodeStrategy(nodeTransformer),
-            createNodeObject to CreateNodeStrategy(nodeTransformer),
-            deleteNodeObject to DeleteNodeStrategy(identifierTransformer),
+            getNodeObject to GetNodeStrategy(),
+            createNodeObject to CreateNodeStrategy(),
+            deleteNodeObject to DeleteNodeStrategy(),
             appendToNodeObject to AppendToNodeStrategy(),
             getNodesByNamespaceObject to GetNodesByNamespaceStrategy(),
             getNodesByWorkspaceObject to GetNodesByWorkspaceStrategy(),

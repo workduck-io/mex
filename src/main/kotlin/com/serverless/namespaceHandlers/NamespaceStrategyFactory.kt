@@ -10,10 +10,6 @@ class NamespaceStrategyFactory {
 
     companion object {
 
-        val namespaceTransformer : Transformer<Namespace> = NamespaceTransformer()
-
-        val identifierTransformer : Transformer<Identifier> = IdentifierTransformer()
-
         const val getNamespaceObject = "GET /namespace/{id}"
 
         const val createNamespaceObject = "POST /namespace"
@@ -25,11 +21,11 @@ class NamespaceStrategyFactory {
         const val getNamespaceDataObject = "GET /namespace/data/{ids}"
 
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
-            getNamespaceObject to GetNamespaceStrategy(namespaceTransformer),
-            createNamespaceObject to CreateNamespaceStrategy(namespaceTransformer),
-            updateNamespaceObject to UpdateNamespaceStrategy(namespaceTransformer),
-            deleteNamespaceObject to DeleteNamespaceStrategy(identifierTransformer),
-            getNamespaceDataObject to GetNamespaceDataStrategy(namespaceTransformer)
+            getNamespaceObject to GetNamespaceStrategy(),
+            createNamespaceObject to CreateNamespaceStrategy(),
+            updateNamespaceObject to UpdateNamespaceStrategy(),
+            deleteNamespaceObject to DeleteNamespaceStrategy(),
+            getNamespaceDataObject to GetNamespaceDataStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {
