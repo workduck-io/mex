@@ -1,8 +1,9 @@
 package com.workduck.repositories
 
+
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
@@ -17,9 +18,9 @@ import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 
 class NodeRepository(
-    private val mapper: DynamoDBMapper,
-    private val dynamoDB: DynamoDB,
-    private val dynamoDBMapperConfig: DynamoDBMapperConfig
+        private val mapper: DynamoDBMapper,
+        private val dynamoDB: DynamoDB,
+        private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<Node> {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {

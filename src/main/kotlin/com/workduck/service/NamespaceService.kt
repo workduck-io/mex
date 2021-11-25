@@ -4,13 +4,14 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.NamespaceRequest
 import com.serverless.models.WDRequest
-import com.serverless.models.WorkspaceRequest
-import com.workduck.models.*
+
+import com.workduck.models.Entity
+import com.workduck.models.Identifier
+import com.workduck.models.Namespace
+import com.workduck.models.NamespaceIdentifier
+import com.workduck.models.WorkspaceIdentifier
 
 import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository

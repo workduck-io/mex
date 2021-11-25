@@ -2,16 +2,20 @@ package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import org.apache.logging.log4j.LogManager
 
 class UserBookmarkRepository(
-    private val dynamoDB: DynamoDB,
-    private val mapper: DynamoDBMapper,
-    private val dynamoDBMapperConfig: DynamoDBMapperConfig
+        private val dynamoDB: DynamoDB,
+        private val mapper: DynamoDBMapper,
+        private val dynamoDBMapperConfig: DynamoDBMapperConfig
 )  {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
