@@ -2,6 +2,7 @@ package com.serverless.workspaceHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
 import com.serverless.transformers.Transformer
 import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
@@ -9,7 +10,7 @@ import com.workduck.service.WorkspaceService
 class GetWorkspaceDataStrategy(
         val namespaceTransformer : Transformer<Workspace>
 ) : WorkspaceStrategy {
-    override fun apply(input: Map<String, Any>, workspaceService: WorkspaceService): ApiGatewayResponse {
+    override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error getting workspaces!"
         val pathParameters = input["pathParameters"] as Map<String, String>?
 

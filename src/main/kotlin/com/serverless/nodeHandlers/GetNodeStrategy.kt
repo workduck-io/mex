@@ -5,6 +5,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.Response
 import com.serverless.transformers.Transformer
+import com.serverless.utils.NodeHelper
 import com.workduck.models.Entity
 import com.workduck.models.Node
 import com.workduck.service.NodeService
@@ -32,7 +33,7 @@ class GetNodeStrategy(
 
         val node: Entity? = nodeService.getNode(nodeID, bookmarkInfo, userID)
 
-        val nodeResponse : Response? = nodeTransformer.transform(node as Node?)
+        val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
     }
 }

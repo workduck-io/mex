@@ -2,6 +2,7 @@ package com.serverless.workspaceHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
 import com.serverless.models.Response
 import com.serverless.transformers.Transformer
 import com.serverless.transformers.WorkspaceTransformer
@@ -12,7 +13,7 @@ import com.workduck.service.WorkspaceService
 class UpdateWorkspaceStrategy(
         val namespaceTransformer : Transformer<Workspace>
 ) : WorkspaceStrategy {
-    override fun apply(input: Map<String, Any>, workspaceService: WorkspaceService): ApiGatewayResponse {
+    override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error updating workspace"
         val json = input["body"] as String
 

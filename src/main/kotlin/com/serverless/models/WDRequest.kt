@@ -10,7 +10,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
  	property = "type",
  )
  @JsonSubTypes(
- 	JsonSubTypes.Type(value = NodeRequest::class, name = "NodeRequest")
+ 	JsonSubTypes.Type(value = NodeRequest::class, name = "NodeRequest"),
+	JsonSubTypes.Type(value = WorkspaceRequest::class, name = "WorkspaceRequest")
  )
 interface WDRequest {
 }
