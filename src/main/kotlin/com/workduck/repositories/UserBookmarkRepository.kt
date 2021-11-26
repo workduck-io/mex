@@ -60,7 +60,7 @@ class UserBookmarkRepository(
             return nodeID
         }
         catch (e : Exception){
-            println(e)
+            LOG.info(e)
             return null
         }
 
@@ -78,7 +78,7 @@ class UserBookmarkRepository(
             nodeID
         }
         catch(e :  Exception){
-            println(e)
+            LOG.info(e)
             null
         }
 
@@ -122,12 +122,12 @@ class UserBookmarkRepository(
 
             val itemList: MutableList<String> = mutableListOf()
             if (items != null) {
-                println(items)
+
                 val iterator: Iterator<Item> = items.iterator()
 
                 while (iterator.hasNext()) {
                     val item: Item = iterator.next()
-                    println(item)
+
                     (item["bookmarkedNodes"] as Map<String, String>).forEach {
                         itemList += it.value
                     }
@@ -137,7 +137,7 @@ class UserBookmarkRepository(
             //println("List of bookmarked nodes : $itemList")
         }
         catch(e : Exception){
-            println(e)
+            LOG.info(e)
             return null
         }
     }
@@ -187,7 +187,7 @@ class UserBookmarkRepository(
             return nodeIDList
         }
         catch (e : Exception){
-            println(e)
+            LOG.info(e)
             return null
         }
 
@@ -209,7 +209,7 @@ class UserBookmarkRepository(
             return nodeIDList
         }
         catch(e :  Exception){
-            println(e)
+            LOG.info(e)
             null
         }
 

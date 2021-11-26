@@ -36,11 +36,4 @@ class Workspace(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
 
-    companion object {
-        fun createWorkspaceWithSkAndCreatedAtNull(workspace: Workspace) : Workspace {
-            workspace.idCopy = workspace.id
-            workspace.createdAt = null
-            return workspace
-        }
-    }
 }

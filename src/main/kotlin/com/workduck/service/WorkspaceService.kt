@@ -49,9 +49,10 @@ class WorkspaceService {
     }
 
     fun updateWorkspace(workspaceRequest: WDRequest?): Entity? {
-        val tempWorkspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
+        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
 
-        val workspace : Workspace = Workspace.createWorkspaceWithSkAndCreatedAtNull(tempWorkspace)
+        workspace.createdAt = null
+
         LOG.info("Updating workspace : $workspace")
         return repository.update(workspace)
     }

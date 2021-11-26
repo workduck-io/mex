@@ -17,7 +17,7 @@ class DeleteBookmarkStrategy: UserBookmarkStrategy {
 
         return if (userID != null && nodeID != null) {
             val returnedNodeID: String? = userBookmarkService.deleteBookmark(userID, nodeID)
-            ApiResponseHelper.generateResponseWithJsonList(returnedNodeID as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(returnedNodeID as Any?, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

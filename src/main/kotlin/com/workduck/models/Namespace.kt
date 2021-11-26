@@ -66,11 +66,4 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt = System.currentTimeMillis()
 
-    companion object {
-        fun createNamespaceWithSkAndCreatedAtNull(namespace: Namespace) : Namespace {
-            namespace.idCopy = namespace.id
-            namespace.createdAt = null
-            return namespace
-        }
-    }
 }

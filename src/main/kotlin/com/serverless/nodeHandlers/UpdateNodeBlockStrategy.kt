@@ -13,9 +13,11 @@ class UpdateNodeBlockStrategy : NodeStrategy {
 
         val nodeBlock = input.body
 
+        val elementListRequest = input.payload
+
         val nodeID = input.pathParameters?.id
-        return if (nodeID != null && nodeBlock != null) {
-            val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, nodeBlock)
+        return if (nodeID != null && elementListRequest != null) {
+            val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, elementListRequest)
             ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

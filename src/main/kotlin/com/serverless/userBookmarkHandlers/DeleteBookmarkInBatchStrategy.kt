@@ -18,7 +18,7 @@ class DeleteBookmarkInBatchStrategy : UserBookmarkStrategy {
             val nodeIDList: List<String> = nodeIDs.split(",")
 
             val returnedNodeIDList: List<String>? = userBookmarkService.deleteBookmarksInBatch(userID, nodeIDList)
-            ApiResponseHelper.generateResponseWithJsonList(returnedNodeIDList as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(returnedNodeIDList as Any?, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

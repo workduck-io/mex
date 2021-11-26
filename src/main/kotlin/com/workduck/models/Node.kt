@@ -95,7 +95,7 @@ data class Node(
         fun populateNodeWithSkAkAndCreatedAtNull(node : Node) {
             node.idCopy = node.id
             node.createdAt = null
-            node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
+            node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
         }
     }
 

@@ -22,4 +22,6 @@ data class NodeResponse(
     var namespaceID: String? = null,
 
     var workspaceID: String? = null,
+
+    var isBookmarked: Boolean? = null
 ) : Response

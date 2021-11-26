@@ -15,7 +15,7 @@ class GetBookmarksStrategy : UserBookmarkStrategy {
         val userID = input.pathParameters?.userID
         return if(userID!= null) {
             val nodeIDList: MutableList<String>? = userBookmarkService.getAllBookmarkedNodesByUser(userID)
-            ApiResponseHelper.generateResponseWithJsonList(nodeIDList as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(nodeIDList as Any?, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

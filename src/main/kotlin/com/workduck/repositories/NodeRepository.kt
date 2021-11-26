@@ -52,7 +52,7 @@ class NodeRepository(
         }
 
 
-    fun append(nodeID: String, userID: String, elements: MutableList<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+    fun append(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -139,7 +139,7 @@ class NodeRepository(
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */
             /* What should be the flow from here on? Call NodeService().update()? */
-            println("Version mismatch!!")
+            LOG.info("Version mismatch!!")
             null
         } catch (e: java.lang.Exception) {
             LOG.info(e)

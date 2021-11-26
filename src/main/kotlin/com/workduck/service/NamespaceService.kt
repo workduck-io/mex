@@ -51,9 +51,9 @@ class NamespaceService {
     }
 
     fun updateNamespace(namespaceRequest: WDRequest?): Entity? {
-        val tempNamespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
+        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
 
-        val namespace : Namespace = Namespace.createNamespaceWithSkAndCreatedAtNull(tempNamespace)
+        namespace.createdAt = null
 
         LOG.info("Updating namespace : $namespace")
         return repository.update(namespace)

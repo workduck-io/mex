@@ -8,13 +8,15 @@ import com.workduck.service.NodeService
 class AppendToNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error appending to node!"
-        val json = input.body
+        //val json = input.body
         val nodeID = input.pathParameters?.id
 
-        //TODO(create an ElementResponse object. And , make NodeResponse.data of the type List<ElementResponse>)
-        return if (nodeID != null && json!= null) {
+        val elementListRequest = input.payload
 
-            val map: Map<String, Any>? = nodeService.append(nodeID, json)
+        //TODO(create an ElementResponse object. And , make NodeResponse.data of the type List<ElementResponse>)
+        return if (nodeID != null && elementListRequest!= null) {
+
+            val map: Map<String, Any>? = nodeService.append(nodeID, elementListRequest)
 
             ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
         } else {

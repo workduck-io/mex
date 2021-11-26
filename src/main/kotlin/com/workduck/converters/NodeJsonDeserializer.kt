@@ -13,7 +13,7 @@ class NodeJsonDeserializer : JsonDeserializer<Node?>() {
 
     @Throws(IOException::class, JsonProcessingException::class)
     override fun deserialize(jp: JsonParser, ctxt: DeserializationContext?): Node {
-        println("Helloooo")
+
         val oc: ObjectCodec = jp.codec
         val objMap: JsonNode = oc.readTree(jp)
         val node: Node = Node()

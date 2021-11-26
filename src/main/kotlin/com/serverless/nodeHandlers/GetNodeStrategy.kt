@@ -4,17 +4,15 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.Response
-import com.serverless.transformers.Transformer
 import com.serverless.utils.NodeHelper
 import com.workduck.models.Entity
-import com.workduck.models.Node
 import com.workduck.service.NodeService
 
 class GetNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error getting node"
 
-        println(input)
+
         val pathParameters = input.pathParameters
         val queryStringParameters = input.queryStringParameters
         println("pathParameters : $pathParameters")

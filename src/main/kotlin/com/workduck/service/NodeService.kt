@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.ElementRequest
 import com.serverless.models.NodeRequest
 import com.serverless.models.WDRequest
 import com.workduck.models.Node
@@ -105,20 +106,23 @@ class NodeService {
         return repository.delete(NodeIdentifier(nodeID))
     }
 
-    fun append(nodeID: String, jsonString: String): Map<String, Any>? {
+    fun append(nodeID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
-        val elements: MutableList<AdvancedElement> = objectMapper.readValue(jsonString)
+        val elementsListRequestConverted = elementsListRequest as ElementRequest
+        val elements = elementsListRequestConverted.elements
+
+        LOG.info(elements)
 
         val orderList = mutableListOf<String>()
-        var userID: String = ""
+        var userID = ""
         for (e in elements) {
-            orderList += e.id
+                orderList += e.id
 
-            e.lastEditedBy = e.createdBy
-            e.createdAt = System.currentTimeMillis()
-            e.updatedAt = e.createdAt
-            userID = e.createdBy as String
-        }
+                e.lastEditedBy = e.createdBy
+                e.createdAt = System.currentTimeMillis()
+                e.updatedAt = e.createdAt
+                userID = e.createdBy as String
+            }
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
@@ -153,10 +157,14 @@ class NodeService {
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
 
-    fun updateNodeBlock(nodeID: String, blockJson: String): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, elementsListRequest: WDRequest): AdvancedElement? {
 
-        val element: AdvancedElement = objectMapper.readValue(blockJson)
+        val elementsListRequestConverted = elementsListRequest as ElementRequest
+        val element = elementsListRequestConverted.elements.let{ it[0] }
 
+        element.updatedAt = System.currentTimeMillis()
+
+        //TODO(since we directly set the block info, createdAt and createdBy get lost since we're not getting anything from ddb)
         val blockData = objectMapper.writeValueAsString(element)
 
         return nodeRepository.updateNodeBlock(nodeID, blockData, element.id, element.lastEditedBy as String)
