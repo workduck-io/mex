@@ -35,7 +35,7 @@ data class Node(
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
-    var data: MutableList<AdvancedElement>? = null,
+    var data: List<AdvancedElement>? = null,
 
     @DynamoDBAttribute(attributeName = "nodeDataOrder")
     var dataOrder: MutableList<String>? = null,
@@ -91,15 +91,12 @@ data class Node(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
 
-//    fun getVersion(): Long? {
-//        return version
-//    }
-//
-//    fun setVersion(version: Long?) {
-//        this.version = version
-//    }
+    companion object {
+        fun populateNodeWithSkAkAndCreatedAtNull(node : Node) {
+            node.idCopy = node.id
+            node.createdAt = null
+            node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
+        }
+    }
 
-    // override val entityID: String = id
-
-    // override val sortKey: List<String> = listOf()//data.map{ element -> element.getID() }
 }

@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
+import com.serverless.models.Input
 import com.workduck.service.NodeService
 import org.apache.logging.log4j.LogManager
 
@@ -13,9 +14,9 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-        val routeKey = input["routeKey"] as String
+        val wdInput : Input = Input.fromMap(input)
 
-        val strategy = NodeStrategyFactory.getNodeStrategy(routeKey)
+        val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse("Request type not recognized")
@@ -24,7 +25,8 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, nodeService)
+
+        return strategy.apply(wdInput, nodeService)
     }
 
     companion object {

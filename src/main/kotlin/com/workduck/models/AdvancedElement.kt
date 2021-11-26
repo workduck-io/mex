@@ -7,7 +7,7 @@ enum class ElementTypes(val type: String) {
     PARAGRAPH("paragraph");
 
     companion object {
-        private val codes = ElementTypes.values().associateBy(ElementTypes::type)
+        private val codes = values().associateBy(ElementTypes::type)
         @JvmStatic
         @JsonCreator
         fun from(value: String) = codes[value]
@@ -17,29 +17,25 @@ enum class ElementTypes(val type: String) {
 data class AdvancedElement(
 
     @JsonProperty("id")
-    private var id: String = "defaultValue",
+    var id: String = "defaultValue",
 
-// 	@JsonProperty("type")
-// 	private var type: String? = "AdvancedElement",
+    // 	@JsonProperty("type")
+    // 	private var type: String? = "AdvancedElement",
 
     @JsonProperty("parentID")
-    private var parentID: String? = null,
+    var parentID: String? = null,
 
     @JsonProperty("content")
-    private var content: String? = null,
+    var content: String? = "",
 
-    @JsonProperty("childrenElements")
-    private var children: List<AdvancedElement>? = listOf(),
+    @JsonProperty("children")
+    var children: List<AdvancedElement> = listOf(),
 
     @JsonProperty("elementType")
-    private var elementType: String? = "paragraph",
+    var elementType: String = "paragraph",
 
     @JsonProperty("properties")
-    private var properties: Map<String, Any>? = null,
-
-    /* don't consider createdBy,lastEditedBy, createdAt, updatedAt */
-    @JsonProperty("hashCode")
-    var hashCode: Int? = null,
+    var properties: Map<String, Any>? = null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
@@ -56,18 +52,22 @@ data class AdvancedElement(
     @JsonProperty("updatedAt")
     var updatedAt: Long? = null
 
-    override fun getContent(): String {
-        if (content != null) return content as String
-        return ""
+    /* Generated equals() and hashcode() functions */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AdvancedElement
+
+        if (id != other.id) return false
+        if (parentID != other.parentID) return false
+        if (content != other.content) return false
+        if (children != other.children) return false
+        if (elementType != other.elementType) return false
+        if (properties != other.properties) return false
+
+        return true
     }
 
-    override fun getID(): String = id
-
-    override fun getChildren(): List<Element>? = children
-
-    fun getElementType(): String? = elementType
-
-    // override fun getType(): String? = type
-
-    fun getProperties(): Map<String, Any>? = properties
+    //fun getProperties(): Map<String, Any>? = properties
 }

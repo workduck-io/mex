@@ -9,6 +9,7 @@ import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
+import javax.naming.Name
 
 /**
  * namespace status
@@ -44,7 +45,7 @@ class Namespace(
 
     @JsonProperty("name")
     @DynamoDBAttribute(attributeName = "namespaceName")
-    var name: String ? = null,
+    var name: String = "DEFAULT_NAMESPACE",
 
     // val owner: OwnerIdentifier,
 
@@ -64,4 +65,5 @@ class Namespace(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt = System.currentTimeMillis()
+
 }

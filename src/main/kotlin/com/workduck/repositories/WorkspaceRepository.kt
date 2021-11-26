@@ -2,10 +2,12 @@ package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.workduck.models.*
-import com.workduck.service.NodeService
+import com.workduck.models.Workspace
+import com.workduck.models.Entity
+import com.workduck.models.Identifier
+import org.apache.logging.log4j.LogManager
 
 class WorkspaceRepository(
     private val dynamoDB: DynamoDB,
@@ -23,6 +25,7 @@ class WorkspaceRepository(
         return try {
             return mapper.load(Workspace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -37,6 +40,7 @@ class WorkspaceRepository(
             table.deleteItem(deleteItemSpec)
             identifier
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -58,8 +62,13 @@ class WorkspaceRepository(
             }
             return workspaceMap
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
         TODO("we also need to have some sort of filter which filters out all the non-workspace ids")
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(WorkspaceRepository::class.java)
     }
 }

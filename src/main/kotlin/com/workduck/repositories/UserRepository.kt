@@ -2,10 +2,13 @@ package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.workduck.models.*
+import com.workduck.models.User
+import com.workduck.models.Entity
+import com.workduck.models.Identifier
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 class UserRepository(
     private val dynamoDB: DynamoDB,
@@ -22,6 +25,7 @@ class UserRepository(
         return try {
             mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -31,6 +35,7 @@ class UserRepository(
         return try {
             DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(namespaceID, "itemType-AK-index", dynamoDB, "UserIdentifierRecord")
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -40,6 +45,7 @@ class UserRepository(
         return try {
             DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "UserIdentifierRecord")
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -62,7 +68,12 @@ class UserRepository(
             table.deleteItem(deleteItemSpec)
             identifier
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(UserRepository::class.java)
     }
 }

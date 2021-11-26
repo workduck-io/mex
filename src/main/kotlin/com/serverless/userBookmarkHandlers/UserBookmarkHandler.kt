@@ -1,21 +1,22 @@
-package com.serverless.userIdentifierMappingHandlers
+package com.serverless.userBookmarkHandlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
-import com.workduck.service.UserIdentifierMappingService
+import com.serverless.models.Input
+import com.workduck.service.UserBookmarkService
 import org.apache.logging.log4j.LogManager
 
-class UserIdentifierMappingHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-    private val userIdentifierMappingService = UserIdentifierMappingService()
+    private val userBookmarkService = UserBookmarkService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-        val routeKey = input["routeKey"] as String
+        val wdInput : Input = Input.fromMap(input)
 
-        val strategy = UserIdentifierMappingStrategyFactory.getUserIdentifierMappingStrategy(routeKey)
+        val strategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy(wdInput.routeKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse("Request type not recognized")
@@ -24,10 +25,10 @@ class UserIdentifierMappingHandler : RequestHandler<Map<String, Any>, ApiGateway
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, userIdentifierMappingService)
+        return strategy.apply(wdInput, userBookmarkService)
     }
 
     companion object {
-        private val LOG = LogManager.getLogger(UserIdentifierMappingHandler::class.java)
+        private val LOG = LogManager.getLogger(UserBookmarkHandler::class.java)
     }
 }

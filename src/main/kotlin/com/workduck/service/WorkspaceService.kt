@@ -4,9 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.WDRequest
+import com.serverless.models.WorkspaceRequest
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.Workspace
@@ -15,9 +14,12 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
+import org.apache.logging.log4j.LogManager
 
 class WorkspaceService {
 
+    private val objectMapper = Helper.objectMapper
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
@@ -34,39 +36,46 @@ class WorkspaceService {
     private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
     private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
-    fun createWorkspace(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val workspace: Workspace = objectMapper.readValue(jsonString)
+    fun createWorkspace(workspaceRequest: WDRequest?): Entity? {
+        val workspace : Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
 
-        /* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-        workspace.idCopy = workspace.id
-
+        LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
 
     fun getWorkspace(workspaceID: String): Entity? {
+        LOG.info("Getting workspace with id : $workspaceID")
         return repository.get(WorkspaceIdentifier(workspaceID))
     }
 
-    fun updateWorkspace(jsonString: String): Entity? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val workspace: Workspace = objectMapper.readValue(jsonString)
+    fun updateWorkspace(workspaceRequest: WDRequest?): Entity? {
+        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
 
-        /* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-        workspace.idCopy = workspace.id
-
-        /* to avoid updating createdAt un-necessarily */
         workspace.createdAt = null
 
+        LOG.info("Updating workspace : $workspace")
         return repository.update(workspace)
     }
 
     fun deleteWorkspace(workspaceID: String): Identifier? {
+        LOG.info("Deleting workspace with id : $workspaceID")
         return repository.delete(WorkspaceIdentifier(workspaceID))
     }
 
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?>? {
+        LOG.info("Getting workspaces with ids : $workspaceIDList")
         return workspaceRepository.getWorkspaceData(workspaceIDList)
+    }
+
+    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest : WorkspaceRequest?) : Workspace?{
+        return workspaceRequest?.let {
+            Workspace(id = workspaceRequest.id,
+                    name = workspaceRequest.name)
+        }
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(WorkspaceService::class.java)
     }
 }
 
@@ -87,5 +96,5 @@ fun main() {
     // WorkspaceService().createWorkspace(json)
     // WorkspaceService().updateWorkspace(jsonUpdate)
     // WorkspaceService().deleteWorkspace("WORKSPACE1")
-    println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
+    //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 }

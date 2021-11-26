@@ -2,20 +2,25 @@ package com.serverless.nodeHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
 import com.workduck.models.AdvancedElement
 import com.workduck.service.NodeService
 
 class UpdateNodeBlockStrategy : NodeStrategy {
-    override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
+    override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
 
         val errorMessage = "Error updating node block"
 
-        val json = input["body"] as String
+        val nodeBlock = input.body
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
-        val nodeID = pathParameters!!["id"] as String
+        val elementListRequest = input.payload
 
-        val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, json)
-        return ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)
+        val nodeID = input.pathParameters?.id
+        return if (nodeID != null && elementListRequest != null) {
+            val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, elementListRequest)
+            ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+        }
     }
 }

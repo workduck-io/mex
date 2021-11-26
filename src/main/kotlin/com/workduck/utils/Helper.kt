@@ -1,8 +1,12 @@
 package com.workduck.utils
 
-import java.util.*
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import java.util.UUID
 
 object Helper {
+
+    val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
 
     private fun uuidBase32(prefix: String): String? {
         return uuidBase32(UUID.randomUUID(), java.lang.StringBuilder(prefix)).toString()

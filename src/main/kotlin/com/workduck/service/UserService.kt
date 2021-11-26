@@ -4,17 +4,25 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.*
+import com.serverless.models.WDRequest
+
+import com.workduck.models.User
+import com.workduck.models.Entity
+import com.workduck.models.UserIdentifier
+import com.workduck.models.IdentifierType
+import com.workduck.models.Identifier
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.UserRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
+import org.apache.logging.log4j.LogManager
 
 class UserService {
+
+	private val objectMapper = Helper.objectMapper
 	private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
 	private val dynamoDB: DynamoDB = DynamoDB(client)
 	private val mapper = DynamoDBMapper(client)
@@ -33,21 +41,20 @@ class UserService {
 
     fun createUser(jsonString: String): Entity? {
 
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
 		user.idCopy = user.id
-
+		LOG.info("Creating user : $user")
 		return repository.create(user)
 	}
 
 	fun getUser(userID : String) : Entity? {
+		LOG.info("Getting user with id : $userID")
 		return repository.get(UserIdentifier(userID))
 	}
 
 	fun updateUser(jsonString: String) : Entity? {
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
 		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
@@ -60,16 +67,21 @@ class UserService {
 	}
 
 	fun registerUser(jsonString: String, workspaceName: String?): Entity?{
-		val objectMapper = ObjectMapper().registerModule(KotlinModule())
 		val user: User = objectMapper.readValue(jsonString)
 
 		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))
+
 		val jsonForWorkspaceCreation : String = """{
+			"type": "WorkspaceRequest"
 			"id": "$workspaceID",
 			"name": "$workspaceName"
 		}"""
 
-		return WorkspaceService().createWorkspace(jsonForWorkspaceCreation)
+		val payload: WDRequest? = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
+
+		//LOG.info("Creating workspace with json : $jsonForWorkspaceCreation")
+
+		return WorkspaceService().createWorkspace(payload)
 
 	}
 
@@ -78,12 +90,8 @@ class UserService {
 		return repository.delete(UserIdentifier(userID))
 	}
 
-	fun getAllUsersWithWorkspaceID(workspaceID : String) : MutableList<String>? {
-		return userRepository.getAllUsersWithWorkspaceID(workspaceID)
-	}
-
-	fun getAllUsersWithNamespaceID(namespaceID : String) : MutableList<String>? {
-		return userRepository.getAllUsersWithNamespaceID(namespaceID)
+	companion object {
+		private val LOG = LogManager.getLogger(UserService::class.java)
 	}
 
 }

@@ -4,6 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
+import com.serverless.models.Input
+import com.serverless.transformers.NamespaceTransformer
+import com.serverless.transformers.Transformer
+import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 import org.apache.logging.log4j.LogManager
 
@@ -13,9 +17,9 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-        val routeKey = input["routeKey"] as String
+        val wdInput : Input = Input.fromMap(input)
 
-        val strategy = NamespaceStrategyFactory.getNamespaceStrategy(routeKey)
+        val strategy = NamespaceStrategyFactory.getNamespaceStrategy(wdInput.routeKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse("Request type not recognized")
@@ -24,7 +28,7 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, namespaceService)
+        return strategy.apply(wdInput, namespaceService)
     }
 
     companion object {

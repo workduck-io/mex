@@ -1,20 +1,26 @@
 package com.workduck.repositories
 
+
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.*
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.*
+import com.workduck.models.Node
+import com.workduck.models.Identifier
+import com.workduck.models.Entity
+import com.workduck.models.AdvancedElement
+import com.workduck.models.Element
 import com.workduck.utils.DDBHelper
+import org.apache.logging.log4j.LogManager
 
 class NodeRepository(
-    private val mapper: DynamoDBMapper,
-    private val dynamoDB: DynamoDB,
-    private val dynamoDBMapperConfig: DynamoDBMapperConfig
+        private val mapper: DynamoDBMapper,
+        private val dynamoDB: DynamoDB,
+        private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<Node> {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
@@ -28,23 +34,25 @@ class NodeRepository(
             orderBlocks(node)
             return node
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
 
-    private fun orderBlocks(node: Node): Entity {
-        val listOfElements = mutableListOf<AdvancedElement>()
-        for (blockID in node.dataOrder!!) {
-            for (element in node.data!!) {
-                if (blockID == element.getID()) listOfElements += element
+    private fun orderBlocks(node: Node): Entity =
+        node.apply {
+            node.data?.let { data ->
+                (node.dataOrder?.mapNotNull { blockId ->
+                    data.find { element -> blockId == element.id }
+                } ?: emptyList())
+                        .also {
+                            node.data = it.toMutableList()
+                        }
             }
         }
-        node.data = listOfElements
-        return node
-    }
 
-    fun append(nodeID: String, userID: String, elements: MutableList<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+
+    fun append(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -57,7 +65,7 @@ class NodeRepository(
         /* we build updateExpression to enable appending of multiple key value pairs to the map with just one query */
         for ((counter, e) in elements.withIndex()) {
             val entry: String = objectMapper.writeValueAsString(e)
-            updateExpression += ", nodeData.${e.getID()} = :val$counter"
+            updateExpression += ", nodeData.${e.id} = :val$counter"
             expressionAttributeValues[":val$counter"] = entry
         }
 
@@ -73,7 +81,7 @@ class NodeRepository(
             table.updateItem(updateItemSpec)
             mapOf("nodeID" to nodeID, "appendedElements" to elements)
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
@@ -84,6 +92,7 @@ class NodeRepository(
         return try {
             DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -93,6 +102,7 @@ class NodeRepository(
         return try {
             return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -107,6 +117,7 @@ class NodeRepository(
             table.deleteItem(deleteItemSpec)
             identifier
         } catch (e: Exception) {
+            LOG.info(e)
             null
         }
     }
@@ -128,10 +139,10 @@ class NodeRepository(
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */
             /* What should be the flow from here on? Call NodeService().update()? */
-            println("Version mismatch!!")
+            LOG.info("Version mismatch!!")
             null
         } catch (e: java.lang.Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
     }
@@ -152,8 +163,12 @@ class NodeRepository(
             table.updateItem(u)
             objectMapper.readValue(updatedBlock)
         } catch (e: Exception) {
-            println(e)
+            LOG.info(e)
             null
         }
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 }

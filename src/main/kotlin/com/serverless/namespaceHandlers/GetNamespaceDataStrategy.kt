@@ -2,17 +2,29 @@ package com.serverless.namespaceHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
+import com.serverless.transformers.Transformer
+import com.serverless.utils.NamespaceHelper
 import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 
 class GetNamespaceDataStrategy : NamespaceStrategy {
-    override fun apply(input: Map<String, Any>, namespaceService: NamespaceService): ApiGatewayResponse {
+    override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
         val errorMessage = "Error getting namespaces!"
-        val pathParameters = input["pathParameters"] as Map<*, *>?
+        val namespaceIDs = input.pathParameters?.ids
 
-        val namespaceIDList: List<String> = (pathParameters!!["ids"] as String).split(",")
-        val namespaces: MutableMap<String, Namespace?>? = namespaceService.getNamespaceData(namespaceIDList)
+        return if (namespaceIDs != null) {
+            val namespaceIDList : List<String> = namespaceIDs.split(",")
 
-        return ApiResponseHelper.generateStandardResponse(namespaces as Any?, errorMessage)
+            val namespaces: MutableMap<String, Namespace?>? = namespaceService.getNamespaceData(namespaceIDList)
+
+            val namespaceResponseMap = namespaces?.mapValues {
+                NamespaceHelper.convertNamespaceToNamespaceResponse(it.value)
+            }
+
+            ApiResponseHelper.generateStandardResponse(namespaceResponseMap, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+        }
     }
 }

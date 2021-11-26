@@ -4,6 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
+import com.serverless.models.Input
+import com.serverless.transformers.Transformer
+import com.serverless.transformers.WorkspaceTransformer
+import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
 
@@ -13,9 +17,11 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-        val routeKey = input["routeKey"] as String
+        //val routeKey = input["routeKey"] as String
 
-        val strategy = WorkspaceStrategyFactory.getWorkspaceStrategy(routeKey)
+        val wdInput : Input = Input.fromMap(input)
+
+        val strategy = WorkspaceStrategyFactory.getWorkspaceStrategy(wdInput.routeKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse("Request type not recognized")
@@ -24,7 +30,8 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, workspaceService)
+
+        return strategy.apply(wdInput, workspaceService)
     }
 
     companion object {

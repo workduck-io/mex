@@ -2,18 +2,24 @@ package com.serverless.nodeHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
+import com.serverless.transformers.Transformer
+import com.workduck.models.Node
 import com.workduck.service.NodeService
 
 class GetNodesByNamespaceStrategy : NodeStrategy {
-    override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
+    override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error getting users!"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
-        val namespaceID = pathParameters!!["namespaceID"] as String
-        val workspaceID = pathParameters["workspaceID"] as String
+        val namespaceID = input.pathParameters?.namespaceID
+        val workspaceID = input.pathParameters?.workspaceID
 
-        val nodes: MutableList<String>? = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
+        return if (workspaceID != null && namespaceID != null) {
+            val nodes: MutableList<String>? = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
 
-        return ApiResponseHelper.generateStandardResponse(nodes as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(nodes as Any?, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+        }
     }
 }

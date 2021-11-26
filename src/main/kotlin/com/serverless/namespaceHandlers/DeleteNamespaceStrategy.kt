@@ -2,17 +2,29 @@ package com.serverless.namespaceHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
+import com.serverless.models.Response
+import com.serverless.transformers.IdentifierTransformer
+import com.serverless.transformers.Transformer
+import com.serverless.utils.IdentifierHelper
 import com.workduck.models.Identifier
+import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 
 class DeleteNamespaceStrategy : NamespaceStrategy {
-    override fun apply(input: Map<String, Any>, namespaceService: NamespaceService): ApiGatewayResponse {
+    override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
         val errorMessage = "Error deleting namespace"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
-        val namespaceID = pathParameters!!["id"] as String
+        val namespaceID = input.pathParameters?.id
 
-        val identifier: Identifier? = namespaceService.deleteNamespace(namespaceID)
-        return ApiResponseHelper.generateStandardResponse(identifier as Any?, errorMessage)
+        return if (namespaceID != null) {
+            val identifier: Identifier? = namespaceService.deleteNamespace(namespaceID)
+
+            val identifierResponse: Response?  = IdentifierHelper.convertIdentifierToIdentifierResponse(identifier)
+
+            ApiResponseHelper.generateStandardResponse(identifierResponse, errorMessage)
+        } else {
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+        }
     }
 }

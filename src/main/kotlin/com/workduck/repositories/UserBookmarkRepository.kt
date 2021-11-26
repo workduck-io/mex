@@ -2,20 +2,21 @@ package com.workduck.repositories
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.*
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
-import com.workduck.models.UserIdentifierRecord
+import org.apache.logging.log4j.LogManager
 
-class UserIdentifierMappingRepository(
-    private val dynamoDB: DynamoDB,
-    private val mapper: DynamoDBMapper,
-    private val dynamoDBMapperConfig: DynamoDBMapperConfig
-) : Repository<UserIdentifierRecord> {
+class UserBookmarkRepository(
+        private val dynamoDB: DynamoDB,
+        private val mapper: DynamoDBMapper,
+        private val dynamoDBMapperConfig: DynamoDBMapperConfig
+)  {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
@@ -24,53 +25,6 @@ class UserIdentifierMappingRepository(
 
     val table: Table = dynamoDB.getTable(tableName)
 
-    override fun create(t: UserIdentifierRecord): UserIdentifierRecord {
-        TODO("Not yet implemented")
-    }
-
-    override fun update(t: UserIdentifierRecord): UserIdentifierRecord {
-        TODO("Not yet implemented")
-    }
-
-    override fun get(identifier: Identifier): Entity {
-        TODO("Not yet implemented")
-    }
-
-    override fun delete(identifier: Identifier): Identifier? {
-        TODO("Not yet implemented")
-    }
-
-    fun getRecordsByUserID(userID: String): MutableList<String> {
-        val querySpec = QuerySpec()
-
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":userID"] = userID
-
-        querySpec.withKeyConditionExpression("PK = :userID")
-            .withValueMap(expressionAttributeValues)
-
-        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
-        val iterator: Iterator<Item> = items!!.iterator()
-
-        val listOfJSON: MutableList<String> = mutableListOf()
-        while (iterator.hasNext()) {
-            val item: Item = iterator.next()
-            listOfJSON += item.toJSON()
-        }
-        return listOfJSON
-    }
-
-    fun deleteUserIdentifierMapping(userID: String, identifier: Identifier): Map<String, String>? {
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-            .withPrimaryKey("PK", userID, "SK", identifier.id)
-
-        return try {
-            table.deleteItem(deleteItemSpec)
-            mapOf("userID" to userID, "identifierID" to identifier.id)
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     fun createBookmark(userID: String, nodeID: String) : String?{
 
@@ -106,7 +60,7 @@ class UserIdentifierMappingRepository(
             return nodeID
         }
         catch (e : Exception){
-            println(e)
+            LOG.info(e)
             return null
         }
 
@@ -124,7 +78,7 @@ class UserIdentifierMappingRepository(
             nodeID
         }
         catch(e :  Exception){
-            println(e)
+            LOG.info(e)
             null
         }
 
@@ -162,18 +116,18 @@ class UserIdentifierMappingRepository(
             val querySpec: QuerySpec = QuerySpec()
                     .withKeyConditionExpression("PK = :pk and SK = :sk")
                     .withValueMap(expressionAttributeValues)
-                    
+
             val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
 
 
             val itemList: MutableList<String> = mutableListOf()
             if (items != null) {
-                println(items)
+
                 val iterator: Iterator<Item> = items.iterator()
 
                 while (iterator.hasNext()) {
                     val item: Item = iterator.next()
-                    println(item)
+
                     (item["bookmarkedNodes"] as Map<String, String>).forEach {
                         itemList += it.value
                     }
@@ -183,7 +137,7 @@ class UserIdentifierMappingRepository(
             //println("List of bookmarked nodes : $itemList")
         }
         catch(e : Exception){
-            println(e)
+            LOG.info(e)
             return null
         }
     }
@@ -233,7 +187,7 @@ class UserIdentifierMappingRepository(
             return nodeIDList
         }
         catch (e : Exception){
-            println(e)
+            LOG.info(e)
             return null
         }
 
@@ -255,9 +209,13 @@ class UserIdentifierMappingRepository(
             return nodeIDList
         }
         catch(e :  Exception){
-            println(e)
+            LOG.info(e)
             null
         }
 
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(UserBookmarkRepository::class.java)
     }
 }

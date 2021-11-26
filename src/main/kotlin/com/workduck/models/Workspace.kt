@@ -35,4 +35,5 @@ class Workspace(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
+
 }

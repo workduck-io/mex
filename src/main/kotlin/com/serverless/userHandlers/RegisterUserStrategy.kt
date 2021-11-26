@@ -18,7 +18,7 @@ class RegisterUserStrategy : UserStrategy {
         val json = input["body"] as String
 
         val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val obj : UserRegister = objectMapper.readValue(json)
+        val obj: UserRegister = objectMapper.readValue(json)
 
         val userJson = objectMapper.writeValueAsString(obj.user)
         val workspaceName = obj.workspaceName
@@ -27,11 +27,9 @@ class RegisterUserStrategy : UserStrategy {
 
         val workspaceID = workspace?.id
 
-
         val lambdaClient = AWSLambdaClient.builder().withRegion("us-east-1").build()
 
         val request = InvokeRequest()
-
 
         val payload = """{
 			"id" : "${obj.user?.id}",
@@ -42,10 +40,9 @@ class RegisterUserStrategy : UserStrategy {
 			}
 		"""
 
-        val stage =  System.getenv("STAGE")
+        val stage = System.getenv("STAGE")
 
         val functionName = "workduck-user-service-$stage-updateUser"
-
 
         request.withFunctionName(functionName).withPayload(payload)
         val invoke: InvokeResult = lambdaClient.invoke(request)
