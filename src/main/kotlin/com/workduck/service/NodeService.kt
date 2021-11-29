@@ -247,6 +247,11 @@ class NodeService {
 
     private fun mergeNodeVersions(node: Node, storedNode: Node) {
 
+        /* if the same user edited the node the last time, he can overwrite anything */
+        if(node.lastEditedBy == storedNode.lastEditedBy){
+            node.version = storedNode.version
+            return
+        }
         /* currently just handling when more blocks have been added */
 
         /* not handling the case when
@@ -290,6 +295,10 @@ class NodeService {
 
     private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean{
         var nodeChanged = false
+
+        /* in case a block has been deleted */
+        if(node.data?.size != storedNode.data?.size) nodeChanged = true
+
         if (node.data != null) {
             for (currElement in node.data!!) {
                 var isPresent = false
@@ -358,24 +367,24 @@ fun main() {
 			"data": [
 			{
 				"id": "sampleParentID",
-                "elementType": "list",
+                "elementType": "paragraph",
                 "children": [
                 {
                     "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "list",
+                    "content" : "sample child content 1",
+                    "elementType": "paragraph",
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
 			},
             {
 				"id": "1234",
-                "elementType": "list",
+                "elementType": "paragraph",
                 "children": [
                 {
                     "id" : "sampleChildID",
                     "content" : "sample child content",
-                    "elementType": "list",
+                    "elementType": "paragraph",
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
@@ -388,48 +397,24 @@ fun main() {
         
     {
         "type" : "NodeRequest",
-        "lastEditedBy" : "Ruddhi",
+        "lastEditedBy" : "Varun",
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
         "workspaceIdentifier" : "WORKSPACE1",
         "data": [
         {
             "id": "sampleParentID",
-            "elementType": "list",
+            "elementType": "paragraph",
             "children": [
             {
                 "id" : "sampleChildID",
                 "content" : "sample child content 1",
-                "elementType": "list",
+                "elementType": "paragraph",
                 "properties" :  { "bold" : true, "italic" : true  }
             }
             ]
-        },
-        {
-            "id": "sampleParentID2",
-            "elementType": "list",
-            "children": [
-            {
-                "id" : "sampleChildID2",
-                "content" : "sample child content",
-                "elementType": "list",
-                "properties" :  { "bold" : true, "italic" : true  }
-            }
-            ]
-        },
-        {
-				"id": "1234",
-                "elementType": "list",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "list",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			}
-        ]
+        }]
+        
     }
     """
 
