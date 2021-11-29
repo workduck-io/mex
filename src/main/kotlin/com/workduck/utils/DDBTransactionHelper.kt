@@ -3,10 +3,30 @@ package com.workduck.utils
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
-import com.amazonaws.services.dynamodbv2.datamodeling.*
-import com.amazonaws.services.dynamodbv2.model.*
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperFieldModel
+import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
+import com.amazonaws.services.dynamodbv2.datamodeling.VersionAttributeConditionExpressionGenerator
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTransactionWriteExpression
+import com.amazonaws.services.dynamodbv2.datamodeling.AttributeTransformer
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMappingException
+import com.amazonaws.services.dynamodbv2.datamodeling.UpdateExpressionGenerator
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAutoGenerateStrategy
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
+import com.amazonaws.services.dynamodbv2.model.ReturnValuesOnConditionCheckFailure
+import com.amazonaws.services.dynamodbv2.model.Put
+import com.amazonaws.services.dynamodbv2.model.Update
+import com.amazonaws.services.dynamodbv2.model.ConditionCheck
+import com.amazonaws.services.dynamodbv2.model.Delete
 import com.amazonaws.util.VersionInfoUtils
-import java.util.*
+import java.util.LinkedList
+import java.util.Collections
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  * This is a custom helper for transactions ( code taken from DynamoDBMapper.java class ).
@@ -22,9 +42,9 @@ class DDBTransactionHelper(
     private val USER_AGENT_TRANSACTION_OPERATION = DynamoDBMapper::class.java.name + "_transaction_operation/" + VersionInfoUtils.getVersion()
 
     private class ValueUpdate(
-        private val field: DynamoDBMapperFieldModel<Any, Any>,
-        private val newValue: AttributeValue,
-        private val target: Any
+            private val field: DynamoDBMapperFieldModel<Any, Any>,
+            private val newValue: AttributeValue,
+            private val target: Any
     ) {
         fun apply() {
             field[target] = field.unconvert(newValue)
