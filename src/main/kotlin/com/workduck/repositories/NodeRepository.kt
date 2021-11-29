@@ -137,7 +137,7 @@ class NodeRepository(
     }
 
 
-    fun createNode(node: Node, nodeVersion: NodeVersion): Node? {
+    fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
         return try {
             val transactionWriteRequest = TransactionWriteRequest()
             transactionWriteRequest.addPut(node)
@@ -155,7 +155,7 @@ class NodeRepository(
     }
 
 
-    fun updateNode(node: Node, nodeVersion: NodeVersion): Node? {
+    fun updateNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
         val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
             .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)

@@ -16,7 +16,6 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
-import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 
 /**
@@ -42,7 +41,7 @@ class NodeService {
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
-    fun createNode(node: Node): Entity? {
+    fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
 
 
@@ -60,16 +59,16 @@ class NodeService {
             e.updatedAt = node.createdAt
         }
 
-        //val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
         LOG.info("Creating node : $node")
 
-        //return repository.create(node)
-
-        val nodeVersion : NodeVersion = createNodeVersionFromNode(node)
-
-        node.nodeVersionCount = 1
-
-        return nodeRepository.createNode(node, nodeVersion)
+        return if(versionEnabled){
+            val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
+            node.nodeVersionCount = 1
+            nodeRepository.createNodeWithVersion(node, nodeVersion)
+        }
+        else{
+            repository.create(node)
+        }
     }
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
@@ -84,16 +83,16 @@ class NodeService {
         return nodeVersion
     }
 
-    fun createAndUpdateNode(nodeRequest: WDRequest?) : Entity? {
+    fun createAndUpdateNode(nodeRequest: WDRequest?, versionEnabled : Boolean = false) : Entity? {
         val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
 
         val storedNode = getNode(node.id) as Node?
 
         return if(storedNode == null){
-            createNode(node)
+            createNode(node, versionEnabled)
         }
         else{
-            updateNode(node, storedNode)
+            updateNode(node, storedNode, versionEnabled)
         }
     }
 
@@ -144,7 +143,7 @@ class NodeService {
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
-    fun updateNode(node : Node, storedNode: Node): Entity? {
+    fun updateNode(node : Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
         /* set idCopy = id, createdAt = null, and set AK */
         Node.populateNodeWithSkAkAndCreatedAtNull(node)
@@ -154,41 +153,34 @@ class NodeService {
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
 
-//        if(!nodeChanged){
-//            return storedNode
-//        }
+        if(!nodeChanged){
+            return storedNode
+        }
 
-        /* to make the versions same */
+        /* to make the locking versions same */
         mergeNodeVersions(node, storedNode)
 
         LOG.info("Updating node : $node")
         //return nodeRepository.update(node)
 
-        /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
-//        if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
-//            node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
-//            return repository.update(node)
-//        }
+        if(versionEnabled){
+            /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
+            if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
+                node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
+                return repository.update(node)
+            }
+            node.lastVersionCreatedAt = node.updatedAt
+            checkNodeVersionCount(node, storedNode.nodeVersionCount)
 
+            val nodeVersion = createNodeVersionFromNode(node)
+            nodeVersion.createdAt = storedNode.createdAt
+            nodeVersion.createBy = storedNode.createBy
 
-        node.lastVersionCreatedAt = node.updatedAt
-
-        println("Thread ID before run blocking : " + Thread.currentThread().id)
-
-
-
-        //println("Thread ID inside run blocking : " + Thread.currentThread().id)
-        checkNodeVersionCount(node, storedNode.nodeVersionCount)
-
-
-
-        val nodeVersion = createNodeVersionFromNode(node)
-
-        nodeVersion.createdAt = storedNode.createdAt
-        nodeVersion.createBy = storedNode.createBy
-
-        println("Before DAO Call!!")
-        return nodeRepository.updateNode(node, nodeVersion)
+            return nodeRepository.updateNodeWithVersion(node, nodeVersion)
+        }
+        else{
+            return repository.update(node)
+        }
     }
 
 
