@@ -12,7 +12,7 @@ enum class NodeStatus {
     UNLINKED
 }
 
-@DynamoDBTable(tableName = "sampleData")
+@DynamoDBTable(tableName = "local-mex")
 data class Node(
 
     @JsonProperty("id")
@@ -91,6 +91,22 @@ data class Node(
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
 
+
+    @JsonProperty("lastVersionCreatedAt")
+    @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
+    var lastVersionCreatedAt: Long? = null
+
+    @JsonProperty("nodeVersionCount")
+    @DynamoDBAttribute(attributeName = "nodeVersionCount")
+    var nodeVersionCount: Long = 0
+
+//    fun getVersion(): Long? {
+//        return version
+//    }
+//
+//    fun setVersion(version: Long?) {
+//        this.version = version
+//    }
     companion object {
         fun populateNodeWithSkAkAndCreatedAtNull(node : Node) {
             node.idCopy = node.id

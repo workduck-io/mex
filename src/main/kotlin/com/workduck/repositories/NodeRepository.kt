@@ -1,11 +1,16 @@
 package com.workduck.repositories
 
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
+import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -14,13 +19,18 @@ import com.workduck.models.Identifier
 import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
+import com.workduck.models.NodeVersion
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.DDBTransactionHelper
+import java.time.Instant
+
 import org.apache.logging.log4j.LogManager
 
 class NodeRepository(
         private val mapper: DynamoDBMapper,
         private val dynamoDB: DynamoDB,
-        private val dynamoDBMapperConfig: DynamoDBMapperConfig
+        private val dynamoDBMapperConfig: DynamoDBMapperConfig,
+        private val client: AmazonDynamoDB
 ) : Repository<Node> {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
@@ -126,16 +136,39 @@ class NodeRepository(
         TODO("Not yet implemented")
     }
 
+
+    fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
+        return try {
+            val transactionWriteRequest = TransactionWriteRequest()
+            transactionWriteRequest.addPut(node)
+            transactionWriteRequest.addPut(nodeVersion)
+            mapper.transactionWrite(transactionWriteRequest, dynamoDBMapperConfig)
+            node
+        } catch (e: Exception) {
+            println(e)
+            null
+        }
+    }
+
     override fun update(t: Node): Node? {
-        val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+        TODO("Not yet implemented")
+    }
+
+
+    fun updateNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
+        val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
             .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
             .build()
 
+
         return try {
-            mapper.save(t, dynamoDBMapperConfig)
-            t
+            val transactionWriteRequest = TransactionWriteRequest()
+            transactionWriteRequest.addUpdate(node)
+            transactionWriteRequest.addPut(nodeVersion)
+            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, dynamoDBMapperUpdateConfig, client)
+            node
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */
             /* What should be the flow from here on? Call NodeService().update()? */
@@ -171,4 +204,66 @@ class NodeRepository(
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
+
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>? {
+        val table = dynamoDB.getTable(tableName)
+        println("Inside getAllVersionsOfNode function")
+
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS("${nodeID}#VERSION")
+        expressionAttributeValues[":status"] = AttributeValue().withS("ACTIVE")
+        expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
+
+
+        val q = DynamoDBQueryExpression<NodeVersion>()
+                .withKeyConditionExpression("PK = :pk")
+                .withFilterExpression("versionStatus = :status and itemType = :NodeVersion")
+                .withExpressionAttributeValues(expressionAttributeValues)
+                .withProjectionExpression("SK")
+
+
+        return try {
+            val nodeVersionList: List<NodeVersion> = mapper.query(NodeVersion::class.java, q, dynamoDBMapperConfig)
+
+            val itemList: MutableList<String> = mutableListOf()
+            for(v in nodeVersionList){
+                if(v.updatedAt != null) itemList.add(v.updatedAt!!)
+            }
+
+            itemList
+        } catch (e : Exception){
+            println(e)
+            null
+        }
+
+    }
+
+    fun setTTLForOldestVersion(nodeID : String, oldestUpdatedAt : String){
+
+        val table : Table = dynamoDB.getTable(tableName)
+
+        val now: Long = Instant.now().epochSecond // unix time
+        val ttl = (60).toLong()
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":ttl"] = (now + ttl)
+        expressionAttributeValues[":status"] = "INACTIVE"
+
+
+        val u = UpdateItemSpec().withPrimaryKey("PK", "$nodeID#VERSION", "SK", oldestUpdatedAt)
+                .withUpdateExpression("SET timeToLive = :ttl, versionStatus = :status ")
+                .withValueMap(expressionAttributeValues)
+
+        try {
+            table.updateItem(u)
+        } catch (e: Exception) {
+            println(e)
+        }
+
+
+    }
+
+
+
 }

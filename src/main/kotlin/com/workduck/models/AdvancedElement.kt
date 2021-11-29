@@ -29,7 +29,7 @@ data class AdvancedElement(
     var content: String? = "",
 
     @JsonProperty("children")
-    var children: List<AdvancedElement> = listOf(),
+    var children: List<AdvancedElement>? = null,
 
     @JsonProperty("elementType")
     var elementType: String = "paragraph",

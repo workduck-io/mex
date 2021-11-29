@@ -9,17 +9,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.ElementRequest
 import com.serverless.models.NodeRequest
 import com.serverless.models.WDRequest
-import com.workduck.models.Node
-import com.workduck.models.Entity
-import com.workduck.models.NodeIdentifier
-import com.workduck.models.Identifier
-import com.workduck.models.AdvancedElement
+import com.workduck.models.*
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
+import com.workduck.utils.Helper
+
 
 /**
  * contains all node related logic
@@ -41,16 +38,17 @@ class NodeService {
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
         .build()
 
-    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig)
+    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
-    fun createNode(node: Node): Entity? {
+    fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
 
 
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
         node.dataOrder = createDataOrderForNode(node)
         node.createBy = node.lastEditedBy
+        node.lastVersionCreatedAt = node.createdAt
 
         //computeHashOfNodeData(node)
 
@@ -63,19 +61,38 @@ class NodeService {
 
         LOG.info("Creating node : $node")
 
-        return repository.create(node)
+        return if(versionEnabled){
+            val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
+            node.nodeVersionCount = 1
+            nodeRepository.createNodeWithVersion(node, nodeVersion)
+        }
+        else{
+            repository.create(node)
+        }
     }
 
-    fun createAndUpdateNode(nodeRequest: WDRequest?) : Entity? {
+    private fun createNodeVersionFromNode(node: Node): NodeVersion {
+        val nodeVersion = NodeVersion(
+            id = "${node.id}#VERSION", lastEditedBy = node.lastEditedBy, createBy = node.createBy,
+            data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
+            workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
+        )
+
+        nodeVersion.version = Helper.generateId("version")
+
+        return nodeVersion
+    }
+
+    fun createAndUpdateNode(nodeRequest: WDRequest?, versionEnabled : Boolean = false) : Entity? {
         val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
 
         val storedNode = getNode(node.id) as Node?
 
         return if(storedNode == null){
-            createNode(node)
+            createNode(node, versionEnabled)
         }
         else{
-            updateNode(node, storedNode)
+            updateNode(node, storedNode, versionEnabled)
         }
     }
 
@@ -126,7 +143,7 @@ class NodeService {
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
-    fun updateNode(node : Node, storedNode: Node): Entity? {
+    fun updateNode(node : Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
         /* set idCopy = id, createdAt = null, and set AK */
         Node.populateNodeWithSkAkAndCreatedAtNull(node)
@@ -140,11 +157,68 @@ class NodeService {
             return storedNode
         }
 
-        /* to make the versions same */
+        /* to make the locking versions same */
         mergeNodeVersions(node, storedNode)
 
         LOG.info("Updating node : $node")
-        return nodeRepository.update(node)
+        //return nodeRepository.update(node)
+
+        if(versionEnabled){
+            /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
+            if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
+                node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
+                return repository.update(node)
+            }
+            node.lastVersionCreatedAt = node.updatedAt
+            checkNodeVersionCount(node, storedNode.nodeVersionCount)
+
+            val nodeVersion = createNodeVersionFromNode(node)
+            nodeVersion.createdAt = storedNode.createdAt
+            nodeVersion.createBy = storedNode.createBy
+
+            return nodeRepository.updateNodeWithVersion(node, nodeVersion)
+        }
+        else{
+            return repository.update(node)
+        }
+    }
+
+
+    fun checkNodeVersionCount(node: Node, storedNodeVersionCount: Long)  {
+        if(storedNodeVersionCount < 25 ) {
+            node.nodeVersionCount = storedNodeVersionCount + 1
+            println(Thread.currentThread().id)
+        }
+        else {
+            node.nodeVersionCount = storedNodeVersionCount + 1
+            //GlobalScope.launch {
+                //println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
+
+                //println("Thread ID inside launch : " + Thread.currentThread().id)
+                setTTLForOldestVersion(node.id)
+                //println("After delay")
+
+            //}
+            println("Hello") // main coroutine continues while a previous one is delayed
+        }
+    }
+
+
+
+    private fun setTTLForOldestVersion(nodeID : String){
+
+        /*returns first element from sorted updatedAts in ascending order */
+        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)?.get(0)
+
+        println(oldestUpdatedAt)
+
+        if(oldestUpdatedAt != null)
+            nodeRepository.setTTLForOldestVersion(nodeID, oldestUpdatedAt)
+
+    }
+
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>?{
+        return nodeRepository.getMetaDataForActiveVersions(nodeID)
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
@@ -173,6 +247,11 @@ class NodeService {
 
     private fun mergeNodeVersions(node: Node, storedNode: Node) {
 
+        /* if the same user edited the node the last time, he can overwrite anything */
+        if(node.lastEditedBy == storedNode.lastEditedBy){
+            node.version = storedNode.version
+            return
+        }
         /* currently just handling when more blocks have been added */
 
         /* not handling the case when
@@ -210,10 +289,16 @@ class NodeService {
 
         node.dataOrder = finalDataOrder
         node.version = storedNode.version
+
+        // TODO(explore autoMerge cmd line)
     }
 
     private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean{
         var nodeChanged = false
+
+        /* in case a block has been deleted */
+        if(node.data?.size != storedNode.data?.size) nodeChanged = true
+
         if (node.data != null) {
             for (currElement in node.data!!) {
                 var isPresent = false
@@ -282,24 +367,24 @@ fun main() {
 			"data": [
 			{
 				"id": "sampleParentID",
-                "elementType": "list",
+                "elementType": "paragraph",
                 "children": [
                 {
                     "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "list",
+                    "content" : "sample child content 1",
+                    "elementType": "paragraph",
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
 			},
             {
 				"id": "1234",
-                "elementType": "list",
+                "elementType": "paragraph",
                 "children": [
                 {
                     "id" : "sampleChildID",
                     "content" : "sample child content",
-                    "elementType": "list",
+                    "elementType": "paragraph",
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
@@ -312,48 +397,24 @@ fun main() {
         
     {
         "type" : "NodeRequest",
-        "lastEditedBy" : "Ruddhi",
+        "lastEditedBy" : "Varun",
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
         "workspaceIdentifier" : "WORKSPACE1",
         "data": [
         {
             "id": "sampleParentID",
-            "elementType": "list",
+            "elementType": "paragraph",
             "children": [
             {
                 "id" : "sampleChildID",
                 "content" : "sample child content 1",
-                "elementType": "list",
+                "elementType": "paragraph",
                 "properties" :  { "bold" : true, "italic" : true  }
             }
             ]
-        },
-        {
-            "id": "sampleParentID2",
-            "elementType": "list",
-            "children": [
-            {
-                "id" : "sampleChildID2",
-                "content" : "sample child content",
-                "elementType": "list",
-                "properties" :  { "bold" : true, "italic" : true  }
-            }
-            ]
-        },
-        {
-				"id": "1234",
-                "elementType": "list",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "list",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			}
-        ]
+        }]
+        
     }
     """
 
@@ -402,8 +463,15 @@ fun main() {
         }
       """
 
+
+    // println(NodeService().getNode("NODE1"))
+    //println("HELLO")
+//    runBlocking {
+//        println("WORLD")
+//        NodeService().updateNode(jsonString1)
+//    }
     val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
-     NodeService().createAndUpdateNode(nodeRequest)
+    NodeService().createAndUpdateNode(nodeRequest)
     // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
@@ -413,6 +481,9 @@ fun main() {
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
+    // NodeService().getMetaDataForActiveVersions("NODE1")
+
+    //NodeService().setTTLForOldestVersion("NODE1")
 
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
