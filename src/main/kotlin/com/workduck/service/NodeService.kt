@@ -9,18 +9,13 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.ElementRequest
 import com.serverless.models.NodeRequest
 import com.serverless.models.WDRequest
-import com.workduck.models.Node
-import com.workduck.models.Entity
-import com.workduck.models.NodeIdentifier
-import com.workduck.models.Identifier
-import com.workduck.models.AdvancedElement
+import com.workduck.models.*
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
-import kotlinx.coroutines.*
 
 
 /**
@@ -64,7 +59,7 @@ class NodeService {
             e.updatedAt = node.createdAt
         }
 
-        val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
+        //val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
         LOG.info("Creating node : $node")
 
         //return repository.create(node)
@@ -203,14 +198,14 @@ class NodeService {
         }
         else {
             node.nodeVersionCount = storedNodeVersionCount + 1
-            GlobalScope.launch {
-                println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
+            //GlobalScope.launch {
+                //println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
 
-                println("Thread ID inside launch : " + Thread.currentThread().id)
+                //println("Thread ID inside launch : " + Thread.currentThread().id)
                 setTTLForOldestVersion(node.id)
-                println("After delay")
+                //println("After delay")
 
-            }
+            //}
             println("Hello") // main coroutine continues while a previous one is delayed
         }
     }
