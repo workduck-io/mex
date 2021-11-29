@@ -16,6 +16,7 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 
 /**
@@ -38,7 +39,7 @@ class NodeService {
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
         .build()
 
-    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig)
+    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
     fun createNode(node: Node): Entity? {
@@ -153,9 +154,9 @@ class NodeService {
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
 
-        if(!nodeChanged){
-            return storedNode
-        }
+//        if(!nodeChanged){
+//            return storedNode
+//        }
 
         /* to make the versions same */
         mergeNodeVersions(node, storedNode)
@@ -164,10 +165,10 @@ class NodeService {
         //return nodeRepository.update(node)
 
         /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
-        if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
-            node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
-            return repository.update(node)
-        }
+//        if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
+//            node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
+//            return repository.update(node)
+//        }
 
 
         node.lastVersionCreatedAt = node.updatedAt
@@ -212,7 +213,7 @@ class NodeService {
 
 
 
-    fun setTTLForOldestVersion(nodeID : String){
+    private fun setTTLForOldestVersion(nodeID : String){
 
         /*returns first element from sorted updatedAts in ascending order */
         val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)?.get(0)
@@ -485,15 +486,15 @@ fun main() {
         }
       """
 
-    // NodeService().createNode(jsonString)
+
     // println(NodeService().getNode("NODE1"))
-    println("HELLO")
+    //println("HELLO")
 //    runBlocking {
 //        println("WORLD")
 //        NodeService().updateNode(jsonString1)
 //    }
     val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
-     NodeService().createAndUpdateNode(nodeRequest)
+    NodeService().createAndUpdateNode(nodeRequest)
     // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")

@@ -1,16 +1,16 @@
 package com.workduck.repositories
 
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Item
-import com.amazonaws.services.dynamodbv2.document.ItemCollection
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome
+import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -29,7 +29,8 @@ import org.apache.logging.log4j.LogManager
 class NodeRepository(
         private val mapper: DynamoDBMapper,
         private val dynamoDB: DynamoDB,
-        private val dynamoDBMapperConfig: DynamoDBMapperConfig
+        private val dynamoDBMapperConfig: DynamoDBMapperConfig,
+        private val client: AmazonDynamoDB
 ) : Repository<Node> {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
@@ -166,7 +167,7 @@ class NodeRepository(
             val transactionWriteRequest = TransactionWriteRequest()
             transactionWriteRequest.addUpdate(node)
             transactionWriteRequest.addPut(nodeVersion)
-            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, dynamoDBMapperUpdateConfig)
+            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, dynamoDBMapperUpdateConfig, client)
             node
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */
@@ -208,26 +209,28 @@ class NodeRepository(
         val table = dynamoDB.getTable(tableName)
         println("Inside getAllVersionsOfNode function")
 
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":pk"] = "${nodeID}#VERSION"
-        expressionAttributeValues[":status"] = "ACTIVE"
 
-        val querySpec = QuerySpec()
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS("${nodeID}#VERSION")
+        expressionAttributeValues[":status"] = AttributeValue().withS("ACTIVE")
+        expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
+
+
+        val q = DynamoDBQueryExpression<NodeVersion>()
                 .withKeyConditionExpression("PK = :pk")
-                .withFilterExpression("versionStatus = :status")
-                .withValueMap(expressionAttributeValues)
+                .withFilterExpression("versionStatus = :status and itemType = :NodeVersion")
+                .withExpressionAttributeValues(expressionAttributeValues)
                 .withProjectionExpression("SK")
 
 
         return try {
-            val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
-            val iterator: Iterator<Item> = items!!.iterator()
+            val nodeVersionList: List<NodeVersion> = mapper.query(NodeVersion::class.java, q, dynamoDBMapperConfig)
 
-            var itemList: MutableList<String> = mutableListOf()
-            while (iterator.hasNext()) {
-                val item: Item = iterator.next()
-                itemList = (itemList + (item["SK"] as String)).toMutableList()
+            val itemList: MutableList<String> = mutableListOf()
+            for(v in nodeVersionList){
+                if(v.updatedAt != null) itemList.add(v.updatedAt!!)
             }
+
             itemList
         } catch (e : Exception){
             println(e)
@@ -238,7 +241,7 @@ class NodeRepository(
 
     fun setTTLForOldestVersion(nodeID : String, oldestUpdatedAt : String){
 
-        val table = dynamoDB.getTable("local-mex-history")
+        val table : Table = dynamoDB.getTable(tableName)
 
         val now: Long = Instant.now().epochSecond // unix time
         val ttl = (60).toLong()

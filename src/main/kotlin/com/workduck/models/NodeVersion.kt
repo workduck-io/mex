@@ -74,8 +74,8 @@ data class NodeVersion(
         var createdAt: Long? = System.currentTimeMillis(),
 
 
-        @JsonProperty("status")
-        @DynamoDBAttribute(attributeName = "status")
+        @JsonProperty("versionStatus")
+        @DynamoDBAttribute(attributeName = "versionStatus")
         var versionStatus: String = "ACTIVE"
 
 ) : Entity {
