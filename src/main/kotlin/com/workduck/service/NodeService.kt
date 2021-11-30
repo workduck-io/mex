@@ -6,9 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.ElementRequest
-import com.serverless.models.NodeRequest
-import com.serverless.models.WDRequest
+import com.serverless.models.*
 import com.workduck.models.*
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
@@ -47,8 +45,9 @@ class NodeService {
 
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
         node.dataOrder = createDataOrderForNode(node)
+
+        /* only when node is actually being created */
         node.createBy = node.lastEditedBy
-        node.lastVersionCreatedAt = node.createdAt
 
         //computeHashOfNodeData(node)
 
@@ -62,6 +61,7 @@ class NodeService {
         LOG.info("Creating node : $node")
 
         return if(versionEnabled){
+            node.lastVersionCreatedAt = node.createdAt
             val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
             node.nodeVersionCount = 1
             nodeRepository.createNodeWithVersion(node, nodeVersion)
@@ -109,7 +109,6 @@ class NodeService {
 
 
         val node =  repository.get(NodeIdentifier(nodeID)) as Node?
-        println("USER ID $userID")
         if(bookmarkInfo == true && userID != null){
             node?.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
         }
@@ -118,10 +117,39 @@ class NodeService {
 
     }
 
+    /* update the status of node to archived */
     fun deleteNode(nodeID: String): Identifier? {
         LOG.info("Deleting node with id : $nodeID")
-        return repository.delete(NodeIdentifier(nodeID))
+
+        val node : Node? = getNode(nodeID) as Node?
+        LOG.info("Node we got : $node")
+        //val identifier : Identifier? = nodeRepository.delete(NodeIdentifier(nodeID))
+        if(node != null){
+            LOG.info("Will update the node now!")
+            node.itemStatus = "ARCHIVED"
+            repository.update(node)
+        }
+
+        //TODO(put them in a transaction)
+        //TODO(can the flow be better? Instead of getting, deleting and creating, simply get and update by using a status variable??)
+        return if(node != null)
+            NodeIdentifier(id = node.id)
+        else null
     }
+
+    /* basically archive the nodes */
+    fun deleteNodes(nodeIDRequest: WDRequest): MutableList<String> {
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        LOG.info(nodeIDList)
+        //val nodeIDList : List<String> = objectMapper.readValue(nodeIDListJson)
+        //println(nodeIDList)
+        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ARCHIVED")
+    }
+
+    fun convertGenericRequestToList(genericRequest: GenericListRequest) : List<String>{
+        return genericRequest.ids
+    }
+
 
     fun append(nodeID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
@@ -350,6 +378,28 @@ class NodeService {
         }
     }
 
+    fun getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID : String) : MutableList<String>?{
+        return nodeRepository.getAllArchivedNodesOfWorkspace(workspaceID)
+    }
+
+
+    fun unarchiveNodes(nodeIDRequest: WDRequest) : MutableList<String> {
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ACTIVE")
+    }
+
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest) : MutableList<String> {
+
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val deletedNodesList : MutableList<String> = mutableListOf()
+        for(nodeID in nodeIDList) {
+            repository.delete(NodeIdentifier(nodeID))?.also{
+                deletedNodesList.add(it.id)
+            }
+        }
+        return deletedNodesList
+    }
+
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
@@ -474,7 +524,7 @@ fun main() {
     NodeService().createAndUpdateNode(nodeRequest)
     // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)
-    // NodeService().deleteNode("NODEF873GEFPVJQKV43NQMWQEJQGLF")
+    // NodeService().deleteNode("NODE1")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
     // NodeService().append("NODE1",jsonForAppend)
@@ -484,6 +534,9 @@ fun main() {
     // NodeService().getMetaDataForActiveVersions("NODE1")
 
     //NodeService().setTTLForOldestVersion("NODE1")
+
+    NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
+
 
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))

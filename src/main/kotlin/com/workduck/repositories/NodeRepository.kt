@@ -8,7 +8,12 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome
+import com.amazonaws.services.dynamodbv2.document.Index
+import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
@@ -120,11 +125,13 @@ class NodeRepository(
     override fun delete(identifier: Identifier): Identifier? {
         val table = dynamoDB.getTable(tableName)
 
+
         val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
             .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
         return try {
             table.deleteItem(deleteItemSpec)
+            LOG.info("Deleted the node")
             identifier
         } catch (e: Exception) {
             LOG.info(e)
@@ -201,10 +208,6 @@ class NodeRepository(
         }
     }
 
-    companion object {
-        private val LOG = LogManager.getLogger(NodeRepository::class.java)
-    }
-
     fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>? {
         val table = dynamoDB.getTable(tableName)
         println("Inside getAllVersionsOfNode function")
@@ -236,8 +239,44 @@ class NodeRepository(
             println(e)
             null
         }
+    }
+
+    fun getAllArchivedNodesOfWorkspace(workspaceID : String) : MutableList<String>?{
+
+        try {
+            val table: Table = dynamoDB.getTable(tableName)
+            val index: Index = table.getIndex("WS-itemStatus-Index")
+
+
+            val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+            expressionAttributeValues[":workspaceID"] = workspaceID
+            expressionAttributeValues[":archived"] = "ARCHIVED"
+            expressionAttributeValues[":node"] = "Node"
+
+            val querySpec = QuerySpec()
+                    .withKeyConditionExpression("workspaceIdentifier = :workspaceID and itemStatus = :archived")
+                    .withFilterExpression("itemType = :node")
+                    .withValueMap(expressionAttributeValues)
+                    .withProjectionExpression("PK")
+
+
+            val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
+            val iterator: Iterator<Item> = items!!.iterator()
+
+            var nodeIDList: MutableList<String> = mutableListOf()
+            while (iterator.hasNext()) {
+                val item: Item = iterator.next()
+                nodeIDList = (nodeIDList + (item["PK"] as String)).toMutableList()
+            }
+            return nodeIDList
+        }
+        catch( e: Exception){
+            println(e)
+            return null
+        }
 
     }
+
 
     fun setTTLForOldestVersion(nodeID : String, oldestUpdatedAt : String){
 
@@ -264,6 +303,32 @@ class NodeRepository(
 
     }
 
+    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, status : String) : MutableList<String>{
+        val table: Table = dynamoDB.getTable(tableName)
 
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":active"] = status
+
+        val nodesProcessedList : MutableList<String> = mutableListOf()
+        for(nodeID in nodeIDList){
+            val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+                    .withUpdateExpression("SET itemStatus = :active")
+                    .withValueMap(expressionAttributeValues)
+
+            try{
+                table.updateItem(u)
+                nodesProcessedList += nodeID
+            }
+            catch(e : Exception){
+                println("Un-archiving Failed for nodeID : $nodeID, Exception : $e")
+            }
+        }
+
+        return nodesProcessedList
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeRepository::class.java)
+    }
 
 }

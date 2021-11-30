@@ -20,9 +20,10 @@ Node:
         method: post
         authorizer: mexAuthorizer
 
+      #deleteNodes( archive them )
     - httpApi:
-        path: /node/{id}
-        method: delete
+        path: /node/archive
+        method: post
         authorizer: mexAuthorizer
 
     - httpApi:
@@ -50,6 +51,22 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /node/unarchive
+        method: post
+        authorizer: mexAuthorizer
+
+      #delete given nodes ids from archive section ( hence, permanently )
+    - httpApi:
+        path: /node/archive/delete
+        method: post
+        authorizer: mexAuthorizer
+
+      #get all archived nodes for a given workspaceID
+    - httpApi:
+        path: /node/archive/{id}
+        method: get
+        authorizer: mexAuthorizer
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
