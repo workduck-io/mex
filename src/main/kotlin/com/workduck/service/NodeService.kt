@@ -6,9 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.ElementRequest
-import com.serverless.models.NodeRequest
-import com.serverless.models.WDRequest
+import com.serverless.models.*
 import com.workduck.models.*
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
@@ -138,13 +136,19 @@ class NodeService {
             NodeIdentifier(id = node.id)
         else null
     }
+
     /* basically archive the nodes */
-    fun deleteNodes(nodeIDListJson: String): MutableList<String> {
-        val nodeIDList : List<String> = ObjectMapper().registerKotlinModule().readValue(nodeIDListJson)
-        println(nodeIDList)
+    fun deleteNodes(nodeIDRequest: WDRequest): MutableList<String> {
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        LOG.info(nodeIDList)
+        //val nodeIDList : List<String> = objectMapper.readValue(nodeIDListJson)
+        //println(nodeIDList)
         return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ARCHIVED")
     }
 
+    fun convertGenericRequestToList(genericRequest: GenericListRequest) : List<String>{
+        return genericRequest.ids
+    }
 
 
     fun append(nodeID: String, elementsListRequest: WDRequest): Map<String, Any>? {
@@ -379,14 +383,14 @@ class NodeService {
     }
 
 
-    fun unarchiveNodes(nodeIDListJson: String) : MutableList<String> {
-        val nodeIDList : List<String> = ObjectMapper().registerKotlinModule().readValue(nodeIDListJson)
+    fun unarchiveNodes(nodeIDRequest: WDRequest) : MutableList<String> {
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
         return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ACTIVE")
     }
 
-    fun deleteArchivedNodes(nodeIDListJson: String) : MutableList<String> {
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest) : MutableList<String> {
 
-        val nodeIDList : List<String> = ObjectMapper().registerKotlinModule().readValue(nodeIDListJson)
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
         val deletedNodesList : MutableList<String> = mutableListOf()
         for(nodeID in nodeIDList) {
             repository.delete(NodeIdentifier(nodeID))?.also{
