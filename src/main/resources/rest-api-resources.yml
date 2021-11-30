@@ -164,6 +164,23 @@ User:
         method: post
         authorizer: mexAuthorizer
 
+UserPreference:
+  handler: com.serverless.userPreferenceHandlers.UserPreferenceHandler
+  events:
+    - httpApi:
+        path: /userPreference
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /userPreference/{id}/{preferenceType}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /userPreference/all/{id}
+        method: get
+        authorizer: mexAuthorizer
 
 
 UserBookmark:

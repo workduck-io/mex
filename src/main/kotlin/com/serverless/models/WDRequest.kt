@@ -15,5 +15,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = WorkspaceRequest::class, name = "WorkspaceRequest"),
     JsonSubTypes.Type(value = NamespaceRequest::class, name = "NamespaceRequest"),
     JsonSubTypes.Type(value = BookmarkRequest::class, name = "BookmarkRequest"),
+    JsonSubTypes.Type(value = UserPreferenceRequest::class, name = "UserPreferenceRequest"),
 )
 interface WDRequest
