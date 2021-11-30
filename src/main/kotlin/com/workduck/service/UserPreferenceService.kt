@@ -4,9 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.UserPreferenceRequest
+import com.serverless.models.WDRequest
 import com.workduck.models.UserPreferenceRecord
 import com.workduck.repositories.UserPreferenceRepository
 import com.workduck.utils.DDBHelper
@@ -23,31 +22,36 @@ class UserPreferenceService {
     }
 
     private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
-            .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-            .build()
+        .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+        .build()
 
     private val userPreferenceRepository: UserPreferenceRepository = UserPreferenceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 
-
-    fun createAndUpdateUserPreferenceRecord(jsonString: String) : UserPreferenceRecord? {
-        val objectMapper = ObjectMapper().registerModule(KotlinModule())
-        val userPreferenceRecord: UserPreferenceRecord = objectMapper.readValue(jsonString)
+    fun createAndUpdateUserPreferenceRecord(userPreferenceRequest: WDRequest): UserPreferenceRecord? {
+        val userPreferenceRecord: UserPreferenceRecord = convertUserPreferenceRequestToUserPreferenceObject(userPreferenceRequest as UserPreferenceRequest)
 
         return userPreferenceRepository.createAndUpdateUserPreferenceRecord(userPreferenceRecord)
     }
 
-    fun getUserPreferenceRecord(userID : String, preferenceType : String) : UserPreferenceRecord?{
+    fun getUserPreferenceRecord(userID: String, preferenceType: String): UserPreferenceRecord? {
         return userPreferenceRepository.getUserPreferenceRecord(userID, preferenceType)
     }
 
-    fun getAllUserPreferencesForUser(userID: String) : List<UserPreferenceRecord>? {
+    fun getAllUserPreferencesForUser(userID: String): List<UserPreferenceRecord>? {
         return userPreferenceRepository.getAllUserPreferencesForUser(userID)
     }
 
+    private fun convertUserPreferenceRequestToUserPreferenceObject(userPreferenceRequest: UserPreferenceRequest): UserPreferenceRecord {
+        return UserPreferenceRecord(
+            userID = userPreferenceRequest.userID,
+            preferenceType = userPreferenceRequest.preferenceType,
+            preferenceValue = userPreferenceRequest.preferenceValue
+        )
+    }
 }
 
-fun main(){
-    val json : String = """
+fun main() {
+    val json: String = """
 		{
 			"userID" : "USER49",
 			"preferenceType" : "Sound",
@@ -55,7 +59,6 @@ fun main(){
 		}
 		"""
 
-    //UserPreferenceService().createAndUpdateUserPreferenceRecord(json)
+    // UserPreferenceService().createAndUpdateUserPreferenceRecord(json)
     println(UserPreferenceService().getAllUserPreferencesForUser("USER49"))
-
 }

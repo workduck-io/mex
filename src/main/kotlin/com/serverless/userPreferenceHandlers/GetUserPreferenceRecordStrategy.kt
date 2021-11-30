@@ -2,22 +2,29 @@ package com.serverless.userPreferenceHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
+import com.serverless.utils.UserPreferenceHelper
 import com.workduck.models.UserPreferenceRecord
 import com.workduck.service.UserPreferenceService
 
 class GetUserPreferenceRecordStrategy : UserPreferenceStrategy {
     override fun apply(
-            input: Map<String, Any>,
+            input: Input,
             userPreferenceService: UserPreferenceService
     ): ApiGatewayResponse {
         val errorMessage = "Error getting user records"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
+        val userID = input.pathParameters?.id
+        val preferenceType = input.pathParameters?.preferenceType
 
-        val userID = pathParameters!!["id"] as String
-        val preferenceType = pathParameters["preferenceType"] as String
+        return if(userID != null && preferenceType != null) {
+            val record: UserPreferenceRecord? = userPreferenceService.getUserPreferenceRecord(userID, preferenceType)
 
-        val record: UserPreferenceRecord? = userPreferenceService.getUserPreferenceRecord(userID, preferenceType)
-        return ApiResponseHelper.generateStandardResponse(record as Any?, errorMessage)
+            val userPreferenceResponse = UserPreferenceHelper.convertUserPreferenceRecordToUserPreferenceResponse(record)
+            ApiResponseHelper.generateStandardResponse(userPreferenceResponse, errorMessage)
+        }
+        else{
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+        }
     }
 }

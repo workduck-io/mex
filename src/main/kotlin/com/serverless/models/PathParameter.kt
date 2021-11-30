@@ -9,5 +9,6 @@ data class PathParameter(
     val userID: String?,
     val nodeID: String?,
     val workspaceID: String?,
-    val namespaceID: String?
+    val namespaceID: String?,
+    val preferenceType: String?
 )
