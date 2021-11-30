@@ -92,6 +92,10 @@ data class Node(
     // TODO(make it part of NodeResponse object in code cleanup)
     var isBookmarked: Boolean? = null,
 
+    @JsonProperty("publicAccess")
+    @DynamoDBAttribute(attributeName = "publicAccess")
+    var publicAccess: Boolean = false,
+
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = System.currentTimeMillis()

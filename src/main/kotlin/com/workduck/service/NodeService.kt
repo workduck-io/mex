@@ -6,8 +6,15 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.*
-import com.workduck.models.*
+import com.serverless.models.WDRequest
+import com.serverless.models.NodeRequest
+import com.serverless.models.GenericListRequest
+import com.serverless.models.ElementRequest
+import com.workduck.models.Node
+import com.workduck.models.NodeVersion
+import com.workduck.models.NodeIdentifier
+import com.workduck.models.Entity
+import com.workduck.models.AdvancedElement
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
@@ -117,25 +124,6 @@ class NodeService {
 
     }
 
-    /* update the status of node to archived */
-    fun deleteNode(nodeID: String): Identifier? {
-        LOG.info("Deleting node with id : $nodeID")
-
-        val node : Node? = getNode(nodeID) as Node?
-        LOG.info("Node we got : $node")
-        //val identifier : Identifier? = nodeRepository.delete(NodeIdentifier(nodeID))
-        if(node != null){
-            LOG.info("Will update the node now!")
-            node.itemStatus = "ARCHIVED"
-            repository.update(node)
-        }
-
-        //TODO(put them in a transaction)
-        //TODO(can the flow be better? Instead of getting, deleting and creating, simply get and update by using a status variable??)
-        return if(node != null)
-            NodeIdentifier(id = node.id)
-        else null
-    }
 
     /* basically archive the nodes */
     fun deleteNodes(nodeIDRequest: WDRequest): MutableList<String> {
@@ -404,6 +392,18 @@ class NodeService {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
+
+    fun makeNodePublic(nodeID: String) : String?{
+        return nodeRepository.toggleNodePublicAccess(nodeID, 1)
+    }
+
+    fun makeNodePrivate(nodeID: String) : String?{
+        return nodeRepository.toggleNodePublicAccess(nodeID, 0)
+    }
+
+    fun getPublicNode(nodeID: String) : Node?{
+        return nodeRepository.getPublicNode(nodeID)
+    }
 }
 
 fun main() {
@@ -535,9 +535,11 @@ fun main() {
 
     //NodeService().setTTLForOldestVersion("NODE1")
 
-    NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
+    //NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
 
 
+    //    NodeService().makeNodePublic("NODE1")
+    NodeService().getPublicNode("NODE1")
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
