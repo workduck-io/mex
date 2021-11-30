@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.StandardResponse
 import com.serverless.models.Input
+import com.serverless.utils.ExceptionParser
 import com.workduck.service.NodeService
 import org.apache.logging.log4j.LogManager
 
@@ -26,7 +27,12 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             }
         }
 
-        return strategy.apply(wdInput, nodeService)
+        return try {
+            strategy.apply(wdInput, nodeService)
+        }
+        catch(e : Exception){
+            ExceptionParser.exceptionHandler(e)
+        }
     }
 
     companion object {
