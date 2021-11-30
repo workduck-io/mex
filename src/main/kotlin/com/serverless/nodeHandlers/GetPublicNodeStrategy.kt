@@ -2,17 +2,26 @@ package com.serverless.nodeHandlers
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
+import com.serverless.utils.NodeHelper
 import com.workduck.models.Node
 import com.workduck.service.NodeService
 
 class GetPublicNodeStrategy : NodeStrategy {
-    override fun apply(input: Map<String, Any>, nodeService: NodeService): ApiGatewayResponse {
+    override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Node not available"
 
-        val pathParameters = input["pathParameters"] as Map<*, *>?
-        val nodeID = pathParameters!!["id"] as String
 
-        val node: Node? = nodeService.getPublicNode(nodeID)
-        return ApiResponseHelper.generateStandardResponse(node as Any?, errorMessage)
+        val nodeID = input.pathParameters?.id
+
+        return if(nodeID != null) {
+            val node: Node? = nodeService.getPublicNode(nodeID)
+
+            val nodeResponse = NodeHelper.convertNodeToNodeResponse(node)
+            ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
+        }
+        else{
+            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+        }
     }
 }
