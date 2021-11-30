@@ -393,12 +393,12 @@ class NodeService {
     }
 
 
-    fun makeNodePublic(nodeID: String) : String?{
-        return nodeRepository.toggleNodePublicAccess(nodeID, 1)
+    fun makeNodePublic(nodeID: String) {
+        nodeRepository.toggleNodePublicAccess(nodeID, 1)
     }
 
-    fun makeNodePrivate(nodeID: String) : String?{
-        return nodeRepository.toggleNodePublicAccess(nodeID, 0)
+    fun makeNodePrivate(nodeID: String) {
+        nodeRepository.toggleNodePublicAccess(nodeID, 0)
     }
 
     fun getPublicNode(nodeID: String) : Node?{

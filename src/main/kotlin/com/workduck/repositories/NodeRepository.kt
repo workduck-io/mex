@@ -333,24 +333,17 @@ class NodeRepository(
 
 
 
-    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) : String?{
+    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":true"] = accessValue
-
-        val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+        
+        UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
                 .withUpdateExpression("SET publicAccess = :true")
-                .withValueMap(expressionAttributeValues)
-
-        return try {
-            table.updateItem(u)
-            nodeID
-        } catch (e: Exception) {
-            println(e)
-            null
-        }
-
+                .withValueMap(expressionAttributeValues).also{
+                    table.updateItem(it)
+                }
     }
 
     fun getPublicNode(nodeID: String) : Node? {
