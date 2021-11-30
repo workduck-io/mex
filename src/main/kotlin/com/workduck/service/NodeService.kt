@@ -54,7 +54,7 @@ class NodeService {
         node.dataOrder = createDataOrderForNode(node)
 
         /* only when node is actually being created */
-        node.createBy = node.lastEditedBy
+        node.createdBy = node.lastEditedBy
 
         //computeHashOfNodeData(node)
 
@@ -80,7 +80,7 @@ class NodeService {
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
         val nodeVersion = NodeVersion(
-            id = "${node.id}#VERSION", lastEditedBy = node.lastEditedBy, createBy = node.createBy,
+            id = "${node.id}#VERSION", lastEditedBy = node.lastEditedBy, createdBy = node.createdBy,
             data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
             workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
         )
@@ -162,9 +162,10 @@ class NodeService {
     fun updateNode(node : Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
         /* set idCopy = id, createdAt = null, and set AK */
-        Node.populateNodeWithSkAkAndCreatedAtNull(node)
+        Node.populateNodeWithSkAkAndCreatedAtNull(node, storedNode)
 
         node.dataOrder = createDataOrderForNode(node)
+
 
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
@@ -190,7 +191,7 @@ class NodeService {
 
             val nodeVersion = createNodeVersionFromNode(node)
             nodeVersion.createdAt = storedNode.createdAt
-            nodeVersion.createBy = storedNode.createBy
+            nodeVersion.createdBy = storedNode.createdBy
 
             return nodeRepository.updateNodeWithVersion(node, nodeVersion)
         }

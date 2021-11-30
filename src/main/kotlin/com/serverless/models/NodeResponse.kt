@@ -13,7 +13,7 @@ data class NodeResponse(
 
     val createdAt: Long?,
 
-    val updateAt: Long,
+    val updatedAt: Long,
 
     val itemType: String = "Node",
 

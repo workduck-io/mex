@@ -28,9 +28,9 @@ data class Node(
     @DynamoDBAttribute(attributeName = "lastEditedBy")
     var lastEditedBy: String? = null,
 
-    @JsonProperty("createBy")
-    @DynamoDBAttribute(attributeName = "createBy")
-    var createBy: String? = null,
+    @JsonProperty("createdBy")
+    @DynamoDBAttribute(attributeName = "createdBy")
+    var createdBy: String? = null,
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
@@ -123,9 +123,10 @@ data class Node(
 //        this.version = version
 //    }
     companion object {
-        fun populateNodeWithSkAkAndCreatedAtNull(node : Node) {
+        fun populateNodeWithSkAkAndCreatedAtNull(node : Node, storedNode : Node) {
             node.idCopy = node.id
-            node.createdAt = null
+            node.createdAt = storedNode.createdAt
+            node.createdBy = storedNode.createdBy
             node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
         }
     }

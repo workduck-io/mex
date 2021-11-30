@@ -24,7 +24,7 @@ data class NodeVersion(
 
         @JsonProperty("createBy")
         @DynamoDBAttribute(attributeName = "createBy")
-        var createBy: String? = null,
+        var createdBy: String? = null,
 
         @JsonProperty("data")
         @DynamoDBTypeConverted(converter = NodeDataConverter::class)

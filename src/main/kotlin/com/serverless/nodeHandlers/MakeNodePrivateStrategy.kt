@@ -4,7 +4,6 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.IdentifierHelper
-import com.sun.tools.javac.util.DefinedBy
 import com.workduck.service.NodeService
 
 class MakeNodePrivateStrategy : NodeStrategy {
