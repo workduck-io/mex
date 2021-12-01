@@ -72,7 +72,7 @@ class UserService {
 		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))
 
 		val jsonForWorkspaceCreation : String = """{
-			"type": "WorkspaceRequest"
+			"type": "WorkspaceRequest",
 			"id": "$workspaceID",
 			"name": "$workspaceName"
 		}"""
