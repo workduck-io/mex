@@ -3,8 +3,9 @@ package com.serverless.userBookmarkHandlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
-import com.serverless.StandardResponse
+import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
+import com.serverless.utils.ExceptionParser
 import com.workduck.service.UserBookmarkService
 import org.apache.logging.log4j.LogManager
 
@@ -14,18 +15,16 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
-        val wdInput : Input = Input.fromMap(input)
+        val wdInput: Input = Input.fromMap(input)
 
         val strategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy(wdInput.routeKey)
+                ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
 
-        if (strategy == null) {
-            val responseBody = StandardResponse("Request type not recognized")
-            return ApiGatewayResponse.build {
-                statusCode = 500
-                objectBody = responseBody
-            }
+        return try {
+            strategy.apply(wdInput, userBookmarkService)
+        } catch (e: Exception) {
+            ExceptionParser.exceptionHandler(e)
         }
-        return strategy.apply(wdInput, userBookmarkService)
     }
 
     companion object {

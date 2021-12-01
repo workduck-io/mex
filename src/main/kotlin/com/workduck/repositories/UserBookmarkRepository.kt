@@ -33,35 +33,32 @@ class UserBookmarkRepository(
             expressionAttributeValues[":map"] = mutableMapOf(nodeID to nodeID)
 
 
-            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+            return UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression("set bookmarkedNodes = :map")
                     .withConditionExpression("attribute_not_exists(bookmarkedNodes)")
                     .withValueMap(expressionAttributeValues)
+                    .let{
+                        table.updateItem(it)
+                        nodeID
+                    }
 
-            table.updateItem(updateItemSpec)
-
-            return nodeID
 
         }
         catch (e : ConditionalCheckFailedException){
             val expressionAttributeValues: MutableMap<String, Any> = HashMap()
             expressionAttributeValues[":nodeID"] = nodeID
 
-
             val updateExpression = "set bookmarkedNodes.${nodeID} = :nodeID"
 
-            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+            return UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression(updateExpression)
                     .withValueMap(expressionAttributeValues)
-
-            table.updateItem(updateItemSpec)
-            return nodeID
-        }
-        catch (e : Exception){
-            LOG.info(e)
-            return null
+                    .let{
+                        table.updateItem(it)
+                        nodeID
+                    }
         }
 
     }
@@ -69,19 +66,13 @@ class UserBookmarkRepository(
 
     fun deleteBookmark(userID: String, nodeID: String) : String? {
 
-        return try {
-            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+        return UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression("remove bookmarkedNodes.${nodeID}")
-
-            table.updateItem(updateItemSpec)
-            nodeID
-        }
-        catch(e :  Exception){
-            LOG.info(e)
-            null
-        }
-
+                    .let {
+                        table.updateItem(it)
+                        nodeID
+                    }
     }
 
     fun isNodeBookmarkedForUser(nodeID: String, userID: String) : Boolean? {
@@ -108,39 +99,31 @@ class UserBookmarkRepository(
 
     fun getAllBookmarkedNodesByUser(userID: String) : MutableList<String>? {
 
-        try {
-            val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-            expressionAttributeValues[":pk"] = "$userID#BOOKMARK"
-            expressionAttributeValues[":sk"] = "$userID#BOOKMARK"
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":pk"] = "$userID#BOOKMARK"
+        expressionAttributeValues[":sk"] = "$userID#BOOKMARK"
 
-            val querySpec: QuerySpec = QuerySpec()
-                    .withKeyConditionExpression("PK = :pk and SK = :sk")
-                    .withValueMap(expressionAttributeValues)
+        val items: ItemCollection<QueryOutcome?>? = QuerySpec()
+                .withKeyConditionExpression("PK = :pk and SK = :sk")
+                .withValueMap(expressionAttributeValues)
+                .let { table.query(it) }
 
-            val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
+        val itemList: MutableList<String> = mutableListOf()
+        if (items != null) {
+            val iterator: Iterator<Item> = items.iterator()
 
+            while (iterator.hasNext()) {
+                val item: Item = iterator.next()
 
-            val itemList: MutableList<String> = mutableListOf()
-            if (items != null) {
-
-                val iterator: Iterator<Item> = items.iterator()
-
-                while (iterator.hasNext()) {
-                    val item: Item = iterator.next()
-
-                    (item["bookmarkedNodes"] as Map<String, String>).forEach {
-                        itemList += it.value
-                    }
+                (item["bookmarkedNodes"] as Map<String, String>).forEach {
+                    itemList += it.value
                 }
             }
-            return itemList
-            //println("List of bookmarked nodes : $itemList")
         }
-        catch(e : Exception){
-            LOG.info(e)
-            return null
-        }
+        return itemList
     }
+
+
 
 
     fun createBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
@@ -155,15 +138,15 @@ class UserBookmarkRepository(
 
             expressionAttributeValues[":map"] = nodeIDMap
 
-            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+            return UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression("set bookmarkedNodes = :map")
                     .withConditionExpression("attribute_not_exists(bookmarkedNodes)")
                     .withValueMap(expressionAttributeValues)
-
-            table.updateItem(updateItemSpec)
-
-            return nodeIDList
+                    .let{
+                        table.updateItem(it)
+                        nodeIDList
+                    }
 
         }
         catch (e : ConditionalCheckFailedException){
@@ -178,41 +161,34 @@ class UserBookmarkRepository(
 
             updateExpression = updateExpression.dropLast(1)
 
-            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
+            return UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression(updateExpression)
                     .withValueMap(expressionAttributeValues)
-
-            table.updateItem(updateItemSpec)
-            return nodeIDList
+                    .let {
+                        table.updateItem(it)
+                        nodeIDList
+                    }
         }
-        catch (e : Exception){
-            LOG.info(e)
-            return null
-        }
-
     }
 
     fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
-        return try {
-            var updateExpression : String = "remove"
 
-            for(nodeID in nodeIDList){
-                updateExpression += " bookmarkedNodes.$nodeID,"
-            }
-            updateExpression = updateExpression.dropLast(1)
-            val updateItemSpec: UpdateItemSpec = UpdateItemSpec()
-                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
-                    .withUpdateExpression(updateExpression)
+        var updateExpression : String = "remove"
 
-            table.updateItem(updateItemSpec)
-            return nodeIDList
-        }
-        catch(e :  Exception){
-            LOG.info(e)
-            null
+        for(nodeID in nodeIDList){
+            updateExpression += " bookmarkedNodes.$nodeID,"
         }
 
+        /* remove the extra comma */
+        updateExpression = updateExpression.dropLast(1)
+        return UpdateItemSpec()
+                .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                .withUpdateExpression(updateExpression)
+                .let{
+                    table.updateItem(it)
+                    nodeIDList
+                }
     }
 
     companion object {

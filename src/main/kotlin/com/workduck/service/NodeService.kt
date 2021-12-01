@@ -113,24 +113,18 @@ class NodeService {
     }
 
     fun getNode(nodeID: String, bookmarkInfo : Boolean? = null, userID : String? = null): Entity? {
-
-
         val node =  repository.get(NodeIdentifier(nodeID)) as Node?
         if(bookmarkInfo == true && userID != null){
             node?.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
         }
-
         return node
-
     }
 
 
     /* basically archive the nodes */
-    fun deleteNodes(nodeIDRequest: WDRequest): MutableList<String> {
+    fun deleteNodes(nodeIDRequest: WDRequest) : MutableList<String>{
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
         LOG.info(nodeIDList)
-        //val nodeIDList : List<String> = objectMapper.readValue(nodeIDListJson)
-        //println(nodeIDList)
         return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ARCHIVED")
     }
 
@@ -314,7 +308,7 @@ class NodeService {
         var nodeChanged = false
 
         /* in case a block has been deleted */
-        if(node.data?.size != storedNode.data?.size) nodeChanged = true
+        if(node.data != storedNode.data) nodeChanged = true
 
         if (node.data != null) {
             for (currElement in node.data!!) {
@@ -372,7 +366,7 @@ class NodeService {
     }
 
 
-    fun unarchiveNodes(nodeIDRequest: WDRequest) : MutableList<String> {
+    fun unarchiveNodes(nodeIDRequest: WDRequest) : MutableList<String>{
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
         return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, "ACTIVE")
     }
@@ -439,6 +433,18 @@ fun main() {
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
+			},
+            {
+				"id": "ABC",
+                "elementType": "paragraph",
+                "children": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content",
+                    "elementType": "paragraph",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
 			}
 			]
 		}
@@ -454,17 +460,41 @@ fun main() {
         "workspaceIdentifier" : "WORKSPACE1",
         "data": [
         {
-            "id": "sampleParentID",
-            "elementType": "paragraph",
-            "children": [
-            {
-                "id" : "sampleChildID",
-                "content" : "sample child content 1",
+				"id": "ABC",
                 "elementType": "paragraph",
-                "properties" :  { "bold" : true, "italic" : true  }
-            }
-            ]
-        }]
+                "children": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content",
+                    "elementType": "paragraph",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
+		},
+        {
+				"id": "1234",
+                "elementType": "paragraph",
+                "children": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content",
+                    "elementType": "paragraph",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
+		},
+        {
+				"id": "sampleParentID",
+                "elementType": "paragraph",
+                "children": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content 1",
+                    "elementType": "paragraph",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
+		}]
         
     }
     """
@@ -521,7 +551,7 @@ fun main() {
 //        println("WORLD")
 //        NodeService().updateNode(jsonString1)
 //    }
-    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
+    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
     NodeService().createAndUpdateNode(nodeRequest)
     // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)

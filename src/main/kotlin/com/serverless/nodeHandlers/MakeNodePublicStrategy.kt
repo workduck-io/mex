@@ -13,7 +13,7 @@ class MakeNodePublicStrategy : NodeStrategy {
 
         return if(nodeID != null) {
             nodeService.makeNodePublic(nodeID)
-            ApiResponseHelper.generateStandardResponse(nodeID as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(nodeID, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

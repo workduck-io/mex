@@ -3,7 +3,7 @@ package com.serverless.nodeHandlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
-import com.serverless.StandardResponse
+import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.ExceptionParser
 import com.workduck.service.NodeService
@@ -18,14 +18,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         val wdInput : Input = Input.fromMap(input)
 
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
-
-        if (strategy == null) {
-            val responseBody = StandardResponse("Request type not recognized")
-            return ApiGatewayResponse.build {
-                statusCode = 500
-                objectBody = responseBody
-            }
-        }
+                ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
 
         return try {
             strategy.apply(wdInput, nodeService)

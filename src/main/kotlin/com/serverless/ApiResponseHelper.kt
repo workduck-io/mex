@@ -20,13 +20,9 @@ object ApiResponseHelper {
 
     fun generateStandardResponse(passedObject: Response?, errorMessage: String): ApiGatewayResponse {
 
-        return if (passedObject != null) {
-            ApiGatewayResponse.build {
-                statusCode = 200
-                objectBody = passedObject
-            }
-        } else {
-            generateStandardErrorResponse(errorMessage)
+        return ApiGatewayResponse.build {
+            statusCode = 200
+            objectBody = passedObject
         }
     }
 

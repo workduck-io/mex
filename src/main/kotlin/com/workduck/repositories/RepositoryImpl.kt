@@ -7,7 +7,6 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import org.apache.logging.log4j.LogManager
-import java.lang.Exception
 
 class RepositoryImpl<T : Entity>(
     private val dynamoDB: DynamoDB,
@@ -30,13 +29,9 @@ class RepositoryImpl<T : Entity>(
     }
 
     override fun create(t: T): T? {
-        return try {
-            mapper.save(t, dynamoDBMapperConfig)
-            t
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+        LOG.info("creating ${t.javaClass} : $t")
+        mapper.save(t, dynamoDBMapperConfig)
+        return t
     }
 
     override fun update(t: T): T? {
@@ -47,13 +42,10 @@ class RepositoryImpl<T : Entity>(
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
             .build()
 
-        return try {
-            mapper.save(t, dynamoDBMapperConfig)
-            t
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+        LOG.info("updating ${t.javaClass} : $t")
+        mapper.save(t, dynamoDBMapperConfig)
+        return t
+
     }
 
     companion object {
