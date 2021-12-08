@@ -45,8 +45,12 @@ provider:
             - dynamodb:DescribeTable
             - dynamodb:BatchWriteItem
             - dynamodb:BatchGetItem
-            - lambda:InvokeFunction
           Resource: 'arn:aws:dynamodb:us-east-1:*:*'
+        - Effect: Allow
+          Action:
+            - 'lambda:InvokeFunction'
+          Resource:
+            - '*'
   httpApi:
     cors: true
     authorizers:

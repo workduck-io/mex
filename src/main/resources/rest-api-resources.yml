@@ -29,7 +29,7 @@ Node:
     - httpApi:
         path: /node/{id}/append
         method: post
-        authorizer: mexAuthorizer
+#        authorizer: mexAuthorizer
 
     - httpApi:
         path: /node/workspace/{workspaceID}/namespace/{namespaceID}
@@ -44,7 +44,7 @@ Node:
     - httpApi:
         path: /node/{id}/blockUpdate
         method: post
-        authorizer: mexAuthorizer
+#        authorizer: mexAuthorizer
 
     - httpApi:
         path: /node/{id}/version/metadata
