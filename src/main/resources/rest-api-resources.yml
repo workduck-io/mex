@@ -225,3 +225,6 @@ UserBookmark:
         path: /userBookmark/batch/{userID}/{ids}
         method: patch
         authorizer: mexAuthorizer
+
+SQSHandler:
+  handler: com.serverless.sqsEventHandlers.SQSEventHandler
