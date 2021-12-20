@@ -228,3 +228,6 @@ UserBookmark:
 
 SQSHandler:
   handler: com.serverless.sqsEventHandlers.SQSEventHandler
+
+S3Handler:
+  handler: com.serverless.s3EventHandlers.S3EventHandler

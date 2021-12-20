@@ -71,7 +71,6 @@ package:
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-  - serverless-domain-manager
 
 custom:
   serverless-offline:

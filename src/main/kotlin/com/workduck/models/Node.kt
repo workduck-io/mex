@@ -34,7 +34,7 @@ data class Node(
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBAttribute(attributeName = "nodeData")
+    @DynamoDBAttribute(attributeName = "data")
     var data: List<AdvancedElement>? = null,
 
 
@@ -43,7 +43,7 @@ data class Node(
     @DynamoDBAttribute(attributeName = "tags")
     var tags: MutableList<String>? = null,
 
-    @DynamoDBAttribute(attributeName = "nodeDataOrder")
+    @DynamoDBAttribute(attributeName = "dataOrder")
     var dataOrder: MutableList<String>? = null,
 
     @JsonProperty("version")

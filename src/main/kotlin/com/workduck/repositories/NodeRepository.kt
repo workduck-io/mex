@@ -73,12 +73,12 @@ class NodeRepository(
         /* we build updateExpression to enable appending of multiple key value pairs to the map with just one query */
         for ((counter, e) in elements.withIndex()) {
             val entry: String = objectMapper.writeValueAsString(e)
-            updateExpression += ", nodeData.${e.id} = :val$counter"
+            updateExpression += ", data.${e.id} = :val$counter"
             expressionAttributeValues[":val$counter"] = entry
         }
 
         expressionAttributeValues[":userID"] = userID
-        expressionAttributeValues[":userID"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
@@ -181,7 +181,7 @@ class NodeRepository(
         expressionAttributeValues[":userID"] = userID
 
         return UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-            .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
+            .withUpdateExpression("SET data.$blockID = :updatedBlock, lastEditedBy = :userID ")
             .withValueMap(expressionAttributeValues)
             .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
             .let {

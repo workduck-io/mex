@@ -181,7 +181,9 @@ class NodeService {
                 return repository.update(node)
             }
             node.lastVersionCreatedAt = node.updatedAt
-            checkNodeVersionCount(node, storedNode.nodeVersionCount)
+
+            node.nodeVersionCount = storedNode.nodeVersionCount + 1
+            checkNodeVersionCount(node.id, node.nodeVersionCount)
 
             val nodeVersion = createNodeVersionFromNode(node)
             nodeVersion.createdAt = storedNode.createdAt
@@ -195,22 +197,9 @@ class NodeService {
     }
 
 
-    fun checkNodeVersionCount(node: Node, storedNodeVersionCount: Long)  {
-        if(storedNodeVersionCount < 25 ) {
-            node.nodeVersionCount = storedNodeVersionCount + 1
-            println(Thread.currentThread().id)
-        }
-        else {
-            node.nodeVersionCount = storedNodeVersionCount + 1
-            //GlobalScope.launch {
-                //println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
-
-                //println("Thread ID inside launch : " + Thread.currentThread().id)
-                setTTLForOldestVersion(node.id)
-                //println("After delay")
-
-            //}
-            println("Hello") // main coroutine continues while a previous one is delayed
+    fun checkNodeVersionCount(nodeID: String, nodeVersionCount: Long)  {
+        if(nodeVersionCount > 25) {
+            setTTLForOldestVersion(nodeID)
         }
     }
 
@@ -570,7 +559,7 @@ fun main() {
 
 
     //    NodeService().makeNodePublic("NODE1")
-    NodeService().getPublicNode("NODE1")
+    //NodeService().getPublicNode("NODE1")
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
