@@ -1,4 +1,4 @@
-package com.serverless.sqsEventHandlers
+package com.serverless.sqsNodeEventHandlers
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo

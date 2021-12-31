@@ -4,6 +4,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.sqsNodeEventHandlers.NodeImage
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
@@ -36,7 +38,6 @@ data class Node(
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "data")
     var data: List<AdvancedElement>? = null,
-
 
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")
@@ -81,15 +82,13 @@ data class Node(
     @DynamoDBAttribute(attributeName = "itemType")
     override var itemType: String = "Node",
 
-
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
     var itemStatus: String = "ACTIVE",
 
-
     @JsonProperty("isBookmarked")
     @DynamoDBAttribute(attributeName = "isBookmarked")
-    // TODO(make it part of NodeResponse object in code cleanup)
+// TODO(make it part of NodeResponse object in code cleanup)
     var isBookmarked: Boolean? = null,
 
     @JsonProperty("publicAccess")
@@ -105,7 +104,6 @@ data class Node(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
-
 
     @JsonProperty("lastVersionCreatedAt")
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
@@ -123,12 +121,61 @@ data class Node(
 //        this.version = version
 //    }
     companion object {
-        fun populateNodeWithSkAkAndCreatedAtNull(node : Node, storedNode : Node) {
+        fun populateNodeWithSkAkAndCreatedAtNull(node: Node, storedNode: Node) {
             node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
-            node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
+            node.ak = node.workspaceIdentifier?.let { "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}" }
+        }
+
+        // since we need to use different deserializer for data, I don't think we can avoid NodeImage.
+        fun convertImageToNode(image: Map<String, Any>?): Node {
+            val objectMapper = Helper.objectMapper
+            val node = Node(
+                id = image?.get("PK") as String,
+                idCopy = image["SK"] as String,
+                lastEditedBy = image["lastEditedBy"] as String,
+                createdBy = image["createdBy"] as String,
+                createdAt = image["createdAt"] as Long,
+                itemStatus = image["itemStatus"] as String,
+                workspaceIdentifier = WorkspaceIdentifier(image["workspaceIdentifier"] as String),
+                namespaceIdentifier = NamespaceIdentifier(image["namespaceIdentifier"] as String),
+                tags = image["tags"] as MutableList<String>?,
+                version = image["version"] as Long?,
+                data = objectMapper.readValue(objectMapper.writeValueAsString(image["data"])),
+                dataOrder = image["dataOrder"] as MutableList<String>?,
+                publicAccess = image["publicAccess"] as Boolean,
+
+            )
+
+            node.updatedAt = image["updatedAt"] as Long
+            node.lastVersionCreatedAt = image["lastVersionCreatedAt"] as Long
+            node.nodeVersionCount = image["nodeVersionCount"] as Long
+
+            return node
+        }
+
+        fun convertNodeImageToNode(nodeImage: NodeImage): Node {
+            val node = Node(
+                id = nodeImage.id,
+                idCopy = nodeImage.idCopy,
+                lastEditedBy = nodeImage.lastEditedBy,
+                createdBy = nodeImage.createdBy,
+                createdAt = nodeImage.createdAt,
+                itemStatus = nodeImage.itemStatus,
+                workspaceIdentifier = nodeImage.workspaceIdentifier,
+                namespaceIdentifier = nodeImage.namespaceIdentifier,
+                tags = nodeImage.tags,
+                version = nodeImage.version,
+                data = nodeImage.data,
+                dataOrder = nodeImage.dataOrder,
+                publicAccess = nodeImage.publicAccess
+            )
+
+            node.updatedAt = nodeImage.updatedAt
+            node.lastVersionCreatedAt = nodeImage.lastVersionCreatedAt
+            node.nodeVersionCount = nodeImage.nodeVersionCount
+            return node
         }
     }
-
 }

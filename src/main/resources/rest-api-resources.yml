@@ -226,6 +226,12 @@ UserBookmark:
         method: patch
         authorizer: mexAuthorizer
 
-SQSHandler:
-  handler: com.serverless.sqsEventHandlers.SQSEventHandler
+SQSNodeHandler:
+  handler: com.serverless.sqsNodeEventHandlers.SQSEventHandler
 
+#StreamTrigger:
+#  handler: arn:aws:lambda:us-east-1:418506370286:function:TriggerV2
+#  events:
+#    - stream:
+#        type: dynamodb
+#        arn: arn:aws:dynamodb:us-east-1:418506370286:table/local-mex/stream/2021-12-04T11:16:33.527

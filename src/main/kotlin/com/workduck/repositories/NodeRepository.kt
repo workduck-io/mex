@@ -6,30 +6,22 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
-import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Table
-import com.amazonaws.services.dynamodbv2.document.Item
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome
-import com.amazonaws.services.dynamodbv2.document.Index
-import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.document.*
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
-import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.amazonaws.services.dynamodbv2.model.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.Node
-import com.workduck.models.Identifier
-import com.workduck.models.Entity
-import com.workduck.models.AdvancedElement
-import com.workduck.models.Element
-import com.workduck.models.NodeVersion
+import com.workduck.models.*
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
-import java.time.Instant
-
 import org.apache.logging.log4j.LogManager
+import java.time.Instant
+import java.util.*
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.memberProperties
+
 
 class NodeRepository(
         private val mapper: DynamoDBMapper,
@@ -128,6 +120,59 @@ class NodeRepository(
         TODO("Not yet implemented")
     }
 
+    fun createNodeVersion(node : Node, nodeVersion: NodeVersion){
+        try {
+
+
+            val nodeKey : HashMap<String, AttributeValue> = HashMap()
+            nodeKey["PK"] = AttributeValue(node.id)
+            nodeKey["SK"] = AttributeValue(node.idCopy)
+
+            val expressionAttributeValues: MutableMap<String, AttributeValue?> = HashMap()
+            expressionAttributeValues[":lastVersionCreatedAt"] = AttributeValue().withN(node.lastVersionCreatedAt.toString())
+            expressionAttributeValues[":nodeVersionCount"] = AttributeValue().withN(node.nodeVersionCount.toString())
+
+            LOG.info("Table Name : $tableName")
+            val updateNode : Update =
+                    Update().withTableName(tableName)
+                            .withKey(nodeKey)
+                            .withUpdateExpression("SET lastVersionCreatedAt = :lastVersionCreatedAt," +
+                                    "nodeVersionCount = :nodeVersionCount")
+                            .withExpressionAttributeValues(expressionAttributeValues)
+
+
+
+            val nodeVersionItem : HashMap<String, AttributeValue> = HashMap()
+            nodeVersionItem["PK"] = AttributeValue(nodeVersion.id)
+            nodeVersionItem["SK"] = AttributeValue(nodeVersion.updatedAt)
+
+            val putNodeVersion : Put = Put().withTableName(tableName).withItem(nodeVersionItem)
+
+
+            val actions: Collection<TransactWriteItem> = listOf(
+                    TransactWriteItem().withUpdate(updateNode),
+                    TransactWriteItem().withPut(putNodeVersion))
+
+            val transaction = TransactWriteItemsRequest()
+                    .withTransactItems(actions)
+
+            client.transactWriteItems(transaction)
+
+//            val transactionWriteRequest = TransactionWriteRequest()
+//            transactionWriteRequest.addUpdate(updateNode)
+//            transactionWriteRequest.addPut(nodeVersion)
+//            transactionWriteRequest.addUpd
+//
+//            LOG.info("Saving nodeVersion : $nodeVersion")
+//            mapper.transactionWrite(transactionWriteRequest)
+
+
+            //mapper.save(nodeVersion)
+        }
+        catch(e : Exception){
+            LOG.error(e)
+        }
+    }
 
     fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
         return try {

@@ -1,4 +1,4 @@
-package com.serverless.sqsEventHandlers
+package com.serverless.sqsNodeEventHandlers
 
 class ActionFactory {
 

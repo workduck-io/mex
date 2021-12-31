@@ -1,4 +1,4 @@
-package com.serverless.sqsEventHandlers
+package com.serverless.sqsNodeEventHandlers
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -15,7 +15,7 @@ import com.workduck.models.NodeSchemaIdentifier
 data class NodeImage(
 
     @JsonProperty("PK")
-    var id: String? = null,
+    var id: String = "",
 
     /* For convenient deletion */
     @JsonProperty("SK")

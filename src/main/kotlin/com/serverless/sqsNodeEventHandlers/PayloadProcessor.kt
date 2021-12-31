@@ -1,4 +1,4 @@
-package com.serverless.sqsEventHandlers
+package com.serverless.sqsNodeEventHandlers
 
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3ClientBuilder

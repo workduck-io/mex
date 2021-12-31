@@ -1,11 +1,11 @@
-package com.serverless.sqsEventHandlers
+package com.serverless.sqsNodeEventHandlers
 
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.workduck.utils.Helper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.workduck.service.NodeService
 
 object EventHelper {
 
@@ -16,7 +16,7 @@ object EventHelper {
       return objectMapper.readValue(imageString)
    }
 
-   fun processDDBPayload(ddbPayload: DDBPayload) {
+   fun processDDBPayload(ddbPayload: DDBPayload, nodeService: NodeService) {
       val action = ActionFactory.getAction(ddbPayload.EventName)
 
       if (action == null) {
@@ -24,7 +24,7 @@ object EventHelper {
          return
       }
       println("DDB Payload in Processor : $ddbPayload")
-      action.apply(ddbPayload)
+      action.apply(ddbPayload, nodeService)
    }
 
    fun deleteMessageFromSQS(queueUrl : String, msgReceiptHandle : String){

@@ -46,7 +46,7 @@ class NodeService {
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client)
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 
-    fun createNode(node: Node, versionEnabled: Boolean): Entity? {
+    fun createNode(node: Node): Entity? {
         LOG.info("Should be created in the table : $tableName")
 
 
@@ -67,15 +67,35 @@ class NodeService {
 
         LOG.info("Creating node : $node")
 
-        return if(versionEnabled){
-            node.lastVersionCreatedAt = node.createdAt
-            val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
-            node.nodeVersionCount = 1
-            nodeRepository.createNodeWithVersion(node, nodeVersion)
+//        return if(versionEnabled){
+//            //node.lastVersionCreatedAt = node.createdAt
+//            val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
+//            node.nodeVersionCount = 1
+//            nodeRepository.createNodeWithVersion(node, nodeVersion)
+//        }
+
+        return repository.create(node)
+
+    }
+
+    fun createNodeVersion(node : Node){
+        //TODO(update "lastVersionCreatedAt", "nodeVersionCount" for actual node object)
+        val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
+        LOG.info("Node Version in NodeService : $nodeVersion")
+        val currentTime = System.currentTimeMillis()
+
+        /* If the last version was created within 5 minutes, skip creating a new version */
+        if(node.lastVersionCreatedAt != null && currentTime - node.lastVersionCreatedAt!! < 300000) {
+            return
         }
-        else{
-            repository.create(node)
-        }
+
+        node.lastVersionCreatedAt = System.currentTimeMillis()
+        node.nodeVersionCount += 1
+
+        checkNodeVersionCount(node.id, node.nodeVersionCount)
+
+        nodeRepository.createNodeVersion(node, nodeVersion)
+
     }
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
@@ -90,16 +110,16 @@ class NodeService {
         return nodeVersion
     }
 
-    fun createAndUpdateNode(nodeRequest: WDRequest?, versionEnabled : Boolean = false) : Entity? {
+    fun createAndUpdateNode(nodeRequest: WDRequest?) : Entity? {
         val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
 
         val storedNode = getNode(node.id) as Node?
 
         return if(storedNode == null){
-            createNode(node, versionEnabled)
+            createNode(node)
         }
         else{
-            updateNode(node, storedNode, versionEnabled)
+            updateNode(node, storedNode)
         }
     }
 
@@ -153,7 +173,7 @@ class NodeService {
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
-    fun updateNode(node : Node, storedNode: Node, versionEnabled: Boolean): Entity? {
+    fun updateNode(node : Node, storedNode: Node): Entity? {
 
         /* set idCopy = id, createdAt = null, and set AK */
         Node.populateNodeWithSkAkAndCreatedAtNull(node, storedNode)
@@ -174,26 +194,26 @@ class NodeService {
         LOG.info("Updating node : $node")
         //return nodeRepository.update(node)
 
-        if(versionEnabled){
-            /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
-            if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
-                node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
-                return repository.update(node)
-            }
-            node.lastVersionCreatedAt = node.updatedAt
+//        if(versionEnabled){
+//            /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
+//            if(node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
+//                node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
+//                return repository.update(node)
+//            }
+//            node.lastVersionCreatedAt = node.updatedAt
+//
+//            node.nodeVersionCount = storedNode.nodeVersionCount + 1
+//            checkNodeVersionCount(node.id, node.nodeVersionCount)
+//
+//            val nodeVersion = createNodeVersionFromNode(node)
+//            nodeVersion.createdAt = storedNode.createdAt
+//            nodeVersion.createdBy = storedNode.createdBy
+//
+//            return nodeRepository.updateNodeWithVersion(node, nodeVersion)
+//        }
 
-            node.nodeVersionCount = storedNode.nodeVersionCount + 1
-            checkNodeVersionCount(node.id, node.nodeVersionCount)
+        return repository.update(node)
 
-            val nodeVersion = createNodeVersionFromNode(node)
-            nodeVersion.createdAt = storedNode.createdAt
-            nodeVersion.createdBy = storedNode.createdBy
-
-            return nodeRepository.updateNodeWithVersion(node, nodeVersion)
-        }
-        else{
-            return repository.update(node)
-        }
     }
 
 
@@ -262,30 +282,34 @@ class NodeService {
         val sentDataOrder = node.dataOrder
         val finalDataOrder = mutableListOf<String>()
 
-        if(storedNodeDataOrder != null) {
-            for ((index, nodeID) in storedNodeDataOrder.withIndex()) {
-                if(sentDataOrder != null) {
-                    if (nodeID == sentDataOrder[index]) {
-                        finalDataOrder.add(nodeID)
-                    } else {
-                        if (sentDataOrder[index] !in finalDataOrder)
-                            finalDataOrder.add(sentDataOrder[index])
+        //very basic handling of maintaining rough order amongst blocks
+        if(storedNodeDataOrder != null && sentDataOrder != null) {
 
-                        if (nodeID !in finalDataOrder)
-                            finalDataOrder.add(nodeID)
+            for(storedNodeID in storedNodeDataOrder){
+                finalDataOrder.add(storedNodeID)
+            }
+
+            for (storedNodeID in storedNodeDataOrder) {
+                for(sentNodeID in sentDataOrder) {
+                    if (storedNodeID == sentNodeID && storedNodeID !in finalDataOrder) {
+                        finalDataOrder.add(storedNodeID)
                     }
                 }
             }
-        }
 
-        var remaining = storedNodeDataOrder?.size
-        if (remaining != null && sentDataOrder != null) {
-            while (remaining < sentDataOrder.size) {
-                if (sentDataOrder[remaining] !in finalDataOrder)
-                    finalDataOrder.add(sentDataOrder[remaining])
-                remaining++
+            for(sentNodeID in sentDataOrder){
+                if(sentNodeID !in finalDataOrder) finalDataOrder.add(sentNodeID)
             }
         }
+
+//        var remaining = storedNodeDataOrder?.size
+//        if (remaining != null && sentDataOrder != null) {
+//            while (remaining < sentDataOrder.size) {
+//                if (sentDataOrder[remaining] !in finalDataOrder)
+//                    finalDataOrder.add(sentDataOrder[remaining])
+//                remaining++
+//            }
+//        }
 
         node.dataOrder = finalDataOrder
         node.version = storedNode.version
@@ -422,18 +446,6 @@ fun main() {
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
-			},
-            {
-				"id": "ABC",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
 			}
 			]
 		}
@@ -449,41 +461,17 @@ fun main() {
         "workspaceIdentifier" : "WORKSPACE1",
         "data": [
         {
-				"id": "ABC",
+            "id": "sampleParentID",
+            "elementType": "paragraph",
+            "children": [
+            {
+                "id" : "sampleChildID",
+                "content" : "sample child content 1",
                 "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		},
-        {
-				"id": "1234",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		},
-        {
-				"id": "sampleParentID",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content 1",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		}]
+                "properties" :  { "bold" : true, "italic" : true  }
+            }
+            ]
+        }]
         
     }
     """

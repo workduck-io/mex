@@ -14,13 +14,13 @@ class CreateNodeStrategy : NodeStrategy {
         val errorMessage = "Error creating node"
 
         val nodeRequest : WDRequest? = input.payload
-        val versionEnabled : Boolean? = input.queryStringParameters?.let{
-            it["versionEnabled"].toBoolean()
-        }
+//        val versionEnabled : Boolean? = input.queryStringParameters?.let{
+//            it["versionEnabled"].toBoolean()
+//        }
 
-        val node: Entity? = if(versionEnabled != null)
-            nodeService.createAndUpdateNode(nodeRequest, versionEnabled)
-        else nodeService.createAndUpdateNode(nodeRequest)
+//        val node: Entity? = if(versionEnabled != null)
+//            nodeService.createAndUpdateNode(nodeRequest, versionEnabled)
+        val node: Entity? = nodeService.createAndUpdateNode(nodeRequest)
 
         val nodeResponse: Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
