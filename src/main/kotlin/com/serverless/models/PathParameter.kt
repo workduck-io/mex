@@ -8,6 +8,7 @@ data class PathParameter(
     val ids: String?,
     val userID: String?,
     val nodeID: String?,
+    val blockID: String?,
     val workspaceID: String?,
     val namespaceID: String?,
     val preferenceType: String?

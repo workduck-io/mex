@@ -3,11 +3,14 @@ package com.workduck.repositories
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.workduck.models.Comment
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import com.workduck.models.UserPreferenceRecord
 import org.apache.logging.log4j.LogManager
 
 class CommentRepository(
@@ -53,12 +56,28 @@ class CommentRepository(
     }
 
 
-    fun getAllCommentsOfBlock(){
+    fun getAllCommentsOfBlock(pk : String, blockID : String?) : List<Comment> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(pk)
+        expressionAttributeValues[":sk"] = AttributeValue().withS("$blockID#")
 
+         return DynamoDBQueryExpression<Comment>()
+                .withKeyConditionExpression("PK = :pk and SK begins_with :sk")
+                .withExpressionAttributeValues(expressionAttributeValues).let{
+                    mapper.query(Comment::class.java, it, dynamoDBMapperConfig)
+                }
     }
 
 
-    fun getAllCommentsOfNode(){
+    fun getAllCommentsOfNode(pk : String) : List<Comment> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(pk)
+
+        return DynamoDBQueryExpression<Comment>()
+                .withKeyConditionExpression("PK = :pk")
+                .withExpressionAttributeValues(expressionAttributeValues).let{
+                    mapper.query(Comment::class.java, it, dynamoDBMapperConfig)
+                }
 
     }
 

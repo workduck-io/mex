@@ -57,6 +57,16 @@ class CommentService {
     }
 
 
+    fun getAllCommentsOfNode(nodeID: String?) : List<Comment>{
+        val pk = generatePK(nodeID)
+        return commentRepository.getAllCommentsOfNode(pk)
+    }
+
+    fun getAllCommentsOfBlock(nodeID: String?, blockID: String?) : List<Comment>{
+        val pk = generatePK(nodeID)
+        return commentRepository.getAllCommentsOfBlock(pk, blockID)
+    }
+
 
     private fun generatePK(nodeID: String?) : String{
         return "$nodeID#COMMENT"

@@ -225,3 +225,43 @@ UserBookmark:
         path: /userBookmark/batch/{userID}/{ids}
         method: patch
         authorizer: mexAuthorizer
+
+
+Comment:
+  handler: com.serverless.commentHandlers.CommentHandler
+  events:
+    #create comment
+    - httpApi:
+        path: /comment
+        method: post
+        authorizer: mexAuthorizer
+
+    #update comment
+    - httpApi:
+        path: /comment
+        method: patch
+        authorizer: mexAuthorizer
+
+    #get comment -> query parameters : nodeID, blockID, commentID
+    - httpApi:
+        path: /comment
+        method: get
+        authorizer: mexAuthorizer
+
+    #delete comment -> query parameters : nodeID, blockID, commentID
+    - httpApi:
+        path: /comment
+        method: delete
+        authorizer: mexAuthorizer
+
+    #get comments of a node -> path parameters : nodeID
+    - httpApi:
+        path: /comment/node/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    #get comments of a node -> path parameters : nodeID, blockID
+    - httpApi:
+        path: /comment/node/{nodeID}/block/{blockID}
+        method: get
+        authorizer: mexAuthorizer

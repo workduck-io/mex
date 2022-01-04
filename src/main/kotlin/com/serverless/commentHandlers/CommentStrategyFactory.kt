@@ -5,13 +5,15 @@ class CommentStrategyFactory {
     companion object{
         const val createComment = "POST /comment"
 
-        const val getComment = "GET /comment/{id}"
+        const val getComment = "GET /comment"
 
-        const val editComment = "UPDATE /comment/{id}"
+        const val editComment = "PATCH /comment"
 
-        const val deleteComment = "DELETE /comment/{id}"
+        const val deleteComment = "DELETE /comment"
 
         const val getAllCommentsOfNode = "GET /comment/node/{id}"
+
+        const val getAllCommentsOfBlock = "GET /comment/node/{nodeID}/block/{blockID}"
 
 
         private val commentRegistry: Map<String, CommentStrategy> = mapOf(
@@ -19,12 +21,13 @@ class CommentStrategyFactory {
                 getComment to GetCommentStrategy(),
                 editComment to UpdateCommentStrategy(),
                 deleteComment to DeleteCommentStrategy(),
-                getAllCommentsOfNode to GetAllCommentsOfNodeStrategy()
+                getAllCommentsOfNode to GetAllCommentsOfNodeStrategy(),
+                getAllCommentsOfBlock to GetAllCommentsOfBlockStrategy()
         )
 
 
         fun getCommentStrategy(routeKey: String): CommentStrategy? {
-            return CommentStrategyFactory.commentRegistry[routeKey]
+            return commentRegistry[routeKey]
         }
 
 
