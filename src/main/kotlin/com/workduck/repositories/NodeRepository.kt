@@ -311,11 +311,6 @@ class NodeRepository(
         return nodesProcessedList
     }
 
-    companion object {
-        private val LOG = LogManager.getLogger(NodeRepository::class.java)
-    }
-
-
 
     fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {
         val table = dynamoDB.getTable(tableName)
@@ -349,6 +344,11 @@ class NodeRepository(
         return if(nodeList.isNotEmpty()) nodeList[0]
         else null
 
+    }
+
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 }
 
