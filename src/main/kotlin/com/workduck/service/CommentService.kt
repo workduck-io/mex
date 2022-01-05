@@ -4,6 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.CommentRequest
 import com.serverless.models.WDRequest
 import com.workduck.models.Comment
@@ -50,10 +52,12 @@ class CommentService {
         return repository.update(comment)
     }
 
-    fun deleteComment(nodeID: String?, blockID : String?, commentID : String?) {
+    fun deleteComment(nodeID: String?, blockID : String?, commentID : String?) : String? {
         val pk = generatePK(nodeID)
         val sk = generateSK(blockID, commentID)
-        commentRepository.deleteComment(pk, sk)
+
+        return commentRepository.deleteComment(pk, sk)
+
     }
 
 
@@ -86,4 +90,57 @@ class CommentService {
             )
         }
     }
+}
+
+
+fun main(){
+    val jsonString: String = """
+    {
+        "type" : "CommentRequest",
+        "nodeID" : "NODE1",
+        "blockID": "BLOCK1",
+        "commentID" : "COMMENT1",
+        "commentedBy" : "Varun Garg",
+        "commentBody": {
+            "id": "sampleParentID",
+            "elementType": "paragraph",
+            "content" : "Comment Text"
+        }
+    }
+    """
+
+
+    val updateJsonString: String = """
+    {
+        "type" : "CommentRequest",
+        "nodeID" : "NODE1",
+        "blockID": "BLOCK2",
+        "commentID" : "COMMENT1",
+        "commentedBy" : "Varun Garg",
+        "commentBody": {
+            "id": "sampleParentID",
+            "elementType": "paragraph",
+            "content" : "Comment Text2"
+        }
+    }
+    """
+
+//    val commentRequest = ObjectMapper().readValue<CommentRequest>(jsonString)
+//    CommentService().createComment(commentRequest)
+
+
+
+    //val updateCommentRequest = ObjectMapper().readValue<WDRequest>(updateJsonString)
+    //CommentService().updateComment(updateCommentRequest)
+
+
+
+    //println(CommentService().getComment("NODE1", "BLOCK2", "COMMENT1"))
+
+
+    //println(Helper.objectMapper.writeValueAsString(CommentService().getAllCommentsOfNode("NODE1")))
+
+    println(Helper.objectMapper.writeValueAsString(CommentService().getAllCommentsOfBlock("NODE1", "BLOCK1")))
+
+
 }

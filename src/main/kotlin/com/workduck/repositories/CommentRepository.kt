@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.serverless.utils.CommentHelper
 import com.workduck.models.Comment
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
@@ -41,17 +42,20 @@ class CommentRepository(
         return mapper.load(Comment::class.java, pk, sk, dynamoDBMapperConfig)
     }
 
-    fun deleteComment(pk: String, sk: String){
+    fun deleteComment(pk: String, sk: String) : String?{
         val table = dynamoDB.getTable(tableName)
 
         val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
                 .withPrimaryKey("PK", pk, "SK", sk)
 
-        try {
+        return try {
             table.deleteItem(deleteItemSpec)
             LOG.info("Deleted the comment")
+            CommentHelper.getCommentIDFromSk(sk)
+
         } catch (e: Exception) {
             LOG.info(e)
+            null
         }
     }
 
@@ -62,7 +66,7 @@ class CommentRepository(
         expressionAttributeValues[":sk"] = AttributeValue().withS("$blockID#")
 
          return DynamoDBQueryExpression<Comment>()
-                .withKeyConditionExpression("PK = :pk and SK begins_with :sk")
+                .withKeyConditionExpression("PK = :pk and begins_with(SK,:sk)")
                 .withExpressionAttributeValues(expressionAttributeValues).let{
                     mapper.query(Comment::class.java, it, dynamoDBMapperConfig)
                 }

@@ -17,6 +17,6 @@ class CommentRequest(
         @JsonProperty("commentBody")
         var commentBody : AdvancedElement ?= null,
 
-        @JsonProperty("commentBy")
+        @JsonProperty("commentedBy")
         var commentedBy : String = ""
-)
+) : WDRequest

@@ -431,18 +431,6 @@ fun main() {
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
-			},
-            {
-				"id": "ABC",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
 			}
 			]
 		}
@@ -459,41 +447,17 @@ fun main() {
         "tags" : ["random tag"],
         "data": [
         {
-				"id": "ABC",
+            "id": "sampleParentID",
+            "elementType": "paragraph",
+            "children": [
+            {
+                "id" : "sampleChildID",
+                "content" : "sample child content 1",
                 "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		},
-        {
-				"id": "1234",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		},
-        {
-				"id": "sampleParentID",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content 1",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		}]
+                "properties" :  { "bold" : true, "italic" : true  }
+            }
+            ]
+        }]
         
     }
     """

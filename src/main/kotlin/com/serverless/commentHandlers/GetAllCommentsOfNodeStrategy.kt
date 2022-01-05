@@ -11,7 +11,8 @@ class GetAllCommentsOfNodeStrategy : CommentStrategy{
     override fun apply(input: Input, commentService: CommentService): ApiGatewayResponse {
         val errorMessage = "Error getting comments"
 
-        val nodeID = input.pathParameters?.nodeID
+
+        val nodeID = input.pathParameters?.id
 
         return if(nodeID != null){
             val commentList = commentService.getAllCommentsOfNode(nodeID)
