@@ -43,11 +43,9 @@ class NodeRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-        val node = mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
-        node?.let {  orderBlocks(node) }
-        return node
-    }
+    override fun get(identifier: Identifier): Entity? =
+            mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let{ node -> orderBlocks(node) }
+
 
     private fun orderBlocks(node: Node): Entity =
         node.apply {
@@ -323,7 +321,7 @@ class NodeRepository(
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":true"] = accessValue
-        
+
         UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
                 .withUpdateExpression("SET publicAccess = :true")
                 .withValueMap(expressionAttributeValues).also{

@@ -109,9 +109,11 @@ class UserBookmarkRepository(
                 .let { table.query(it) }
 
         val itemList: MutableList<String> = mutableListOf()
-        if (items != null) {
-            val iterator: Iterator<Item> = items.iterator()
 
+
+
+        items?.map {
+            val iterator: Iterator<Item> = items.iterator()
             while (iterator.hasNext()) {
                 val item: Item = iterator.next()
 
@@ -119,7 +121,9 @@ class UserBookmarkRepository(
                     itemList += it.value
                 }
             }
+
         }
+
         return itemList
     }
 
