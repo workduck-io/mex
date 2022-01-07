@@ -79,7 +79,7 @@ class NodeService {
     }
 
     fun createNodeVersion(node : Node){
-        //TODO(update "lastVersionCreatedAt", "nodeVersionCount" for actual node object)
+
         val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
         LOG.info("Node Version in NodeService : $nodeVersion")
         val currentTime = System.currentTimeMillis()

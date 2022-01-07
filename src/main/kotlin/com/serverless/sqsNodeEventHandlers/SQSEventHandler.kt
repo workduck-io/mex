@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.Node
 import com.workduck.service.NodeService
 import com.workduck.utils.Helper
 
@@ -43,21 +42,10 @@ class SQSEventHandler : RequestHandler<SQSEvent, Any> {
 
 
 fun main(){
-    val messageBody = bdy
-
     val ddbPayload = PayloadProcessor.process(Helper.objectMapper.readValue(bdy))
     println("Message Body Object : $ddbPayload")
     val new = ddbPayload.NewImage
     println("New : $new")
     EventHelper.processDDBPayload(ddbPayload, NodeService())
-    //println("node = $node")
-    //val action = ActionFactory.getAction(actualObj["EventName"] as String)
-
-//    if (action == null) {
-//        println("Some error!!")
-//        return
-//    }
-
-    //action.apply(actualObj)
 
 }

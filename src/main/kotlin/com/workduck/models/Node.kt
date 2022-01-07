@@ -1,12 +1,23 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBVersionAttribute
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.sqsNodeEventHandlers.NodeImage
-import com.workduck.converters.*
+import com.workduck.converters.WorkspaceIdentifierDeserializer
+import com.workduck.converters.IdentifierSerializer
+import com.workduck.converters.NamespaceIdentifierConverter
+import com.workduck.converters.NamespaceIdentifierDeserializer
+import com.workduck.converters.WorkspaceIdentifierConverter
+import com.workduck.converters.NodeSchemaIdentifierConverter
+import com.workduck.converters.NodeDataConverter
 import com.workduck.utils.Helper
 
 enum class NodeStatus {
@@ -165,6 +176,7 @@ data class Node(
                 itemStatus = nodeImage.itemStatus,
                 workspaceIdentifier = nodeImage.workspaceIdentifier,
                 namespaceIdentifier = nodeImage.namespaceIdentifier,
+                ak = nodeImage.ak,
                 tags = nodeImage.tags,
                 version = nodeImage.version,
                 data = nodeImage.data,
