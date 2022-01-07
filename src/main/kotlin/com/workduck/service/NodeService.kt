@@ -84,17 +84,13 @@ class NodeService {
             data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
             workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
         )
-
         nodeVersion.version = Helper.generateId("version")
-
         return nodeVersion
     }
 
     fun createAndUpdateNode(nodeRequest: WDRequest?, versionEnabled : Boolean = false) : Entity? {
         val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
-
         val storedNode = getNode(node.id) as Node?
-
         return if(storedNode == null){
             createNode(node, versionEnabled)
         }
@@ -202,15 +198,7 @@ class NodeService {
         }
         else {
             node.nodeVersionCount = storedNodeVersionCount + 1
-            //GlobalScope.launch {
-                //println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
-
-                //println("Thread ID inside launch : " + Thread.currentThread().id)
-                setTTLForOldestVersion(node.id)
-                //println("After delay")
-
-            //}
-            println("Hello") // main coroutine continues while a previous one is delayed
+            setTTLForOldestVersion(node.id)
         }
     }
 
@@ -400,6 +388,16 @@ class NodeService {
     fun getPublicNode(nodeID: String) : Node?{
         return nodeRepository.getPublicNode(nodeID)
     }
+
+    fun copyBlock(blockID: String, nodeID1: String, nodeID2: String){
+        val block = nodeRepository.getBlock(nodeID1, blockID)
+    }
+
+
+    fun moveBlock(blockID: String, nodeID1: String, nodeID2: String){
+        val block = nodeRepository.getBlock(nodeID1, blockID)
+    }
+
 }
 
 fun main() {

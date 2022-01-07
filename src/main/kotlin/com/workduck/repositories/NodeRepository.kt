@@ -25,6 +25,7 @@ import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 import com.workduck.models.NodeVersion
+import com.workduck.models.UserPreferenceRecord
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
 import java.time.Instant
@@ -359,9 +360,32 @@ class NodeRepository(
     }
 
 
+    fun getBlock(nodeID: String, blockID: String) : Node? {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+
+        val nodeList : List<Node> = DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("PK = :pk and SK = :sk")
+                .withProjectionExpression("data.$blockID")
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(Node::class.java, it)
+                }
+
+        return if(nodeList.isNotEmpty()) nodeList[0]
+        else null
+
+
+    }
+
+
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
+
+
+
+
 }
 
 //TODO(separate out table in code cleanup)
