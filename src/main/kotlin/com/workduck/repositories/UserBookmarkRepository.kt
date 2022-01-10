@@ -1,8 +1,6 @@
 package com.workduck.repositories
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-import com.amazonaws.services.dynamodbv2.document.DynamoDB
+
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.Item
@@ -13,20 +11,11 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import org.apache.logging.log4j.LogManager
 
 class UserBookmarkRepository(
-        private val dynamoDB: DynamoDB,
-        private val mapper: DynamoDBMapper,
-        private val dynamoDBMapperConfig: DynamoDBMapperConfig
+        private val table : Table
 )  {
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    }
 
-    val table: Table = dynamoDB.getTable(tableName)
-
-
-    fun createBookmark(userID: String, nodeID: String) : String?{
+    fun createBookmark(userID: String, nodeID: String) {
 
         try {
             val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -40,10 +29,7 @@ class UserBookmarkRepository(
                     .withValueMap(expressionAttributeValues)
                     .let{
                         table.updateItem(it)
-                        nodeID
                     }
-
-
         }
         catch (e : ConditionalCheckFailedException){
             val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -57,21 +43,18 @@ class UserBookmarkRepository(
                     .withValueMap(expressionAttributeValues)
                     .let{
                         table.updateItem(it)
-                        nodeID
                     }
         }
-
     }
 
 
-    fun deleteBookmark(userID: String, nodeID: String) : String? {
+    fun deleteBookmark(userID: String, nodeID: String) {
 
         return UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression("remove bookmarkedNodes.${nodeID}")
                     .let {
                         table.updateItem(it)
-                        nodeID
                     }
     }
 
@@ -130,7 +113,7 @@ class UserBookmarkRepository(
 
 
 
-    fun createBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+    fun createBookmarksInBatch(userID: String, nodeIDList: List<String>) {
 
         try {
             val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -142,14 +125,13 @@ class UserBookmarkRepository(
 
             expressionAttributeValues[":map"] = nodeIDMap
 
-            return UpdateItemSpec()
+            UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression("set bookmarkedNodes = :map")
                     .withConditionExpression("attribute_not_exists(bookmarkedNodes)")
                     .withValueMap(expressionAttributeValues)
                     .let{
                         table.updateItem(it)
-                        nodeIDList
                     }
 
         }
@@ -165,18 +147,17 @@ class UserBookmarkRepository(
 
             updateExpression = updateExpression.dropLast(1)
 
-            return UpdateItemSpec()
+            UpdateItemSpec()
                     .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                     .withUpdateExpression(updateExpression)
                     .withValueMap(expressionAttributeValues)
                     .let {
                         table.updateItem(it)
-                        nodeIDList
                     }
         }
     }
 
-    fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) : List<String>?{
+    fun deleteBookmarksInBatch(userID: String, nodeIDList: List<String>) {
 
         var updateExpression : String = "remove"
 
@@ -186,12 +167,11 @@ class UserBookmarkRepository(
 
         /* remove the extra comma */
         updateExpression = updateExpression.dropLast(1)
-        return UpdateItemSpec()
+        UpdateItemSpec()
                 .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
                 .withUpdateExpression(updateExpression)
                 .let{
                     table.updateItem(it)
-                    nodeIDList
                 }
     }
 

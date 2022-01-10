@@ -3,10 +3,7 @@ package com.serverless.userPreferenceHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.UserPreferenceRequest
 import com.serverless.models.WDRequest
-import com.serverless.utils.UserPreferenceHelper
-import com.workduck.models.UserPreferenceRecord
 import com.workduck.service.UserPreferenceService
 
 class CreateAndUpdateUserPreferenceRecordStrategy : UserPreferenceStrategy {
@@ -19,10 +16,10 @@ class CreateAndUpdateUserPreferenceRecordStrategy : UserPreferenceStrategy {
         val userPreferenceRequest : WDRequest? = input.payload
 
         return if(userPreferenceRequest != null) {
-            val record: UserPreferenceRecord? = userPreferenceService.createAndUpdateUserPreferenceRecord(userPreferenceRequest)
+            userPreferenceService.createAndUpdateUserPreferenceRecord(userPreferenceRequest)
 
-            val userPreferenceResponse = UserPreferenceHelper.convertUserPreferenceRecordToUserPreferenceResponse(record)
-            ApiResponseHelper.generateStandardResponse(userPreferenceResponse, errorMessage)
+            //val userPreferenceResponse = UserPreferenceHelper.convertUserPreferenceRecordToUserPreferenceResponse(record)
+            ApiResponseHelper.generateStandardResponse(null,  201, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

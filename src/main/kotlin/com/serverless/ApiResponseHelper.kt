@@ -5,7 +5,7 @@ import java.util.Collections
 
 object ApiResponseHelper {
 
-    fun generateStandardResponse(passedObject: Any?, errorMessage: String): ApiGatewayResponse {
+    fun generateStandardResponse(passedObject: Any? = null, errorMessage: String): ApiGatewayResponse {
 
         return if (passedObject != null) {
             ApiGatewayResponse.build {
@@ -18,10 +18,10 @@ object ApiResponseHelper {
     }
 
 
-    fun generateStandardResponse(passedObject: Response?, errorMessage: String): ApiGatewayResponse {
+    fun generateStandardResponse(passedObject: Response?, statusCodePassed: Int = 200, errorMessage: String): ApiGatewayResponse {
 
         return ApiGatewayResponse.build {
-            statusCode = 200
+            statusCode = statusCodePassed
             objectBody = passedObject
         }
     }

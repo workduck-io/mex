@@ -17,8 +17,8 @@ class CreateBookmarkInBatchStrategy : UserBookmarkStrategy {
         return if(userID != null && nodeIDs != null) {
             val nodeIDList: List<String> = nodeIDs.split(",")
 
-            val returnedNodeIDList: List<String>? = userBookmarkService.createBookmarksInBatch(userID, nodeIDList)
-            ApiResponseHelper.generateStandardResponse(returnedNodeIDList as Any?, errorMessage)
+            userBookmarkService.createBookmarksInBatch(userID, nodeIDList)
+            ApiResponseHelper.generateStandardResponse(null, 201,  errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

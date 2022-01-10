@@ -18,7 +18,7 @@ class UserPreferenceRepository(
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
     }
-    fun createAndUpdateUserPreferenceRecord(t: UserPreferenceRecord): UserPreferenceRecord? {
+    fun createAndUpdateUserPreferenceRecord(t: UserPreferenceRecord) {
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
                 .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
@@ -27,8 +27,6 @@ class UserPreferenceRepository(
                 .build()
 
         mapper.save(t, dynamoDBMapperConfig)
-        return t
-
     }
 
     fun getUserPreferenceRecord(userID : String, preferenceType : String): UserPreferenceRecord? {

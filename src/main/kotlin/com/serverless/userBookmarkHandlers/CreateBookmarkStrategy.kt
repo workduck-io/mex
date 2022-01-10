@@ -16,8 +16,8 @@ class CreateBookmarkStrategy: UserBookmarkStrategy {
         val nodeID = input.pathParameters?.nodeID
 
         return if (userID != null && nodeID != null) {
-            val returnedNodeID: String? = userBookmarkService.createBookmark(userID, nodeID)
-            ApiResponseHelper.generateStandardResponse(returnedNodeID as Any?, errorMessage)
+            userBookmarkService.createBookmark(userID, nodeID)
+            ApiResponseHelper.generateStandardResponse(null, 201, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

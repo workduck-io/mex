@@ -27,10 +27,10 @@ class UserPreferenceService {
 
     private val userPreferenceRepository: UserPreferenceRepository = UserPreferenceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
 
-    fun createAndUpdateUserPreferenceRecord(userPreferenceRequest: WDRequest): UserPreferenceRecord? {
+    fun createAndUpdateUserPreferenceRecord(userPreferenceRequest: WDRequest) {
         val userPreferenceRecord: UserPreferenceRecord = convertUserPreferenceRequestToUserPreferenceObject(userPreferenceRequest as UserPreferenceRequest)
 
-        return userPreferenceRepository.createAndUpdateUserPreferenceRecord(userPreferenceRecord)
+        userPreferenceRepository.createAndUpdateUserPreferenceRecord(userPreferenceRecord)
     }
 
     fun getUserPreferenceRecord(userID: String, preferenceType: String): UserPreferenceRecord? {
