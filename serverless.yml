@@ -64,7 +64,7 @@ provider:
               - '.amazonaws.com/'
               - 'us-east-1_Zu7FAh7hj' #userpool id
         audience:
-          - '2ihj64grcq87pe3svecr5hafk2'
+          - '6pvqt64p0l2kqkk2qafgdh13qe'
 package:
   artifact: target/mex-dev.jar
 
