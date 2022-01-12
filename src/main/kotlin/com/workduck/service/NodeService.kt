@@ -69,16 +69,18 @@ class NodeService {
 
     fun createNodeVersion(node : Node){
 
-        val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
-        LOG.info("Node Version in NodeService : $nodeVersion")
         val currentTime = System.currentTimeMillis()
-
-        /* If the last version was created within 5 minutes, skip creating a new version */
         if(node.lastVersionCreatedAt != null && currentTime - node.lastVersionCreatedAt!! < 300000) {
+            LOG.info("A version was recently created!")
             return
         }
 
-        node.lastVersionCreatedAt = System.currentTimeMillis()
+        val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
+        LOG.info("Node Version in NodeService : $nodeVersion")
+
+        /* If the last version was created within 5 minutes, skip creating a new version */
+
+        node.lastVersionCreatedAt = currentTime
         node.nodeVersionCount += 1
 
         checkNodeVersionCount(node.id, node.nodeVersionCount)
@@ -100,6 +102,8 @@ class NodeService {
 
     fun createAndUpdateNode(nodeRequest: WDRequest?) : Entity? {
         val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
+
+        node.dataOrder = getDataOrderFromMap(node.data)
 
         val storedNode = getNode(node.id) as Node?
 
@@ -140,11 +144,9 @@ class NodeService {
 
         LOG.info(elements)
 
-        val orderList = mutableListOf<String>()
+        val orderList = getDataOrderFromList(elements)
         var userID = ""
         for (e in elements) {
-                orderList += e.id
-
                 e.lastEditedBy = e.createdBy
                 e.createdAt = System.currentTimeMillis()
                 e.updatedAt = e.createdAt
@@ -197,6 +199,22 @@ class NodeService {
         if(nodeVersionCount > 25) {
             setTTLForOldestVersion(nodeID)
         }
+    }
+
+    private fun getDataOrderFromMap(mp : Map<String, AdvancedElement>?) : MutableList<String>{
+        val dataOrder : MutableList<String> = mutableListOf()
+        mp?.map{
+            dataOrder.add(it.key)
+        }
+        return dataOrder
+    }
+
+    private fun getDataOrderFromList(list : List <AdvancedElement>?) : MutableList<String>{
+        val dataOrder : MutableList<String> = mutableListOf()
+        list?.map{
+            dataOrder.add(it.id)
+        }
+        return dataOrder
     }
 
 
@@ -413,12 +431,24 @@ fun main() {
                 ]
 			},
             {
-				"id": "1234",
+				"id": "bbbb1234",
                 "elementType": "paragraph",
                 "children": [
                 {
                     "id" : "sampleChildID",
                     "content" : "sample child content",
+                    "elementType": "paragraph",
+                    "properties" :  { "bold" : true, "italic" : true  }
+                }
+                ]
+			},
+            {
+				"id": "aasampleParentID",
+                "elementType": "paragraph",
+                "children": [
+                {
+                    "id" : "sampleChildID",
+                    "content" : "sample child content 1",
                     "elementType": "paragraph",
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
@@ -432,7 +462,7 @@ fun main() {
         
     {
         "type" : "NodeRequest",
-        "lastEditedBy" : "Varun",
+        "lastEditedBy" : "Ruddhi",
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
         "workspaceIdentifier" : "WORKSPACE1",
@@ -454,7 +484,7 @@ fun main() {
     """
 
     val jsonForAppend: String = """
-        [
+        {
         "type" : "ElementRequest",
         "elements" : [
             {
@@ -466,6 +496,7 @@ fun main() {
             {
                
                 "id" : "sampleChildID4",
+                "elementType": "paragraph",
                 "content" : "sample child content"
             }
             ]},
@@ -477,12 +508,13 @@ fun main() {
             "children": [
             {
                 "id" : "sampleChildID5",
+                "elementType": "paragraph",
                 "content" : "sample child content"
             }
             ]}
             
             ]
-        ]
+        }
         """
 
     val jsonForEditBlock = """
@@ -503,19 +535,13 @@ fun main() {
 
 
     // println(NodeService().getNode("NODE1"))
-    //println("HELLO")
-//    runBlocking {
-//        println("WORLD")
-//        NodeService().updateNode(jsonString1)
-//    }
-    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
-    NodeService().createAndUpdateNode(nodeRequest)
-    // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)
     // NodeService().deleteNode("NODE1")
     // NodeService().jsonToObjectMapper(jsonString1)
     // NodeService().jsonToElement()
-    // NodeService().append("NODE1",jsonForAppend)
+
+    val appendBlock : WDRequest = ObjectMapper().readValue(jsonForAppend)
+     NodeService().append("NODE1",appendBlock)
     // println(System.getenv("PRIMARY_TABLE"))
     // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
     // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)

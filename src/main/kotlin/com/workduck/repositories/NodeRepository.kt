@@ -34,6 +34,8 @@ class NodeRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
+    private val objectMapper = Helper.objectMapper
+
     override fun get(identifier: Identifier): Entity? =
             mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let{ node -> orderBlocks(node) }
 
@@ -51,20 +53,32 @@ class NodeRepository(
         }
 
 
-    fun append(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+//    private fun orderBlocks(node: Node): Entity =
+//        node.apply {
+//            node.data?.let { data ->
+//                (node.dataOrder?.mapNotNull { blockId ->
+//                    data.find { element -> blockId == element.id }
+//                } ?: emptyList())
+//                        .also {
+//                            node.data = it.toMutableList()
+//                        }
+//            }
+//        }
+
+
+    fun append(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: List<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
-        var updateExpression = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList), lastEditedBy = :userID, updatedAt = :updatedAt"
+        var updateExpression = "set dataOrder = list_append(if_not_exists(dataOrder, :empty_list), :orderList), lastEditedBy = :userID, updatedAt = :updatedAt"
 
-        val objectMapper = ObjectMapper()
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
 
         /* we build updateExpression to enable appending of multiple key value pairs to the map with just one query */
         for ((counter, e) in elements.withIndex()) {
             val entry: String = objectMapper.writeValueAsString(e)
-            updateExpression += ", data.${e.id} = :val$counter"
+            updateExpression += ", nodeData.${e.id} = :val$counter"
             expressionAttributeValues[":val$counter"] = entry
         }
 
@@ -128,7 +142,7 @@ class NodeRepository(
             nodeToSave.publicAccess = node.publicAccess
             nodeToSave.createdAt = node.createdAt
             nodeToSave.updatedAt = node.updatedAt
-            nodeToSave.nodeVersionCount = node.nodeVersionCount + 1
+            nodeToSave.nodeVersionCount = node.nodeVersionCount
             nodeToSave.lastVersionCreatedAt = node.lastVersionCreatedAt
             nodeToSave.version = node.version /*TODO(this version is to avoid conflicts during concurrent updates and auto-incrementing. In this flow we don't really need this to be updated. Can this cause any problem?) */
             /* REFER NOTE HERE : https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBMapper.OptimisticLocking.html */
@@ -257,7 +271,7 @@ class NodeRepository(
         expressionAttributeValues[":userID"] = userID
 
         return UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-            .withUpdateExpression("SET data.$blockID = :updatedBlock, lastEditedBy = :userID ")
+            .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
             .withValueMap(expressionAttributeValues)
             .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
             .let {

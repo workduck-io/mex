@@ -27,7 +27,6 @@ enum class NodeStatus {
 }
 
 @DynamoDBTable(tableName = "local-mex")
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class Node(
 
     @JsonProperty("id")
@@ -50,8 +49,9 @@ data class Node(
     var createdBy: String? = null,
 
     @JsonProperty("data")
+    @JsonAlias("nodeData")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBAttribute(attributeName = "data")
+    @DynamoDBAttribute(attributeName = "nodeData")
     @JsonDeserialize(using = NodeObjectDataDeserializer::class)
     var data: Map<String, AdvancedElement>? = null,
 
@@ -60,6 +60,7 @@ data class Node(
     @DynamoDBAttribute(attributeName = "tags")
     var tags: MutableList<String>? = null,
 
+    @JsonProperty("dataOrder")
     @DynamoDBAttribute(attributeName = "dataOrder")
     var dataOrder: MutableList<String>? = null,
 
@@ -82,6 +83,7 @@ data class Node(
     var workspaceIdentifier: WorkspaceIdentifier? = null,
 
     /* WORKSPACE_ID#NAMESPACE_ID */
+    @JsonProperty("AK")
     @DynamoDBAttribute(attributeName = "AK")
     var ak: String? = null,
 

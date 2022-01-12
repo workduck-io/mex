@@ -10,6 +10,7 @@ class Insert : Action {
     override fun apply(ddbPayload: DDBPayload, nodeService: NodeService) {
         val objectMapper = Helper.objectMapper
         val node : Node = objectMapper.readValue(objectMapper.writeValueAsString(ddbPayload.NewImage))
+        println(node)
         nodeService.createNodeVersion(node)
 
     }

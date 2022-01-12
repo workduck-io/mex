@@ -22,8 +22,8 @@ data class NodeVersion(
         @DynamoDBAttribute(attributeName = "lastEditedBy")
         var lastEditedBy: String? = null,
 
-        @JsonProperty("createBy")
-        @DynamoDBAttribute(attributeName = "createBy")
+        @JsonProperty("createdBy")
+        @DynamoDBAttribute(attributeName = "createdBy")
         var createdBy: String? = null,
 
         @JsonProperty("data")
