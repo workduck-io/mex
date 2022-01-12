@@ -6,11 +6,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBVersionAttribute
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.sqsNodeEventHandlers.NodeImage
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierConverter
@@ -18,6 +18,7 @@ import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.NodeSchemaIdentifierConverter
 import com.workduck.converters.NodeDataConverter
+import com.workduck.deserializers.NodeObjectDataDeserializer
 import com.workduck.utils.Helper
 
 enum class NodeStatus {
@@ -26,14 +27,17 @@ enum class NodeStatus {
 }
 
 @DynamoDBTable(tableName = "local-mex")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Node(
 
     @JsonProperty("id")
+    @JsonAlias("PK") /* to help convert DDB Image to Node */
     @DynamoDBHashKey(attributeName = "PK")
     var id: String = Helper.generateId(IdentifierType.NODE.name),
 
     /* For convenient deletion */
     @JsonProperty("idCopy")
+    @JsonAlias("SK") /* to help convert DDB Image to Node */
     @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String? = id,
 
@@ -48,7 +52,8 @@ data class Node(
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "data")
-    var data: List<AdvancedElement>? = null,
+    @JsonDeserialize(using = NodeObjectDataDeserializer::class)
+    var data: Map<String, AdvancedElement>? = null,
 
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")
@@ -124,70 +129,12 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeVersionCount")
     var nodeVersionCount: Long = 0
 
-//    fun getVersion(): Long? {
-//        return version
-//    }
-//
-//    fun setVersion(version: Long?) {
-//        this.version = version
-//    }
     companion object {
         fun populateNodeWithSkAkAndCreatedAtNull(node: Node, storedNode: Node) {
             node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
             node.ak = node.workspaceIdentifier?.let { "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}" }
-        }
-
-        // since we need to use different deserializer for data, I don't think we can avoid NodeImage.
-        fun convertImageToNode(image: Map<String, Any>?): Node {
-            val objectMapper = Helper.objectMapper
-            val node = Node(
-                id = image?.get("PK") as String,
-                idCopy = image["SK"] as String,
-                lastEditedBy = image["lastEditedBy"] as String,
-                createdBy = image["createdBy"] as String,
-                createdAt = image["createdAt"] as Long,
-                itemStatus = image["itemStatus"] as String,
-                workspaceIdentifier = WorkspaceIdentifier(image["workspaceIdentifier"] as String),
-                namespaceIdentifier = NamespaceIdentifier(image["namespaceIdentifier"] as String),
-                tags = image["tags"] as MutableList<String>?,
-                version = image["version"] as Long?,
-                data = objectMapper.readValue(objectMapper.writeValueAsString(image["data"])),
-                dataOrder = image["dataOrder"] as MutableList<String>?,
-                publicAccess = image["publicAccess"] as Boolean,
-
-            )
-
-            node.updatedAt = image["updatedAt"] as Long
-            node.lastVersionCreatedAt = image["lastVersionCreatedAt"] as Long
-            node.nodeVersionCount = image["nodeVersionCount"] as Long
-
-            return node
-        }
-
-        fun convertNodeImageToNode(nodeImage: NodeImage): Node {
-            val node = Node(
-                id = nodeImage.id,
-                idCopy = nodeImage.idCopy,
-                lastEditedBy = nodeImage.lastEditedBy,
-                createdBy = nodeImage.createdBy,
-                createdAt = nodeImage.createdAt,
-                itemStatus = nodeImage.itemStatus,
-                workspaceIdentifier = nodeImage.workspaceIdentifier,
-                namespaceIdentifier = nodeImage.namespaceIdentifier,
-                ak = nodeImage.ak,
-                tags = nodeImage.tags,
-                version = nodeImage.version,
-                data = nodeImage.data,
-                dataOrder = nodeImage.dataOrder,
-                publicAccess = nodeImage.publicAccess
-            )
-
-            node.updatedAt = nodeImage.updatedAt
-            node.lastVersionCreatedAt = nodeImage.lastVersionCreatedAt
-            node.nodeVersionCount = nodeImage.nodeVersionCount
-            return node
         }
     }
 }

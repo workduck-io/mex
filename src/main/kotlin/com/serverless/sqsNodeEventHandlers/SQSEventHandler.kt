@@ -23,6 +23,8 @@ class SQSEventHandler : RequestHandler<SQSEvent, Any> {
 
             val ddbPayload = PayloadProcessor.process(objectMapper.readValue(msg.body))
 
+            println("ddbPayload : $ddbPayload")
+
             try {
                 EventHelper.processDDBPayload(ddbPayload, nodeService)
             } catch (e : Error){

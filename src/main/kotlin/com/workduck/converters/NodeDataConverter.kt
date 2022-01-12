@@ -5,27 +5,26 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.AdvancedElement
 
-class NodeDataConverter : DynamoDBTypeConverter<MutableMap<String, String>, MutableList<AdvancedElement>> {
+class NodeDataConverter : DynamoDBTypeConverter<MutableMap<String, String>, MutableMap<String, AdvancedElement>> {
 
     private val objectMapper = ObjectMapper()
 
-    // override fun convert()
-    override fun convert(n: MutableList<AdvancedElement>): MutableMap<String, String> {
+    override fun convert(n: MutableMap<String, AdvancedElement>): MutableMap<String, String> {
         val mapOfData: MutableMap<String, String> = mutableMapOf()
-        for (element in n) {
-            mapOfData[element.id] = objectMapper.writeValueAsString(element)
+        for ((id,element) in n) {
+            mapOfData[id] = objectMapper.writeValueAsString(element)
         }
         return mapOfData
         // return objectMapper.writeValueAsString(n)
     }
 
-    override fun unconvert(nodeData: MutableMap<String, String>): MutableList<AdvancedElement> {
-        val listOfElements: MutableList<AdvancedElement> = mutableListOf()
-        for ((_, v) in nodeData) {
+    override fun unconvert(nodeData: MutableMap<String, String>): MutableMap<String, AdvancedElement> {
+        val mapOfElements: MutableMap<String, AdvancedElement> = mutableMapOf()
+        for ((k, v) in nodeData) {
             val element: AdvancedElement = objectMapper.readValue(v)
-            listOfElements += element
+            mapOfElements[k] = element
         }
-        return listOfElements
+        return mapOfElements
         // return objectMapper.readValue<List<Element>>(nodeData)
     }
 }

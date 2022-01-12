@@ -49,16 +49,12 @@ class NodeService {
     fun createNode(node: Node): Entity? {
         LOG.info("Should be created in the table : $tableName")
 
-
         node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
-        node.dataOrder = createDataOrderForNode(node)
 
         /* only when node is actually being created */
         node.createdBy = node.lastEditedBy
 
-        //computeHashOfNodeData(node)
-
-        for (e in node.data!!) {
+        for ((_, e) in node.data!!) {
             e.createdBy = node.lastEditedBy
             e.lastEditedBy = node.lastEditedBy
             e.createdAt = node.createdAt
@@ -66,13 +62,6 @@ class NodeService {
         }
 
         LOG.info("Creating node : $node")
-
-//        return if(versionEnabled){
-//            //node.lastVersionCreatedAt = node.createdAt
-//            val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
-//            node.nodeVersionCount = 1
-//            nodeRepository.createNodeWithVersion(node, nodeVersion)
-//        }
 
         return repository.create(node)
 
@@ -95,7 +84,6 @@ class NodeService {
         checkNodeVersionCount(node.id, node.nodeVersionCount)
 
         nodeRepository.createNodeVersion(node, nodeVersion)
-
     }
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
@@ -123,14 +111,6 @@ class NodeService {
         }
     }
 
-    private fun createDataOrderForNode(node: Node): MutableList<String> {
-
-        val list = mutableListOf<String>()
-        for (element in node.data!!) {
-            list += element.id
-        }
-        return list
-    }
 
     fun getNode(nodeID: String, bookmarkInfo : Boolean? = null, userID : String? = null): Entity? {
         val node =  repository.get(NodeIdentifier(nodeID)) as Node?
@@ -169,17 +149,13 @@ class NodeService {
                 e.createdAt = System.currentTimeMillis()
                 e.updatedAt = e.createdAt
                 userID = e.createdBy as String
-            }
+        }
         return nodeRepository.append(nodeID, userID, elements, orderList)
     }
 
     fun updateNode(node : Node, storedNode: Node): Entity? {
-
         /* set idCopy = id, createdAt = null, and set AK */
         Node.populateNodeWithSkAkAndCreatedAtNull(node, storedNode)
-
-        node.dataOrder = createDataOrderForNode(node)
-
 
         /* to update block level details for accountability */
         val nodeChanged : Boolean = compareNodeWithStoredNode(node, storedNode)
@@ -324,10 +300,10 @@ class NodeService {
         if(node.data != storedNode.data) nodeChanged = true
 
         if (node.data != null) {
-            for (currElement in node.data!!) {
+            for ((_,currElement) in node.data!!) {
                 var isPresent = false
                 if(storedNode.data != null) {
-                    for (storedElement in storedNode.data!!) {
+                    for ((_,storedElement) in storedNode.data!!) {
                         if (storedElement.id == currElement.id) {
                             isPresent = true
 
@@ -370,7 +346,8 @@ class NodeService {
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
                 workspaceIdentifier = nodeRequest.workspaceIdentifier,
                 lastEditedBy = nodeRequest.lastEditedBy,
-                data = nodeRequest.data)
+                data = nodeRequest.data,
+                dataOrder = nodeRequest.dataOrder)
         }
     }
 
@@ -461,7 +438,7 @@ fun main() {
         "workspaceIdentifier" : "WORKSPACE1",
         "data": [
         {
-            "id": "sampleParentID",
+            "id": "sampleParentID2",
             "elementType": "paragraph",
             "children": [
             {
@@ -478,6 +455,8 @@ fun main() {
 
     val jsonForAppend: String = """
         [
+        "type" : "ElementRequest",
+        "elements" : [
             {
             "createdBy" : "Varun",
             "id": "xyz",
@@ -502,6 +481,7 @@ fun main() {
             }
             ]}
             
+            ]
         ]
         """
 
@@ -528,7 +508,7 @@ fun main() {
 //        println("WORLD")
 //        NodeService().updateNode(jsonString1)
 //    }
-    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
+    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString1)
     NodeService().createAndUpdateNode(nodeRequest)
     // println(NodeService().getNode("NODE2"))
     // NodeService().updateNode(jsonString1)

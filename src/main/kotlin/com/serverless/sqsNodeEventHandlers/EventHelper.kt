@@ -4,17 +4,11 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.workduck.utils.Helper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.service.NodeService
 
 object EventHelper {
 
    val objectMapper = Helper.objectMapper
-
-
-   fun getImageObjectFromImage(imageString : String) : Image {
-      return objectMapper.readValue(imageString)
-   }
 
    fun processDDBPayload(ddbPayload: DDBPayload, nodeService: NodeService) {
       val action = ActionFactory.getAction(ddbPayload.EventName)

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.converters.WorkspaceIdentifierDeserializer
+import com.workduck.deserializers.NodeRequestDataDeserializer
 import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.WorkspaceIdentifier
@@ -31,6 +32,10 @@ data class NodeRequest(
     val workspaceIdentifier: WorkspaceIdentifier? = null,
 
     @JsonProperty("data")
-    val data: List<AdvancedElement>? = null,
+    @JsonDeserialize(using = NodeRequestDataDeserializer::class)
+    val data: Map<String, AdvancedElement>? = null,
+
+    @JsonProperty("dataOrder")
+    val dataOrder : MutableList<String> ?= null
 
 ) : WDRequest
