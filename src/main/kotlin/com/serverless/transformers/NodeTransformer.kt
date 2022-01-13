@@ -10,7 +10,7 @@ class NodeTransformer : Transformer<Node> {
         if (t == null) return null
         return NodeResponse(
             id = t.id,
-            //data = t.data,
+            data = Node.convertNodeDataToList(t.data),
             lastEditedBy = t.lastEditedBy,
             createdBy = t.createdBy,
             createdAt = t.createdAt,

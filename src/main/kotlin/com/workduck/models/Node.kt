@@ -138,5 +138,13 @@ data class Node(
             node.createdBy = storedNode.createdBy
             node.ak = node.workspaceIdentifier?.let { "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}" }
         }
+
+        fun convertNodeDataToList(mp : Map<String, AdvancedElement>?) : List<AdvancedElement>{
+            val list = mutableListOf<AdvancedElement>()
+            mp?.map{
+                list.add(it.value)
+            }
+            return list
+        }
     }
 }
