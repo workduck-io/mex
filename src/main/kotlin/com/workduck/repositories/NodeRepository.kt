@@ -64,7 +64,7 @@ class NodeRepository(
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
-        var updateExpression = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList), lastEditedBy = :userID"
+        var updateExpression = "set nodeDataOrder = list_append(if_not_exists(nodeDataOrder, :empty_list), :orderList), lastEditedBy = :userID, updatedAt = :updatedAt"
 
         val objectMapper = ObjectMapper()
 
@@ -78,6 +78,7 @@ class NodeRepository(
         }
 
         expressionAttributeValues[":userID"] = userID
+        expressionAttributeValues[":userID"] = System.currentTimeMillis()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
