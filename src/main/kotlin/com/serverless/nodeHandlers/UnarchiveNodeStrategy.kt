@@ -3,6 +3,7 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
+import com.serverless.models.Response
 import com.workduck.models.Entity
 import com.workduck.service.NodeService
 
@@ -13,8 +14,8 @@ class UnarchiveNodeStrategy : NodeStrategy {
         val nodeIDRequest = input.payload
 
         return if(nodeIDRequest != null) {
-            val returnedNodeIDList: MutableList<String> = nodeService.unarchiveNodes(nodeIDRequest)
-            return ApiResponseHelper.generateStandardResponse(returnedNodeIDList as Any?, errorMessage)
+            val nodeIDList = nodeService.unarchiveNodes(nodeIDRequest)
+            return ApiResponseHelper.generateStandardResponse(nodeIDList, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

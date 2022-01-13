@@ -5,9 +5,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.workduck.models.Identifier
 import com.workduck.models.UserPreferenceRecord
-import java.lang.Exception
+import org.apache.logging.log4j.LogManager
 
 class UserPreferenceRepository(
         private val dynamoDB: DynamoDB,
@@ -19,7 +18,7 @@ class UserPreferenceRepository(
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
     }
-    fun createAndUpdateUserPreferenceRecord(t: UserPreferenceRecord): UserPreferenceRecord? {
+    fun createAndUpdateUserPreferenceRecord(t: UserPreferenceRecord) {
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
                 .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
@@ -27,17 +26,7 @@ class UserPreferenceRepository(
                 .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
                 .build()
 
-        return try {
-            mapper.save(t, dynamoDBMapperConfig)
-            t
-        } catch (e: Exception) {
-            println(e)
-            null
-        }
-    }
-
-    fun updateUserPreferenceRecord(t: UserPreferenceRecord): UserPreferenceRecord? {
-        TODO("Not yet implemented")
+        mapper.save(t, dynamoDBMapperConfig)
     }
 
     fun getUserPreferenceRecord(userID : String, preferenceType : String): UserPreferenceRecord? {
@@ -47,12 +36,11 @@ class UserPreferenceRepository(
         expressionAttributeValues[":sk"] = AttributeValue().withS(preferenceType)
         expressionAttributeValues[":userPreferenceRecord"] = AttributeValue().withS("UserPreferenceRecord")
 
-        val queryExpression = DynamoDBQueryExpression<UserPreferenceRecord>()
+        val userPreferenceList: List<UserPreferenceRecord> = DynamoDBQueryExpression<UserPreferenceRecord>()
                 .withKeyConditionExpression("PK = :pk and SK = :sk")
                 .withFilterExpression("itemType = :userPreferenceRecord")
                 .withExpressionAttributeValues(expressionAttributeValues)
-
-        val userPreferenceList: List<UserPreferenceRecord> = mapper.query(UserPreferenceRecord::class.java, queryExpression, dynamoDBMapperConfig)
+                .let{ mapper.query(UserPreferenceRecord::class.java, it, dynamoDBMapperConfig)}
 
         return if(userPreferenceList.isNotEmpty()) userPreferenceList[0]
         else null
@@ -63,21 +51,22 @@ class UserPreferenceRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(userID)
         expressionAttributeValues[":userPreferenceRecord"] = AttributeValue().withS("UserPreferenceRecord")
 
-        val queryExpression = DynamoDBQueryExpression<UserPreferenceRecord>()
+        val userPreferenceList: List<UserPreferenceRecord> = DynamoDBQueryExpression<UserPreferenceRecord>()
                 .withKeyConditionExpression("PK = :pk")
                 .withFilterExpression("itemType = :userPreferenceRecord")
                 .withExpressionAttributeValues(expressionAttributeValues)
-
-        val userPreferenceList: List<UserPreferenceRecord> = mapper.query(UserPreferenceRecord::class.java, queryExpression, dynamoDBMapperConfig)
+                .let { mapper.query(UserPreferenceRecord::class.java, it, dynamoDBMapperConfig) }
 
         for(r in userPreferenceList){
-            println("record : $r")
+            LOG.info("record : $r")
         }
-        return userPreferenceList.ifEmpty { null }
+
+        return userPreferenceList
     }
 
-    fun delete(identifier: Identifier): Identifier? {
-        TODO("Not yet implemented")
+
+    companion object {
+        private val LOG = LogManager.getLogger(UserPreferenceRepository::class.java)
     }
 
 

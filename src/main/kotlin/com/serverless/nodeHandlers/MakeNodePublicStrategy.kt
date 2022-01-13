@@ -12,8 +12,8 @@ class MakeNodePublicStrategy : NodeStrategy {
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {
-            val returnedID: String? = nodeService.makeNodePublic(nodeID)
-            return ApiResponseHelper.generateStandardResponse(returnedID as Any?, errorMessage)
+            nodeService.makeNodePublic(nodeID)
+            ApiResponseHelper.generateStandardResponse(nodeID, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

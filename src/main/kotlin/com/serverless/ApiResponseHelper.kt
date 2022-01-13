@@ -5,7 +5,7 @@ import java.util.Collections
 
 object ApiResponseHelper {
 
-    fun generateStandardResponse(passedObject: Any?, errorMessage: String): ApiGatewayResponse {
+    fun generateStandardResponse(passedObject: Any? = null, errorMessage: String): ApiGatewayResponse {
 
         return if (passedObject != null) {
             ApiGatewayResponse.build {
@@ -18,15 +18,11 @@ object ApiResponseHelper {
     }
 
 
-    fun generateStandardResponse(passedObject: Response?, errorMessage: String): ApiGatewayResponse {
+    fun generateStandardResponse(passedObject: Response?, statusCodePassed: Int = 200, errorMessage: String): ApiGatewayResponse {
 
-        return if (passedObject != null) {
-            ApiGatewayResponse.build {
-                statusCode = 200
-                objectBody = passedObject
-            }
-        } else {
-            generateStandardErrorResponse(errorMessage)
+        return ApiGatewayResponse.build {
+            statusCode = statusCodePassed
+            objectBody = passedObject
         }
     }
 
@@ -46,6 +42,18 @@ object ApiResponseHelper {
         val responseBody = StandardResponse(errorMessage)
         return ApiGatewayResponse.build {
             statusCode = 500
+            objectBody = responseBody
+            headers = Collections.singletonMap("X-Powered-By", "AWS Lambda & serverless")
+        }
+    }
+
+    fun generateStandardErrorResponse(
+        errorMessage: String,
+        errorCode: Int
+    ): ApiGatewayResponse {
+        val responseBody = StandardResponse(errorMessage)
+        return ApiGatewayResponse.build {
+            statusCode = errorCode
             objectBody = responseBody
             headers = Collections.singletonMap("X-Powered-By", "AWS Lambda & serverless")
         }

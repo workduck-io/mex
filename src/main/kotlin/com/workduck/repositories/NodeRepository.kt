@@ -43,16 +43,9 @@ class NodeRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-        return try {
-            val node = mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
-            orderBlocks(node)
-            return node
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
-    }
+    override fun get(identifier: Identifier): Entity? =
+            mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let{ node -> orderBlocks(node) }
+
 
     private fun orderBlocks(node: Node): Entity =
         node.apply {
@@ -88,17 +81,15 @@ class NodeRepository(
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
-        val updateItemSpec: UpdateItemSpec = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+
+        return UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
             .withUpdateExpression(updateExpression)
             .withValueMap(expressionAttributeValues)
-
-        return try {
-            table.updateItem(updateItemSpec)
-            mapOf("nodeID" to nodeID, "appendedElements" to elements)
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+            .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
+            .let{
+                table.updateItem(it)
+                mapOf("nodeID" to nodeID, "appendedElements" to elements)
+            }
     }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
@@ -125,18 +116,11 @@ class NodeRepository(
     override fun delete(identifier: Identifier): Identifier? {
         val table = dynamoDB.getTable(tableName)
 
-
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
+        DeleteItemSpec()
             .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
+            .also { table.deleteItem(it) }
 
-        return try {
-            table.deleteItem(deleteItemSpec)
-            LOG.info("Deleted the node")
-            identifier
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+        return identifier
     }
 
     override fun create(t: Node): Node {
@@ -195,17 +179,14 @@ class NodeRepository(
         expressionAttributeValues[":updatedBlock"] = updatedBlock
         expressionAttributeValues[":userID"] = userID
 
-        val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+        return UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
             .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
             .withValueMap(expressionAttributeValues)
-
-        return try {
-            table.updateItem(u)
-            objectMapper.readValue(updatedBlock)
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+            .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
+            .let {
+                table.updateItem(it)
+                objectMapper.readValue(updatedBlock)
+            }
     }
 
     fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>? {
@@ -303,7 +284,7 @@ class NodeRepository(
 
     }
 
-    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, status : String) : MutableList<String>{
+    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, status : String) : MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -311,16 +292,18 @@ class NodeRepository(
 
         val nodesProcessedList : MutableList<String> = mutableListOf()
         for(nodeID in nodeIDList){
-            val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-                    .withUpdateExpression("SET itemStatus = :active")
-                    .withValueMap(expressionAttributeValues)
-
-            try{
-                table.updateItem(u)
-                nodesProcessedList += nodeID
+            try {
+                UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+                        .withUpdateExpression("SET itemStatus = :active")
+                        .withValueMap(expressionAttributeValues)
+                        .withConditionExpression("attribute_exists(PK)")
+                        .also {
+                            table.updateItem(it)
+                            nodesProcessedList += nodeID
+                        }
             }
-            catch(e : Exception){
-                println("Un-archiving Failed for nodeID : $nodeID, Exception : $e")
+            catch(e: ConditionalCheckFailedException){
+                LOG.warn("nodeID : $nodeID not present in the DB")
             }
         }
 
@@ -333,24 +316,17 @@ class NodeRepository(
 
 
 
-    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) : String?{
+    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":true"] = accessValue
 
-        val u = UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+        UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
                 .withUpdateExpression("SET publicAccess = :true")
-                .withValueMap(expressionAttributeValues)
-
-        return try {
-            table.updateItem(u)
-            nodeID
-        } catch (e: Exception) {
-            println(e)
-            null
-        }
-
+                .withValueMap(expressionAttributeValues).also{
+                    table.updateItem(it)
+                }
     }
 
     fun getPublicNode(nodeID: String) : Node? {

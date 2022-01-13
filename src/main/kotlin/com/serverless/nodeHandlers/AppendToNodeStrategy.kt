@@ -8,7 +8,7 @@ import com.workduck.service.NodeService
 class AppendToNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error appending to node!"
-        //val json = input.body
+
         val nodeID = input.pathParameters?.id
 
         val elementListRequest = input.payload

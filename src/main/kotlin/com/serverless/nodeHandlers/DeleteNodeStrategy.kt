@@ -3,6 +3,7 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
+import com.serverless.models.Response
 import com.workduck.service.NodeService
 
 class DeleteNodeStrategy : NodeStrategy {
@@ -13,10 +14,9 @@ class DeleteNodeStrategy : NodeStrategy {
 
         return if (nodeIDRequest != null) {
 
-            val deleteNodeIDList: MutableList<String>? = nodeService.deleteNodes(nodeIDRequest)
+            val nodeIDList =nodeService.deleteNodes(nodeIDRequest)
 
-            //val identifierResponse = IdentifierHelper.convertIdentifierToIdentifierResponse(identifier)
-            ApiResponseHelper.generateStandardResponse(deleteNodeIDList, errorMessage)
+            ApiResponseHelper.generateStandardResponse(nodeIDList, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }

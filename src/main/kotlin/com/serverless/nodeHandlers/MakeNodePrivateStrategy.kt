@@ -3,7 +3,6 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.utils.IdentifierHelper
 import com.workduck.service.NodeService
 
 class MakeNodePrivateStrategy : NodeStrategy {
@@ -13,10 +12,8 @@ class MakeNodePrivateStrategy : NodeStrategy {
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {
-
-            val returnedID: String? = nodeService.makeNodePrivate(nodeID)
-
-            ApiResponseHelper.generateStandardResponse(returnedID, errorMessage)
+            nodeService.makeNodePrivate(nodeID)
+            ApiResponseHelper.generateStandardResponse(nodeID, errorMessage)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)
