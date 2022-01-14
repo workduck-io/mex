@@ -390,12 +390,23 @@ class NodeService {
     }
 
     fun copyBlock(blockID: String, nodeID1: String, nodeID2: String){
-        val block = nodeRepository.getBlock(nodeID1, blockID)
+        /* this node contains only valid block info and dataOrder info */
+        val node : Node? = nodeRepository.getBlock(nodeID1, blockID)
+
+        val block = node?.data?.get(0)
+        val userID = block?.createdBy as String
+        nodeRepository.append(nodeID2, userID, listOf(block), mutableListOf(block.id))
     }
 
 
     fun moveBlock(blockID: String, nodeID1: String, nodeID2: String){
-        val block = nodeRepository.getBlock(nodeID1, blockID)
+        /* this node contains only valid block info and dataOrder info ) */
+        val node1 : Node? = nodeRepository.getBlock(nodeID1, blockID)
+
+        //TODO(list remove changes order of the original elements )
+        node1?.dataOrder?.let {
+            it.remove(blockID)
+            nodeRepository.moveBlock(node1.data?.get(0), nodeID1, nodeID2, it) }
     }
 
 }

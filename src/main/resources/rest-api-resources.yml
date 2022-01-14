@@ -74,6 +74,16 @@ Node:
         path: /node/makePrivate/{id}
         method: patch
 
+    #move/cut a block from node1 to node2
+    - httpApi:
+        path: /node/block/move/{blockID}/{nodeID1}/{nodeID2}
+        method: patch
+
+    #copy a block from node1 to node2
+    - httpApi:
+        path: /node/block/copy/{blockID}/{nodeID1}/{nodeID2}
+        method: patch
+
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
   events:

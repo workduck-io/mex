@@ -7,30 +7,33 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Table
-import com.amazonaws.services.dynamodbv2.document.Item
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Index
+import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome
+import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
+import com.amazonaws.services.dynamodbv2.model.Update
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.workduck.models.Node
-import com.workduck.models.Identifier
-import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
+import com.workduck.models.Entity
+import com.workduck.models.Identifier
+import com.workduck.models.Node
 import com.workduck.models.NodeVersion
-import com.workduck.models.UserPreferenceRecord
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
+import com.workduck.utils.Helper
+import org.apache.logging.log4j.LogManager
 import java.time.Instant
 
-import org.apache.logging.log4j.LogManager
 
 class NodeRepository(
         private val mapper: DynamoDBMapper,
@@ -367,7 +370,7 @@ class NodeRepository(
 
         val nodeList : List<Node> = DynamoDBQueryExpression<Node>()
                 .withKeyConditionExpression("PK = :pk and SK = :sk")
-                .withProjectionExpression("data.$blockID")
+                .withProjectionExpression("nodeData.$blockID, dataOrder")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
                     mapper.query(Node::class.java, it)
                 }
@@ -376,6 +379,64 @@ class NodeRepository(
         else null
 
 
+    }
+
+    fun moveBlock(block : AdvancedElement?, nodeID1: String, nodeID2: String, dataOrderNode1: MutableList<String>){
+        val updateTime = System.currentTimeMillis()
+        val node1Key = HashMap<String, AttributeValue>()
+        node1Key["PK"] = AttributeValue(nodeID1)
+        node1Key["SK"] = AttributeValue(nodeID1)
+
+        val expressionAttributeValuesNode1: MutableMap<String, AttributeValue> = mutableMapOf()
+
+        val l: MutableList<AttributeValue> = mutableListOf()
+        dataOrderNode1.map{
+            l.add(AttributeValue().withS(it))
+        }
+        expressionAttributeValuesNode1[":dataOrderNode1"] = AttributeValue().withL(l)
+        expressionAttributeValuesNode1[":updatedAt"] = AttributeValue().withN(updateTime.toString())
+
+
+        val updateExpression1 = "remove nodeData.${block?.id} " +
+                "set dataOrder = :dataOrderNode1, " +
+                "updatedAt = :updatedAt"
+
+        val deleteBlock : Update =
+                Update().withTableName(tableName)
+                        .withKey(node1Key)
+                        .withUpdateExpression(updateExpression1)
+                        .withExpressionAttributeValues(expressionAttributeValuesNode1)
+
+
+
+
+        val node2Key = HashMap<String, AttributeValue>()
+        node2Key["PK"] = AttributeValue(nodeID2)
+        node2Key["SK"] = AttributeValue(nodeID2)
+
+        val expressionAttributeValuesNode2: MutableMap<String, AttributeValue> = mutableMapOf()
+        expressionAttributeValuesNode2[":updatedAt"] = AttributeValue().withN(updateTime.toString())
+        expressionAttributeValuesNode2[":orderList"] = AttributeValue().withL(AttributeValue().withS(block?.id))
+        expressionAttributeValuesNode2[":block"] = AttributeValue(Helper.objectMapper.writeValueAsString(block))
+
+
+        val updateExpression2 = "set dataOrder = list_append(dataOrder, :orderList), " +
+                            "nodeData.${block?.id} = :block, updatedAt = :updatedAt"
+
+
+        val addBlock : Update =
+                Update().withTableName(tableName)
+                        .withKey(node2Key)
+                        .withUpdateExpression(updateExpression2)
+                        .withExpressionAttributeValues(expressionAttributeValuesNode2)
+
+        val actions: Collection<TransactWriteItem> = listOf(
+                TransactWriteItem().withUpdate(deleteBlock),
+                TransactWriteItem().withUpdate(addBlock))
+
+        val moveBlockTransaction = TransactWriteItemsRequest().withTransactItems(actions)
+
+        client.transactWriteItems(moveBlockTransaction)
     }
 
 
