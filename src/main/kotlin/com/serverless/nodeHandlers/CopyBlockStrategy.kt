@@ -16,7 +16,10 @@ class CopyBlockStrategy : NodeStrategy {
         if(blockID != null && nodeID1 != null && nodeID2 != null){
             nodeService.copyBlock(blockID, nodeID1, nodeID2)
         }
-        return ApiResponseHelper.generateStandardResponse("", errorMessage)
+        else{
+            ApiResponseHelper.generateStandardErrorResponse("Invalid Parameters", 400)
+        }
+        return ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
 
     }
 

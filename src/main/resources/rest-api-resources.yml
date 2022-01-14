@@ -78,11 +78,13 @@ Node:
     - httpApi:
         path: /node/block/move/{blockID}/{nodeID1}/{nodeID2}
         method: patch
+        authorizer: mexAuthorizer
 
     #copy a block from node1 to node2
     - httpApi:
         path: /node/block/copy/{blockID}/{nodeID1}/{nodeID2}
         method: patch
+        authorizer: mexAuthorizer
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler

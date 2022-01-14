@@ -50,7 +50,10 @@ class NodeStrategyFactory {
             makeNodePublicObject to MakeNodePublicStrategy(),
             makeNodePublicObject to MakeNodePrivateStrategy(),
             getPublicNodeObject to GetPublicNodeStrategy(),
-            getAllNodesObject to GetAllNodesStrategy()
+            getAllNodesObject to GetAllNodesStrategy(),
+            getPublicNodeObject to GetPublicNodeStrategy(),
+            moveBlockObject to MoveBlockStrategy(),
+            copyBlockObject to CopyBlockStrategy()
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {

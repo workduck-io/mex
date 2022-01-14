@@ -16,8 +16,10 @@ class MoveBlockStrategy : NodeStrategy {
         if(blockID != null && nodeID1 != null && nodeID2 != null){
             nodeService.moveBlock(blockID, nodeID1, nodeID2)
         }
-        return ApiResponseHelper.generateStandardResponse("", errorMessage)
-
+        else{
+            ApiResponseHelper.generateStandardErrorResponse("Invalid Parameters", 400)
+        }
+        return ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
 
     }
 
