@@ -6,14 +6,13 @@ import com.workduck.models.Namespace
 
 class NamespaceTransformer : Transformer<Namespace> {
 
-    override fun transform(t: Namespace?): Response? {
-        if (t == null) return null
-        return NamespaceResponse(
+    override fun transform(t: Namespace?): Response? = t?.let {
+       NamespaceResponse(
             id = t.id,
             name = t.name,
             workspaceID = t.workspaceIdentifier?.id,
             createdAt = t.createdAt,
             updateAt = t.updatedAt
-        )
+       )
     }
 }

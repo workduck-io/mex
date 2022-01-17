@@ -12,25 +12,21 @@ class GetCommentStrategy : CommentStrategy {
 
         val errorMessage = "Error fetching comment"
 
-        val queryStringParameters = input.queryStringParameters
+        val list = input.pathParameters?.id?.split("-")
 
-        val nodeID = queryStringParameters?.let{
-            it["nodeID"].toString()
+        val nodeID = list?.get(0)
+        val blockID = list?.get(1)
+        val commentID = list?.get(2)
+
+        return if(nodeID != null && blockID != null && commentID != null) {
+            val comment = commentService.getComment(nodeID, blockID, commentID)
+
+            val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
+
+            ApiResponseHelper.generateStandardResponse(commentResponse, errorMessage)
+        } else{
+            ApiResponseHelper.generateStandardErrorResponse("Invalid ID", 400)
         }
-
-        val blockID = queryStringParameters?.let {
-            it["blockID"].toString()
-        }
-
-        val commentID = queryStringParameters?.let {
-            it["commentID"].toString()
-        }
-
-        val comment = commentService.getComment(nodeID, blockID, commentID)
-
-        val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
-
-        return ApiResponseHelper.generateStandardResponse(commentResponse, errorMessage)
 
     }
 

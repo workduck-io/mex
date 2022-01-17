@@ -242,26 +242,20 @@ Comment:
         method: patch
         authorizer: mexAuthorizer
 
-    #get comment -> query parameters : nodeID, blockID, commentID
+    #id -> nodeID#blockID#commentID
     - httpApi:
-        path: /comment
+        path: /comment/{id}
         method: get
         authorizer: mexAuthorizer
 
-    #delete comment -> query parameters : nodeID, blockID, commentID
+    #id -> nodeID#blockID#commentID
     - httpApi:
-        path: /comment
+        path: /comment/{id}
         method: delete
         authorizer: mexAuthorizer
 
-    #get comments of a node -> path parameters : nodeID
+    #get all comments of a node/block -> when node, id : nodeID ; when block, id : nodeID#blockID
     - httpApi:
-        path: /comment/node/{id}
-        method: get
-        authorizer: mexAuthorizer
-
-    #get comments of a node -> path parameters : nodeID, blockID
-    - httpApi:
-        path: /comment/node/{nodeID}/block/{blockID}
+        path: /comment/all/{id}
         method: get
         authorizer: mexAuthorizer

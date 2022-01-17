@@ -9,26 +9,19 @@ class DeleteCommentStrategy : CommentStrategy{
     override fun apply(input: Input, commentService: CommentService): ApiGatewayResponse {
         val errorMessage = "Error deleting comment"
 
-        val queryStringParameters = input.queryStringParameters
+        val list = input.pathParameters?.id?.split("-")
 
-        val nodeID = queryStringParameters?.let{
-            it["nodeID"].toString()
+        val nodeID = list?.get(0)
+        val blockID = list?.get(1)
+        val commentID = list?.get(2)
+
+        return if(nodeID != null && blockID != null && commentID != null) {
+            commentService.deleteComment(nodeID, blockID, commentID)
+            ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
+        } else{
+            ApiResponseHelper.generateStandardErrorResponse("Invalid ID", 400)
         }
 
-        val blockID = queryStringParameters?.let {
-            it["blockID"].toString()
-        }
-
-        val commentID = queryStringParameters?.let {
-            it["commentID"].toString()
-        }
-
-        val returnedCommentID = commentService.deleteComment(nodeID, blockID, commentID)
-
-        //val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
-
-        //TODO(refactor this post error handling PR)
-        return ApiResponseHelper.generateStandardResponse(returnedCommentID, errorMessage)
     }
 
 }

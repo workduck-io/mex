@@ -6,9 +6,8 @@ import com.workduck.models.Workspace
 
 class WorkspaceTransformer : Transformer<Workspace> {
 
-    override fun transform(t: Workspace?): Response? {
-        if (t == null) return null
-        return WorkspaceResponse(
+    override fun transform(t: Workspace?): Response?= t?.let {
+        WorkspaceResponse(
             id = t.id,
             name = t.name,
             createdAt = t.createdAt,

@@ -3,10 +3,7 @@ package com.serverless.commentHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.Response
 import com.serverless.models.WDRequest
-import com.serverless.utils.CommentHelper
-import com.workduck.models.Comment
 import com.workduck.service.CommentService
 
 class UpdateCommentStrategy : CommentStrategy {
@@ -15,11 +12,14 @@ class UpdateCommentStrategy : CommentStrategy {
 
         val commentRequest : WDRequest? = input.payload
 
-        val comment : Comment? = commentService.updateComment(commentRequest)
+        return if(commentRequest != null) {
+            commentService.updateComment(commentRequest)
+            ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
 
-        val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
+        } else{
+            ApiResponseHelper.generateStandardErrorResponse("Invalid request body", 400)
+        }
 
-        return ApiResponseHelper.generateStandardResponse(commentResponse, errorMessage)
     }
 
 }

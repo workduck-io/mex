@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.CommentRequest
 import com.serverless.models.WDRequest
 import com.workduck.models.Comment
+import com.workduck.models.UserIdentifier
 import com.workduck.repositories.CommentRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
@@ -42,33 +43,33 @@ class CommentService {
     }
 
     fun createComment(commentRequest : WDRequest?) : Comment? {
-        val comment = createCommentObjectFromCommentRequest(commentRequest as CommentRequest?) ?: return null
+        val comment = createCommentObjectFromCommentRequest(commentRequest as CommentRequest)
         return repository.create(comment)
     }
 
-    fun updateComment(commentRequest: WDRequest?) : Comment? {
-        val comment = createCommentObjectFromCommentRequest(commentRequest as CommentRequest?) ?: return null
-        comment.createdAt = null
-        return repository.update(comment)
+    fun updateComment(commentRequest: WDRequest)  {
+        val comment = createCommentObjectFromCommentRequest(commentRequest as CommentRequest)
+
+        commentRepository.updateComment(comment)
     }
 
-    fun deleteComment(nodeID: String?, blockID : String?, commentID : String?) : String? {
+    fun deleteComment(nodeID: String?, blockID : String?, commentID : String?) {
         val pk = generatePK(nodeID)
         val sk = generateSK(blockID, commentID)
 
-        return commentRepository.deleteComment(pk, sk)
+        commentRepository.deleteComment(pk, sk)
 
     }
 
 
-    fun getAllCommentsOfNode(nodeID: String?) : List<Comment>{
-        val pk = generatePK(nodeID)
-        return commentRepository.getAllCommentsOfNode(pk)
-    }
+    fun getAllComments(compositeIDList: List<String>) : List<Comment>{
 
-    fun getAllCommentsOfBlock(nodeID: String?, blockID: String?) : List<Comment>{
-        val pk = generatePK(nodeID)
-        return commentRepository.getAllCommentsOfBlock(pk, blockID)
+        return when (compositeIDList.size) {
+            1 -> commentRepository.getAllCommentsOfNode(generatePK(compositeIDList[0]))
+            2 -> commentRepository.getAllCommentsOfBlock(generatePK(compositeIDList[0]), compositeIDList[1])
+            else -> throw Exception("Invalid ID")
+        }
+
     }
 
 
@@ -80,15 +81,13 @@ class CommentService {
         return "$blockID#$commentID"
     }
 
-    private fun createCommentObjectFromCommentRequest(commentRequest: CommentRequest?) : Comment? {
-        return  commentRequest?.let {
-            Comment(
-                pk = "${commentRequest.nodeID}#COMMENT",
-                sk = "${commentRequest.blockID}#${commentRequest.commentID}",
-                commentBody = commentRequest.commentBody,
-                commentedBy = commentRequest.commentedBy
-            )
-        }
+    private fun createCommentObjectFromCommentRequest(commentRequest: CommentRequest) : Comment {
+        return Comment(
+            pk = "${commentRequest.nodeID}#COMMENT",
+            sk = "${commentRequest.blockID}#${commentRequest.commentID}",
+            commentBody = commentRequest.commentBody,
+            commentedBy = UserIdentifier(commentRequest.commentedBy)
+        )
     }
 }
 
@@ -99,12 +98,12 @@ fun main(){
         "type" : "CommentRequest",
         "nodeID" : "NODE1",
         "blockID": "BLOCK1",
-        "commentID" : "COMMENT1",
+        "commentID" : "COMMENT4C3RX7K98FD47Z10RJ0YTE8JJP",
         "commentedBy" : "Varun Garg",
         "commentBody": {
             "id": "sampleParentID",
             "elementType": "paragraph",
-            "content" : "Comment Text"
+            "content" : "Comment Textt"
         }
     }
     """
@@ -125,22 +124,7 @@ fun main(){
     }
     """
 
-//    val commentRequest = ObjectMapper().readValue<CommentRequest>(jsonString)
-//    CommentService().createComment(commentRequest)
-
-
-
-    //val updateCommentRequest = ObjectMapper().readValue<WDRequest>(updateJsonString)
-    //CommentService().updateComment(updateCommentRequest)
-
-
-
-    //println(CommentService().getComment("NODE1", "BLOCK2", "COMMENT1"))
-
-
-    //println(Helper.objectMapper.writeValueAsString(CommentService().getAllCommentsOfNode("NODE1")))
-
-    println(Helper.objectMapper.writeValueAsString(CommentService().getAllCommentsOfBlock("NODE1", "BLOCK1")))
-
+    val commentRequest = ObjectMapper().readValue<WDRequest>(jsonString)
+    CommentService().updateComment(commentRequest)
 
 }

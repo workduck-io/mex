@@ -6,9 +6,8 @@ import com.workduck.models.Node
 
 class NodeTransformer : Transformer<Node> {
 
-    override fun transform(t: Node?): Response? {
-        if (t == null) return null
-        return NodeResponse(
+    override fun transform(t: Node?): Response? = t?.let {
+       NodeResponse(
             id = t.id,
             data = t.data,
             lastEditedBy = t.lastEditedBy,
@@ -20,6 +19,6 @@ class NodeTransformer : Transformer<Node> {
             namespaceID = t.namespaceIdentifier?.id,
             workspaceID = t.workspaceIdentifier?.id,
             isBookmarked = t.isBookmarked
-        )
+       )
     }
 }

@@ -6,8 +6,6 @@ import com.serverless.models.Input
 import com.serverless.models.Response
 import com.serverless.models.WDRequest
 import com.serverless.utils.CommentHelper
-import com.serverless.utils.NodeHelper
-import com.workduck.models.Comment
 import com.workduck.service.CommentService
 
 class CreateCommentStrategy : CommentStrategy {
@@ -16,11 +14,14 @@ class CreateCommentStrategy : CommentStrategy {
         val errorMessage = "Error creating comment"
         val commentRequest : WDRequest? = input.payload
 
-        val comment : Comment? = commentService.createComment(commentRequest)
-
-        val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
-
-        return ApiResponseHelper.generateStandardResponse(commentResponse, errorMessage)
+        return if(commentRequest != null) {
+            val commentResponse: Response? = commentService.createComment(commentRequest).let {
+                CommentHelper.convertCommentToCommentResponse(it)
+            }
+            ApiResponseHelper.generateStandardResponse(commentResponse, 201, errorMessage)
+        } else{
+            ApiResponseHelper.generateStandardErrorResponse("Invalid request body", 400)
+        }
     }
 
 }

@@ -406,7 +406,6 @@ fun main() {
 			"id": "NODE1",
             "namespaceIdentifier" : "NAMESPACE1",
             "workspaceIdentifier" : "WORKSPACE1",
-            "tags" : ["random tag"],
 			"data": [
 			{
 				"id": "sampleParentID",
@@ -444,7 +443,6 @@ fun main() {
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
         "workspaceIdentifier" : "WORKSPACE1",
-        "tags" : ["random tag"],
         "data": [
         {
             "id": "sampleParentID",
@@ -508,33 +506,7 @@ fun main() {
       """
 
 
-    // println(NodeService().getNode("NODE1"))
-    //println("HELLO")
-//    runBlocking {
-//        println("WORLD")
-//        NodeService().updateNode(jsonString1)
-//    }
+
     val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
-    NodeService().createAndUpdateNode(nodeRequest)
-    // println(NodeService().getNode("NODE2"))
-    // NodeService().updateNode(jsonString1)
-    // NodeService().deleteNode("NODE1")
-    // NodeService().jsonToObjectMapper(jsonString1)
-    // NodeService().jsonToElement()
-    // NodeService().append("NODE1",jsonForAppend)
-    // println(System.getenv("PRIMARY_TABLE"))
-    // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
-    // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
-    // NodeService().getMetaDataForActiveVersions("NODE1")
 
-    //NodeService().setTTLForOldestVersion("NODE1")
-
-    //NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
-
-
-    //    NodeService().makeNodePublic("NODE1")
-    //NodeService().getPublicNode("NODE1")
-    // NodeService().testOrderedMap()
-    // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
-    // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 }

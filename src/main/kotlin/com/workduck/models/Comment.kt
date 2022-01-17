@@ -5,10 +5,13 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.workduck.converters.CommentDataConverter
+import com.workduck.converters.UserIdentifierConverter
 
 @DynamoDBTable(tableName = "local-mex")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Comment(
 
     @JsonProperty("pk")
@@ -24,9 +27,10 @@ data class Comment(
     @DynamoDBAttribute(attributeName = "commentBody")
     var commentBody: AdvancedElement ? = null,
 
-    @JsonProperty("commentBy")
-    @DynamoDBAttribute(attributeName = "commentBy")
-    var commentedBy: String = "",
+    @JsonProperty("commentedBy")
+    @DynamoDBTypeConverted(converter = UserIdentifierConverter::class)
+    @DynamoDBAttribute(attributeName = "commentedBy")
+    var commentedBy: UserIdentifier ? = null,
 
 
     @JsonProperty("itemType")

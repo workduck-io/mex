@@ -9,7 +9,7 @@ data class CommentResponse(
 
         val blockID : String,
 
-        val commentedBy : String,
+        val commentedBy : String?,
 
         val commentBody : AdvancedElement?,
 
