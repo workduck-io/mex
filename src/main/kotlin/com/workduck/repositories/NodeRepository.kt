@@ -280,9 +280,8 @@ class NodeRepository(
             }
     }
 
-    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>? {
-        val table = dynamoDB.getTable(tableName)
-        println("Inside getAllVersionsOfNode function")
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String?> {
+        LOG.info("Inside getAllVersionsOfNode function")
 
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
@@ -291,26 +290,21 @@ class NodeRepository(
         expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
 
 
-        val q = DynamoDBQueryExpression<NodeVersion>()
+        val nodeVersionList: List<NodeVersion> = DynamoDBQueryExpression<NodeVersion>()
                 .withKeyConditionExpression("PK = :pk")
                 .withFilterExpression("versionStatus = :status and itemType = :NodeVersion")
                 .withExpressionAttributeValues(expressionAttributeValues)
-                .withProjectionExpression("SK")
+                .withProjectionExpression("SK").let{
+                    mapper.query(NodeVersion::class.java, it, dynamoDBMapperConfig)
+                }
 
 
-        return try {
-            val nodeVersionList: List<NodeVersion> = mapper.query(NodeVersion::class.java, q, dynamoDBMapperConfig)
-
-            val itemList: MutableList<String> = mutableListOf()
-            for(v in nodeVersionList){
-                if(v.updatedAt != null) itemList.add(v.updatedAt!!)
-            }
-
-            itemList
-        } catch (e : Exception){
-            println(e)
-            null
+        val itemList: MutableList<String?> = mutableListOf()
+        nodeVersionList.map {
+           itemList.add(it.sk)
         }
+        return itemList
+
     }
 
     fun getAllArchivedNodesOfWorkspace(workspaceID : String) : MutableList<String>?{
@@ -360,10 +354,11 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":ttl"] = (now + ttl)
         expressionAttributeValues[":status"] = "INACTIVE"
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
 
 
         val u = UpdateItemSpec().withPrimaryKey("PK", "$nodeID#VERSION", "SK", oldestUpdatedAt)
-                .withUpdateExpression("SET timeToLive = :ttl, versionStatus = :status ")
+                .withUpdateExpression("SET timeToLive = :ttl, versionStatus = :status, updatedAt = :updatedAt ")
                 .withValueMap(expressionAttributeValues)
 
         try {

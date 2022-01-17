@@ -67,10 +67,14 @@ class NodeService {
 
     }
 
-    fun createNodeVersion(node : Node){
+    fun createNodeVersion(node : Node, isPreviousUpdateBySameUser : Boolean = false){
 
         val currentTime = System.currentTimeMillis()
-        if(node.lastVersionCreatedAt != null && currentTime - node.lastVersionCreatedAt!! < 300000) {
+
+        /* if the time difference b/w last version and current one is < 5min, don't create it given
+            that both versions are being created via the same user */
+        if(node.lastVersionCreatedAt != null && currentTime - node.lastVersionCreatedAt!! < 300000
+                && isPreviousUpdateBySameUser ) {
             LOG.info("A version was recently created!")
             return
         }
@@ -90,9 +94,9 @@ class NodeService {
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
         val nodeVersion = NodeVersion(
-            id = "${node.id}#VERSION", lastEditedBy = node.lastEditedBy, createdBy = node.createdBy,
-            data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
-            workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
+            id = "${node.id}#VERSION",  sk = "UPDATED_AT#${node.updatedAt}", lastEditedBy = node.lastEditedBy, createdBy = node.createdBy,
+            data = node.data, dataOrder = node.dataOrder, nodeCreatedAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
+            workspaceIdentifier = node.workspaceIdentifier
         )
 
         nodeVersion.version = Helper.generateId("version")
@@ -222,16 +226,16 @@ class NodeService {
     private fun setTTLForOldestVersion(nodeID : String){
 
         /*returns first element from sorted updatedAts in ascending order */
-        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)?.get(0)
+        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)[0]
 
-        println(oldestUpdatedAt)
+        LOG.info("Node Version for $nodeID Oldest Updated At : $oldestUpdatedAt")
 
         if(oldestUpdatedAt != null)
             nodeRepository.setTTLForOldestVersion(nodeID, oldestUpdatedAt)
 
     }
 
-    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String>?{
+    fun getMetaDataForActiveVersions(nodeID : String) : MutableList<String?>{
         return nodeRepository.getMetaDataForActiveVersions(nodeID)
     }
 

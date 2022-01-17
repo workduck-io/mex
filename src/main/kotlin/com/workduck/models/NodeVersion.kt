@@ -13,10 +13,10 @@ data class NodeVersion(
         @DynamoDBHashKey(attributeName = "PK")
         var id: String ?= null,
 
-        /* For convenient deletion */
-        @JsonProperty("updatedAt")
+        /* UpdatedAt#node.updatedAt */
+        @JsonProperty("sk")
         @DynamoDBRangeKey(attributeName = "SK")
-        var updatedAt: String? = null,
+        var sk: String? = null,
 
         @JsonProperty("lastEditedBy")
         @DynamoDBAttribute(attributeName = "lastEditedBy")
@@ -69,9 +69,14 @@ data class NodeVersion(
         @DynamoDBAttribute(attributeName = "itemType")
         override var itemType: String = "Node Version",
 
+        @JsonProperty("nodeCreatedAt")
+        @DynamoDBAttribute(attributeName = "nodeCreatedAt")
+        var nodeCreatedAt: Long? = System.currentTimeMillis(),
+
+
         @JsonProperty("createdAt")
         @DynamoDBAttribute(attributeName = "createdAt")
-        var createdAt: Long? = System.currentTimeMillis(),
+        var createdAt: Long = System.currentTimeMillis(),
 
 
         @JsonProperty("versionStatus")
@@ -83,5 +88,9 @@ data class NodeVersion(
         @JsonProperty("timeToLive")
         @DynamoDBAttribute(attributeName = "timeToLive")
         var timeToLive: Long? = null
+
+        @JsonProperty("updatedAt")
+        @DynamoDBAttribute(attributeName = "updatedAt")
+        var updatedAt: Long = System.currentTimeMillis()
 
 }

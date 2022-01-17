@@ -12,7 +12,7 @@ class GetNodeVersionMetaDataStrategy : NodeStrategy {
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {
-            val metaDataList : MutableList<String>? = NodeService().getMetaDataForActiveVersions(nodeID)
+            val metaDataList : MutableList<String?> = NodeService().getMetaDataForActiveVersions(nodeID)
             ApiResponseHelper.generateResponseWithJsonList(metaDataList as Any?, errorMessage)
         }
         else{
