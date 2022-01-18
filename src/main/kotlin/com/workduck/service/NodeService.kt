@@ -82,11 +82,6 @@ class NodeService {
         val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
         LOG.info("Node Version in NodeService : $nodeVersion")
 
-        /* If the last version was created within 5 minutes, skip creating a new version */
-
-        node.lastVersionCreatedAt = currentTime
-        node.nodeVersionCount += 1
-
         checkNodeVersionCount(node.id, node.nodeVersionCount)
 
         nodeRepository.createNodeVersion(node, nodeVersion)
@@ -417,37 +412,13 @@ fun main() {
     val jsonString: String = """
 		{
             "type" : "NodeRequest",
-            "lastEditedBy" : "Varun",
+            "lastEditedBy" : "Varun Garg",
 			"id": "NODE1",
             "namespaceIdentifier" : "NAMESPACE1",
             "workspaceIdentifier" : "WORKSPACE1",
 			"data": [
 			{
-				"id": "sampleParentID",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content 1",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			},
-            {
-				"id": "bbbb1234",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			},
-            {
-				"id": "aasampleParentID",
+				"id": "sampleParentID2",
                 "elementType": "paragraph",
                 "children": [
                 {
@@ -537,28 +508,8 @@ fun main() {
         }
       """
 
+    val nodeR : WDRequest = ObjectMapper().readValue(jsonString)
+    NodeService().createAndUpdateNode(nodeR)
 
-    // println(NodeService().getNode("NODE1"))
-    // NodeService().updateNode(jsonString1)
-    // NodeService().deleteNode("NODE1")
-    // NodeService().jsonToObjectMapper(jsonString1)
-    // NodeService().jsonToElement()
-
-    val appendBlock : WDRequest = ObjectMapper().readValue(jsonForAppend)
-     NodeService().append("NODE1",appendBlock)
-    // println(System.getenv("PRIMARY_TABLE"))
-    // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
-    // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
-    // NodeService().getMetaDataForActiveVersions("NODE1")
-
-    //NodeService().setTTLForOldestVersion("NODE1")
-
-    //NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
-
-
-    //    NodeService().makeNodePublic("NODE1")
-    //NodeService().getPublicNode("NODE1")
-    // NodeService().testOrderedMap()
-    // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 }

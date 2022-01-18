@@ -37,20 +37,20 @@ class NodeRepository(
     private val objectMapper = Helper.objectMapper
 
     override fun get(identifier: Identifier): Entity? =
-            mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let{ node -> orderBlocks(node) }
+            mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
 
 
-    private fun orderBlocks(node: Node): Entity =
-        node.apply {
-            node.data?.let { data ->
-                (node.dataOrder?.mapNotNull { blockId ->
-                    data.find { element -> blockId == element.id }
-                } ?: emptyList())
-                        .also {
-                            node.data = it.toMutableList()
-                        }
-            }
-        }
+//    private fun orderBlocks(node: Node): Entity =
+//        node.apply {
+//            node.data?.let { data ->
+//                (node.dataOrder?.mapNotNull { blockId ->
+//                    data.find { element -> blockId == element.id }
+//                } ?: emptyList())
+//                        .also {
+//                            node.data = it.toMutableList()
+//                        }
+//            }
+//        }
 
 
 //    private fun orderBlocks(node: Node): Entity =
@@ -142,60 +142,12 @@ class NodeRepository(
             nodeToSave.publicAccess = node.publicAccess
             nodeToSave.createdAt = node.createdAt
             nodeToSave.updatedAt = node.updatedAt
-            nodeToSave.nodeVersionCount = node.nodeVersionCount
-            nodeToSave.lastVersionCreatedAt = node.lastVersionCreatedAt
-            nodeToSave.version = node.version /*TODO(this version is to avoid conflicts during concurrent updates and auto-incrementing. In this flow we don't really need this to be updated. Can this cause any problem?) */
+            nodeToSave.nodeVersionCount = node.nodeVersionCount + 1
+            nodeToSave.lastVersionCreatedAt = nodeVersion.createdAt
+            nodeToSave.version = node.version /* this version is to avoid conflicts during concurrent updates and auto-incrementing. In this flow we don't really need this to be updated. */
+
             /* REFER NOTE HERE : https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBMapper.OptimisticLocking.html */
 
-
-
-
-            /* set actual node object's lastVersionCreatedAt & nodeVersionCount */
-//            val nodeKey : HashMap<String, AttributeValue> = HashMap()
-//            nodeKey["PK"] = AttributeValue(node.id)
-//            nodeKey["SK"] = AttributeValue(node.idCopy)
-//
-//            val expressionAttributeValues: MutableMap<String, AttributeValue?> = HashMap()
-//            expressionAttributeValues[":lastVersionCreatedAt"] = AttributeValue().withN(node.lastVersionCreatedAt.toString())
-//            expressionAttributeValues[":nodeVersionCount"] = AttributeValue().withN(node.nodeVersionCount.toString())
-//
-//            LOG.info("Table Name : $tableName")
-//            val updateNode : Update =
-//                    Update().withTableName(tableName)
-//                            .withKey(nodeKey)
-//                            .withUpdateExpression("SET lastVersionCreatedAt = :lastVersionCreatedAt," +
-//                                    "nodeVersionCount = :nodeVersionCount")
-//                            .withExpressionAttributeValues(expressionAttributeValues)
-
-
-            /* insert NodeVersion */
-//            val nodeVersionItem : HashMap<String, AttributeValue> = HashMap()
-//            nodeVersionItem["PK"] = AttributeValue(nodeVersion.id)
-//            nodeVersionItem["SK"] = AttributeValue(nodeVersion.updatedAt)
-//            nodeVersionItem["lastEditedBy"] = AttributeValue(nodeVersion.lastEditedBy)
-//            nodeVersionItem["createdBy"] = AttributeValue(nodeVersion.createdBy)
-//            nodeVersionItem["data"] = AttributeValue(Helper.objectMapper.writeValueAsString(nodeVersion.data))
-//            nodeVersionItem["dataOrder"] = AttributeValue(nodeVersion.dataOrder)
-//            nodeVersionItem["namespaceIdentifier"] = AttributeValue(nodeVersion.namespaceIdentifier?.id)
-//            nodeVersionItem["workspaceIdentifier"] = AttributeValue(nodeVersion.workspaceIdentifier?.id)
-//            nodeVersionItem["nodeSchemaIdentifier"] = AttributeValue(nodeVersion.nodeSchemaIdentifier?.id)
-//            nodeVersionItem["itemType"] = AttributeValue(nodeVersion.itemType)
-//            nodeVersionItem["createdAt"] = AttributeValue().withN(nodeVersion.createdAt?.toString())
-//            nodeVersionItem["versionStatus"] = AttributeValue(nodeVersion.versionStatus)
-//            nodeVersionItem["timeToLive"] = AttributeValue().withN(nodeVersion.timeToLive?.toString())
-
-
-//            val putNodeVersion : Put = Put().withTableName(tableName).withItem(nodeVersionItem)
-//
-//
-//            val actions: Collection<TransactWriteItem> = listOf(
-//                    TransactWriteItem().withUpdate(updateNode),
-//                    TransactWriteItem().withPut(putNodeVersion))
-//
-//            val transaction = TransactWriteItemsRequest()
-//                    .withTransactItems(actions)
-//
-//            client.transactWriteItems(transaction)
 
             val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()
                     .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
