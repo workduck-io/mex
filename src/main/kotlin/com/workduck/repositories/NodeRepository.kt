@@ -78,7 +78,7 @@ class NodeRepository(
         }
 
         expressionAttributeValues[":userID"] = userID
-        expressionAttributeValues[":userID"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
