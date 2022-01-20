@@ -2,6 +2,9 @@ package com.workduck.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.serverless.ApiGatewayResponse
+import com.serverless.ApiResponseHelper
+import com.serverless.nodeHandlers.NodeHandler
 import java.util.UUID
 
 object Helper {
@@ -20,5 +23,9 @@ object Helper {
 
     fun generateId(prefix: String?): String {
         return uuidBase32(UUID.randomUUID(), StringBuilder(prefix)).toString()
+    }
+
+    fun isSourceWarmup(source : String?) : Boolean {
+        return "serverless-plugin-warmup" == source
     }
 }

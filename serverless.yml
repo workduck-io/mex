@@ -27,7 +27,7 @@ provider:
   timeout: 20
   memorySize: 512
   environment:
-    #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    #WS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
     STAGE: ${opt:stage, 'dev'}
@@ -80,6 +80,22 @@ custom:
     ignoreJWTSignature: true
     noAuth: true
     httpPort: 4000
+  warmup:
+    officeHoursWarmer:
+      enabled: true
+      prewarm: true
+      events:
+        - schedule: cron(0/5 2:30-13:30 ? * MON-FRI *) # converted to UTC format
+      concurrency: 5
+    outOfOfficeHoursWarmer:
+      enabled: true
+      prewarm: true
+      events:
+        - schedule: cron(0/15 13:30-2:30 ? * MON-FRI *)
+        - schedule: cron(0/15 * ? * SAT-SUN *)
+      concurrency: 2
+    testWarmer:
+      enabled: false
 
   customDomain:
     rest:

@@ -7,6 +7,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.ExceptionParser
 import com.workduck.service.NodeService
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
@@ -14,6 +15,13 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val nodeService = NodeService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
+
+        val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
+
+        if (isWarmup) {
+            LOG.info("WarmUp - Lambda is warm!")
+            return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
+        }
 
         val wdInput : Input = Input.fromMap(input)
 
