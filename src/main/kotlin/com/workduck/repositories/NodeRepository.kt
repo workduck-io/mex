@@ -6,14 +6,19 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Index
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
+import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.amazonaws.services.dynamodbv2.model.Put
 import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
 import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.amazonaws.services.dynamodbv2.model.Update
@@ -26,7 +31,11 @@ import com.workduck.models.Element
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
+import com.workduck.models.Entity
+import com.workduck.models.Identifier
 import com.workduck.models.NodeVersion
+import com.workduck.models.Relationship
+import com.workduck.service.NodeService
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
 import org.apache.logging.log4j.LogManager
@@ -38,7 +47,7 @@ class NodeRepository(
     private val dynamoDB: DynamoDB,
     private val dynamoDBMapperConfig: DynamoDBMapperConfig,
     private val client: AmazonDynamoDB,
-    private var tableName: String
+    private val tableName: String
 )  {
 
     fun append(nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
@@ -63,14 +72,85 @@ class NodeRepository(
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
-        return UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
-            .withUpdateExpression(updateExpression)
-            .withValueMap(expressionAttributeValues)
-            .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-            .let {
-                table.updateItem(it)
-                mapOf("nodeID" to nodeID, "appendedElements" to elements)
+        return try {
+            UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
+                    .withUpdateExpression(updateExpression)
+                    .withValueMap(expressionAttributeValues)
+                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
+                    .let {
+                        table.updateItem(it)
+                        mapOf("nodeID" to nodeID, "appendedElements" to elements)
+                    }
+        } catch (e: AmazonDynamoDBException) {
+            if (e.errorMessage == "Item size to update has exceeded the maximum allowed size") {
+                LOG.info(e.errorMessage)
+                nodeService.createRelationship(nodeID, userID, elements, orderList)
+                null
+            } else {
+                throw e
             }
+        }
+    }
+
+    fun createRelationshipAndPutNewNode(nodeID: String, newNode: Node, relationship: Relationship) {
+
+        val nodeKey = HashMap<String, AttributeValue>()
+        nodeKey["PK"] = AttributeValue(nodeID)
+        nodeKey["SK"] = AttributeValue(nodeID)
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":relationshipID"] = AttributeValue(relationship.id)
+
+        val addNodeRelationshipID = Update()
+            .withTableName(tableName)
+            .withKey(nodeKey)
+            .withUpdateExpression("SET relationshipIdentifier = :relationshipID")
+            .withExpressionAttributeValues(expressionAttributeValues)
+
+        val relationShipItem = HashMap<String, AttributeValue>()
+        relationShipItem["PK"] = AttributeValue(relationship.id)
+        relationShipItem["SK"] = AttributeValue(relationship.pk)
+        relationShipItem["startNode"] = AttributeValue(relationship.startNode.id)
+        relationShipItem["endNode"] = AttributeValue(relationship.endNode.id)
+        relationShipItem["createdAt"] = AttributeValue().withN(relationship.createdAt.toString())
+        relationShipItem["updatedAt"] = AttributeValue().withN(relationship.updatedAt.toString())
+        relationShipItem["status"] = AttributeValue(relationship.status.name)
+
+        val createRelationship = Put()
+            .withTableName(tableName)
+            .withItem(relationShipItem)
+
+
+        val newNodeItem = HashMap<String, AttributeValue>()
+        newNodeItem["PK"] = AttributeValue(newNode.id)
+        newNodeItem["SK"] = AttributeValue(newNode.idCopy)
+        newNodeItem["AK"] = AttributeValue(newNode.ak)
+        newNodeItem["publicAccess"] = AttributeValue().withBOOL(newNode.publicAccess)
+        newNodeItem["createdBy"] = AttributeValue(newNode.createdBy)
+        newNodeItem["lastEditedBy"] = AttributeValue(newNode.lastEditedBy)
+        newNodeItem["updatedAt"] = AttributeValue().withN(newNode.updatedAt.toString())
+        newNodeItem["createdAt"] = AttributeValue().withN(newNode.createdAt.toString())
+        newNodeItem["nodeData"] = AttributeValue().withM(mutableMapOf())
+        newNode.nodeSchemaIdentifier?.let { newNodeItem["nodeSchemaIdentifier"] = AttributeValue(it.id) }
+        newNode.namespaceIdentifier?.let { newNodeItem["namespaceIdentifier"] = AttributeValue(it.id) }
+        newNode.workspaceIdentifier?.let { newNodeItem["workspaceIdentifier"] = AttributeValue(it.id) }
+
+
+        val putNewNode = Put()
+                .withTableName(tableName)
+                .withItem(newNodeItem)
+
+
+        listOf(
+            TransactWriteItem().withUpdate(addNodeRelationshipID),
+            TransactWriteItem().withPut(createRelationship),
+            TransactWriteItem().withPut(putNewNode)
+        ).let { actionList ->
+            TransactWriteItemsRequest()
+                .withTransactItems(actionList).let { client.transactWriteItems(it) }
+        }
+
+        LOG.info("Relationship creation successful")
     }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
@@ -185,6 +265,23 @@ class NodeRepository(
             }
     }
 
+    fun getNodeMetaData(nodeID: String) : Node{
+        LOG.info("Getting metadata for $nodeID")
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+
+        val projectionExpression = "workspaceIdentifier, namespaceIdentifier, nodeSchemaIdentifier, AK, publicAccess, createdBy"
+
+        return DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("PK = :pk and SK = :sk")
+                .withExpressionAttributeValues(expressionAttributeValues)
+                .withProjectionExpression(projectionExpression).let{
+                    mapper.query(Node::class.java, it, dynamoDBMapperConfig)[0]
+                }
+    }
+
     fun getMetaDataForActiveVersions(nodeID: String): MutableList<String>? {
         val table = dynamoDB.getTable(tableName)
         println("Inside getAllVersionsOfNode function")
@@ -263,6 +360,13 @@ class NodeRepository(
             }
         }
         return nodesProcessedList
+    }
+
+    fun appendAndCreateRelationship(nodeID: String, newNode: Node, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 
 

@@ -518,8 +518,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun append(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
-        val elementsListRequestConverted = elementsListRequest as ElementRequest
-        val elements = elementsListRequestConverted.elements
+        val elements = (elementsListRequest as ElementRequest).elements
 
         LOG.info(elements)
 
@@ -779,52 +778,42 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
+
+
+    fun createRelationship(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>){
+        val newNode = Node()
+        copyValuesToNewNode(nodeID, newNode)
+        newNode.lastEditedBy = userID
+
+        val relationship = Relationship(
+                startNode = NodeIdentifier(nodeID),
+                endNode = NodeIdentifier(newNode.id)
+        )
+
+        LOG.info(relationship)
+
+        nodeRepository.createRelationshipAndPutNewNode(nodeID, newNode, relationship)
+
+        nodeRepository.append(newNode.id, userID, elements, orderList)
+
+
+
+    }
+
+    private fun copyValuesToNewNode(nodeID: String, newNode: Node){
+        val node = nodeRepository.getNodeMetaData(nodeID)
+
+        newNode.nodeSchemaIdentifier = node.nodeSchemaIdentifier
+        newNode.namespaceIdentifier = node.namespaceIdentifier
+        newNode.workspaceIdentifier = node.workspaceIdentifier
+        newNode.ak = node.ak
+        newNode.publicAccess = node.publicAccess
+        newNode.createdBy = node.createdBy
+    }
+
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
 
-}
-
-
-fun main(){
-    val jsonString: String = """
- {
-     "type" : "NodeRequest",
-     "title" : "F",
-     "referenceID": "NODE2",
-     "lastEditedBy" : "USERVarun",
-     "id": "NODE6",
-     "namespaceIdentifier" : "NAMESPACE1",
-     "data": [
-     {
-         "id": "sampleParentID",
-         "elementType": "paragraph",
-         "children": [
-         {
-             "id" : "sampleChildID",
-             "content" : "sample child content 1",
-             "elementType": "paragraph",
-             "properties" :  { "bold" : true, "italic" : true  }
-         }
-         ]
-     },
-     {
-         "id": "1234",
-         "elementType": "paragraph",
-         "children": [
-         {
-             "id" : "sampleChildID",
-             "content" : "sample child content",
-             "elementType": "paragraph",
-             "properties" :  { "bold" : true, "italic" : true  }
-         }
-         ]
-     }
-     ]
- }"""
-
-    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
-    println(nodeRequest)
-    //NodeService().createAndUpdateNode(nodeRequest, "WORKSPACE1", "v@gmail.com")
 }

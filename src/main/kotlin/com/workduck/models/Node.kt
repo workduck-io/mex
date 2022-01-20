@@ -75,6 +75,11 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")
     var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
 
+    @JsonProperty("relationshipIdentifier")
+    @DynamoDBTypeConverted(converter = RelationshipIdentifierConverter::class)
+    @DynamoDBAttribute(attributeName = "relationshipIdentifier")
+    var relationshipIdentifier: RelationshipIdentifier? = null,
+
     // @JsonProperty("status")
     // val status: NodeStatus = NodeStatus.LINKED,
     // val associatedProperties: Set<AssociatedProperty>,
