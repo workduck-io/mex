@@ -88,6 +88,7 @@ custom:
       events:
         - schedule: cron(0/5 2:30-13:30 ? * MON-FRI *) # converted to UTC format
       concurrency: 5
+      role: IamRoleLambdaExecution
     outOfOfficeHoursWarmer:
       enabled: true
       prewarm: true
@@ -95,6 +96,7 @@ custom:
         - schedule: cron(0/15 13:30-2:30 ? * MON-FRI *)
         - schedule: cron(0/15 * ? * SAT-SUN *)
       concurrency: 2
+      role: IamRoleLambdaExecution
     testWarmer:
       enabled: false
 
