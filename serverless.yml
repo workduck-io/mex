@@ -98,8 +98,6 @@ custom:
         - schedule: cron(0/15 * ? * SAT-SUN *)
       concurrency: 2
       role: IamRoleLambdaExecution
-    testWarmer:
-      enabled: false
 
   customDomain:
     rest:
