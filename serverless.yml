@@ -86,19 +86,18 @@ custom:
       enabled: true
       prewarm: true
       events:
-        - schedule: cron(0/5 2:30-13:30 ? * MON-FRI *) # converted to UTC format
+        - schedule: cron(0/5 3-15 ? * MON-FRI *) # converted to UTC format -> IST : 8.30 am to 8.30 pm
       concurrency: 5
       role: IamRoleLambdaExecution
     outOfOfficeHoursWarmer:
       enabled: true
       prewarm: true
       events:
-        - schedule: cron(0/15 13:30-2:30 ? * MON-FRI *)
+        - schedule: cron(0/15 15-23 ? * MON-FRI *) # 8.30 pm to 4.30 am IST
+        - schedule: cron(0/15 0-3 ? * MON-FRI *) # left value should be lesser that right value
         - schedule: cron(0/15 * ? * SAT-SUN *)
       concurrency: 2
       role: IamRoleLambdaExecution
-    testWarmer:
-      enabled: false
 
   customDomain:
     rest:
