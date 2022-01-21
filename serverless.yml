@@ -72,6 +72,7 @@ plugins:
   - serverless-dynamodb-local
   - serverless-offline
   - serverless-domain-manager
+  - serverless-plugin-warmup
 
 custom:
   serverless-offline:
