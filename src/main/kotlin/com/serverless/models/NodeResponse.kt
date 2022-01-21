@@ -17,6 +17,8 @@ data class NodeResponse(
 
     val itemType: String = "Node",
 
+    var tags: MutableList<String>?,
+
     var version: Long? = null,
 
     var namespaceID: String? = null,

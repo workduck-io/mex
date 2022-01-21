@@ -16,6 +16,7 @@ class NodeTransformer : Transformer<Node> {
             createdAt = t.createdAt,
             updatedAt = t.updatedAt,
             version = t.version,
+            tags = t.tags,
             namespaceID = t.namespaceIdentifier?.id,
             workspaceID = t.workspaceIdentifier?.id,
             isBookmarked = t.isBookmarked

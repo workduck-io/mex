@@ -1,5 +1,6 @@
 package com.serverless.models
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -32,5 +33,8 @@ data class NodeRequest(
 
     @JsonProperty("data")
     val data: List<AdvancedElement>? = null,
+
+    @JsonProperty("tags")
+    var tags: MutableList<String>? = null,
 
 ) : WDRequest
