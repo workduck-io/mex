@@ -357,6 +357,7 @@ class NodeService {
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
                 workspaceIdentifier = nodeRequest.workspaceIdentifier,
                 lastEditedBy = nodeRequest.lastEditedBy,
+                tags = nodeRequest.tags,
                 data = nodeRequest.data)
         }
     }
@@ -409,6 +410,7 @@ fun main() {
 			"id": "NODE1",
             "namespaceIdentifier" : "NAMESPACE1",
             "workspaceIdentifier" : "WORKSPACE1",
+            "tags" : ["random tag"],
 			"data": [
 			{
 				"id": "sampleParentID",
@@ -458,6 +460,7 @@ fun main() {
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
         "workspaceIdentifier" : "WORKSPACE1",
+        "tags" : ["random tag"],
         "data": [
         {
 				"id": "ABC",
@@ -570,7 +573,7 @@ fun main() {
 
 
     //    NodeService().makeNodePublic("NODE1")
-    NodeService().getPublicNode("NODE1")
+    //NodeService().getPublicNode("NODE1")
     // NodeService().testOrderedMap()
     // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
     // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
