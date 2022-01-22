@@ -273,28 +273,23 @@ class NodeService {
         val sentDataOrder = node.dataOrder
         val finalDataOrder = mutableListOf<String>()
 
-        if(storedNodeDataOrder != null) {
-            for ((index, nodeID) in storedNodeDataOrder.withIndex()) {
-                if(sentDataOrder != null) {
-                    if (nodeID == sentDataOrder[index]) {
-                        finalDataOrder.add(nodeID)
-                    } else {
-                        if (sentDataOrder[index] !in finalDataOrder)
-                            finalDataOrder.add(sentDataOrder[index])
+        //very basic handling of maintaining rough order amongst blocks
+        if(storedNodeDataOrder != null && sentDataOrder != null) {
 
-                        if (nodeID !in finalDataOrder)
-                            finalDataOrder.add(nodeID)
+            for(storedNodeID in storedNodeDataOrder){
+                finalDataOrder.add(storedNodeID)
+            }
+
+            for (storedNodeID in storedNodeDataOrder) {
+                for(sentNodeID in sentDataOrder) {
+                    if (storedNodeID == sentNodeID && storedNodeID !in finalDataOrder) {
+                        finalDataOrder.add(storedNodeID)
                     }
                 }
             }
-        }
 
-        var remaining = storedNodeDataOrder?.size
-        if (remaining != null && sentDataOrder != null) {
-            while (remaining < sentDataOrder.size) {
-                if (sentDataOrder[remaining] !in finalDataOrder)
-                    finalDataOrder.add(sentDataOrder[remaining])
-                remaining++
+            for(sentNodeID in sentDataOrder){
+                if(sentNodeID !in finalDataOrder) finalDataOrder.add(sentNodeID)
             }
         }
 
@@ -303,6 +298,7 @@ class NodeService {
 
         // TODO(explore autoMerge cmd line)
     }
+
 
     private fun compareNodeWithStoredNode(node: Node, storedNode: Node) : Boolean{
         var nodeChanged = false
