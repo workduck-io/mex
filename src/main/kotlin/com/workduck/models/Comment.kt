@@ -29,7 +29,7 @@ data class Comment(
 
     @JsonProperty("commentedBy")
     @DynamoDBTypeConverted(converter = UserIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "commentedBy")
+    @DynamoDBAttribute(attributeName = "AK")
     var commentedBy: UserIdentifier ? = null,
 
 

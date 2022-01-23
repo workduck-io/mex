@@ -11,12 +11,13 @@ class GetAllCommentsStrategy : CommentStrategy {
     override fun apply(input: Input, commentService: CommentService): ApiGatewayResponse {
         val errorMessage = "Error getting comments"
 
-        /* when getting comments of a node , id = NodeID;
-           when getting comments of a block, id = NodeID#BlockID */
-        val compositeIDList = input.pathParameters?.id?.split("-")
+        /* when getting comments of a node , id = NodeID
+           when getting comments of a block, id = BlockID
+           when getting comments of a user , id = UserID*/
+        val id = input.pathParameters?.id
 
-        return if (compositeIDList != null && compositeIDList.size <= 2) {
-            val commentList = commentService.getAllComments(compositeIDList)
+        return if (id != null) {
+            val commentList = commentService.getAllComments(id)
 
             val commentResponseList = mutableListOf<Response?>()
             commentList.map {

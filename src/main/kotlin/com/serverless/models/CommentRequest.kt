@@ -7,11 +7,12 @@ import com.workduck.utils.Helper
 
 class CommentRequest(
 
-        @JsonProperty("nodeID")
-        var nodeID : String = "",
+        /* either blockID or nodeID */
+        @JsonProperty("entityID")
+        var entityID : String = "",
 
-        @JsonProperty("blockID")
-        var blockID : String = "",
+        //@JsonProperty("blockID")
+        //var blockID : String = "",
 
         @JsonProperty("commentID")
         var commentID : String = Helper.generateId(IdentifierType.COMMENT.name),

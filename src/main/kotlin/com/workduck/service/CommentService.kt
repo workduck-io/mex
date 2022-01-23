@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.CommentRequest
 import com.serverless.models.WDRequest
 import com.workduck.models.Comment
+import com.workduck.models.Identifier
 import com.workduck.models.UserIdentifier
 import com.workduck.repositories.CommentRepository
 import com.workduck.repositories.Repository
@@ -36,10 +37,9 @@ class CommentService {
     private val commentRepository: CommentRepository = CommentRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val repository: Repository<Comment> = RepositoryImpl(dynamoDB, mapper, commentRepository, dynamoDBMapperConfig)
 
-    fun getComment(nodeID: String?, blockID: String?, commentID: String?) : Comment? {
-        val pk = generatePK(nodeID)
-        val sk = generateSK(blockID, commentID)
-        return commentRepository.getComment(pk, sk)
+    fun getComment(entityID: String, commentID: String) : Comment? {
+        val pk = generatePK(entityID)
+        return commentRepository.getComment(pk, commentID)
     }
 
     fun createComment(commentRequest : WDRequest?) : Comment? {
@@ -49,42 +49,39 @@ class CommentService {
 
     fun updateComment(commentRequest: WDRequest)  {
         val comment = createCommentObjectFromCommentRequest(commentRequest as CommentRequest)
-
         commentRepository.updateComment(comment)
     }
 
-    fun deleteComment(nodeID: String?, blockID : String?, commentID : String?) {
-        val pk = generatePK(nodeID)
-        val sk = generateSK(blockID, commentID)
-
-        commentRepository.deleteComment(pk, sk)
-
+    fun deleteComment(entityID: String, commentID : String) {
+        val pk = generatePK(entityID)
+        commentRepository.deleteComment(pk, commentID)
     }
 
 
-    fun getAllComments(compositeIDList: List<String>) : List<Comment>{
+    fun getAllComments(id: String) : List<Comment>{
 
-        return when (compositeIDList.size) {
-            1 -> commentRepository.getAllCommentsOfNode(generatePK(compositeIDList[0]))
-            2 -> commentRepository.getAllCommentsOfBlock(generatePK(compositeIDList[0]), compositeIDList[1])
+
+        //val identifier = Identifier()
+        return when {
+            isNodeID(id) || isBlockID(id) -> commentRepository.getAllCommentsOfNodeOrBlock(generatePK(id))
+            isUserID(id) -> commentRepository.getAllCommentsOfUser(id)
             else -> throw Exception("Invalid ID")
         }
 
     }
 
+    private fun isUserID(id : String) = id.startsWith("USER")
 
-    private fun generatePK(nodeID: String?) : String{
-        return "$nodeID#COMMENT"
-    }
+    private fun isNodeID(id : String) = id.startsWith("NODE")
 
-    private fun generateSK(blockID: String?, commentID: String?) : String{
-        return "$blockID#$commentID"
-    }
+    private fun isBlockID(id : String) = id.startsWith("BLOCK")
+
+    private fun generatePK(entityID: String) : String = "$entityID#COMMENT"
 
     private fun createCommentObjectFromCommentRequest(commentRequest: CommentRequest) : Comment {
         return Comment(
-            pk = "${commentRequest.nodeID}#COMMENT",
-            sk = "${commentRequest.blockID}#${commentRequest.commentID}",
+            pk = "${commentRequest.entityID}#COMMENT",
+            sk = commentRequest.commentID,
             commentBody = commentRequest.commentBody,
             commentedBy = UserIdentifier(commentRequest.commentedBy)
         )
@@ -96,14 +93,12 @@ fun main(){
     val jsonString: String = """
     {
         "type" : "CommentRequest",
-        "nodeID" : "NODE1",
-        "blockID": "BLOCK1",
-        "commentID" : "COMMENT4C3RX7K98FD47Z10RJ0YTE8JJP",
-        "commentedBy" : "Varun Garg",
+        "entityID" : "NODE1",
+        "commentedBy" : "USERVarun Garg",
         "commentBody": {
             "id": "sampleParentID",
             "elementType": "paragraph",
-            "content" : "Comment Textt"
+            "content" : "Comment Text"
         }
     }
     """
@@ -112,10 +107,9 @@ fun main(){
     val updateJsonString: String = """
     {
         "type" : "CommentRequest",
-        "nodeID" : "NODE1",
-        "blockID": "BLOCK2",
+        "entityID" : "NODE1",
         "commentID" : "COMMENT1",
-        "commentedBy" : "Varun Garg",
+        "commentedBy" : "USERVarun Garg",
         "commentBody": {
             "id": "sampleParentID",
             "elementType": "paragraph",

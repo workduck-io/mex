@@ -58,7 +58,7 @@ class CommentRepository(
         UpdateItemSpec().withPrimaryKey("PK", comment.pk, "SK", comment.sk)
                 .withUpdateExpression("set commentBody = :body , updatedAt = :updatedAt")
                 .withValueMap(expressionAttributeValues)
-                .withConditionExpression("commentedBy = :currentCommenter").let{
+                .withConditionExpression("AK = :currentCommenter").let{
                     table.updateItem(it)
                 }
 
@@ -74,20 +74,7 @@ class CommentRepository(
     }
 
 
-    fun getAllCommentsOfBlock(pk : String, blockID : String?) : List<Comment> {
-        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue().withS(pk)
-        expressionAttributeValues[":sk"] = AttributeValue().withS("$blockID#")
-
-         return DynamoDBQueryExpression<Comment>()
-                .withKeyConditionExpression("PK = :pk and begins_with(SK,:sk)")
-                .withExpressionAttributeValues(expressionAttributeValues).let{
-                    mapper.query(Comment::class.java, it, dynamoDBMapperConfig)
-                }
-    }
-
-
-    fun getAllCommentsOfNode(pk : String) : List<Comment> {
+    fun getAllCommentsOfNodeOrBlock(pk : String) : List<Comment> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(pk)
 
@@ -97,6 +84,20 @@ class CommentRepository(
                     mapper.query(Comment::class.java, it, dynamoDBMapperConfig)
                 }
 
+    }
+
+    fun getAllCommentsOfUser(userID : String) : List<Comment>{
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":ak"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue("Comment")
+
+
+        return DynamoDBQueryExpression<Comment>()
+                .withKeyConditionExpression("AK = :ak  and itemType = :itemType")
+                .withIndexName("itemType-AK-index").withConsistentRead(false)
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(Comment::class.java, it, dynamoDBMapperConfig)
+                }
     }
 
     companion object {

@@ -3,11 +3,11 @@ package com.serverless.models
 import com.workduck.models.AdvancedElement
 
 data class CommentResponse(
-        val nodeID : String,
+        //val nodeID : String,
+
+        val entityID : String,
 
         val commentID : String,
-
-        val blockID : String,
 
         val commentedBy : String?,
 

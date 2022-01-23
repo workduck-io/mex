@@ -13,15 +13,8 @@ object CommentHelper {
         return commentTransformer.transform(comment)
     }
 
-    fun getNodeIDFromPk(pk : String) : String{
-        return pk.split("#")[0]
-    }
 
-    fun getBlockIDFromSk(sk : String) : String{
-        return sk.split("#")[0]
-    }
+    fun getEntityIDFromPk(pk : String) : String = pk.split("#")[0]
 
-    fun getCommentIDFromSk(sk : String) : String{
-        return sk.split("#")[1]
-    }
+
 }

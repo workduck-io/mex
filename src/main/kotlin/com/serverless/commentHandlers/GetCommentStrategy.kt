@@ -14,12 +14,11 @@ class GetCommentStrategy : CommentStrategy {
 
         val list = input.pathParameters?.id?.split("-")
 
-        val nodeID = list?.get(0)
-        val blockID = list?.get(1)
-        val commentID = list?.get(2)
+        val entityID = list?.get(0)
+        val commentID = list?.get(1)
 
-        return if(nodeID != null && blockID != null && commentID != null) {
-            val comment = commentService.getComment(nodeID, blockID, commentID)
+        return if(entityID != null  && commentID != null) {
+            val comment = commentService.getComment(entityID, commentID)
 
             val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
 

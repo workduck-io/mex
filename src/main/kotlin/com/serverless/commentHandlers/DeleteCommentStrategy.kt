@@ -11,12 +11,11 @@ class DeleteCommentStrategy : CommentStrategy{
 
         val list = input.pathParameters?.id?.split("-")
 
-        val nodeID = list?.get(0)
-        val blockID = list?.get(1)
-        val commentID = list?.get(2)
+        val entityID = list?.get(0)
+        val commentID = list?.get(1)
 
-        return if(nodeID != null && blockID != null && commentID != null) {
-            commentService.deleteComment(nodeID, blockID, commentID)
+        return if(entityID != null  && commentID != null) {
+            commentService.deleteComment(entityID, commentID)
             ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
         } else{
             ApiResponseHelper.generateStandardErrorResponse("Invalid ID", 400)

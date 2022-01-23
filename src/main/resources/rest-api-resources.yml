@@ -242,19 +242,19 @@ Comment:
         method: patch
         authorizer: mexAuthorizer
 
-    #id -> nodeID#blockID#commentID
+    #id -> nodeID/blockID-commentID
     - httpApi:
         path: /comment/{id}
         method: get
         authorizer: mexAuthorizer
 
-    #id -> nodeID#blockID#commentID
+    #id -> nodeID/blockID-commentID
     - httpApi:
         path: /comment/{id}
         method: delete
         authorizer: mexAuthorizer
 
-    #get all comments of a node/block -> when node, id : nodeID ; when block, id : nodeID#blockID
+    #get all comments of a node/block/user
     - httpApi:
         path: /comment/all/{id}
         method: get
