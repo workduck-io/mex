@@ -3,12 +3,9 @@ package com.serverless.namespaceHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.Response
-import com.serverless.transformers.IdentifierTransformer
-import com.serverless.transformers.Transformer
+import com.serverless.models.responses.Response
 import com.serverless.utils.IdentifierHelper
 import com.workduck.models.Identifier
-import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 
 class DeleteNamespaceStrategy : NamespaceStrategy {

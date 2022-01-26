@@ -1,6 +1,5 @@
-package com.serverless.models
+package com.serverless.models.requests
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize

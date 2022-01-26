@@ -98,14 +98,13 @@ data class Node(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long? = System.currentTimeMillis()
+    var createdAt: Long = System.currentTimeMillis()
 
 ) : Entity {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
-
 
     @JsonProperty("lastVersionCreatedAt")
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
@@ -115,15 +114,8 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeVersionCount")
     var nodeVersionCount: Long = 0
 
-//    fun getVersion(): Long? {
-//        return version
-//    }
-//
-//    fun setVersion(version: Long?) {
-//        this.version = version
-//    }
     companion object {
-        fun populateNodeWithSkAkAndCreatedAtNull(node : Node, storedNode : Node) {
+        fun populateNodeWithSkAkAndCreatedAt(node : Node, storedNode : Node) {
             node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy

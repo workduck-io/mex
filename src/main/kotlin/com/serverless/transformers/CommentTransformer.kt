@@ -1,7 +1,7 @@
 package com.serverless.transformers
 
-import com.serverless.models.CommentResponse
-import com.serverless.models.Response
+import com.serverless.models.responses.CommentResponse
+import com.serverless.models.responses.Response
 import com.serverless.utils.CommentHelper
 import com.workduck.models.Comment
 

@@ -3,8 +3,8 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.Response
-import com.serverless.models.WDRequest
+import com.serverless.models.responses.Response
+import com.serverless.models.requests.WDRequest
 import com.serverless.utils.NodeHelper
 import com.workduck.models.Entity
 import com.workduck.service.NodeService

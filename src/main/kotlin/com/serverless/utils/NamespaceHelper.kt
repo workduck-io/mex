@@ -1,6 +1,6 @@
 package com.serverless.utils
 
-import com.serverless.models.Response
+import com.serverless.models.responses.Response
 import com.serverless.transformers.NamespaceTransformer
 import com.serverless.transformers.Transformer
 import com.workduck.models.Entity

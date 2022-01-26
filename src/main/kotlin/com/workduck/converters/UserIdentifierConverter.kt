@@ -5,7 +5,7 @@ import com.workduck.models.UserIdentifier
 
 class UserIdentifierConverter: DynamoDBTypeConverter<String, UserIdentifier?> {
 
-    override fun convert(n: UserIdentifier?): String? = n?.id
+    override fun convert(userIdentifier: UserIdentifier?): String? = userIdentifier?.id
 
     override fun unconvert(userID: String): UserIdentifier = UserIdentifier(userID)
 

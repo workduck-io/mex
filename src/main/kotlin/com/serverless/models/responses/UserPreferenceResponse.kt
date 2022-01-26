@@ -1,4 +1,4 @@
-package com.serverless.models
+package com.serverless.models.responses
 
 data class UserPreferenceResponse(
     val userID: String,

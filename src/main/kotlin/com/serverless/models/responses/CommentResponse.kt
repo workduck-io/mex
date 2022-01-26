@@ -1,9 +1,8 @@
-package com.serverless.models
+package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
 
 data class CommentResponse(
-        //val nodeID : String,
 
         val entityID : String,
 
@@ -13,7 +12,7 @@ data class CommentResponse(
 
         val commentBody : AdvancedElement?,
 
-        val updatedAt : Long,
+        override val updatedAt : Long,
 
-        val createdAt : Long?
-) : Response
+        override val createdAt : Long
+) : Response , TimestampAdhereResponse

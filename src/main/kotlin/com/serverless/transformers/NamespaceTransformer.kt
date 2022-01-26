@@ -1,7 +1,7 @@
 package com.serverless.transformers
 
-import com.serverless.models.NamespaceResponse
-import com.serverless.models.Response
+import com.serverless.models.responses.NamespaceResponse
+import com.serverless.models.responses.Response
 import com.workduck.models.Namespace
 
 class NamespaceTransformer : Transformer<Namespace> {
@@ -12,7 +12,7 @@ class NamespaceTransformer : Transformer<Namespace> {
             name = t.name,
             workspaceID = t.workspaceIdentifier?.id,
             createdAt = t.createdAt,
-            updateAt = t.updatedAt
+            updatedAt = t.updatedAt
        )
     }
 }

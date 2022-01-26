@@ -1,4 +1,4 @@
-package com.serverless.models
+package com.serverless.models.responses
 
 data class NamespaceResponse(
     val id: String,
@@ -7,7 +7,7 @@ data class NamespaceResponse(
 
     val createdAt: Long?,
 
-    val updateAt: Long,
+    val updatedAt: Long,
 
     val workspaceID: String?,
 

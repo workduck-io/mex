@@ -2,8 +2,8 @@ package com.serverless.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.requests.WDRequest
 import com.workduck.utils.Helper
 
 @JsonIgnoreProperties(ignoreUnknown = true)

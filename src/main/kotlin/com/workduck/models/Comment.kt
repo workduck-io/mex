@@ -39,7 +39,7 @@ data class Comment(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long? = System.currentTimeMillis()
+    var createdAt: Long = System.currentTimeMillis()
 
 
 ) : Entity {

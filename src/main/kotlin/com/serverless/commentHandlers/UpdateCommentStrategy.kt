@@ -3,7 +3,7 @@ package com.serverless.commentHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.WDRequest
+import com.serverless.models.requests.WDRequest
 import com.workduck.service.CommentService
 
 class UpdateCommentStrategy : CommentStrategy {

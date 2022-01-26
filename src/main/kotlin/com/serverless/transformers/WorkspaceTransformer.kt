@@ -1,7 +1,7 @@
 package com.serverless.transformers
 
-import com.serverless.models.Response
-import com.serverless.models.WorkspaceResponse
+import com.serverless.models.responses.Response
+import com.serverless.models.responses.WorkspaceResponse
 import com.workduck.models.Workspace
 
 class WorkspaceTransformer : Transformer<Workspace> {
@@ -11,7 +11,7 @@ class WorkspaceTransformer : Transformer<Workspace> {
             id = t.id,
             name = t.name,
             createdAt = t.createdAt,
-            updateAt = t.updatedAt
+            updatedAt = t.updatedAt
         )
     }
 }

@@ -1,4 +1,4 @@
-package com.serverless.models
+package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
 
@@ -11,9 +11,9 @@ data class NodeResponse(
 
     val createdBy: String?,
 
-    val createdAt: Long?,
+    override val createdAt: Long,
 
-    val updatedAt: Long,
+    override val updatedAt: Long,
 
     val itemType: String = "Node",
 
@@ -26,4 +26,4 @@ data class NodeResponse(
     var workspaceID: String? = null,
 
     var isBookmarked: Boolean? = null
-) : Response
+) : Response, TimestampAdhereResponse

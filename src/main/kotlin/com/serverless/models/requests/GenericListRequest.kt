@@ -1,4 +1,4 @@
-package com.serverless.models
+package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

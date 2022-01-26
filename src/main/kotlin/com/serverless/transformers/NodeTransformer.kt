@@ -1,7 +1,7 @@
 package com.serverless.transformers
 
-import com.serverless.models.NodeResponse
-import com.serverless.models.Response
+import com.serverless.models.responses.NodeResponse
+import com.serverless.models.responses.Response
 import com.workduck.models.Node
 
 class NodeTransformer : Transformer<Node> {

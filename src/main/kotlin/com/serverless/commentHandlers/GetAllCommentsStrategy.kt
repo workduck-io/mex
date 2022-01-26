@@ -3,7 +3,7 @@ package com.serverless.commentHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.Response
+import com.serverless.models.responses.Response
 import com.serverless.utils.CommentHelper
 import com.workduck.service.CommentService
 
@@ -16,7 +16,7 @@ class GetAllCommentsStrategy : CommentStrategy {
            when getting comments of a user , id = UserID*/
         val id = input.pathParameters?.id
 
-        return if (id != null) {
+        return if (id != null && CommentHelper.isValidEntity(id)) {
             val commentList = commentService.getAllComments(id)
 
             val commentResponseList = mutableListOf<Response?>()

@@ -6,10 +6,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.WDRequest
-import com.serverless.models.NodeRequest
-import com.serverless.models.GenericListRequest
-import com.serverless.models.ElementRequest
+import com.serverless.models.requests.WDRequest
+import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.GenericListRequest
+import com.serverless.models.requests.ElementRequest
 import com.workduck.models.Node
 import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
@@ -156,7 +156,7 @@ class NodeService {
     fun updateNode(node : Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
         /* set idCopy = id, createdAt = null, and set AK */
-        Node.populateNodeWithSkAkAndCreatedAtNull(node, storedNode)
+        Node.populateNodeWithSkAkAndCreatedAt(node, storedNode)
 
         node.dataOrder = createDataOrderForNode(node)
 

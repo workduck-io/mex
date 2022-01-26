@@ -9,11 +9,9 @@ class NodeSchemaIdentifierConverter : DynamoDBTypeConverter<String, NodeSchemaId
 
     private val objectMapper = ObjectMapper()
 
-    override fun convert(n: NodeSchemaIdentifier?): String? {
-        return objectMapper.writeValueAsString(n)
-    }
+    override fun convert(nodeSchemaIdentifier: NodeSchemaIdentifier?): String? = nodeSchemaIdentifier?.id
 
-    override fun unconvert(nodeSchemaIdentifierString: String): NodeSchemaIdentifier {
-        return objectMapper.readValue<NodeSchemaIdentifier>(nodeSchemaIdentifierString)
-    }
+
+    override fun unconvert(nodeSchemaID: String): NodeSchemaIdentifier = NodeSchemaIdentifier(nodeSchemaID)
+
 }

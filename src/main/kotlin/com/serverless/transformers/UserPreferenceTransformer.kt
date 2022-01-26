@@ -1,7 +1,7 @@
 package com.serverless.transformers
 
-import com.serverless.models.Response
-import com.serverless.models.UserPreferenceResponse
+import com.serverless.models.responses.Response
+import com.serverless.models.responses.UserPreferenceResponse
 import com.workduck.models.UserPreferenceRecord
 
 class UserPreferenceTransformer : Transformer<UserPreferenceRecord> {

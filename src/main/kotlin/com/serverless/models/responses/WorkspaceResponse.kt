@@ -1,4 +1,4 @@
-package com.serverless.models
+package com.serverless.models.responses
 
 data class WorkspaceResponse(
     val id: String,
@@ -7,7 +7,7 @@ data class WorkspaceResponse(
 
     val createdAt: Long?,
 
-    val updateAt: Long,
+    val updatedAt: Long,
 
     val itemType: String = "Workspace",
 ) : Response
