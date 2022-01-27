@@ -104,14 +104,12 @@ class NodeRepository(
         }
     }
 
-    fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
+    fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
+        return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
+    }
 
-        return try {
-            return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+    fun getAllNodesWithUserID(userID: String): MutableList<String> {
+        
     }
 
     override fun delete(identifier: Identifier): Identifier? {

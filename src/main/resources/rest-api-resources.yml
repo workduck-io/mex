@@ -32,7 +32,7 @@ Node:
 #        authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/workspace/{workspaceID}/namespace/{namespaceID}
+        path: /node/all/{id}
         method: get
         authorizer: mexAuthorizer
 

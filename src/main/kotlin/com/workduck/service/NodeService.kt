@@ -232,9 +232,13 @@ class NodeService {
         return nodeRepository.getMetaDataForActiveVersions(nodeID)
     }
 
-    fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String>? {
+    fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
 
         return nodeRepository.getAllNodesWithWorkspaceID(workspaceID)
+    }
+
+    fun getAllNodesWithUserID(userID: String) : MutableList<String>{
+        return nodeRepository.getAllNodesWithUserID(userID)
     }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {

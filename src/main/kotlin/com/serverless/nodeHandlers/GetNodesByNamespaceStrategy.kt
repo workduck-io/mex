@@ -9,7 +9,7 @@ import com.workduck.service.NodeService
 
 class GetNodesByNamespaceStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val errorMessage = "Error getting users!"
+        val errorMessage = "Error getting nodes!"
 
         val namespaceID = input.pathParameters?.namespaceID
         val workspaceID = input.pathParameters?.workspaceID
