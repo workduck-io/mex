@@ -108,8 +108,22 @@ class NodeRepository(
         return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(workspaceID, "itemType-AK-index", dynamoDB, "Node")
     }
 
-    fun getAllNodesWithUserID(userID: String): MutableList<String> {
-        
+    fun getAllNodesWithUserID(userID: String): List<String> {
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":createdBy"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue("Node")
+
+        return  DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("createdBy = :createdBy  and itemType = :itemType")
+                .withIndexName("createdBy-itemType-index").withConsistentRead(false)
+                .withProjectionExpression("PK")
+                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
+                        node.id
+                    }
+                }
+
     }
 
     override fun delete(identifier: Identifier): Identifier? {

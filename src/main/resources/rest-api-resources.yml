@@ -37,11 +37,6 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/workspace/{workspaceId}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
         path: /node/{id}/blockUpdate
         method: post
 #        authorizer: mexAuthorizer

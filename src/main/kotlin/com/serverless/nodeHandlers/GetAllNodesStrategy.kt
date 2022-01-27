@@ -10,7 +10,7 @@ class GetAllNodesStrategy : NodeStrategy {
         val errorMessage = "Error getting nodes!"
 
         /*
-            if by namespace : id = namespaceID#workspaceID
+            if by namespace : id = namespaceID-workspaceID
             if by workspace : id = workspaceID
             if by user : id = userID
          */

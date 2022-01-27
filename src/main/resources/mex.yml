@@ -12,6 +12,8 @@ Resources:
           AttributeType: S
         - AttributeName: itemType
           AttributeType: S
+        - AttributeName: createdBy
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -48,6 +50,17 @@ Resources:
             - AttributeName: workspaceIdentifier
               KeyType: HASH
             - AttributeName: itemStatus
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: createdBy-itemType-index
+          KeySchema:
+            - AttributeName: createdBy
+              KeyType: HASH
+            - AttributeName: itemType
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

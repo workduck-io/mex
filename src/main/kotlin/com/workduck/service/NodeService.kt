@@ -237,7 +237,7 @@ class NodeService {
         return nodeRepository.getAllNodesWithWorkspaceID(workspaceID)
     }
 
-    fun getAllNodesWithUserID(userID: String) : MutableList<String>{
+    fun getAllNodesWithUserID(userID: String) : List<String>{
         return nodeRepository.getAllNodesWithUserID(userID)
     }
 
@@ -406,7 +406,7 @@ fun main() {
     val jsonString: String = """
 		{
             "type" : "NodeRequest",
-            "lastEditedBy" : "Varun",
+            "lastEditedBy" : "USERVarun",
 			"id": "NODE1",
             "namespaceIdentifier" : "NAMESPACE1",
             "workspaceIdentifier" : "WORKSPACE1",
