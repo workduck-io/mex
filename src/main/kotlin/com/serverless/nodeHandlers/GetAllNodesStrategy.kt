@@ -14,7 +14,7 @@ class GetAllNodesStrategy : NodeStrategy {
             if by workspace : id = workspaceID
             if by user : id = userID
          */
-        val idList = input.pathParameters?.id?.split("-")
+        val idList = input.pathParameters?.id?.split("$")
 
         return if (idList != null) {
             when (idList.size) {
