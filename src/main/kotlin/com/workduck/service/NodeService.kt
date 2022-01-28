@@ -10,6 +10,7 @@ import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.ElementRequest
+import com.serverless.models.requests.BlockMovementRequest
 import com.workduck.models.Node
 import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
