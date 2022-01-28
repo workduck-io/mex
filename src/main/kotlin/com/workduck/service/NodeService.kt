@@ -389,24 +389,44 @@ class NodeService {
         return nodeRepository.getPublicNode(nodeID)
     }
 
-    fun copyBlock(blockID: String, nodeID1: String, nodeID2: String){
-        /* this node contains only valid block info and dataOrder info */
-        val node : Node? = nodeRepository.getBlock(nodeID1, blockID)
+    fun copyOrMoveBlock(wdRequest: WDRequest ){
 
-        val block = node?.data?.get(0)
+        val copyOrMoveBlockRequest = wdRequest as CopyOrMoveBlockRequest
+        val destinationNodeID = copyOrMoveBlockRequest.destinationNodeID
+        val sourceNodeID = copyOrMoveBlockRequest.sourceNodeID
+        val blockID = copyOrMoveBlockRequest.blockID
+
+        require(destinationNodeID != sourceNodeID ) {
+            "Source NodeID can't be equal to Destination NodeID"
+        }
+
+        when(copyOrMoveBlockRequest.action.lowercase()){
+            "copy" -> copyBlock(blockID, sourceNodeID, destinationNodeID)
+            "move" -> moveBlock(blockID, sourceNodeID, destinationNodeID)
+            else -> throw IllegalArgumentException("Invalid action")
+        }
+
+    }
+
+    fun copyBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
+        /* this node contains only valid block info and dataOrder info */
+        val sourceNode : Node? = nodeRepository.getBlock(sourceNodeID, blockID)
+
+        val block = sourceNode?.data?.get(0)
         val userID = block?.createdBy as String
-        nodeRepository.append(nodeID2, userID, listOf(block), mutableListOf(block.id))
+
+        nodeRepository.append(destinationNodeID, userID, listOf(block), mutableListOf(block.id))
     }
 
 
-    fun moveBlock(blockID: String, nodeID1: String, nodeID2: String){
-        /* this node contains only valid block info and dataOrder info ) */
-        val node1 : Node? = nodeRepository.getBlock(nodeID1, blockID)
+    fun moveBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
+        /* this node contains only valid block info and dataOrder info  */
+        val sourceNode : Node? = nodeRepository.getBlock(sourceNodeID, blockID)
 
         //TODO(list remove changes order of the original elements )
-        node1?.dataOrder?.let {
+        sourceNode?.dataOrder?.let {
             it.remove(blockID)
-            nodeRepository.moveBlock(node1.data?.get(0), nodeID1, nodeID2, it) }
+            nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it) }
     }
 
 }

@@ -12,7 +12,5 @@ data class PathParameter(
     val workspaceID: String?,
     val namespaceID: String?,
     val preferenceType: String?,
-    val blockID: String?,
-    val nodeID1: String?,
-    val nodeID2: String?
+    val blockID: String?
 )

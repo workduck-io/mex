@@ -32,9 +32,7 @@ class NodeStrategyFactory {
 
         const val getPublicNodeObject = "GET /node/public/{id}"
 
-        const val moveBlockObject = "PATCH /node/block/move/{blockID}/{nodeID1}/{nodeID2}"
-
-        const val copyBlockObject = "PATCH /node/block/copy/{blockID}/{nodeID1}/{nodeID2}"
+        const val copyOrMoveBlockObject = "PATCH /node/block/movement"
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
@@ -52,8 +50,7 @@ class NodeStrategyFactory {
             getPublicNodeObject to GetPublicNodeStrategy(),
             getAllNodesObject to GetAllNodesStrategy(),
             getPublicNodeObject to GetPublicNodeStrategy(),
-            moveBlockObject to MoveBlockStrategy(),
-            copyBlockObject to CopyBlockStrategy()
+            copyOrMoveBlockObject to CopyOrMoveBlockStrategy()
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {

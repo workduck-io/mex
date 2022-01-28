@@ -74,15 +74,9 @@ Node:
         path: /node/makePrivate/{id}
         method: patch
 
-    #move/cut a block from node1 to node2
+    #copy  or move a block from sourceNode to destinationNode
     - httpApi:
-        path: /node/block/move/{blockID}/{nodeID1}/{nodeID2}
-        method: patch
-        authorizer: mexAuthorizer
-
-    #copy a block from node1 to node2
-    - httpApi:
-        path: /node/block/copy/{blockID}/{nodeID1}/{nodeID2}
+        path: /node/block/movement
         method: patch
         authorizer: mexAuthorizer
 
