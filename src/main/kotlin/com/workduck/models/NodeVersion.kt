@@ -31,7 +31,7 @@ data class NodeVersion(
         @DynamoDBAttribute(attributeName = "nodeData")
         var data: List<AdvancedElement>? = null,
 
-        @DynamoDBAttribute(attributeName = "nodeDataOrder")
+        @DynamoDBAttribute(attributeName = "dataOrder")
         var dataOrder: MutableList<String>? = null,
 
         @JsonProperty("version")
