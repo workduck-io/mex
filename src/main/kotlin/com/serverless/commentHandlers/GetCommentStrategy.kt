@@ -12,7 +12,7 @@ class GetCommentStrategy : CommentStrategy {
 
         val errorMessage = "Error fetching comment"
 
-        val list = input.pathParameters?.id?.split("-")
+        val list = input.pathParameters?.id?.split("$")
 
         /* entity ID can be either BlockID or NodeID */
         val entityID = list?.get(0)

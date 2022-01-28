@@ -71,7 +71,7 @@ class CommentService (
 
     private fun isNodeID(id : String) = id.startsWith("NODE")
 
-    private fun isBlockID(id : String) = id.startsWith("BLOCK")
+    private fun isBlockID(id : String) = id.startsWith("TEMP") || id.startsWith("SYNC")
 
     private fun generatePK(entityID: String) : String = "$entityID#COMMENT"
 

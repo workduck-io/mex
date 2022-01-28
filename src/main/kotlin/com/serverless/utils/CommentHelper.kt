@@ -17,10 +17,10 @@ object CommentHelper {
     fun getEntityIDFromPk(pk : String) : String = pk.split("#")[0]
 
     fun isBlockOrNodeID(entityID : String) : Boolean {
-        return entityID.startsWith("NODE") || entityID.startsWith("BLOCK")
+        return entityID.startsWith("NODE") || entityID.startsWith("TEMP") ||  entityID.startsWith("SYNC")
     }
 
     fun isValidEntity(entityID: String) : Boolean {
-        return entityID.startsWith("NODE") || entityID.startsWith("BLOCK") || entityID.startsWith("USER")
+        return isBlockOrNodeID(entityID) || entityID.startsWith("USER")
     }
 }

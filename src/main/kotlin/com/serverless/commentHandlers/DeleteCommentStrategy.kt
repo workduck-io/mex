@@ -10,7 +10,7 @@ class DeleteCommentStrategy : CommentStrategy{
     override fun apply(input: Input, commentService: CommentService): ApiGatewayResponse {
         val errorMessage = "Error deleting comment"
 
-        val list = input.pathParameters?.id?.split("-")
+        val list = input.pathParameters?.id?.split("$")
 
         val entityID = list?.get(0)
         val commentID = list?.get(1)
