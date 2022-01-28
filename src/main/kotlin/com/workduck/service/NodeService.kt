@@ -391,7 +391,7 @@ class NodeService {
 
     fun copyOrMoveBlock(wdRequest: WDRequest ){
 
-        val copyOrMoveBlockRequest = wdRequest as CopyOrMoveBlockRequest
+        val copyOrMoveBlockRequest = wdRequest as BlockMovementRequest
         val destinationNodeID = copyOrMoveBlockRequest.destinationNodeID
         val sourceNodeID = copyOrMoveBlockRequest.sourceNodeID
         val blockID = copyOrMoveBlockRequest.blockID
