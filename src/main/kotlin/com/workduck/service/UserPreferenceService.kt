@@ -4,8 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.serverless.models.UserPreferenceRequest
-import com.serverless.models.WDRequest
+import com.serverless.models.requests.UserPreferenceRequest
+import com.serverless.models.requests.WDRequest
 import com.workduck.models.UserPreferenceRecord
 import com.workduck.repositories.UserPreferenceRepository
 import com.workduck.utils.DDBHelper

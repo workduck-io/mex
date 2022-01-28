@@ -1,6 +1,6 @@
 package com.serverless
 
-import com.serverless.models.Response
+import com.serverless.models.responses.Response
 import java.util.Collections
 
 object ApiResponseHelper {

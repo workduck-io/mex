@@ -6,10 +6,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.WDRequest
-import com.serverless.models.NodeRequest
-import com.serverless.models.GenericListRequest
-import com.serverless.models.ElementRequest
+import com.serverless.models.requests.WDRequest
+import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.GenericListRequest
+import com.serverless.models.requests.ElementRequest
 import com.workduck.models.Node
 import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
@@ -156,7 +156,7 @@ class NodeService {
     fun updateNode(node : Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
         /* set idCopy = id, createdAt = null, and set AK */
-        Node.populateNodeWithSkAkAndCreatedAtNull(node, storedNode)
+        Node.populateNodeWithSkAkAndCreatedAt(node, storedNode)
 
         node.dataOrder = createDataOrderForNode(node)
 
@@ -410,7 +410,6 @@ fun main() {
 			"id": "NODE1",
             "namespaceIdentifier" : "NAMESPACE1",
             "workspaceIdentifier" : "WORKSPACE1",
-            "tags" : ["random tag"],
 			"data": [
 			{
 				"id": "sampleParentID",
@@ -435,18 +434,6 @@ fun main() {
                     "properties" :  { "bold" : true, "italic" : true  }
                 }
                 ]
-			},
-            {
-				"id": "ABC",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
 			}
 			]
 		}
@@ -460,44 +447,19 @@ fun main() {
         "id": "NODE1",
         "namespaceIdentifier" : "NAMESPACE1",
         "workspaceIdentifier" : "WORKSPACE1",
-        "tags" : ["random tag"],
         "data": [
         {
-				"id": "ABC",
+            "id": "sampleParentID",
+            "elementType": "paragraph",
+            "children": [
+            {
+                "id" : "sampleChildID",
+                "content" : "sample child content 1",
                 "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		},
-        {
-				"id": "1234",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		},
-        {
-				"id": "sampleParentID",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content 1",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-		}]
+                "properties" :  { "bold" : true, "italic" : true  }
+            }
+            ]
+        }]
         
     }
     """
@@ -548,33 +510,7 @@ fun main() {
       """
 
 
-    // println(NodeService().getNode("NODE1"))
-    //println("HELLO")
-//    runBlocking {
-//        println("WORLD")
-//        NodeService().updateNode(jsonString1)
-//    }
+
     val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
-    NodeService().createAndUpdateNode(nodeRequest)
-    // println(NodeService().getNode("NODE2"))
-    // NodeService().updateNode(jsonString1)
-    // NodeService().deleteNode("NODE1")
-    // NodeService().jsonToObjectMapper(jsonString1)
-    // NodeService().jsonToElement()
-    // NodeService().append("NODE1",jsonForAppend)
-    // println(System.getenv("PRIMARY_TABLE"))
-    // println(NodeService().getAllNodesWithNamespaceID("NAMESPACE1", "WORKSPACE1"))
-    // NodeService().updateNodeBlock("NODE1", jsonForEditBlock)
-    // NodeService().getMetaDataForActiveVersions("NODE1")
 
-    //NodeService().setTTLForOldestVersion("NODE1")
-
-    //NodeService().getMetaDataOfAllArchivedNodesOfWorkspace("WORKSPACE1")
-
-
-    //    NodeService().makeNodePublic("NODE1")
-    //NodeService().getPublicNode("NODE1")
-    // NodeService().testOrderedMap()
-    // println(NodeService().getAllNodesWithWorkspaceID("WORKSPACE1"))
-    // TODO("for list of nodes, I should be getting just namespace/workspace IDs and not the whole serialized object")
 }

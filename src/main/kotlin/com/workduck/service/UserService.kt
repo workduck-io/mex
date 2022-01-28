@@ -6,7 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.WDRequest
+import com.serverless.models.requests.WDRequest
 
 import com.workduck.models.User
 import com.workduck.models.Entity

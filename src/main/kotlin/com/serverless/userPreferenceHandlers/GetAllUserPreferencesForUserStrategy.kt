@@ -3,8 +3,7 @@ package com.serverless.userPreferenceHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.Response
-import com.serverless.models.UserPreferenceResponse
+import com.serverless.models.responses.Response
 import com.serverless.utils.UserPreferenceHelper
 import com.workduck.models.UserPreferenceRecord
 import com.workduck.service.UserPreferenceService

@@ -3,7 +3,6 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.Response
 import com.workduck.service.NodeService
 
 class DeleteNodeStrategy : NodeStrategy {
