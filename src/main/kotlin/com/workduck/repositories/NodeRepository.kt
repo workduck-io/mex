@@ -4,6 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTransactionWriteExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Index
@@ -11,6 +13,7 @@ import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
@@ -18,10 +21,8 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.amazonaws.services.dynamodbv2.model.Put
-import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
-import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
-import com.amazonaws.services.dynamodbv2.model.Update
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue
+import com.amazonaws.services.dynamodbv2.model.TransactionCanceledException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
@@ -47,10 +48,11 @@ class NodeRepository(
     private val dynamoDB: DynamoDB,
     private val dynamoDBMapperConfig: DynamoDBMapperConfig,
     private val client: AmazonDynamoDB,
-    private val tableName: String
+    private val tableName: String,
+    private val nodeService: NodeService
 )  {
 
-    fun append(nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+    fun append(sourceNodeID: String, nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -83,75 +85,81 @@ class NodeRepository(
                     }
         } catch (e: AmazonDynamoDBException) {
             if (e.errorMessage == "Item size to update has exceeded the maximum allowed size") {
-                LOG.info(e.errorMessage)
-                nodeService.createRelationship(nodeID, userID, elements, orderList)
-                null
+                nodeService.createRelationship(sourceNodeID, nodeID, userID, elements, orderList)
+
             } else {
                 throw e
             }
         }
     }
 
-    fun createRelationshipAndPutNewNode(nodeID: String, newNode: Node, relationship: Relationship) {
+    fun createRelationshipAndNewNode(node: Node, relationship: Relationship) : Boolean {
+        LOG.info("Creating a relationship item : $node & a new node : $node")
+        val transactionWriteRequest = TransactionWriteRequest()
 
-        val nodeKey = HashMap<String, AttributeValue>()
-        nodeKey["PK"] = AttributeValue(nodeID)
-        nodeKey["SK"] = AttributeValue(nodeID)
+        transactionWriteRequest.addPut(node)
+        transactionWriteRequest.addPut(relationship,
+                DynamoDBTransactionWriteExpression().withConditionExpression("attribute_not_exists(SK)"))
 
-        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":relationshipID"] = AttributeValue(relationship.id)
-
-        val addNodeRelationshipID = Update()
-            .withTableName(tableName)
-            .withKey(nodeKey)
-            .withUpdateExpression("SET relationshipIdentifier = :relationshipID")
-            .withExpressionAttributeValues(expressionAttributeValues)
-
-        val relationShipItem = HashMap<String, AttributeValue>()
-        relationShipItem["PK"] = AttributeValue(relationship.id)
-        relationShipItem["SK"] = AttributeValue(relationship.pk)
-        relationShipItem["startNode"] = AttributeValue(relationship.startNode.id)
-        relationShipItem["endNode"] = AttributeValue(relationship.endNode.id)
-        relationShipItem["createdAt"] = AttributeValue().withN(relationship.createdAt.toString())
-        relationShipItem["updatedAt"] = AttributeValue().withN(relationship.updatedAt.toString())
-        relationShipItem["status"] = AttributeValue(relationship.status.name)
-
-        val createRelationship = Put()
-            .withTableName(tableName)
-            .withItem(relationShipItem)
-
-
-        val newNodeItem = HashMap<String, AttributeValue>()
-        newNodeItem["PK"] = AttributeValue(newNode.id)
-        newNodeItem["SK"] = AttributeValue(newNode.idCopy)
-        newNodeItem["AK"] = AttributeValue(newNode.ak)
-        newNodeItem["publicAccess"] = AttributeValue().withBOOL(newNode.publicAccess)
-        newNodeItem["createdBy"] = AttributeValue(newNode.createdBy)
-        newNodeItem["lastEditedBy"] = AttributeValue(newNode.lastEditedBy)
-        newNodeItem["updatedAt"] = AttributeValue().withN(newNode.updatedAt.toString())
-        newNodeItem["createdAt"] = AttributeValue().withN(newNode.createdAt.toString())
-        newNodeItem["nodeData"] = AttributeValue().withM(mutableMapOf())
-        newNode.nodeSchemaIdentifier?.let { newNodeItem["nodeSchemaIdentifier"] = AttributeValue(it.id) }
-        newNode.namespaceIdentifier?.let { newNodeItem["namespaceIdentifier"] = AttributeValue(it.id) }
-        newNode.workspaceIdentifier?.let { newNodeItem["workspaceIdentifier"] = AttributeValue(it.id) }
-
-
-        val putNewNode = Put()
-                .withTableName(tableName)
-                .withItem(newNodeItem)
-
-
-        listOf(
-            TransactWriteItem().withUpdate(addNodeRelationshipID),
-            TransactWriteItem().withPut(createRelationship),
-            TransactWriteItem().withPut(putNewNode)
-        ).let { actionList ->
-            TransactWriteItemsRequest()
-                .withTransactItems(actionList).let { client.transactWriteItems(it) }
+        return try {
+            mapper.transactionWrite(transactionWriteRequest)
+            true
+        } catch (error : TransactionCanceledException){
+            when(error.cancellationReasons.filter { it.code == "ConditionalCheckFailed" }.size){
+                0 -> throw error
+                else -> return false
+            }
         }
 
-        LOG.info("Relationship creation successful")
     }
+
+    fun getRelationshipsForSourceNode(sourceNodeID: String) : List<Relationship> {
+
+        LOG.info("SourceNodeID : $sourceNodeID")
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue("$sourceNodeID#RLSP")
+        //expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
+
+        return  DynamoDBQueryExpression<Relationship>()
+                .withKeyConditionExpression("PK = :pk")
+                .withProjectionExpression("PK, SK, startNode, endNode")
+                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
+                }
+
+    }
+
+    fun getRelationShipEndNode(sourceNodeID: String, startNodeID: String) : String{
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue("$sourceNodeID#RLSP")
+        expressionAttributeValues[":sk"] = AttributeValue(startNodeID)
+
+        return DynamoDBQueryExpression<Relationship>()
+                .withKeyConditionExpression("PK = :pk and SK = :sk")
+                .withProjectionExpression("endNode")
+                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)[0].endNode.id
+                }
+    }
+
+
+    fun getBatchNodeData(nodeIDs: List<String>){
+        val nodeKeysAndAttributes  = TableKeysAndAttributes(tableName)
+
+        nodeKeysAndAttributes.addHashOnlyPrimaryKeys("PK", nodeIDs)
+
+        val outcome = dynamoDB.batchGetItem(nodeKeysAndAttributes)
+
+        val items = outcome.tableItems[tableName]!!
+        for (item in items) {
+            println(item.toJSONPretty())
+        }
+
+
+    }
+
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
@@ -363,10 +371,6 @@ class NodeRepository(
     }
 
     fun appendAndCreateRelationship(nodeID: String, newNode: Node, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 
 
