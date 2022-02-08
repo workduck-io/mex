@@ -27,6 +27,23 @@ class GetNodeStrategy : NodeStrategy {
             it["userID"]
         }
 
+        val startCursor = queryStringParameters?.let{
+            it["startCursor"]
+        }
+
+        val blockSize = queryStringParameters?.let{
+            it["blockSize"]?.toInt() ?: 50
+        } ?: 50
+
+        val getMetaDataOfNode = queryStringParameters?.let{
+            it["getMetaDataOfNode"].toBoolean()
+        } ?: true
+
+        val getReverseOrder = queryStringParameters?.let{
+            it["getReverseOrder"].toBoolean()
+        } ?: false
+
+        val node: Entity? = nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, getMetaDataOfNode, bookmarkInfo, userID)
         val node: Entity? = nodeService.getNode(nodeID, input.headers.workspaceID, bookmarkInfo, userID)
 
         val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)

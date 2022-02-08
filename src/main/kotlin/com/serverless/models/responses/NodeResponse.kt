@@ -17,6 +17,8 @@ data class NodeResponse(
 
     val itemType: String = "Node",
 
+    val endCursor: String? = null,
+
     var tags: MutableList<String>?,
 
     var version: Int? = null,

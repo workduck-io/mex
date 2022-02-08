@@ -41,6 +41,8 @@ import com.workduck.repositories.PageRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
+import com.workduck.utils.NodeHelper
 import org.apache.logging.log4j.LogManager
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -492,15 +494,50 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun getDataFromLinkedNodes(nodeID: String, relationships: List<Relationship>){
         val set : MutableSet<String> = mutableSetOf()
+    fun getNodeData(nodeID: String, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false, getMetaDataOfNode : Boolean = true, bookmarkInfo: Boolean? = null, userID: String? = null): Entity?  = runBlocking{
 
-        for(relationship in relationships){
-            LOG.info("startNode : ${relationship.startNode.id} , endNode : ${relationship.endNode.id}")
-            set.add(relationship.startNode.id)
-            set.add(relationship.endNode.id)
+        val relationships = nodeRepository.getRelationshipsForSourceNode(nodeID)
+
+        when(getMetaDataOfNode){
+            true -> {
+                val jobToGetNodeMetaData = async { nodeRepository.getNodeMetaData(nodeID) }
+                val jobToGetNodeData = async { getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder) }
+
+                val node = jobToGetNodeMetaData.await()
+                jobToGetNodeData.await().let {
+                    node.data = it.second
+                    node.endCursor = it.first
+                }
+
+                return@runBlocking node
+            }
+
+            false -> {
+                val node = Node(id = nodeID, idCopy = nodeID)
+                getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder).let {
+                    node.data = it.second
+                    node.endCursor = it.first
+                }
+                return@runBlocking node
+
+            }
         }
+    }
 
-        nodeRepository.getBatchNodeData(set.toList())
+    private fun getPaginatedNodeData(nodeID: String, relationships: List<Relationship>, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false) : Pair<String?, MutableList<AdvancedElement>>{
 
+        return when(getReverseOrder) {
+            true -> {
+                /* if the start_cursor is passed, extract nodeID , else get the tail node from relationships */
+                val currentNodeID = startCursor?.split("#")?.get(0) ?: getTailNodeIDFromRelationships(nodeID, relationships)
+                nodeRepository.getPaginatedNodeDataReverseAndEndCursor(currentNodeID, relationships, startCursor?.split("#")?.get(1), blockSize)
+            }
+            false -> {
+                /* if the start_cursor is passed, extract nodeID , else set current node as  passed source node */
+                val currentNodeID = startCursor?.split("#")?.get(0) ?: nodeID
+                nodeRepository.getPaginatedNodeDataAndEndCursor(currentNodeID, relationships, startCursor?.split("#")?.get(1), blockSize)
+            }
+        }
     }
 
     /* basically archive the nodes */

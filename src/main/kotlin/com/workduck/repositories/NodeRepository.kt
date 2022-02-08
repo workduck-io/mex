@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTransactionWriteExpression
 import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
@@ -21,7 +20,6 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue
 import com.amazonaws.services.dynamodbv2.model.TransactionCanceledException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -39,6 +37,7 @@ import com.workduck.models.Relationship
 import com.workduck.service.NodeService
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
+import com.workduck.utils.NodeHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
 import java.time.Instant
@@ -53,6 +52,117 @@ class NodeRepository(
 )  {
 
     fun append(sourceNodeID: String, nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+    override fun get(identifier: Identifier): Entity? =
+        mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
+
+    fun getPaginatedNodeDataAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed: Int = 0): Pair<String?, MutableList<AdvancedElement>> {
+
+        val nodeData = mapper.load(Node::class.java, nodeID, nodeID, dynamoDBMapperConfig)
+
+        var pair = processBlocks(nodeData, blockID, relationships, blockSize, blocksProcessed)
+
+        if(blocksProcessed == blockSize) return pair
+
+        NodeHelper.getNodeNextNodeID(nodeID, relationships).let {
+            when (it) {
+                nodeID -> return pair /* case when there's no more relationships left */
+                else -> {
+                    val newData =  getPaginatedNodeDataAndEndCursor(it, relationships, null, blockSize, blocksProcessed)
+                    pair.second += newData.second
+                    pair = pair.copy(first = newData.first)
+                }
+            }
+        }
+        return pair
+    }
+
+    fun getPaginatedNodeDataReverseAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed: Int = 0): Pair<String?, MutableList<AdvancedElement>> {
+
+        val nodeData = mapper.load(Node::class.java, nodeID, nodeID, dynamoDBMapperConfig)
+
+        var pair = processBlocksInReverse(nodeData, blockID, relationships, blockSize, blocksProcessed)
+
+        if(blocksProcessed == blockSize) return pair
+
+        NodeHelper.getNodePreviousNodeID(nodeID, relationships).let {
+            when (it) {
+                nodeID -> return pair /* case when there's no more relationships left */
+                else -> {
+                    val newData = getPaginatedNodeDataReverseAndEndCursor(it, relationships, null, blockSize, blocksProcessed)
+                    pair.second += newData.second
+                    pair = pair.copy(first = newData.first)
+
+                }
+            }
+        }
+
+        return pair
+    }
+
+
+    private fun processBlocks(nodeData: Node, blockID: String?, relationships: List<Relationship>, blockSize: Int, _blocksProcessed: Int) : Pair<String?, MutableList<AdvancedElement>>{
+
+        val listOfElements = mutableListOf<AdvancedElement>()
+        var blocksProcessed = _blocksProcessed
+
+        val indexOfStartBlock = nodeData.dataOrder?.indexOf(blockID) ?: 0
+
+        for (indexOfDataOrder in indexOfStartBlock until nodeData.dataOrder?.size!!) {
+            for ((index,element) in nodeData.data!!.withIndex()) {
+                if (element.id == nodeData.dataOrder?.get(indexOfDataOrder)) {
+                    blocksProcessed++
+                    listOfElements.add(element)
+                    if (blocksProcessed == blockSize) {
+                        return if(index + 1 < nodeData.data!!.size) Pair("${nodeData.id}#${nodeData.dataOrder?.get(index+1)}",listOfElements)
+                        else Pair(NodeHelper.getNodeNextNodeID(nodeData.id, relationships) , listOfElements)
+                    }
+                }
+            }
+        }
+
+        return Pair(null, listOfElements)
+
+    }
+
+    private fun processBlocksInReverse(nodeData: Node, blockID: String?, relationships: List<Relationship>, blockSize: Int, _blocksProcessed: Int) : Pair<String?, MutableList<AdvancedElement>>{
+
+        val listOfElements = mutableListOf<AdvancedElement>()
+        var blocksProcessed = _blocksProcessed
+
+        val indexOfStartBlock = nodeData.dataOrder?.indexOf(blockID) ?: nodeData.dataOrder?.size!!
+
+        for (indexOfDataOrder in indexOfStartBlock downTo 0) {
+            for ((index, element) in nodeData.data!!.withIndex()) {
+                if (element.id == nodeData.dataOrder?.get(indexOfDataOrder)) {
+                    blocksProcessed++
+                    listOfElements.add(element)
+                    if (blocksProcessed == blockSize) {
+                        return if(index-1 >= 0) Pair("${nodeData.id}#${nodeData.dataOrder?.get(index-1)}",listOfElements)
+                        else Pair(NodeHelper.getNodePreviousNodeID(nodeData.id, relationships), listOfElements)
+                    }
+                }
+            }
+        }
+
+        return Pair(null, listOfElements)
+
+    }
+
+    private fun orderBlocks(node: Node): Entity =
+        node.apply {
+            node.data?.let { data ->
+                (
+                    node.dataOrder?.mapNotNull { blockId ->
+                        data.find { element -> blockId == element.id }
+                    } ?: emptyList()
+                    )
+                    .also {
+                        node.data = it.toMutableList()
+                    }
+            }
+        }
+
+    fun append(sourceNodeID: String, nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -86,67 +196,65 @@ class NodeRepository(
         } catch (e: AmazonDynamoDBException) {
             if (e.errorMessage == "Item size to update has exceeded the maximum allowed size") {
                 nodeService.createRelationship(sourceNodeID, nodeID, userID, elements, orderList)
-
             } else {
                 throw e
             }
         }
     }
 
-    fun createRelationshipAndNewNode(node: Node, relationship: Relationship) : Boolean {
+    fun createRelationshipAndNewNode(node: Node, relationship: Relationship): Boolean {
         LOG.info("Creating a relationship item : $node & a new node : $node")
         val transactionWriteRequest = TransactionWriteRequest()
 
         transactionWriteRequest.addPut(node)
-        transactionWriteRequest.addPut(relationship,
-                DynamoDBTransactionWriteExpression().withConditionExpression("attribute_not_exists(SK)"))
+        transactionWriteRequest.addPut(
+            relationship,
+            DynamoDBTransactionWriteExpression().withConditionExpression("attribute_not_exists(SK)")
+        )
 
         return try {
             mapper.transactionWrite(transactionWriteRequest)
             true
-        } catch (error : TransactionCanceledException){
-            when(error.cancellationReasons.filter { it.code == "ConditionalCheckFailed" }.size){
+        } catch (error: TransactionCanceledException) {
+            when (error.cancellationReasons.filter { it.code == "ConditionalCheckFailed" }.size) {
                 0 -> throw error
                 else -> return false
             }
         }
-
     }
 
-    fun getRelationshipsForSourceNode(sourceNodeID: String) : List<Relationship> {
+    fun getRelationshipsForSourceNode(sourceNodeID: String): List<Relationship> {
 
         LOG.info("SourceNodeID : $sourceNodeID")
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue("$sourceNodeID#RLSP")
-        //expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
+        // expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
 
-        return  DynamoDBQueryExpression<Relationship>()
-                .withKeyConditionExpression("PK = :pk")
-                .withProjectionExpression("PK, SK, startNode, endNode")
-                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
-                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
-                }
-
+        return DynamoDBQueryExpression<Relationship>()
+            .withKeyConditionExpression("PK = :pk")
+            .withProjectionExpression("PK, SK, startNode, endNode")
+            .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
+            }
     }
 
-    fun getRelationShipEndNode(sourceNodeID: String, startNodeID: String) : String{
+    fun getRelationShipEndNode(sourceNodeID: String, startNodeID: String): String {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue("$sourceNodeID#RLSP")
         expressionAttributeValues[":sk"] = AttributeValue(startNodeID)
 
         return DynamoDBQueryExpression<Relationship>()
-                .withKeyConditionExpression("PK = :pk and SK = :sk")
-                .withProjectionExpression("endNode")
-                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
-                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)[0].endNode.id
-                }
+            .withKeyConditionExpression("PK = :pk and SK = :sk")
+            .withProjectionExpression("endNode")
+            .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)[0].endNode.id
+            }
     }
 
-
-    fun getBatchNodeData(nodeIDs: List<String>){
-        val nodeKeysAndAttributes  = TableKeysAndAttributes(tableName)
+    fun getBatchNodeData(nodeIDs: List<String>) {
+        val nodeKeysAndAttributes = TableKeysAndAttributes(tableName)
 
         nodeKeysAndAttributes.addHashOnlyPrimaryKeys("PK", nodeIDs)
 
@@ -156,10 +264,7 @@ class NodeRepository(
         for (item in items) {
             println(item.toJSONPretty())
         }
-
-
     }
-
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
@@ -273,21 +378,21 @@ class NodeRepository(
             }
     }
 
-    fun getNodeMetaData(nodeID: String) : Node{
+    fun getNodeMetaData(nodeID: String): Node {
         LOG.info("Getting metadata for $nodeID")
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        val projectionExpression = "workspaceIdentifier, namespaceIdentifier, nodeSchemaIdentifier, AK, publicAccess, createdBy"
+        val projectionExpression = "workspaceIdentifier, namespaceIdentifier, nodeSchemaIdentifier, AK, publicAccess, createdBy, lastEditedBy, tags"
 
         return DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("PK = :pk and SK = :sk")
-                .withExpressionAttributeValues(expressionAttributeValues)
-                .withProjectionExpression(projectionExpression).let{
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig)[0]
-                }
+            .withKeyConditionExpression("PK = :pk and SK = :sk")
+            .withExpressionAttributeValues(expressionAttributeValues)
+            .withProjectionExpression(projectionExpression).let {
+                mapper.query(Node::class.java, it, dynamoDBMapperConfig)[0]
+            }
     }
 
     fun getMetaDataForActiveVersions(nodeID: String): MutableList<String>? {
@@ -373,6 +478,7 @@ class NodeRepository(
     fun appendAndCreateRelationship(nodeID: String, newNode: Node, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
     }
 
+    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {
 
     fun getBlock(nodeID: String, blockID: String, workspaceID: String) : Node? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()

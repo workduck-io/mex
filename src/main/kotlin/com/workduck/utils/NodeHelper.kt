@@ -90,7 +90,17 @@ object NodeHelper {
     }
 
 
+    fun getNodePreviousNodeID(nodeID: String, relationships: List<Relationship>) : String{
+        for(relationship in relationships){
+            if(relationship.endNode.id == nodeID) return relationship.startNode.id
+        }
+        return nodeID
+    }
 
-
-
+    fun getNodeNextNodeID(nodeID: String, relationships: List<Relationship>) : String{
+        for (relationship in relationships){
+            if(relationship.startNode.id == nodeID) return relationship.endNode.id
+        }
+        return nodeID
+    }
 }

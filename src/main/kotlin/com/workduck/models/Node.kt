@@ -121,6 +121,9 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeVersionCount")
     var nodeVersionCount: Long = 0
 
+
+    var endCursor : String? = null
+
     companion object {
         fun populateNodeWithSkAkAndCreatedAt(node: Node, storedNode: Node) {
             node.createdAt = storedNode.createdAt
