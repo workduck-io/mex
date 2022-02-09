@@ -24,6 +24,10 @@ data class Node(
     @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String? = id,
 
+    @JsonProperty("nodePath")
+    @DynamoDBAttribute(attributeName = "nodePath")
+    var nodePath: String? = null,
+
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
     var lastEditedBy: String? = null,

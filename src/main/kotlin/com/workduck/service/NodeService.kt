@@ -354,6 +354,7 @@ class NodeService {
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?) : Node? {
         return nodeRequest?.let{
             Node(id = nodeRequest.id,
+                nodePath = nodeRequest.nodePath,
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
                 workspaceIdentifier = nodeRequest.workspaceIdentifier,
                 lastEditedBy = nodeRequest.lastEditedBy,

@@ -20,6 +20,9 @@ data class NodeRequest(
     @JsonProperty("id")
     val id: String = "",
 
+    @JsonProperty("nodePath")
+    val nodePath: String ?= null,
+
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
