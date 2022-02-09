@@ -5,6 +5,8 @@ import com.workduck.models.AdvancedElement
 data class NodeResponse(
     val id: String? = null,
 
+    val nodePath: String?= null,
+
     val data: List<AdvancedElement> ? = null,
 
     val lastEditedBy: String?,
