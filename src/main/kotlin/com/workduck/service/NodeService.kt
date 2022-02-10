@@ -46,7 +46,6 @@ import com.workduck.utils.NodeHelper
 import org.apache.logging.log4j.LogManager
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
@@ -490,6 +489,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
+    fun getNodeData(nodeID: String, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false, bookmarkInfo: Boolean? = null, userID: String? = null): Entity?  = runBlocking{
     fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
     private fun getDataFromLinkedNodes(nodeID: String, relationships: List<Relationship>){
@@ -498,30 +498,28 @@ class NodeService( // Todo: Inject them from handlers
 
         val relationships = nodeRepository.getRelationshipsForSourceNode(nodeID)
 
-        when(getMetaDataOfNode){
-            true -> {
-                val jobToGetNodeMetaData = async { nodeRepository.getNodeMetaData(nodeID) }
-                val jobToGetNodeData = async { getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder) }
+        val jobToGetNodeMetaData = async { nodeRepository.getNodeMetaData(nodeID) }
+        val jobToGetNodeData = async { getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder) }
 
-                val node = jobToGetNodeMetaData.await()
-                jobToGetNodeData.await().let {
-                    node.data = it.second
-                    node.endCursor = it.first
-                }
-
-                return@runBlocking node
-            }
-
-            false -> {
-                val node = Node(id = nodeID, idCopy = nodeID)
-                getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder).let {
-                    node.data = it.second
-                    node.endCursor = it.first
-                }
-                return@runBlocking node
-
-            }
+        val node = jobToGetNodeMetaData.await()
+        LOG.info("Node with metadata = $node")
+        jobToGetNodeData.await().let {
+            node.data = it.second
+            node.endCursor = it.first
         }
+
+        if (bookmarkInfo == true && userID != null) {
+            node.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
+        }
+
+        return@runBlocking node
+    }
+
+    fun getNodeElements(nodeID: String, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false) : Pair<String?, MutableList<AdvancedElement>>{
+
+        val relationships = nodeRepository.getRelationshipsForSourceNode(nodeID)
+        return getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder)
+
     }
 
     private fun getPaginatedNodeData(nodeID: String, relationships: List<Relationship>, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false) : Pair<String?, MutableList<AdvancedElement>>{
@@ -529,13 +527,13 @@ class NodeService( // Todo: Inject them from handlers
         return when(getReverseOrder) {
             true -> {
                 /* if the start_cursor is passed, extract nodeID , else get the tail node from relationships */
-                val currentNodeID = startCursor?.split("#")?.get(0) ?: getTailNodeIDFromRelationships(nodeID, relationships)
-                nodeRepository.getPaginatedNodeDataReverseAndEndCursor(currentNodeID, relationships, startCursor?.split("#")?.get(1), blockSize)
+                val currentNodeID = startCursor?.split("$")?.get(0) ?: getTailNodeIDFromRelationships(nodeID, relationships)
+                nodeRepository.getPaginatedNodeDataReverseAndEndCursor(currentNodeID, relationships, startCursor?.split("$")?.getOrNull(1), blockSize)
             }
             false -> {
                 /* if the start_cursor is passed, extract nodeID , else set current node as  passed source node */
-                val currentNodeID = startCursor?.split("#")?.get(0) ?: nodeID
-                nodeRepository.getPaginatedNodeDataAndEndCursor(currentNodeID, relationships, startCursor?.split("#")?.get(1), blockSize)
+                val currentNodeID = startCursor?.split("$")?.get(0) ?: nodeID
+                nodeRepository.getPaginatedNodeDataAndEndCursor(currentNodeID, relationships, startCursor?.split("$")?.getOrNull(1), blockSize)
             }
         }
     }
@@ -582,17 +580,31 @@ class NodeService( // Todo: Inject them from handlers
         processElementsAndCreateOrderList(orderList, elements)
 
         val nodeID = jobToGetTailNodeID.await()
-        if(nodeID != sourceNodeID){
-            jobToGetNodeDataSize.cancel() /* if the node is linked, no need to check for source node size */
-        } else{
-            /* in this case we're appending to the sourceNode */
-            when(jobToGetNodeDataSize.await() + getRoughSizeOfDDBItem(elements) >= 350000){
-                false -> nodeRepository.append(sourceNodeID, nodeID, elements[0].createdBy as String, elements, orderList)
-                true -> createRelationship(sourceNodeID, nodeID, elements[0].createdBy as String, elements, orderList)
+
+        LOG.info("Source Node ID : $sourceNodeID, Tail Node ID : $nodeID")
+        when(nodeID == sourceNodeID){
+
+            false -> {
+                jobToGetNodeDataSize.cancel() /* if the node is linked, no need to check for source node size */
+                nodeRepository.append(sourceNodeID, nodeID, elements[0].createdBy as String, elements, orderList)
+            }
+
+            true -> {
+                /* in this case we're appending to the sourceNode */
+                when(jobToGetNodeDataSize.await() + getRoughSizeOfDDBItem(elements) >= 350000){
+                    false -> {
+                        LOG.info("Current node can handle added elements")
+                        nodeRepository.append(sourceNodeID, sourceNodeID, elements[0].createdBy as String, elements, orderList)
+                    }
+                    true -> {
+                        LOG.info("Current node can't handle added elements")
+                        createRelationship(sourceNodeID, sourceNodeID, elements[0].createdBy as String, elements, orderList)
+                    }
+                }
             }
         }
-
     }
+
 
     private fun processElementsAndCreateOrderList(orderList: MutableList<String>, elements: List<AdvancedElement>){
         for (e in elements) {
@@ -817,6 +829,9 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun createRelationship(sourceNodeID: String, lastTailNodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
+
+        LOG.info("Creating Relationship : SourceNode : $sourceNodeID, StartNode : $lastTailNodeID")
+
         val newNode = createNewNodeObjectForRelationship(lastTailNodeID, userID)
     fun makeNodePublic(nodeID: String, workspaceID: String) {
         pageRepository.togglePagePublicAccess(nodeID, workspaceID, 1)
@@ -928,6 +943,7 @@ class NodeService( // Todo: Inject them from handlers
         newNode.ak = node.ak
         newNode.publicAccess = node.publicAccess
         newNode.createdBy = node.createdBy
+        newNode.data = listOf()
 
         return newNode
     }
@@ -953,41 +969,6 @@ class NodeService( // Todo: Inject them from handlers
 }
 
 fun main() {
-    val jsonString: String = """
-		{
-            "type" : "NodeRequest",
-            "lastEditedBy" : "USERVarun",
-			"id": "NODE1",
-            "namespaceIdentifier" : "NAMESPACE1",
-            "workspaceIdentifier" : "WORKSPACE1",
-			"data": [
-			{
-				"id": "sampleParentID",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content 1",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			},
-            {
-				"id": "1234",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			}
-			]
-		}
-		"""
 
     val jsonString1: String = """
         
@@ -1065,7 +1046,9 @@ fun main() {
       """
 
     val nodeRequest = ObjectMapper().readValue<WDRequest>(jsonForAppend)
-    //NodeService().append("NODE2", nodeRequest)
+    NodeService().append("NODE1", nodeRequest)
 
+//    val node = NodeService().getNodeData("NODE1", blockSize = 20, startCursor = "NODE2") as Node
+//    println("endcursor : ${node.endCursor}, updatedAt : ${node.updatedAt}")
 
 }

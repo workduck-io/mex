@@ -55,13 +55,13 @@ class NodeRepository(
     override fun get(identifier: Identifier): Entity? =
         mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
 
-    fun getPaginatedNodeDataAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed: Int = 0): Pair<String?, MutableList<AdvancedElement>> {
+    fun getPaginatedNodeDataAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed : MutableList<Int> = mutableListOf(0)): Pair<String?, MutableList<AdvancedElement>> {
 
         val nodeData = mapper.load(Node::class.java, nodeID, nodeID, dynamoDBMapperConfig)
 
         var pair = processBlocks(nodeData, blockID, relationships, blockSize, blocksProcessed)
 
-        if(blocksProcessed == blockSize) return pair
+        if(blocksProcessed[0] == blockSize) return pair
 
         NodeHelper.getNodeNextNodeID(nodeID, relationships).let {
             when (it) {
@@ -76,13 +76,13 @@ class NodeRepository(
         return pair
     }
 
-    fun getPaginatedNodeDataReverseAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed: Int = 0): Pair<String?, MutableList<AdvancedElement>> {
+    fun getPaginatedNodeDataReverseAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed : MutableList<Int> = mutableListOf(0)): Pair<String?, MutableList<AdvancedElement>> {
 
         val nodeData = mapper.load(Node::class.java, nodeID, nodeID, dynamoDBMapperConfig)
 
         var pair = processBlocksInReverse(nodeData, blockID, relationships, blockSize, blocksProcessed)
 
-        if(blocksProcessed == blockSize) return pair
+        if(blocksProcessed[0] == blockSize) return pair
 
         NodeHelper.getNodePreviousNodeID(nodeID, relationships).let {
             when (it) {
@@ -100,21 +100,28 @@ class NodeRepository(
     }
 
 
-    private fun processBlocks(nodeData: Node, blockID: String?, relationships: List<Relationship>, blockSize: Int, _blocksProcessed: Int) : Pair<String?, MutableList<AdvancedElement>>{
+    private fun processBlocks(nodeData: Node, blockID: String?, relationships: List<Relationship>, blockSize: Int, blocksProcessed: MutableList<Int>) : Pair<String?, MutableList<AdvancedElement>>{
 
         val listOfElements = mutableListOf<AdvancedElement>()
-        var blocksProcessed = _blocksProcessed
 
-        val indexOfStartBlock = nodeData.dataOrder?.indexOf(blockID) ?: 0
+        var indexOfStartBlock = nodeData.dataOrder?.indexOf(blockID) ?: 0
+
+        if(indexOfStartBlock == -1) indexOfStartBlock = 0
 
         for (indexOfDataOrder in indexOfStartBlock until nodeData.dataOrder?.size!!) {
-            for ((index,element) in nodeData.data!!.withIndex()) {
+            for (element in nodeData.data!!) {
                 if (element.id == nodeData.dataOrder?.get(indexOfDataOrder)) {
-                    blocksProcessed++
+                    blocksProcessed[0]++
                     listOfElements.add(element)
-                    if (blocksProcessed == blockSize) {
-                        return if(index + 1 < nodeData.data!!.size) Pair("${nodeData.id}#${nodeData.dataOrder?.get(index+1)}",listOfElements)
-                        else Pair(NodeHelper.getNodeNextNodeID(nodeData.id, relationships) , listOfElements)
+                    if (blocksProcessed[0] == blockSize) {
+                        return if(indexOfDataOrder + 1 < nodeData.data!!.size) Pair("${nodeData.id}#${nodeData.dataOrder?.get(indexOfDataOrder+1)}",listOfElements)
+                        else {
+                            val nextNodeID = NodeHelper.getNodeNextNodeID(nodeData.id, relationships).let{
+                                if(it == nodeData.id) null
+                                else it
+                            }
+                            Pair(nextNodeID , listOfElements)
+                        }
                     }
                 }
             }
@@ -124,21 +131,29 @@ class NodeRepository(
 
     }
 
-    private fun processBlocksInReverse(nodeData: Node, blockID: String?, relationships: List<Relationship>, blockSize: Int, _blocksProcessed: Int) : Pair<String?, MutableList<AdvancedElement>>{
+    private fun processBlocksInReverse(nodeData: Node, blockID: String?, relationships: List<Relationship>, blockSize: Int, blocksProcessed: MutableList<Int>) : Pair<String?, MutableList<AdvancedElement>>{
 
         val listOfElements = mutableListOf<AdvancedElement>()
-        var blocksProcessed = _blocksProcessed
 
-        val indexOfStartBlock = nodeData.dataOrder?.indexOf(blockID) ?: nodeData.dataOrder?.size!!
+        var indexOfStartBlock = nodeData.dataOrder?.indexOf(blockID) ?: (nodeData.dataOrder?.size!! - 1)
+
+        if(indexOfStartBlock == -1) indexOfStartBlock = nodeData.dataOrder?.size!! - 1
 
         for (indexOfDataOrder in indexOfStartBlock downTo 0) {
-            for ((index, element) in nodeData.data!!.withIndex()) {
+            for (element in nodeData.data!!) {
                 if (element.id == nodeData.dataOrder?.get(indexOfDataOrder)) {
-                    blocksProcessed++
+                    blocksProcessed[0]++
                     listOfElements.add(element)
-                    if (blocksProcessed == blockSize) {
-                        return if(index-1 >= 0) Pair("${nodeData.id}#${nodeData.dataOrder?.get(index-1)}",listOfElements)
-                        else Pair(NodeHelper.getNodePreviousNodeID(nodeData.id, relationships), listOfElements)
+                    if (blocksProcessed[0] == blockSize) {
+                        return if(indexOfDataOrder-1 >= 0) Pair("${nodeData.id}#${nodeData.dataOrder?.get(indexOfDataOrder-1)}",listOfElements)
+                        else {
+                            /* when the current node has exhausted all the blocks and blockSize is reached as well */
+                            val prevNodeID = NodeHelper.getNodePreviousNodeID(nodeData.id, relationships).let{
+                                if(it == nodeData.id) null
+                                else it
+                            }
+                            Pair(prevNodeID, listOfElements)
+                        }
                     }
                 }
             }
@@ -163,6 +178,8 @@ class NodeRepository(
         }
 
     fun append(sourceNodeID: String, nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
+        LOG.info("Source Node : $sourceNodeID, Node to which we append : $nodeID")
+
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -203,7 +220,7 @@ class NodeRepository(
     }
 
     fun createRelationshipAndNewNode(node: Node, relationship: Relationship): Boolean {
-        LOG.info("Creating a relationship item : $node & a new node : $node")
+        LOG.info("Creating a relationship item : $relationship & a new node : $node")
         val transactionWriteRequest = TransactionWriteRequest()
 
         transactionWriteRequest.addPut(node)
@@ -214,11 +231,12 @@ class NodeRepository(
 
         return try {
             mapper.transactionWrite(transactionWriteRequest)
+            LOG.info("Transaction successful")
             true
         } catch (error: TransactionCanceledException) {
             when (error.cancellationReasons.filter { it.code == "ConditionalCheckFailed" }.size) {
                 0 -> throw error
-                else -> return false
+                else -> return false /* case when two relationships from same start node are being formed */
             }
         }
     }
@@ -233,7 +251,7 @@ class NodeRepository(
 
         return DynamoDBQueryExpression<Relationship>()
             .withKeyConditionExpression("PK = :pk")
-            .withProjectionExpression("PK, SK, startNode, endNode")
+            .withProjectionExpression("PK, SK, endNode")
             .withExpressionAttributeValues(expressionAttributeValues).let { it ->
                 mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
             }
@@ -253,18 +271,6 @@ class NodeRepository(
             }
     }
 
-    fun getBatchNodeData(nodeIDs: List<String>) {
-        val nodeKeysAndAttributes = TableKeysAndAttributes(tableName)
-
-        nodeKeysAndAttributes.addHashOnlyPrimaryKeys("PK", nodeIDs)
-
-        val outcome = dynamoDB.batchGetItem(nodeKeysAndAttributes)
-
-        val items = outcome.tableItems[tableName]!!
-        for (item in items) {
-            println(item.toJSONPretty())
-        }
-    }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
@@ -385,7 +391,7 @@ class NodeRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        val projectionExpression = "workspaceIdentifier, namespaceIdentifier, nodeSchemaIdentifier, AK, publicAccess, createdBy, lastEditedBy, tags"
+        val projectionExpression = "PK, SK, AK, workspaceIdentifier, namespaceIdentifier, nodeSchemaIdentifier, publicAccess, createdBy, lastEditedBy, tags, createdAt, updatedAt"
 
         return DynamoDBQueryExpression<Node>()
             .withKeyConditionExpression("PK = :pk and SK = :sk")
@@ -475,8 +481,6 @@ class NodeRepository(
         return nodesProcessedList
     }
 
-    fun appendAndCreateRelationship(nodeID: String, newNode: Node, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
-    }
 
     fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {
 

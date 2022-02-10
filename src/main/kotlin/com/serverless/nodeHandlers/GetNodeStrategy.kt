@@ -4,6 +4,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.responses.Response
+import com.serverless.utils.NodeElementsHelper
 import com.serverless.utils.NodeHelper
 import com.workduck.models.Entity
 import com.workduck.service.NodeService
@@ -36,17 +37,28 @@ class GetNodeStrategy : NodeStrategy {
         } ?: 50
 
         val getMetaDataOfNode = queryStringParameters?.let{
-            it["getMetaDataOfNode"].toBoolean()
+            it["getMetaDataOfNode"]?.toBoolean() ?: true
         } ?: true
 
         val getReverseOrder = queryStringParameters?.let{
-            it["getReverseOrder"].toBoolean()
+            it["getReverseOrder"]?.toBoolean() ?: false
         } ?: false
 
-        val node: Entity? = nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, getMetaDataOfNode, bookmarkInfo, userID)
-        val node: Entity? = nodeService.getNode(nodeID, input.headers.workspaceID, bookmarkInfo, userID)
 
-        val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
-        return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
+        println("getMetaDataOfNode : $getMetaDataOfNode")
+        return when(getMetaDataOfNode){
+            true -> {
+                val node: Entity? = nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, bookmarkInfo, userID)
+                val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
+                ApiResponseHelper.generateStandardResponse(nodeResponse, 200, errorMessage)
+            }
+            false -> {
+                val pair = nodeService.getNodeElements(nodeID, startCursor, blockSize, getReverseOrder)
+                val response = NodeElementsHelper.convertToNodeElementResponse(pair)
+                ApiResponseHelper.generateStandardResponse(response,200,  errorMessage)
+
+            }
+        }
+
     }
 }
