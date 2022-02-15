@@ -80,6 +80,10 @@ Node:
         method: patch
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /node/nodePath
+        method: patch
+
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
   events:
