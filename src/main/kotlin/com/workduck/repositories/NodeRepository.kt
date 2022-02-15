@@ -14,13 +14,17 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.amazonaws.services.dynamodbv2.model.TransactionCanceledException
+import com.amazonaws.services.dynamodbv2.model.Update
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
@@ -41,6 +45,7 @@ import com.workduck.utils.NodeHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
 import java.time.Instant
+
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,
@@ -163,6 +168,27 @@ class NodeRepository(
 
     }
 
+
+    fun getNodeElements(nodeID : String, relationships : List<Relationship>) : MutableList<AdvancedElement>?{
+        LOG.info("Getting elements for $nodeID")
+
+        val nextNodeID = NodeHelper.getNodeNextNodeID(nodeID, relationships)
+
+        val nodeElements : MutableList<AdvancedElement>? = mapper.load(Node::class.java, nodeID, nodeID, dynamoDBMapperConfig).data?.let {
+            return when(nodeID != nextNodeID){
+                true -> {
+                    getNodeElements(nextNodeID, relationships)?.let { it1 -> it.toMutableList().addAll(it1) }
+                    it.toMutableList()
+                }
+                else -> it.toMutableList()
+            }
+        }
+
+        return nodeElements
+
+
+    }
+
     private fun orderBlocks(node: Node): Entity =
         node.apply {
             node.data?.let { data ->
@@ -187,29 +213,77 @@ class NodeRepository(
 
         val objectMapper = ObjectMapper()
 
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
 
         /* we build updateExpression to enable appending of multiple key value pairs to the map with just one query */
         for ((counter, e) in elements.withIndex()) {
             val entry: String = objectMapper.writeValueAsString(e)
             updateExpression += ", nodeData.${e.id} = :val$counter"
-            expressionAttributeValues[":val$counter"] = entry
+            expressionAttributeValues[":val$counter"] = AttributeValue(entry)
         }
 
-        expressionAttributeValues[":userID"] = userID
-        expressionAttributeValues[":updatedAt"] = getCurrentTime()
-        expressionAttributeValues[":orderList"] = orderList
-        expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
+        val currentTime = System.currentTimeMillis()
+        val orderListAttributeValue = orderList.map { blockID -> AttributeValue().withS(blockID) }
 
-        return try {
-            UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
-                    .withUpdateExpression(updateExpression)
-                    .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-                    .let {
-                        table.updateItem(it)
-                        mapOf("nodeID" to nodeID, "appendedElements" to elements)
-                    }
+        expressionAttributeValues[":userID"] = AttributeValue(userID)
+        expressionAttributeValues[":updatedAt"] = AttributeValue().withN(currentTime.toString())
+        expressionAttributeValues[":orderList"] = AttributeValue().withL(orderListAttributeValue)
+        expressionAttributeValues[":empty_list"] = AttributeValue().withL()
+
+        val nodeKey = HashMap<String, AttributeValue>()
+        nodeKey["PK"] = AttributeValue(nodeID)
+        nodeKey["SK"] = AttributeValue(nodeID)
+
+        val appendItems : Update = Update()
+                .withKey(nodeKey)
+                .withTableName(tableName)
+                .withUpdateExpression(updateExpression)
+                .withExpressionAttributeValues(expressionAttributeValues)
+                .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
+
+
+       try{
+            when(sourceNodeID == nodeID){
+                true -> {
+                    val actions: Collection<TransactWriteItem> = listOf(
+                            TransactWriteItem().withUpdate(appendItems))
+
+                    val placeOrderTransaction = TransactWriteItemsRequest()
+                            .withTransactItems(actions)
+                    client.transactWriteItems(placeOrderTransaction)
+
+                }
+
+                false -> {
+
+                    val expressionAttributeValuesSourceNode: MutableMap<String, AttributeValue> = HashMap()
+
+                    expressionAttributeValuesSourceNode[":userID"] = AttributeValue(userID)
+                    expressionAttributeValuesSourceNode[":updatedAt"] = AttributeValue().withN(currentTime.toString())
+
+                    val sourceNodeKey = HashMap<String, AttributeValue>()
+                    sourceNodeKey["PK"] = AttributeValue(sourceNodeID)
+                    sourceNodeKey["SK"] = AttributeValue(sourceNodeID)
+
+                    val updateExpressionSource = "set lastEditedBy = :userID, updatedAt = :updatedAt"
+
+
+                    val updatedAt : Update = Update()
+                            .withKey(sourceNodeKey)
+                            .withTableName(tableName)
+                            .withUpdateExpression(updateExpressionSource)
+                            .withExpressionAttributeValues(expressionAttributeValuesSourceNode)
+
+                    val actions: Collection<TransactWriteItem> = listOf(
+                            TransactWriteItem().withUpdate(appendItems),
+                            TransactWriteItem().withUpdate(updatedAt))
+
+                    val placeOrderTransaction = TransactWriteItemsRequest()
+                            .withTransactItems(actions)
+                    client.transactWriteItems(placeOrderTransaction)
+
+                }
+            }
         } catch (e: AmazonDynamoDBException) {
             if (e.errorMessage == "Item size to update has exceeded the maximum allowed size") {
                 nodeService.createRelationship(sourceNodeID, nodeID, userID, elements, orderList)

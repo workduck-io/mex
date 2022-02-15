@@ -33,8 +33,8 @@ class GetNodeStrategy : NodeStrategy {
         }
 
         val blockSize = queryStringParameters?.let{
-            it["blockSize"]?.toInt() ?: 50
-        } ?: 50
+            it["blockSize"]?.toInt()
+        }
 
         val getMetaDataOfNode = queryStringParameters?.let{
             it["getMetaDataOfNode"]?.toBoolean() ?: true
@@ -45,20 +45,30 @@ class GetNodeStrategy : NodeStrategy {
         } ?: false
 
 
-        println("getMetaDataOfNode : $getMetaDataOfNode")
-        return when(getMetaDataOfNode){
+        /* if blockSize is not provided, get all the node's data */
+        return when(blockSize == null){
+
             true -> {
-                val node: Entity? = nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, bookmarkInfo, userID)
+                val node : Entity? = nodeService.getNode(nodeID, bookmarkInfo, userID)
                 val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
                 ApiResponseHelper.generateStandardResponse(nodeResponse, 200, errorMessage)
             }
-            false -> {
-                val pair = nodeService.getNodeElements(nodeID, startCursor, blockSize, getReverseOrder)
-                val response = NodeElementsHelper.convertToNodeElementResponse(pair)
-                ApiResponseHelper.generateStandardResponse(response,200,  errorMessage)
 
+            false -> {
+                return when(getMetaDataOfNode){
+                    true -> {
+                        val node: Entity? = nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, bookmarkInfo, userID)
+                        val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
+                        ApiResponseHelper.generateStandardResponse(nodeResponse, 200, errorMessage)
+                    }
+                    false -> {
+                        val pair = nodeService.getNodeElements(nodeID, startCursor, blockSize, getReverseOrder)
+                        val response = NodeElementsHelper.convertToNodeElementResponse(pair)
+                        ApiResponseHelper.generateStandardResponse(response,200,  errorMessage)
+
+                    }
+                }
             }
         }
-
     }
 }

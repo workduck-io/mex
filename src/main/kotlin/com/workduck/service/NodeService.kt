@@ -60,6 +60,7 @@ import kotlinx.coroutines.runBlocking
 import com.serverless.utils.toNode
 
 import com.workduck.models.ItemType
+import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 
@@ -480,12 +481,29 @@ class NodeService( // Todo: Inject them from handlers
         return list
     }
 
-    fun getNode(nodeID: String, workspaceID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Entity? {
-        val node =  (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node?
+    fun getNode(nodeID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Entity? = runBlocking{
+        LOG.info("Getting information for $nodeID")
+
+        val jobToGetRelationships = async {  nodeRepository.getRelationshipsForSourceNode(nodeID) }
+
+        val jobToGetSourceNode = async { (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node? }
+
+        val node = jobToGetSourceNode.await() as Node?
+
+        val relationships = jobToGetRelationships.await()
+
+        val nextNodeID = NodeHelper.getNodeNextNodeID(nodeID, relationships)
+
+        if(node?.id != nextNodeID) {
+            node?.data = nodeRepository.getNodeElements(nextNodeID, relationships)?.let {
+                node?.data?.toMutableList()?.plus((it))
+            }
+        }
+
         if (bookmarkInfo == true && userID != null) {
             node?.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
         }
-        return node
+        return@runBlocking node
     }
 
 
@@ -495,6 +513,7 @@ class NodeService( // Todo: Inject them from handlers
     private fun getDataFromLinkedNodes(nodeID: String, relationships: List<Relationship>){
         val set : MutableSet<String> = mutableSetOf()
     fun getNodeData(nodeID: String, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false, getMetaDataOfNode : Boolean = true, bookmarkInfo: Boolean? = null, userID: String? = null): Entity?  = runBlocking{
+    fun getNodeData(nodeID: String, startCursor: String? = null, blockSize: Int, getReverseOrder: Boolean = false, bookmarkInfo: Boolean? = null, userID: String? = null): Entity?  = runBlocking{
 
         val relationships = nodeRepository.getRelationshipsForSourceNode(nodeID)
 
@@ -522,7 +541,7 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
-    private fun getPaginatedNodeData(nodeID: String, relationships: List<Relationship>, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false) : Pair<String?, MutableList<AdvancedElement>>{
+    private fun getPaginatedNodeData(nodeID: String, relationships: List<Relationship>, startCursor: String? = null, blockSize: Int, getReverseOrder: Boolean = false) : Pair<String?, MutableList<AdvancedElement>>{
 
         return when(getReverseOrder) {
             true -> {
@@ -1048,7 +1067,5 @@ fun main() {
     val nodeRequest = ObjectMapper().readValue<WDRequest>(jsonForAppend)
     NodeService().append("NODE1", nodeRequest)
 
-//    val node = NodeService().getNodeData("NODE1", blockSize = 20, startCursor = "NODE2") as Node
-//    println("endcursor : ${node.endCursor}, updatedAt : ${node.updatedAt}")
 
 }
