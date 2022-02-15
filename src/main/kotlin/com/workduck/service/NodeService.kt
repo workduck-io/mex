@@ -11,6 +11,7 @@ import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.BlockMovementRequest
+import com.serverless.models.requests.NodeNameRequest
 import com.workduck.models.Node
 import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
@@ -25,6 +26,11 @@ import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 
 
 /**
@@ -375,6 +381,25 @@ class NodeService {
             }
         }
         return deletedNodesList
+    }
+
+    fun updateNodePath(nodeToPathMapRequest: WDRequest) : Map<String, String>{
+
+        val nodeToPathMap = ( nodeToPathMapRequest as NodeNameRequest ).nodeToPathMap
+
+        val ioScope = CoroutineScope(Dispatchers.IO + Job() )
+
+        ioScope.launch {
+
+            supervisorScope {
+                for()
+            }
+
+        }
+
+
+        return nodeToPathMap
+
     }
 
     companion object {
