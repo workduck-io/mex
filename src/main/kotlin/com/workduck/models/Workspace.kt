@@ -28,7 +28,12 @@ class Workspace(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: String = "Workspace"
+    override var itemType: String = "Workspace",
+
+
+    @JsonProperty("nodeHierarchyInformation")
+    @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
+    var nodeHierarchyInformation : List<String> ?= null
 
 ) : Entity {
 

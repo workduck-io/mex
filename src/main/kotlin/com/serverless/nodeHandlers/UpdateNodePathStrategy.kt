@@ -9,10 +9,10 @@ class UpdateNodePathStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error updating node path"
 
-        val nodeToPathMapRequest = input.payload
+        val nodePathRefactorRequest = input.payload
 
-        return if(nodeToPathMapRequest != null){
-            val x = nodeService.updateNodePath(nodeToPathMapRequest)
+        return if(nodePathRefactorRequest != null){
+            val x = nodeService.updateNodePath(nodePathRefactorRequest)
             ApiResponseHelper.generateStandardResponse(x, errorMessage)
         } else{
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

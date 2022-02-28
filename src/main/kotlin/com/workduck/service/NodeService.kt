@@ -6,15 +6,19 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.requests.WDRequest
-import com.serverless.models.requests.NodeRequest
-import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.ElementRequest
+import com.serverless.models.requests.GenericListRequest
+import com.serverless.models.requests.NodePathRefactorRequest
+import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.NodeNameRequest
 import com.workduck.models.Node
-import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
+import com.workduck.models.NodeVersion
+import com.workduck.models.Relationship
+import com.workduck.models.RelationshipType
+import com.workduck.models.Workspace
 import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
 import com.workduck.models.WorkspaceIdentifier
@@ -22,7 +26,6 @@ import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
-import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -31,6 +34,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import com.workduck.utils.Helper.splitIgnoreEmpty
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import org.apache.logging.log4j.LogManager
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 
 
 /**
@@ -84,7 +92,7 @@ class NodeService {
             nodeRepository.createNodeWithVersion(node, nodeVersion)
         }
         else{
-            repository.create(node)
+             nodeRepository.create(node)
         }
     }
 
@@ -98,15 +106,87 @@ class NodeService {
         return nodeVersion
     }
 
-    fun createAndUpdateNode(nodeRequest: WDRequest?, workspaceID: String,versionEnabled : Boolean = false) : Entity? {
-        val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?, workspaceID) ?: return null
-        val storedNode = getNode(node.id) as Node?
-        return if(storedNode == null){
-            createNode(node, versionEnabled)
+    fun createAndUpdateNode(request: WDRequest?, versionEnabled : Boolean = false) : Entity? = runBlocking {
+
+        val nodeRequest : NodeRequest? = request as NodeRequest?
+        val node : Node = createNodeObjectFromNodeRequest(nodeRequest) ?: return@runBlocking null
+
+        val jobToGetStoredNode = async { getNode(node.id) as Node? }
+        val jobToGetNodeHierarchyInformation = async { node.workspaceIdentifier?.id?.let { (WorkspaceService().getWorkspace(it) as Workspace).nodeHierarchyInformation }}
+
+        return@runBlocking when(val storedNode = jobToGetStoredNode.await()){
+            null -> {
+                val nodeHierarchyInformation = jobToGetNodeHierarchyInformation.await()
+                val longestExistingPath = getLongestExistingPath(nodeHierarchyInformation, node.nodePath)
+                if(longestExistingPath == node.nodePath){
+                    throw Exception("The provided path already exists")
+                }
+
+                val nodesToCreate = node.nodePath?.let {  it.removePrefix(it.commonPrefixWith(longestExistingPath)).splitIgnoreEmpty("#") }
+                createMultipleNodes(node, nodesToCreate)
+                createNode(node, versionEnabled)
+            }
+            else -> {
+                jobToGetNodeHierarchyInformation.cancel()
+                updateNode(node, storedNode, versionEnabled)
+            }
         }
-        else{
-            updateNode(node, storedNode, versionEnabled)
+    }
+
+
+    fun createMultipleNodes(node: Node, nodesToCreate: List<String>?){
+        // set metadata of node having data
+
+        val listOfNodes = mutableListOf<Node>()
+        nodesToCreate?.let {
+            for(index in 0 until nodesToCreate.size - 1){
+                listOfNodes.add(createEmptyNodeWithMetadata(node, nodesToCreate[index]))
+            }
         }
+
+        listOfNodes.add(node)
+
+        nodeRepository.createMultipleNodes(listOfNodes)
+    }
+
+    private fun createEmptyNodeWithMetadata(node: Node, newNodeName: String) : Node{
+        val newNode = Node(
+                id = "NEED TO GET FUNCTION",
+                title = newNodeName,
+                workspaceIdentifier = node.workspaceIdentifier,
+                namespaceIdentifier = node.namespaceIdentifier,
+                createdBy = node.createdBy,
+                lastEditedBy = node.lastEditedBy,
+                createdAt = node.createdAt,
+                ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}",
+                data = listOf()
+        )
+
+        newNode.updatedAt = node.updatedAt
+
+        return newNode
+
+    }
+
+
+
+    private fun getLongestExistingPath(nodeHierarchyInformation : List<String>?, nodePath: String?) : String{
+
+        var longestExistingPath = ""
+        nodeHierarchyInformation?.let {
+            for (existingNodePath in nodeHierarchyInformation) {
+                val nodeNames = mutableListOf<String>()
+
+                existingNodePath.split("#").mapIndexed {
+                    index, string ->  if(index % 2 == 0) nodeNames.add(string)
+                }
+
+                val longestPath = nodePath?.commonPrefixWith(nodeNames.joinToString("#")) ?: ""
+                if(longestPath.length > longestExistingPath.length) longestExistingPath = longestPath
+            }
+        }
+
+        return longestExistingPath
     }
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
@@ -350,8 +430,9 @@ class NodeService {
     }
 
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?, workspaceID: String) : Node? {
-        return nodeRequest?.let{
+        val node = nodeRequest?.let{
             Node(id = nodeRequest.id,
+                title = nodeRequest.title,
                 nodePath = nodeRequest.nodePath,
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
                 workspaceIdentifier = WorkspaceIdentifier(workspaceID),
@@ -359,6 +440,8 @@ class NodeService {
                 tags = nodeRequest.tags,
                 data = nodeRequest.data)
         }
+
+        return node
     }
 
     fun getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID : String) : MutableList<String>?{
@@ -383,22 +466,25 @@ class NodeService {
         return deletedNodesList
     }
 
-    fun updateNodePath(nodeToPathMapRequest: WDRequest) : Map<String, String>{
+    fun updateNodePath(wdRequest: WDRequest) {
 
-        val nodeToPathMap = ( nodeToPathMapRequest as NodeNameRequest ).nodeToPathMap
+        val nodePathRefactorRequest = ( wdRequest as NodePathRefactorRequest )
 
-        val ioScope = CoroutineScope(Dispatchers.IO + Job() )
+        val newRelationship = Relationship(
+                sourceNode = NodeIdentifier(nodePathRefactorRequest.newParentID),
+                startNode = NodeIdentifier(nodePathRefactorRequest.newParentID),
+                endNode = NodeIdentifier(nodePathRefactorRequest.nodeID),
+                type = RelationshipType.LINKED
+        )
 
-        ioScope.launch {
+        val oldRelationship = Relationship(
+                sourceNode = NodeIdentifier(nodePathRefactorRequest.currentParentID),
+                startNode = NodeIdentifier(nodePathRefactorRequest.currentParentID),
+                endNode = NodeIdentifier(nodePathRefactorRequest.nodeID),
+                type = RelationshipType.LINKED
+        )
 
-            supervisorScope {
-                for()
-            }
-
-        }
-
-
-        return nodeToPathMap
+        nodeRepository.updateLinkedRelationship(oldRelationship, newRelationship)
 
     }
 
@@ -587,5 +673,9 @@ fun main() {
                 ]
         }
       """
+
+
+
+    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
 
 }

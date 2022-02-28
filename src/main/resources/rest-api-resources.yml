@@ -265,3 +265,17 @@ Comment:
         path: /comment/all/{id}
         method: get
         authorizer: mexAuthorizer
+
+RelationshipTrigger:
+  handler: com.serverless.ddbStreamTriggers.RelationshipTrigger
+  events:
+    - stream: arn:aws:dynamodb:us-east-1:418506370286:table/local-mex/stream/2022-02-22T11:31:44.345
+  filterPatterns:
+    - dynamodb:
+        NewImage:
+          itemType:
+            S: [Relationship]
+    - dynamodb:
+        OldImage:
+          itemType:
+            S: [Relationship]

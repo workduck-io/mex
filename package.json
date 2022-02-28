@@ -2,9 +2,9 @@
   "name": "my-hello",
   "version": "1.0.0",
   "devDependencies": {
-    "serverless-domain-manager": "^5.1.5",
-    "serverless-dynamodb-local": "^0.2.40",
-    "serverless-offline": "^8.2.0",
-    "serverless-plugin-warmup": "^6.2.0"
+    "serverless-domain-manager": "~5.1.5",
+    "serverless-dynamodb-local": "~0.2.40",
+    "serverless-offline": "~8.2.0",
+    "serverless-plugin-warmup": "~6.2.0"
   }
 }

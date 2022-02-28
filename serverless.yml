@@ -51,6 +51,13 @@ provider:
             - 'lambda:InvokeFunction'
           Resource:
             - '*'
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeStream
+            - dynamodb:GetRecords
+            - dynamodb:GetShardIterator
+            - dynamodb:ListStreams
+          Resource: 'arn:aws:dynamodb:us-east-1:*:table/*'
   httpApi:
     cors: true
     authorizers:
