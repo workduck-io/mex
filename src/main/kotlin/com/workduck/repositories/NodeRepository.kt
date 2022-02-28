@@ -26,11 +26,14 @@ import com.workduck.models.Element
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.Node
+import com.workduck.models.NodeIdentifier
 import com.workduck.models.NodeVersion
+import com.workduck.models.Relationship
+import com.workduck.models.RelationshipType
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
-import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
+import com.workduck.utils.Helper
 import java.time.Instant
 
 class NodeRepository(
@@ -115,16 +118,15 @@ class NodeRepository(
         expressionAttributeValues[":createdBy"] = AttributeValue(userID)
         expressionAttributeValues[":itemType"] = AttributeValue("Node")
 
-        return  DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("createdBy = :createdBy  and itemType = :itemType")
-                .withIndexName("createdBy-itemType-index").withConsistentRead(false)
-                .withProjectionExpression("PK")
-                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
-                        node.id
-                    }
+        return DynamoDBQueryExpression<Node>()
+            .withKeyConditionExpression("createdBy = :createdBy  and itemType = :itemType")
+            .withIndexName("createdBy-itemType-index").withConsistentRead(false)
+            .withProjectionExpression("PK")
+            .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
+                    node.id
                 }
-
+            }
     }
 
     override fun delete(identifier: Identifier): Identifier? {
@@ -138,7 +140,24 @@ class NodeRepository(
     }
 
     override fun create(t: Node): Node {
-        TODO("Not yet implemented")
+        val relationship = Relationship(
+            sourceNode = NodeIdentifier(t.parentNodeID),
+            startNode = NodeIdentifier(t.parentNodeID),
+            endNode = NodeIdentifier(t.id),
+            type = RelationshipType.LINKED
+
+        )
+
+        val transactionWriteRequest = TransactionWriteRequest()
+
+        transactionWriteRequest.addPut(relationship)
+        transactionWriteRequest.addPut(t)
+        mapper.transactionWrite(transactionWriteRequest)
+        return t
+    }
+
+    fun createMultipleNodes(listOfNodes : List<Node>){
+        mapper.batchSave(listOfNodes)
     }
 
     fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
@@ -422,6 +441,14 @@ class NodeRepository(
                         .withExpressionAttributeValues(expressionAttributeValues)
     }
 
+    fun updateLinkedRelationship(oldRelationship: Relationship, newRelationship: Relationship) {
+
+        val transactionWriteRequest = TransactionWriteRequest()
+        transactionWriteRequest.addDelete(oldRelationship)
+        transactionWriteRequest.addPut(newRelationship)
+
+        mapper.transactionWrite(transactionWriteRequest)
+    }
     fun getWorkspaceIDOfNode(nodeID: String) : String{
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)

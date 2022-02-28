@@ -29,7 +29,7 @@ provider:
   environment:
     #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
-    TABLE_NAME: ${env:PRIMARY_TABLE, '${opt:stage, 'local'}-mex'}
+    TABLE_NAME: ${'${opt:stage, 'local'}-mex'}
     STAGE: ${opt:stage, 'dev'}
   iam:
     role:
@@ -51,6 +51,13 @@ provider:
             - 'lambda:InvokeFunction'
           Resource:
             - '*'
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeStream
+            - dynamodb:GetRecords
+            - dynamodb:GetShardIterator
+            - dynamodb:ListStreams
+          Resource: 'arn:aws:dynamodb:us-east-1:*:table/*'
   httpApi:
     cors: true
     authorizers:
@@ -71,9 +78,8 @@ package:
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-  - serverless-domain-manager
-  - serverless-plugin-warmup
-
+  #- serverless-domain-manager
+  #- serverless-plugin-warmup
 custom:
   serverless-offline:
     noPrependStageInUrl: true

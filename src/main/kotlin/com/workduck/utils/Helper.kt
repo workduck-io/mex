@@ -28,4 +28,10 @@ object Helper {
     fun isSourceWarmup(source : String?) : Boolean {
         return "serverless-plugin-warmup" == source
     }
+
+    fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
+        return this.split(*delimiters).filter {
+            it.isNotEmpty()
+        }
+    }
 }
