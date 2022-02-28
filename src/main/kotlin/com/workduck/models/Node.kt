@@ -24,6 +24,14 @@ data class Node(
     @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String? = id,
 
+    @JsonProperty("parentNodeID")
+    @DynamoDBAttribute(attributeName = "parentNodeID")
+    var parentNodeID: String = id,
+
+    @JsonProperty("title")
+    @DynamoDBAttribute(attributeName = "title")
+    var title: String = "New Node",
+
     @JsonProperty("nodePath")
     @DynamoDBAttribute(attributeName = "nodePath")
     var nodePath: String? = null,

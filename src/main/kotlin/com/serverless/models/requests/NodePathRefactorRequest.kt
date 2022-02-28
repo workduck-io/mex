@@ -6,10 +6,16 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("NodeNameRequest")
-class NodeNameRequest (
+@JsonTypeName("NodePathRefactorRequest")
+class NodePathRefactorRequest (
 
-    @JsonProperty("nodeToPathMap")
-    val nodeToPathMap : Map<String, String>
+    @JsonProperty("currentParentID")
+    val currentParentID : String,
+
+    @JsonProperty("newParentID")
+    val newParentID : String,
+
+    @JsonProperty("nodeID")
+    val nodeID : String
 
 ) : WDRequest

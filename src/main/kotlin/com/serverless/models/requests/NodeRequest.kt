@@ -14,6 +14,7 @@ import com.workduck.models.WorkspaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class NodeRequest(
 
     @JsonProperty("lastEditedBy")
@@ -24,6 +25,12 @@ data class NodeRequest(
 
     @JsonProperty("nodePath")
     val nodePath: String ?= null,
+
+    @JsonProperty("parentNodeID")
+    val referenceID: String ?= null,
+
+    @JsonProperty("title")
+    val title: String = "New Node",
 
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)

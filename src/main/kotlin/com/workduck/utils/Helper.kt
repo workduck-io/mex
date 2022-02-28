@@ -29,6 +29,12 @@ object Helper {
         return "serverless-plugin-warmup" == source
     }
 
+    fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
+        return this.split(*delimiters).filter {
+            it.isNotEmpty()
+        }
+    }
+
     fun validateWorkspace(workspaceID: String, workspaceIDList: List<String>): Boolean{
         return workspaceID in workspaceIDList
     }
