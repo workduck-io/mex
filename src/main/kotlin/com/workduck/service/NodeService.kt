@@ -16,12 +16,15 @@ import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
+import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -89,8 +92,8 @@ class NodeService {
         return nodeVersion
     }
 
-    fun createAndUpdateNode(nodeRequest: WDRequest?, versionEnabled : Boolean = false) : Entity? {
-        val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
+    fun createAndUpdateNode(nodeRequest: WDRequest?, workspaceID: String,versionEnabled : Boolean = false) : Entity? {
+        val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?, workspaceID) ?: return null
         val storedNode = getNode(node.id) as Node?
         return if(storedNode == null){
             createNode(node, versionEnabled)
@@ -340,11 +343,11 @@ class NodeService {
         return nodeChanged
     }
 
-    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?) : Node? {
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?, workspaceID: String) : Node? {
         return nodeRequest?.let{
             Node(id = nodeRequest.id,
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
-                workspaceIdentifier = nodeRequest.workspaceIdentifier,
+                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                 lastEditedBy = nodeRequest.lastEditedBy,
                 tags = nodeRequest.tags,
                 data = nodeRequest.data)
@@ -390,16 +393,14 @@ class NodeService {
         return nodeRepository.getPublicNode(nodeID)
     }
 
-    fun copyOrMoveBlock(wdRequest: WDRequest ){
+    fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
 
         val copyOrMoveBlockRequest = wdRequest as BlockMovementRequest
         val destinationNodeID = copyOrMoveBlockRequest.destinationNodeID
         val sourceNodeID = copyOrMoveBlockRequest.sourceNodeID
         val blockID = copyOrMoveBlockRequest.blockID
 
-        require(destinationNodeID != sourceNodeID ) {
-            "Source NodeID can't be equal to Destination NodeID"
-        }
+        workspaceLevelChecksForMovement(destinationNodeID, sourceNodeID, workspaceID)
 
         when(copyOrMoveBlockRequest.action.lowercase()){
             "copy" -> copyBlock(blockID, sourceNodeID, destinationNodeID)
@@ -408,8 +409,30 @@ class NodeService {
         }
 
     }
+    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking{
+        require(destinationNodeID != sourceNodeID ) {
+            "Source NodeID can't be equal to Destination NodeID"
+        }
 
-    fun copyBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
+        val jobToGetSourceNodeWorkspaceID = async { getWorkspaceIDOfNode(sourceNodeID) }
+        val jobToGetDestinationNodeWorkspaceID = async { getWorkspaceIDOfNode(destinationNodeID) }
+
+        val sourceNodeWorkspaceID = jobToGetSourceNodeWorkspaceID.await()
+
+        require(sourceNodeWorkspaceID ==  jobToGetDestinationNodeWorkspaceID.await()){
+            "NodeIDs should belong to same workspace"
+        }
+
+        require(sourceNodeWorkspaceID == workspaceID) {
+            "Passed NodeIDs should belong to the current workspace"
+        }
+    }
+
+    private fun getWorkspaceIDOfNode(nodeID: String) : String{
+        return nodeRepository.getWorkspaceIDOfNode(nodeID)
+    }
+
+    private fun copyBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
         /* this node contains only valid block info and dataOrder info */
         val sourceNode : Node? = nodeRepository.getBlock(sourceNodeID, blockID)
 
@@ -420,7 +443,7 @@ class NodeService {
     }
 
 
-    fun moveBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
+    private fun moveBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
         /* this node contains only valid block info and dataOrder info  */
         val sourceNode : Node? = nodeRepository.getBlock(sourceNodeID, blockID)
 
@@ -538,9 +561,5 @@ fun main() {
                 ]
         }
       """
-
-
-
-    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
 
 }

@@ -12,7 +12,7 @@ class CopyOrMoveBlockStrategy : NodeStrategy {
         val copyOrMoveRequest = input.payload
 
         if(copyOrMoveRequest != null){
-            nodeService.copyOrMoveBlock(copyOrMoveRequest)
+            nodeService.copyOrMoveBlock(copyOrMoveRequest, input.headers.workspaceID)
         }
         else{
             ApiResponseHelper.generateStandardErrorResponse("Invalid Parameters", 400)

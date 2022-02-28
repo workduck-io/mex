@@ -422,6 +422,23 @@ class NodeRepository(
                         .withExpressionAttributeValues(expressionAttributeValues)
     }
 
+    fun getWorkspaceIDOfNode(nodeID: String) : String{
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+
+        val nodeList: List<Node> = DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("PK = :pk and SK = :sk")
+                .withProjectionExpression("workspaceIdentifier")
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(Node::class.java, it)
+                }
+
+        return if (nodeList.isNotEmpty()) nodeList[0].workspaceIdentifier.id
+        else throw Exception("$nodeID does not belong to a valid workspace")
+
+    }
+
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }

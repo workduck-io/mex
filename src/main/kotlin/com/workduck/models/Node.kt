@@ -62,7 +62,7 @@ data class Node(
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    var workspaceIdentifier: WorkspaceIdentifier? = null,
+    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")

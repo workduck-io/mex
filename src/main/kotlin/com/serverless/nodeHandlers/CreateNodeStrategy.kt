@@ -13,14 +13,15 @@ class CreateNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error creating node"
 
+        println("WORKSPACE-ID : " + input.headers.workspaceID)
         val nodeRequest : WDRequest? = input.payload
         val versionEnabled : Boolean? = input.queryStringParameters?.let{
             it["versionEnabled"].toBoolean()
         }
 
         val node: Entity? = if(versionEnabled != null)
-            nodeService.createAndUpdateNode(nodeRequest, versionEnabled)
-        else nodeService.createAndUpdateNode(nodeRequest)
+            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, versionEnabled)
+        else nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID)
 
         val nodeResponse: Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
