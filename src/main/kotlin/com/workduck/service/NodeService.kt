@@ -10,17 +10,21 @@ import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.ElementRequest
+import com.serverless.models.requests.BlockMovementRequest
 import com.workduck.models.Node
 import com.workduck.models.NodeVersion
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.Entity
 import com.workduck.models.AdvancedElement
+import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -84,17 +88,13 @@ class NodeService {
             data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
             workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
         )
-
         nodeVersion.version = Helper.generateId("version")
-
         return nodeVersion
     }
 
-    fun createAndUpdateNode(nodeRequest: WDRequest?, versionEnabled : Boolean = false) : Entity? {
-        val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?) ?: return null
-
+    fun createAndUpdateNode(nodeRequest: WDRequest?, workspaceID: String,versionEnabled : Boolean = false) : Entity? {
+        val node : Node = createNodeObjectFromNodeRequest(nodeRequest as NodeRequest?, workspaceID) ?: return null
         val storedNode = getNode(node.id) as Node?
-
         return if(storedNode == null){
             createNode(node, versionEnabled)
         }
@@ -202,15 +202,7 @@ class NodeService {
         }
         else {
             node.nodeVersionCount = storedNodeVersionCount + 1
-            //GlobalScope.launch {
-                //println("Thread ID inside coroutine scope : " + Thread.currentThread().id)
-
-                //println("Thread ID inside launch : " + Thread.currentThread().id)
-                setTTLForOldestVersion(node.id)
-                //println("After delay")
-
-            //}
-            println("Hello") // main coroutine continues while a previous one is delayed
+            setTTLForOldestVersion(node.id)
         }
     }
 
@@ -351,12 +343,12 @@ class NodeService {
         return nodeChanged
     }
 
-    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?) : Node? {
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?, workspaceID: String) : Node? {
         return nodeRequest?.let{
             Node(id = nodeRequest.id,
                 nodePath = nodeRequest.nodePath,
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
-                workspaceIdentifier = nodeRequest.workspaceIdentifier,
+                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                 lastEditedBy = nodeRequest.lastEditedBy,
                 tags = nodeRequest.tags,
                 data = nodeRequest.data)
@@ -401,6 +393,67 @@ class NodeService {
     fun getPublicNode(nodeID: String) : Node?{
         return nodeRepository.getPublicNode(nodeID)
     }
+
+    fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
+
+        val copyOrMoveBlockRequest = wdRequest as BlockMovementRequest
+        val destinationNodeID = copyOrMoveBlockRequest.destinationNodeID
+        val sourceNodeID = copyOrMoveBlockRequest.sourceNodeID
+        val blockID = copyOrMoveBlockRequest.blockID
+
+        workspaceLevelChecksForMovement(destinationNodeID, sourceNodeID, workspaceID)
+
+        when(copyOrMoveBlockRequest.action.lowercase()){
+            "copy" -> copyBlock(blockID, sourceNodeID, destinationNodeID)
+            "move" -> moveBlock(blockID, sourceNodeID, destinationNodeID)
+            else -> throw IllegalArgumentException("Invalid action")
+        }
+
+    }
+    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking{
+        require(destinationNodeID != sourceNodeID ) {
+            "Source NodeID can't be equal to Destination NodeID"
+        }
+
+        val jobToGetSourceNodeWorkspaceID = async { getWorkspaceIDOfNode(sourceNodeID) }
+        val jobToGetDestinationNodeWorkspaceID = async { getWorkspaceIDOfNode(destinationNodeID) }
+
+        val sourceNodeWorkspaceID = jobToGetSourceNodeWorkspaceID.await()
+
+        require(sourceNodeWorkspaceID ==  jobToGetDestinationNodeWorkspaceID.await()){
+            "NodeIDs should belong to same workspace"
+        }
+
+        require(sourceNodeWorkspaceID == workspaceID) {
+            "Passed NodeIDs should belong to the current workspace"
+        }
+    }
+
+    private fun getWorkspaceIDOfNode(nodeID: String) : String{
+        return nodeRepository.getWorkspaceIDOfNode(nodeID)
+    }
+
+    private fun copyBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
+        /* this node contains only valid block info and dataOrder info */
+        val sourceNode : Node? = nodeRepository.getBlock(sourceNodeID, blockID)
+
+        val block = sourceNode?.data?.get(0)
+        val userID = block?.createdBy as String
+
+        nodeRepository.append(destinationNodeID, userID, listOf(block), mutableListOf(block.id))
+    }
+
+
+    private fun moveBlock(blockID: String, sourceNodeID: String, destinationNodeID: String){
+        /* this node contains only valid block info and dataOrder info  */
+        val sourceNode : Node? = nodeRepository.getBlock(sourceNodeID, blockID)
+
+        //TODO(list remove changes order of the original elements )
+        sourceNode?.dataOrder?.let {
+            it.remove(blockID)
+            nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it) }
+    }
+
 }
 
 fun main() {
@@ -509,9 +562,5 @@ fun main() {
                 ]
         }
       """
-
-
-
-    val nodeRequest = ObjectMapper().readValue<NodeRequest>(jsonString)
 
 }

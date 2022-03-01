@@ -1,8 +1,8 @@
-package com.serverless.models.requests
+package com.serverless.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class BookmarkRequest(
-
-) : WDRequest
+data class Header(
+   val workspaceID : String
+)

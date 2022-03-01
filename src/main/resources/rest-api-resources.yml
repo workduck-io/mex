@@ -74,6 +74,12 @@ Node:
         path: /node/makePrivate/{id}
         method: patch
 
+    #copy  or move a block from sourceNode to destinationNode
+    - httpApi:
+        path: /node/block/movement
+        method: patch
+        authorizer: mexAuthorizer
+
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
   events:

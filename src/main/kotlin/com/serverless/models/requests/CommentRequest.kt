@@ -1,10 +1,13 @@
 package com.serverless.models.requests
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.workduck.models.AdvancedElement
 import com.workduck.models.IdentifierType
 import com.workduck.utils.Helper
 
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 class CommentRequest(
 
         /* either blockID or nodeID */

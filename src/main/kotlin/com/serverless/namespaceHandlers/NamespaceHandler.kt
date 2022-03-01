@@ -23,7 +23,7 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
         }
 
-        val wdInput : Input = Input.fromMap(input)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
         val strategy = NamespaceStrategyFactory.getNamespaceStrategy(wdInput.routeKey)
 
