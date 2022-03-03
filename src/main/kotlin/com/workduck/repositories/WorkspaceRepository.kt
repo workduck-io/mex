@@ -71,4 +71,8 @@ class WorkspaceRepository(
     companion object {
         private val LOG = LogManager.getLogger(WorkspaceRepository::class.java)
     }
+
+    override fun createInBatch(list: List<Entity>) {
+        TODO("Not yet implemented")
+    }
 }

@@ -469,6 +469,10 @@ class NodeRepository(
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
+
+    override fun createInBatch(list: List<Entity>) {
+        TODO("Not yet implemented")
+    }
 }
 
 // TODO(separate out table in code cleanup)

@@ -12,7 +12,6 @@ import com.serverless.models.requests.NodePathRefactorRequest
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.BlockMovementRequest
-import com.serverless.models.requests.NodeNameRequest
 import com.workduck.models.Node
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.NodeVersion
@@ -29,16 +28,8 @@ import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import com.workduck.utils.Helper.splitIgnoreEmpty
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 
 
 /**
@@ -67,21 +58,7 @@ class NodeService {
     fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
 
-
-        node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
-        node.dataOrder = createDataOrderForNode(node)
-
-        /* only when node is actually being created */
-        node.createdBy = node.lastEditedBy
-
-        //computeHashOfNodeData(node)
-
-        for (e in node.data!!) {
-            e.createdBy = node.lastEditedBy
-            e.lastEditedBy = node.lastEditedBy
-            e.createdAt = node.createdAt
-            e.updatedAt = node.createdAt
-        }
+        setMetadataOfNodeToCreate(node)
 
         LOG.info("Creating node : $node")
 
@@ -106,24 +83,21 @@ class NodeService {
         return nodeVersion
     }
 
-    fun createAndUpdateNode(request: WDRequest?, versionEnabled : Boolean = false) : Entity? = runBlocking {
+    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, versionEnabled : Boolean = false) : Entity? = runBlocking {
 
         val nodeRequest : NodeRequest? = request as NodeRequest?
-        val node : Node = createNodeObjectFromNodeRequest(nodeRequest) ?: return@runBlocking null
+        val node : Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: return@runBlocking null
+
+        val nodePath : String? = nodeRequest?.nodePath
 
         val jobToGetStoredNode = async { getNode(node.id) as Node? }
-        val jobToGetNodeHierarchyInformation = async { node.workspaceIdentifier?.id?.let { (WorkspaceService().getWorkspace(it) as Workspace).nodeHierarchyInformation }}
+        val jobToGetNodeHierarchyInformation = async { node.workspaceIdentifier.id.let { (WorkspaceService().getWorkspace(it) as Workspace).nodeHierarchyInformation }}
 
         return@runBlocking when(val storedNode = jobToGetStoredNode.await()){
             null -> {
                 val nodeHierarchyInformation = jobToGetNodeHierarchyInformation.await()
-                val longestExistingPath = getLongestExistingPath(nodeHierarchyInformation, node.nodePath)
-                if(longestExistingPath == node.nodePath){
-                    throw Exception("The provided path already exists")
-                }
 
-                val nodesToCreate = node.nodePath?.let {  it.removePrefix(it.commonPrefixWith(longestExistingPath)).splitIgnoreEmpty("#") }
-                createMultipleNodes(node, nodesToCreate)
+                // need to update nodeHierarchyInformation
                 createNode(node, versionEnabled)
             }
             else -> {
@@ -133,9 +107,77 @@ class NodeService {
         }
     }
 
+    fun bulkCreateNodes(request: WDRequest?, workspaceID: String)  {
+        val nodeRequest : NodeRequest? = request as NodeRequest?
+        val node : Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: throw IllegalArgumentException("Invalid Body")
 
-    fun createMultipleNodes(node: Node, nodesToCreate: List<String>?){
-        // set metadata of node having data
+        val workspace : Workspace =  WorkspaceService().getWorkspace(workspaceID) as Workspace
+
+        val nodeHierarchyInformation =  workspace.nodeHierarchyInformation as MutableList<String>
+
+        val nodePath : String? = nodeRequest?.nodePath
+
+        val longestOverlappingPath = getLongestOverlappingPath(nodeHierarchyInformation, nodePath)
+
+        if(longestOverlappingPath == nodePath){
+            throw Exception("The provided path already exists")
+        }
+
+        val nodesToCreate: List<String>? = nodePath?.let {  it.removePrefix(it.commonPrefixWith(longestOverlappingPath)).splitIgnoreEmpty("#") }
+
+        val listOfNodes = createMultipleNodes(node, nodesToCreate)
+
+        var suffixNodePath = ""
+
+        for(nodeToCreate in listOfNodes){
+            suffixNodePath += "${nodeToCreate.title}#${nodeToCreate.id}"
+        }
+
+
+        workspace.nodeHierarchyInformation = getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestOverlappingPath, suffixNodePath)
+        workspace.updatedAt = System.currentTimeMillis()
+
+
+        val listOfEntities = mutableListOf<Entity>()
+
+        listOfEntities.add(workspace)
+        listOfEntities += listOfNodes
+
+        repository.createInBatch(listOfEntities)
+
+
+
+
+
+    }
+
+
+    private fun getUpdatedNodeHierarchyInformation(nodeHierarchyInformation : MutableList<String>, longestOverlappingPath: String, suffixNodePath : String) : List<String>{
+
+        var nodePathToRemove : String? = null
+
+        for (existingNodePath in nodeHierarchyInformation) {
+            if(longestOverlappingPath == getNamePath(existingNodePath)){
+                nodePathToRemove = existingNodePath
+                break
+            }
+        }
+
+        when(nodePathToRemove){
+            null -> nodeHierarchyInformation.add(suffixNodePath)
+            else -> {
+                nodeHierarchyInformation.remove(nodePathToRemove)
+                nodeHierarchyInformation.add("$nodePathToRemove#$suffixNodePath")
+            }
+        }
+
+        return nodeHierarchyInformation
+
+    }
+
+    fun createMultipleNodes(node: Node, nodesToCreate: List<String>?) : List<Node>{
+
+        setMetadataOfNodeToCreate(node)
 
         val listOfNodes = mutableListOf<Node>()
         nodesToCreate?.let {
@@ -146,7 +188,26 @@ class NodeService {
 
         listOfNodes.add(node)
 
-        nodeRepository.createMultipleNodes(listOfNodes)
+        return listOfNodes
+
+    }
+
+    /* sets AK, dataOrder, createdBy and accountability data of blocks of the node */
+    private fun setMetadataOfNodeToCreate(node: Node){
+
+        node.ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"
+        node.dataOrder = createDataOrderForNode(node)
+
+        /* only when node is actually being created */
+        node.createdBy = node.lastEditedBy
+
+        for (e in node.data!!) {
+            e.createdBy = node.lastEditedBy
+            e.lastEditedBy = node.lastEditedBy
+            e.createdAt = node.createdAt
+            e.updatedAt = node.createdAt
+        }
+
     }
 
     private fun createEmptyNodeWithMetadata(node: Node, newNodeName: String) : Node{
@@ -158,7 +219,7 @@ class NodeService {
                 createdBy = node.createdBy,
                 lastEditedBy = node.lastEditedBy,
                 createdAt = node.createdAt,
-                ak = "${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}",
+                ak = "${node.workspaceIdentifier.id}#${node.namespaceIdentifier?.id}",
                 data = listOf()
         )
 
@@ -169,25 +230,29 @@ class NodeService {
     }
 
 
-
-    private fun getLongestExistingPath(nodeHierarchyInformation : List<String>?, nodePath: String?) : String{
+    private fun getLongestOverlappingPath(nodeHierarchyInformation : List<String>?, nodePath: String?) : String{
 
         var longestExistingPath = ""
         nodeHierarchyInformation?.let {
             for (existingNodePath in nodeHierarchyInformation) {
-                val nodeNames = mutableListOf<String>()
-
-                existingNodePath.split("#").mapIndexed {
-                    index, string ->  if(index % 2 == 0) nodeNames.add(string)
-                }
-
-                val longestPath = nodePath?.commonPrefixWith(nodeNames.joinToString("#")) ?: ""
+                val namePath = getNamePath(existingNodePath)
+                val longestPath = nodePath?.commonPrefixWith(namePath) ?: ""
                 if(longestPath.length > longestExistingPath.length) longestExistingPath = longestPath
             }
         }
-
         return longestExistingPath
     }
+
+
+    /* nodePath is of the format : node1Name#node1ID#node2Name#node2ID.. */
+    private fun getNamePath(nodePath : String) : String{
+        val nodeNames = mutableListOf<String>()
+        nodePath.split("#").mapIndexed {
+            index, string ->  if(index % 2 == 0) nodeNames.add(string)
+        }
+        return nodeNames.joinToString("#")
+    }
+
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
 
@@ -433,7 +498,6 @@ class NodeService {
         val node = nodeRequest?.let{
             Node(id = nodeRequest.id,
                 title = nodeRequest.title,
-                nodePath = nodeRequest.nodePath,
                 namespaceIdentifier = nodeRequest.namespaceIdentifier,
                 workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                 lastEditedBy = nodeRequest.lastEditedBy,
