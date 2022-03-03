@@ -23,9 +23,6 @@ object DDBHelper {
         .withRegion(Regions.US_EAST_1)
         .build()
 
-    var enhancedClient: DynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
-            .dynamoDbClient(ddb)
-            .build()
 
 	/*
 	** Currently, works for : NamespaceID and WorkspaceID. Return List of Strings, not objects

@@ -14,7 +14,6 @@ import com.workduck.models.WorkspaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class NodeRequest(
 
     @JsonProperty("lastEditedBy")
@@ -24,7 +23,7 @@ data class NodeRequest(
     val id: String = "",
 
     @JsonProperty("nodePath")
-    val nodePath: String ?= null,
+    val nodePath: String,
 
     @JsonProperty("parentNodeID")
     val referenceID: String ?= null,

@@ -32,9 +32,9 @@ data class Node(
     @DynamoDBAttribute(attributeName = "title")
     var title: String = "New Node",
 
-    @JsonProperty("nodePath")
-    @DynamoDBAttribute(attributeName = "nodePath")
-    var nodePath: String? = null,
+//    @JsonProperty("nodePath")
+//    @DynamoDBAttribute(attributeName = "nodePath")
+//    var nodePath: String? = null,
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
