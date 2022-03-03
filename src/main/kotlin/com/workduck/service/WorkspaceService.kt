@@ -4,6 +4,9 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.workduck.models.Entity
@@ -82,6 +85,7 @@ class WorkspaceService {
 fun main() {
     val json: String = """
 		{
+            "type": "WorkspaceRequest",
 			"id": "WORKSPACE1",
 			"name": "WorkDuck"
 		}
@@ -89,12 +93,13 @@ fun main() {
 
     val jsonUpdate: String = """
 		{
+            "type": "WorkspaceRequest",
 			"id" : "WORKSPACE1",
-			"name" : "WorkDuck Pvt. Ltd."
+			"name" : "WorkDuck Pvt. Ltd. Blrrrrrr"
 		}
 		"""
-    // WorkspaceService().createWorkspace(json)
-    // WorkspaceService().updateWorkspace(jsonUpdate)
+     //WorkspaceService().createWorkspace(ObjectMapper().readValue<WDRequest>(json))
+     WorkspaceService().updateWorkspace(ObjectMapper().readValue<WDRequest>(jsonUpdate))
     // WorkspaceService().deleteWorkspace("WORKSPACE1")
     //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 }

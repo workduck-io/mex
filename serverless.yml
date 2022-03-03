@@ -79,7 +79,8 @@ plugins:
   - serverless-dynamodb-local
   - serverless-offline
   #- serverless-domain-manager
-  #- serverless-plugin-warmup
+  - serverless-plugin-warmup
+  - serverless-dynamo-stream-plugin
 custom:
   serverless-offline:
     noPrependStageInUrl: true

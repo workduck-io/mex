@@ -4,7 +4,9 @@
   "devDependencies": {
     "serverless-domain-manager": "^5.1.5",
     "serverless-offline": "^8.2.0",
-    "serverless-plugin-warmup": "^7.1.0"
+    "serverless-plugin-warmup": "^6.2.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "serverless-dynamo-stream-plugin": "^0.1.5"
+  }
 }

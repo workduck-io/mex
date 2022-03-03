@@ -26,35 +26,35 @@ object RelationshipHelper {
     }
 
 
-    fun handleRelationAddition(startNode: String?, endNode: String?, workspaceID: String?, workspaceService: WorkspaceService){
-        require(startNode != null && endNode != null && workspaceID != null) { throw Exception("StartNode, EndNode and WorkspaceID cannot be null")}
-
-        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace
-
-        if(startNode == endNode){
-            workspaceService.updateNodeHierarchyInformation()
-        }
-
-        val nodeHierarchyInformation = workspace.nodeHierarchyInformation
-
-        val combinedSubString = "$startNode#$endNode"
-
-        val newNodeHierarchyInformation = mutableListOf<String>()
-
-        var appendAtEnd = false
-
-        for(nodePath in nodeHierarchyInformation!!){
-            if(nodePath.endsWith(startNode)){
-                appendAtEnd = true
-                break
-            }
-
-
-
-        }
-
-
-    }
+//    fun handleRelationAddition(startNode: String?, endNode: String?, workspaceID: String?, workspaceService: WorkspaceService){
+//        require(startNode != null && endNode != null && workspaceID != null) { throw Exception("StartNode, EndNode and WorkspaceID cannot be null")}
+//
+//        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace
+//
+//        if(startNode == endNode){
+//            workspaceService.updateNodeHierarchyInformation()
+//        }
+//
+//        val nodeHierarchyInformation = workspace.nodeHierarchyInformation
+//
+//        val combinedSubString = "$startNode#$endNode"
+//
+//        val newNodeHierarchyInformation = mutableListOf<String>()
+//
+//        var appendAtEnd = false
+//
+//        for(nodePath in nodeHierarchyInformation!!){
+//            if(nodePath.endsWith(startNode)){
+//                appendAtEnd = true
+//                break
+//            }
+//
+//
+//
+//        }
+//
+//
+//    }
 
 
 

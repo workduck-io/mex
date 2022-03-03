@@ -9,7 +9,6 @@ class NodeTransformer : Transformer<Node> {
     override fun transform(t: Node?): Response? = t?.let {
        NodeResponse(
             id = t.id,
-            nodePath = t.nodePath,
             data = t.data,
             lastEditedBy = t.lastEditedBy,
             createdBy = t.createdBy,
