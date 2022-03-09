@@ -62,6 +62,17 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+        - IndexName: WS-itemType-index
+            KeySchema:
+            - AttributeName: workspaceIdentifier
+              KeyType: HASH
+            - AttributeName: itemType
+              KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         - IndexName: createdBy-itemType-index
           KeySchema:
             - AttributeName: createdBy

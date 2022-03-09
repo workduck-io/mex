@@ -7,15 +7,22 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodePathRefactorRequest")
-class NodePathRefactorRequest (
+class RefactorNodePathRequest (
 
-    @JsonProperty("currentParentID")
-    val currentParentID : String,
+    @JsonProperty("existingNodePath")
+    val existingNodePath: String,
 
-    @JsonProperty("newParentID")
-    val newParentID : String,
+    @JsonProperty("newNodePath")
+    val newNodePath: String,
+
+    @JsonProperty("lastEditedBy")
+    val lastEditedBy: String,
 
     @JsonProperty("nodeID")
-    val nodeID : String
+    val nodeID : String,
+
+    @JsonProperty("namespaceID")
+    val namespaceID : String?
+
 
 ) : WDRequest
