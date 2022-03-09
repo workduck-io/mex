@@ -7,10 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
-import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.WorkspaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
@@ -23,10 +21,10 @@ data class NodeRequest(
     val id: String = "",
 
     @JsonProperty("nodePath")
-    val nodePath: String,
+    val nodePath: String? = null,
 
-    @JsonProperty("parentNodeID")
-    val referenceID: String ?= null,
+    @JsonProperty("referenceID")
+    val referenceID: String ? = null,
 
     @JsonProperty("title")
     val title: String = "New Node",

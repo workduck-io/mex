@@ -32,9 +32,6 @@ data class Node(
     @DynamoDBAttribute(attributeName = "title")
     var title: String = "New Node",
 
-//    @JsonProperty("nodePath")
-//    @DynamoDBAttribute(attributeName = "nodePath")
-//    var nodePath: String? = null,
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
@@ -96,7 +93,8 @@ data class Node(
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
-    var itemStatus: String = "ACTIVE",
+    @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
+    override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
 
     @JsonProperty("isBookmarked")
@@ -112,7 +110,7 @@ data class Node(
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = System.currentTimeMillis()
 
-) : Entity {
+) : Entity, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")

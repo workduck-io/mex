@@ -6,40 +6,31 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.workduck.converters.IdentifierSerializer
+import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.NodeIdentifierConverter
-import com.workduck.converters.RelationshipStatusConverter
 import com.workduck.converters.RelationshipTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
-import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
-enum class RelationshipStatus(s: String) {
-    ACTIVE("ACTIVE"),
-    INACTIVE("INACTIVE")
-}
 
-enum class RelationshipType(s: String) {
-    CONTAINED("CONTAINED"),
-    LINKED("LINKED")
+enum class RelationshipType {
+    CONTAINED, /* when node size exceeds threshold */
+    HIERARCHY, /* parent- child hierarchy */
+    LINKED /* iLinks */
 }
 
 @DynamoDBTable(tableName = "local-mex")
 data class Relationship(
 
     @JsonProperty("id")
-    @DynamoDBAttribute(attributeName = "id")
+    @DynamoDBHashKey(attributeName = "id")
     var id: String = Helper.generateId("RLSP"),
 
     @JsonProperty("sourceNode")
     @DynamoDBAttribute(attributeName = "sourceNode")
     @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
-    var sourceNode: NodeIdentifier = NodeIdentifier(""),
+    var sourceNode: NodeIdentifier? = null,
 
-    @DynamoDBHashKey(attributeName = "PK")
-    var pk: String = "${sourceNode.id}#RLSP",
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
@@ -57,18 +48,20 @@ data class Relationship(
     var endNode: NodeIdentifier = NodeIdentifier(""),
 
 
-    @DynamoDBRangeKey(attributeName = "SK")
-    var sk: String = "${startNode.id}#${endNode.id}",
-
-    @JsonProperty("status")
-    @DynamoDBAttribute(attributeName = "status")
-    @DynamoDBTypeConverted(converter = RelationshipStatusConverter::class)
-    var status: RelationshipStatus = RelationshipStatus.ACTIVE,
+    @JsonProperty("itemStatus")
+    @DynamoDBAttribute(attributeName = "itemStatus")
+    @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
+    override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
     @JsonProperty("type")
     @DynamoDBAttribute(attributeName = "type")
     @DynamoDBTypeConverted(converter = RelationshipTypeConverter::class)
-    var type: RelationshipType? = null,
+    var type: RelationshipType = RelationshipType.HIERARCHY,
+
+
+    @DynamoDBRangeKey(attributeName = "SK")
+    var sk: String = "${startNode.id}#${type.name}",
+
 
     @JsonProperty("workspaceIdentifier")
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
@@ -83,7 +76,7 @@ data class Relationship(
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = System.currentTimeMillis()
 
-) : Entity {
+) : Entity, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")

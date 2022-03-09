@@ -12,15 +12,9 @@ class DeleteWorkspaceStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error deleting workspace"
 
-        val workspaceID = input.pathParameters?.id
-        return if (workspaceID != null) {
+        val identifier: Identifier? = workspaceService.deleteWorkspace(input.headers.workspaceID)
+        val identifierResponse : Response?  = IdentifierHelper.convertIdentifierToIdentifierResponse(identifier)
+        return ApiResponseHelper.generateStandardResponse(identifierResponse, errorMessage)
 
-            val identifier: Identifier? = workspaceService.deleteWorkspace(workspaceID)
-
-            val identifierResponse : Response?  = IdentifierHelper.convertIdentifierToIdentifierResponse(identifier)
-            ApiResponseHelper.generateStandardResponse(identifierResponse, errorMessage)
-        } else {
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
-        }
     }
 }

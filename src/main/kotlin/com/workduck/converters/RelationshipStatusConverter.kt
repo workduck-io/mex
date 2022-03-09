@@ -1,15 +1,15 @@
 package com.workduck.converters
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter
-import com.workduck.models.RelationshipStatus
+import com.workduck.models.ItemStatus
 
-class RelationshipStatusConverter : DynamoDBTypeConverter<String, RelationshipStatus> {
+class ItemStatusConverter : DynamoDBTypeConverter<String, ItemStatus> {
 
-    override fun convert(status: RelationshipStatus): String {
+    override fun convert(status: ItemStatus): String {
         return status.name
     }
 
-    override fun unconvert(status: String): RelationshipStatus {
-        return RelationshipStatus.valueOf(status)
+    override fun unconvert(status: String): ItemStatus {
+        return ItemStatus.valueOf(status)
     }
 }

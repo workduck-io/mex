@@ -25,6 +25,7 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import com.workduck.models.ItemStatus
 import com.workduck.models.Node
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.NodeVersion
@@ -34,6 +35,7 @@ import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException
 import java.time.Instant
 
 class NodeRepository(
@@ -140,20 +142,7 @@ class NodeRepository(
     }
 
     override fun create(t: Node): Node {
-        val relationship = Relationship(
-            sourceNode = NodeIdentifier(t.parentNodeID),
-            startNode = NodeIdentifier(t.parentNodeID),
-            endNode = NodeIdentifier(t.id),
-            type = RelationshipType.LINKED
-
-        )
-
-        val transactionWriteRequest = TransactionWriteRequest()
-
-        transactionWriteRequest.addPut(relationship)
-        transactionWriteRequest.addPut(t)
-        mapper.transactionWrite(transactionWriteRequest)
-        return t
+        TODO("Not yet implemented")
     }
 
     fun createMultipleNodes(listOfNodes : List<Node>){
@@ -303,17 +292,18 @@ class NodeRepository(
         }
     }
 
-    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, status: String): MutableList<String> {
+    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, itemStatus: ItemStatus): MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":active"] = status
+        expressionAttributeValues[":active"] = itemStatus.name
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
         for (nodeID in nodeIDList) {
             try {
                 UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-                    .withUpdateExpression("SET itemStatus = :active")
+                    .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
                     .withValueMap(expressionAttributeValues)
                     .withConditionExpression("attribute_exists(PK)")
                     .also {
@@ -325,6 +315,34 @@ class NodeRepository(
             }
         }
 
+        return nodesProcessedList
+    }
+
+    fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>) : MutableList<String>{
+        val table: Table = dynamoDB.getTable(tableName)
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":active"] = ItemStatus.ARCHIVED.name
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+
+        val nodesProcessedList: MutableList<String> = mutableListOf()
+
+        for ((nodeID,nodeName) in mapOfNodeIDToName) {
+            try {
+                expressionAttributeValues[":title"] = "$nodeName(1)"
+
+                UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+                        .withUpdateExpression("SET itemStatus = :active, title = :title, updatedAt = :updatedAt")
+                        .withValueMap(expressionAttributeValues)
+                        .withConditionExpression("attribute_exists(PK)")
+                        .also {
+                            table.updateItem(it)
+                            nodesProcessedList += nodeID
+                        }
+            } catch (e: ConditionalCheckFailedException) {
+                LOG.warn("nodeID : $nodeID not present in the DB")
+            }
+        }
         return nodesProcessedList
     }
 
@@ -342,7 +360,7 @@ class NodeRepository(
     }
 
     fun getPublicNode(nodeID: String): Node? {
-        val table = dynamoDB.getTable(tableName)
+
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
@@ -432,23 +450,45 @@ class NodeRepository(
         expressionAttributeValues[":orderList"] = AttributeValue().withL(AttributeValue().withS(block?.id))
         expressionAttributeValues[":block"] = AttributeValue(Helper.objectMapper.writeValueAsString(block))
 
-        val updateExpression2 = "set dataOrder = list_append(dataOrder, :orderList), " +
+        val updateExpression = "set dataOrder = list_append(dataOrder, :orderList), " +
                 "nodeData.${block?.id} = :block, updatedAt = :updatedAt"
 
         return Update().withTableName(tableName)
                         .withKey(nodeKey)
-                        .withUpdateExpression(updateExpression2)
+                        .withUpdateExpression(updateExpression)
                         .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-    fun updateLinkedRelationship(oldRelationship: Relationship, newRelationship: Relationship) {
+    fun renameNode(nodeID: String, newName: String, lastEditedBy: String){
 
-        val transactionWriteRequest = TransactionWriteRequest()
-        transactionWriteRequest.addDelete(oldRelationship)
-        transactionWriteRequest.addPut(newRelationship)
+        val table = dynamoDB.getTable(tableName)
 
-        mapper.transactionWrite(transactionWriteRequest)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":title"] = newName
+        expressionAttributeValues[":lastEditedBy"] = lastEditedBy
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+
+        try {
+            UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
+                    .withUpdateExpression("SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy")
+                    .withValueMap(expressionAttributeValues)
+                    .withConditionExpression("attribute_exists(PK)")
+                    .also {
+                        table.updateItem(it)
+                    }
+        } catch (e: ConditionalCheckFailedException) {
+            throw ConditionalCheckFailedException("Cannot Rename node since $nodeID does not exist")
+        }
     }
+
+//    fun updateLinkedRelationship(oldRelationship: Relationship, newRelationship: Relationship) {
+//
+//        val transactionWriteRequest = TransactionWriteRequest()
+//        transactionWriteRequest.addDelete(oldRelationship)
+//        transactionWriteRequest.addPut(newRelationship)
+//
+//        mapper.transactionWrite(transactionWriteRequest)
+//    }
     fun getWorkspaceIDOfNode(nodeID: String) : String{
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)
@@ -464,6 +504,25 @@ class NodeRepository(
         return if (nodeList.isNotEmpty()) nodeList[0].workspaceIdentifier.id
         else throw Exception("$nodeID does not belong to a valid workspace")
 
+    }
+
+    fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus) : Map<String, String>{
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":workspaceIdentifier"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":itemType"] = AttributeValue("Node")
+        expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
+
+
+
+        return DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
+                .withIndexName("WS-itemType-index").withConsistentRead(false)
+                .withProjectionExpression("PK, SK, title")
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(Node::class.java, it, dynamoDBMapperConfig)
+                }.associate {
+                    it.id to it.title
+                }
     }
 
     companion object {
