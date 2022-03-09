@@ -4,6 +4,9 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.workduck.models.Element
 import com.workduck.models.Workspace
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
@@ -51,6 +54,30 @@ class WorkspaceRepository(
 
     override fun update(t: Workspace): Workspace {
         TODO("Not yet implemented")
+    }
+
+    fun addNodePathToHierarchy(workspaceID: String, nodePath: String){
+
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":orderList"] = nodePath.toList()
+        expressionAttributeValues[":empty_list"] = mutableListOf<String>()
+
+        val updateExpression = "set dataOrder = list_append(if_not_exists(dataOrder, :empty_list), :orderList), updatedAt = :updatedAt"
+
+        try {
+            UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", workspaceID)
+                    .withUpdateExpression(updateExpression)
+                    .withValueMap(expressionAttributeValues)
+                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
+                    .let {
+                        table.updateItem(it)
+                    }
+        }catch (e: ConditionalCheckFailedException){
+            LOG.warn("Invalid WorkspaceID : $workspaceID")
+        }
+
     }
 
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?>? {

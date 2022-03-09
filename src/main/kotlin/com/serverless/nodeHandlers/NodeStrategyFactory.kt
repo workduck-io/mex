@@ -34,7 +34,9 @@ class NodeStrategyFactory {
 
         const val copyOrMoveBlockObject = "PATCH /node/block/movement"
 
-        const val updateNodePathObject = "PATCH /node/nodePath"
+        const val refactorNodePathObject = "POST /node/refactor"
+
+        const val bulkCreateNodesObject = "POST /node/bulkCreate"
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
@@ -54,7 +56,8 @@ class NodeStrategyFactory {
             getPublicNodeObject to GetPublicNodeStrategy(),
             copyOrMoveBlockObject to CopyOrMoveBlockStrategy(),
             getAllNodesObject to GetAllNodesStrategy(),
-            updateNodePathObject to UpdateNodePathStrategy()
+            refactorNodePathObject to RefactorNodePathStrategy(),
+            bulkCreateNodesObject to BulkCreateNodesStrategy()
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {

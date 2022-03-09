@@ -6,7 +6,6 @@ Ping:
         cors: true
         method: get
 
-
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
   events:
@@ -81,8 +80,14 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/nodePath
-        method: patch
+        path: /node/refactor
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/bulkCreate
+        method: post
+        authorizer: mexAuthorizer
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
@@ -118,7 +123,7 @@ Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
   events:
     - httpApi:
-        path: /workspace/{id}
+        path: /workspace
         method: get
         authorizer: mexAuthorizer
 
@@ -133,13 +138,23 @@ Workspace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /workspace/{id}
+        path: /workspace
         method: delete
         authorizer: mexAuthorizer
 
     - httpApi:
         path: /workspace/data/{ids}
         method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /workspace/hierarchy
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /workspace/refreshHierarchy
+        method: patch
         authorizer: mexAuthorizer
 
 User:
@@ -279,3 +294,6 @@ RelationshipTrigger:
 #            OldImage:
 #              itemType:
 #                S: Workspace
+
+NodeArchiveUnarchiveTrigger:
+  handler: com.serverless.ddbStreamTriggers.NodeArchiveUnarchiveTrigger

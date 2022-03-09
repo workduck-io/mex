@@ -11,7 +11,8 @@ class WorkspaceTransformer : Transformer<Workspace> {
             id = t.id,
             name = t.name,
             createdAt = t.createdAt,
-            updatedAt = t.updatedAt
+            updatedAt = t.updatedAt,
+            nodeHierarchy = t.nodeHierarchyInformation
         )
     }
 }
