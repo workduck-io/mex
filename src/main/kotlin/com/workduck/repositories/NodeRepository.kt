@@ -27,28 +27,20 @@ import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.Node
-import com.workduck.models.NodeIdentifier
 import com.workduck.models.NodeVersion
-import com.workduck.models.Relationship
-import com.workduck.models.RelationshipType
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException
 import java.time.Instant
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,
     private val dynamoDB: DynamoDB,
-    private val dynamoDBMapperConfig: DynamoDBMapperConfig,
-    private val client: AmazonDynamoDB
+    var dynamoDBMapperConfig: DynamoDBMapperConfig,
+    private val client: AmazonDynamoDB,
+    var tableName: String
 ) : Repository<Node> {
-
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    }
 
     override fun get(identifier: Identifier): Entity? =
         mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
@@ -146,7 +138,8 @@ class NodeRepository(
     }
 
     fun createMultipleNodes(listOfNodes : List<Node>){
-        mapper.batchSave(listOfNodes)
+        val failedBatches = mapper.batchWrite(listOfNodes, emptyList<Any>(), dynamoDBMapperConfig)
+        Helper.logFailureForBatchOperation(failedBatches)
     }
 
     fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
@@ -513,7 +506,6 @@ class NodeRepository(
         expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
 
 
-
         return DynamoDBQueryExpression<Node>()
                 .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
                 .withIndexName("WS-itemType-index").withConsistentRead(false)
@@ -529,9 +521,6 @@ class NodeRepository(
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
 
-    override fun createInBatch(list: List<Entity>) {
-        TODO("Not yet implemented")
-    }
 }
 
 // TODO(separate out table in code cleanup)

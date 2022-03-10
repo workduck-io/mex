@@ -1,5 +1,6 @@
 package com.workduck.utils
 
+import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
@@ -14,7 +15,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 object DDBHelper {
 
 //    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
-//        AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-east-1"))
+//        AwsClientBuilder.EndpointConfiguration("http://host.docker.internal:8000", "us-east-1"))
 //        .build()
 
     fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder

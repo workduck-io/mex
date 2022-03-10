@@ -29,8 +29,8 @@ provider:
   environment:
     #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
-    TABLE_NAME: ${'${opt:stage, 'local'}-mex'}
-    STAGE: ${opt:stage, 'dev'}
+    TABLE_NAME: ${opt:stage, 'local'}-mex
+    STAGE: ${opt:stage, 'local'}
   iam:
     role:
       statements:
@@ -80,7 +80,7 @@ plugins:
   - serverless-offline
   #- serverless-domain-manager
   - serverless-plugin-warmup
-  - serverless-dynamo-stream-plugin
+
 custom:
   serverless-offline:
     noPrependStageInUrl: true

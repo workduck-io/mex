@@ -48,23 +48,6 @@ class RepositoryImpl<T : Entity>(
 
     }
 
-    override fun createInBatch(list: List<Entity>) {
-        LOG.info("Creating in Batch : $list")
-        val failedBatches = mapper.batchSave(list)
-
-        for (batch in failedBatches) {
-            LOG.info("Failed to create some items: " + batch.exception);
-            val items = batch.unprocessedItems
-            for (entry in items) {
-                for (request in entry.value) {
-                    val  key = request.putRequest.item
-                    LOG.info(key)
-                }
-            }
-        }
-
-    }
-
     companion object {
         private val LOG = LogManager.getLogger(RepositoryImpl::class.java)
     }

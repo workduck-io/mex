@@ -21,6 +21,7 @@
         <junit.version>4.13.1</junit.version>
         <junit-jupiter-api.version>5.7.0</junit-jupiter-api.version>
         <mock.version>1.9.3</mock.version>
+        <jnanoid.version>2.0.0</jnanoid.version>
     </properties>
 
     <dependencyManagement>
@@ -137,6 +138,12 @@
             <artifactId>assertj-core</artifactId>
             <version>3.21.0</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aventrix.jnanoid</groupId>
+            <artifactId>jnanoid</artifactId>
+            <version>${jnanoid.version}</version>
         </dependency>
 
 

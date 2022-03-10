@@ -104,9 +104,6 @@ class CommentRepository(
         private val LOG = LogManager.getLogger(CommentRepository::class.java)
     }
 
-    override fun createInBatch(list: List<Entity>) {
-        TODO("Not yet implemented")
-    }
 
 
 }

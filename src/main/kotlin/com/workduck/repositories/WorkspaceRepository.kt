@@ -58,13 +58,14 @@ class WorkspaceRepository(
 
     fun addNodePathToHierarchy(workspaceID: String, nodePath: String){
 
+        LOG.info("$workspaceID, $nodePath")
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
-        expressionAttributeValues[":orderList"] = nodePath.toList()
+        expressionAttributeValues[":nodePath"] = mutableListOf(nodePath)
         expressionAttributeValues[":empty_list"] = mutableListOf<String>()
 
-        val updateExpression = "set dataOrder = list_append(if_not_exists(dataOrder, :empty_list), :orderList), updatedAt = :updatedAt"
+        val updateExpression = "set nodeHierarchyInformation = list_append(if_not_exists(nodeHierarchyInformation, :empty_list), :nodePath), updatedAt = :updatedAt"
 
         try {
             UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", workspaceID)
@@ -99,7 +100,4 @@ class WorkspaceRepository(
         private val LOG = LogManager.getLogger(WorkspaceRepository::class.java)
     }
 
-    override fun createInBatch(list: List<Entity>) {
-        TODO("Not yet implemented")
-    }
 }
