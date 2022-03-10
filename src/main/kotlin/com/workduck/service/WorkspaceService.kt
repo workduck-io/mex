@@ -45,7 +45,6 @@ class WorkspaceService {
 
     fun createWorkspace(workspaceRequest: WDRequest?): Entity? {
         val workspace : Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
-
         LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
@@ -281,7 +280,7 @@ fun main() {
 		}
 		"""
      //WorkspaceService().createWorkspace(ObjectMapper().readValue<WDRequest>(json))
-     WorkspaceService().updateWorkspace(ObjectMapper().readValue<WDRequest>(jsonUpdate))
+     //WorkspaceService().updateWorkspace(ObjectMapper().readValue<WDRequest>(jsonUpdate))
     // WorkspaceService().deleteWorkspace("WORKSPACE1")
     //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 }

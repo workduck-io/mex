@@ -77,7 +77,4 @@ class UserRepository(
         private val LOG = LogManager.getLogger(UserRepository::class.java)
     }
 
-    override fun createInBatch(list: List<Entity>) {
-        TODO("Not yet implemented")
-    }
 }
