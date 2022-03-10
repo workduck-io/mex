@@ -8,44 +8,54 @@ import com.workduck.models.Relationship
 import com.workduck.repositories.RelationshipRepository
 import com.workduck.utils.DDBHelper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.workduck.models.NodeIdentifier
 
 
-class RelationshipService {
+class RelationshipService (
 
-    private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-    private val dynamoDB: DynamoDB = DynamoDB(client)
-    private val mapper = DynamoDBMapper(client)
+        val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
+        val dynamoDB: DynamoDB = DynamoDB(client),
+        val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
+        var tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
-    }
+    },
 
-    private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+        var dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-            .build()
+            .build(),
 
-    private val relationshipRepository: RelationshipRepository = RelationshipRepository(mapper, dynamoDBMapperConfig, dynamoDB, tableName)
+        val relationshipRepository: RelationshipRepository = RelationshipRepository(mapper, dynamoDBMapperConfig, dynamoDB, tableName)
 
-    fun createRelationshipInBatch(list : List<Relationship>){
+) {
+    fun createRelationshipInBatch(list: List<Relationship>) {
+        println(tableName)
         relationshipRepository.createInBatch(list)
     }
 
-    fun getHierarchyRelationshipsOfWorkspace(workspaceID: String, status: ItemStatus) : List<Relationship> {
+    fun getHierarchyRelationshipsOfWorkspace(workspaceID: String, status: ItemStatus): List<Relationship> {
         return relationshipRepository.getHierarchyRelationshipsOfWorkspace(workspaceID, status)
     }
 
-    fun getHierarchyRelationshipsWithStartNode(workspaceID: String, startNodeID : String, status: ItemStatus) : List<Relationship> {
+    fun getHierarchyRelationshipsWithStartNode(workspaceID: String, startNodeID: String, status: ItemStatus): List<Relationship> {
         return relationshipRepository.getHierarchyRelationshipsWithStartNode(workspaceID, startNodeID, status)
     }
 
-    fun getHierarchyRelationshipsWithEndNode(workspaceID: String, startNodeID : String, status: ItemStatus) : List<Relationship> {
+    fun getHierarchyRelationshipsWithEndNode(workspaceID: String, startNodeID: String, status: ItemStatus): List<Relationship> {
         return relationshipRepository.getHierarchyRelationshipsWithEndNode(workspaceID, startNodeID, status)
     }
 
-    fun changeRelationshipStatus(list: List<Relationship>, status: ItemStatus){
+    fun changeRelationshipStatus(list: List<Relationship>, status: ItemStatus) {
         relationshipRepository.changeRelationshipStatus(list, status)
     }
 
 
+}
+
+fun main(){
+    RelationshipService().createRelationshipInBatch(listOf(
+            Relationship(startNode = NodeIdentifier("1"), endNode = NodeIdentifier("2"))
+    )
+    )
 }

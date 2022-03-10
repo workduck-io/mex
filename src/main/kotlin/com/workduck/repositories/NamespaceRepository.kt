@@ -76,7 +76,4 @@ class NamespaceRepository(
         private val LOG = LogManager.getLogger(NamespaceRepository::class.java)
     }
 
-    override fun createInBatch(list: List<Entity>) {
-        TODO("Not yet implemented")
-    }
 }

@@ -17,16 +17,16 @@ data class Node(
 
     @JsonProperty("id")
     @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateId(IdentifierType.NODE.name),
+    var id: String = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
 
     /* For convenient deletion */
     @JsonProperty("idCopy")
     @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String? = id,
 
-    @JsonProperty("parentNodeID")
-    @DynamoDBAttribute(attributeName = "parentNodeID")
-    var parentNodeID: String = id,
+//    @JsonProperty("parentNodeID")
+//    @DynamoDBAttribute(attributeName = "parentNodeID")
+//    var parentNodeID: String = id,
 
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")

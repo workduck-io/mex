@@ -12,5 +12,4 @@ interface Repository<T : Entity> {
 
     fun delete(identifier: Identifier): Identifier?
 
-    fun createInBatch(list : List<Entity>)
 }

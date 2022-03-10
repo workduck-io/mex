@@ -8,14 +8,18 @@ import com.workduck.models.NodeIdentifier
 import com.workduck.models.Relationship
 import com.workduck.models.RelationshipType
 import com.workduck.service.RelationshipService
+import com.workduck.utils.Helper
 import com.workduck.utils.Helper.splitIgnoreEmpty
+import com.workduck.utils.NodeHelper.getLongestExistingPath
+import com.workduck.utils.NodeHelper.getNamePath
 import org.apache.logging.log4j.LogManager
 
 class RelationshipTrigger : RequestHandler<DynamodbEvent, Void> {
     private val relationshipService = RelationshipService()
 
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context): Void? {
-        LOG.info("DYNAMODB-EVENT : $dynamodbEvent")
+
+        LOG.info("DYNAMODB-EVENT : $dynamodbEvent, CONTEXT : $context")
         for (record in dynamodbEvent?.records!!) {
 
             val newNodeHierarchyInformation =
@@ -34,17 +38,31 @@ class RelationshipTrigger : RequestHandler<DynamodbEvent, Void> {
             /* case when more nodes added on an existing path */
             if (addedPath.size == 1 && removedPath.size == 1) {
                 val commonPrefix = removedPath[0].commonPrefixWith(addedPath[0])
-                val relationshipList: MutableList<String> = commonPrefix.split("#").takeLast(2).reversed() as MutableList<String>
+
+                /* take last node from overlapping path since that will be starting node of the first relationship to be created */
+                val relationshipList: MutableList<String> = commonPrefix.split("#").takeLast(2) as MutableList<String>
+
                 relationshipList += addedPath[0].removePrefix(commonPrefix).splitIgnoreEmpty("#")
 
                 /* now we have a list [ node1, node1id, node2, node2id, node3, node3id.. ], we take out ids and make pairs */
-                val nodePairListForRelationship = relationshipList.filterIndexed { index, _ -> index % 2 == 0 }.toList().zipWithNext()
+                val nodePairListForRelationship = relationshipList.filterIndexed { index, _ -> index % 2 != 0 }.toList().zipWithNext()
 
                 makeNodePairsAndCreateRelationships(nodePairListForRelationship)
 
             } else if (addedPath.size == 1 && removedPath.isEmpty()) {
 
-                val nodePairListForRelationship = addedPath[0].split("#").filterIndexed { index, _ -> index % 2 == 0 }.toList().zipWithNext()
+                val longestExistingPath = getLongestExistingPath(oldNodeHierarchyInformation, getNamePath(addedPath[0]))
+
+                var relationshipPath = addedPath[0]
+
+                when(longestExistingPath.isNotEmpty()){
+                    true -> {
+                        val lastNodePath = longestExistingPath.split("#").takeLast(2).joinToString("#")
+                        relationshipPath = lastNodePath + "#" + relationshipPath.removePrefix(longestExistingPath).splitIgnoreEmpty("#").joinToString("#")
+                    }
+                }
+                println("RelationshipPath : $relationshipPath")
+                val nodePairListForRelationship = relationshipPath.split("#").filterIndexed { index, _ -> index % 2 != 0 }.toList().zipWithNext()
                 makeNodePairsAndCreateRelationships(nodePairListForRelationship)
 
             } else {
@@ -65,6 +83,8 @@ class RelationshipTrigger : RequestHandler<DynamodbEvent, Void> {
                     )
             )
         }
+
+        LOG.info(Helper.objectMapper.writeValueAsString(listOfRelationships))
 
         relationshipService.createRelationshipInBatch(listOfRelationships)
     }
@@ -91,5 +111,5 @@ class RelationshipTrigger : RequestHandler<DynamodbEvent, Void> {
 
 
 fun main() {
-    println(listOf("A").filterIndexed { index, _ -> index % 2 == 0 }.toList().zipWithNext())
+    println("A#Aid#B#Bid#C#Cid".split("#").filterIndexed { index, _ -> index % 2 != 0 }.toList().zipWithNext())
 }

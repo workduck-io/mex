@@ -23,7 +23,7 @@ enum class RelationshipType {
 data class Relationship(
 
     @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "id")
+    @DynamoDBHashKey(attributeName = "PK")
     var id: String = Helper.generateId("RLSP"),
 
     @JsonProperty("sourceNode")

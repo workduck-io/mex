@@ -4,6 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -12,6 +14,7 @@ import com.serverless.models.requests.RefactorNodePathRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
+import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
@@ -26,6 +29,9 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import com.workduck.utils.Helper.splitIgnoreEmpty
+import com.workduck.utils.NodeHelper
+import com.workduck.utils.NodeHelper.getIDPath
+import com.workduck.utils.NodeHelper.getNamePath
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -34,28 +40,30 @@ import org.apache.logging.log4j.LogManager
 /**
  * contains all node related logic
  */
-class NodeService {
+class NodeService (
     // Todo: Inject them from handlers
 
-    private val objectMapper = Helper.objectMapper
-    private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-    private val dynamoDB: DynamoDB = DynamoDB(client)
-    private val mapper = DynamoDBMapper(client)
+        val objectMapper: ObjectMapper = Helper.objectMapper,
+        val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
+        val dynamoDB: DynamoDB = DynamoDB(client),
+        val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
+        var tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
-    }
+    },
 
-    private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+        var dynamoDBMapperConfig : DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-        .build()
+        .build(),
 
-    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client)
-    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
+        val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
+        val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
+){
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
+        LOG.info("ENV TABLE : " + System.getenv("TABLE_NAME"))
         setMetadataOfNodeToCreate(node)
         LOG.info("Creating node : $node")
 
@@ -106,7 +114,7 @@ class NodeService {
     private fun updateNodeHierarchyInSingleCreate(referenceID: String?, nodeID: String, nodeTitle: String, workspace: Workspace, workspaceService: WorkspaceService){
         when(referenceID){
             null -> {
-                workspaceService.addNodePathToHierarchy(workspace.id, "$nodeTitle$$nodeID")
+                workspaceService.addNodePathToHierarchy(workspace.id, "$nodeTitle#$nodeID")
             }
             else -> {
                 val nodeHierarchy = workspace.nodeHierarchyInformation as MutableList<String>? ?: mutableListOf()
@@ -115,7 +123,7 @@ class NodeService {
 
                 for(nodePath in nodeHierarchy){
                    if(nodePath.endsWith(referenceID)){ /* referenceID was a leaf node */
-                       nodePathsToAdd.add("$nodePath#$nodeTitle$$nodeID")
+                       nodePathsToAdd.add("$nodePath#$nodeTitle#$nodeID")
                        nodePathsToRemove.add(nodePath)
                    } else if(nodePath.contains(referenceID)){ /* referenceID is not leaf node, and we need to extract path till referenceID */
                        val endIndex = nodePath.indexOf(referenceID) + referenceID.length - 1
@@ -264,62 +272,66 @@ class NodeService {
 
      */
 
-    fun bulkCreateNodes(request: WDRequest?, workspaceID: String) {
+    fun bulkCreateNodes(request: WDRequest?, workspaceID: String) = runBlocking {
         val nodeRequest: NodeRequest? = request as NodeRequest?
         val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: throw IllegalArgumentException("Invalid Body")
 
-        val workspace: Workspace = WorkspaceService().getWorkspace(workspaceID) as Workspace
+        val workspaceService = WorkspaceService()
+        val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
         val nodeHierarchyInformation = workspace.nodeHierarchyInformation as MutableList<String>
 
-        val nodePath: String? = nodeRequest?.nodePath
+        val nodePath: String = nodeRequest?.nodePath ?: throw IllegalArgumentException("nodePath needs to be provided")
 
-        val longestOverlappingPath = getLongestOverlappingPath(nodeHierarchyInformation, nodePath)
+        val longestExistingPath = NodeHelper.getLongestExistingPath(nodeHierarchyInformation, nodePath)
 
-        if (longestOverlappingPath == nodePath) {
+        val longestExistingNamePath = getNamePath(longestExistingPath)
+
+        if (longestExistingNamePath == nodePath) {
             throw Exception("The provided path already exists")
         }
 
-        val nodesToCreate: List<String>? = nodePath?.let { it.removePrefix(it.commonPrefixWith(longestOverlappingPath)).splitIgnoreEmpty("#") }
+        val nodesToCreate: List<String> = nodePath.removePrefix(longestExistingNamePath).splitIgnoreEmpty("#")
 
         setMetadataOfNodeToCreate(node)
         val listOfNodes = setMetaDataFromNode(node, nodesToCreate)
 
+        /* path from new nodes to be created (will either be a suffix or an independent string)*/
         var suffixNodePath = ""
+        for ((index, nodeToCreate) in listOfNodes.withIndex()) {
+            when(index){
+                0 -> suffixNodePath = "${nodeToCreate.title}#${nodeToCreate.id}"
+                else -> suffixNodePath += "#${nodeToCreate.title}#${nodeToCreate.id}"
+            }
 
-        for (nodeToCreate in listOfNodes) {
-            suffixNodePath += "${nodeToCreate.title}#${nodeToCreate.id}"
         }
 
-        workspace.nodeHierarchyInformation = getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestOverlappingPath, suffixNodePath)
+        workspace.nodeHierarchyInformation = getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestExistingPath, suffixNodePath)
         workspace.updatedAt = System.currentTimeMillis()
 
-        val listOfEntities = mutableListOf<Entity>()
 
-        listOfEntities.add(workspace)
-        listOfEntities += listOfNodes
+        launch { nodeRepository.createMultipleNodes(listOfNodes) }
+        launch { workspaceService.updateWorkspace(workspace) }
 
-        repository.createInBatch(listOfEntities)
     }
 
-    private fun getUpdatedNodeHierarchyInformation(nodeHierarchyInformation: MutableList<String>, longestOverlappingPath: String, suffixNodePath: String): List<String> {
+    private fun getUpdatedNodeHierarchyInformation(nodeHierarchyInformation: MutableList<String>, longestExistingPath: String, suffixNodePath: String): List<String> {
 
         var nodePathToRemove: String? = null
 
         for (existingNodePath in nodeHierarchyInformation) {
-            if (longestOverlappingPath == getNamePath(existingNodePath)) {
+            if (longestExistingPath == existingNodePath) {
                 nodePathToRemove = existingNodePath
                 break
             }
         }
 
-        when (nodePathToRemove) {
-            null -> nodeHierarchyInformation.add(suffixNodePath)
-            else -> {
-                nodeHierarchyInformation.remove(nodePathToRemove)
-                nodeHierarchyInformation.add("$nodePathToRemove#$suffixNodePath")
-            }
+        /* if nodePathToRemove != null , we are adding to a leaf path, so we remove that path*/
+        when (nodePathToRemove != null) {
+            true -> nodeHierarchyInformation.remove(nodePathToRemove)
         }
+
+        nodeHierarchyInformation.add("$longestExistingPath#$suffixNodePath")
 
         return nodeHierarchyInformation
     }
@@ -340,7 +352,7 @@ class NodeService {
 
     private fun createEmptyNodeWithMetadata(node: Node, newNodeName: String): Node {
         val newNode = Node(
-            id = "NEED TO GET FUNCTION",
+            id = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
             title = newNodeName,
             workspaceIdentifier = node.workspaceIdentifier,
             namespaceIdentifier = node.namespaceIdentifier,
@@ -373,37 +385,6 @@ class NodeService {
         }
     }
 
-    private fun getLongestOverlappingPath(nodeHierarchyInformation: List<String>?, nodePath: String?): String {
-
-        var longestExistingPath = ""
-        nodeHierarchyInformation?.let {
-            for (existingNodePath in nodeHierarchyInformation) {
-                val namePath = getNamePath(existingNodePath)
-                val longestPath = nodePath?.commonPrefixWith(namePath) ?: ""
-                if (longestPath.length > longestExistingPath.length) longestExistingPath = longestPath
-            }
-        }
-        return longestExistingPath
-    }
-
-    /* nodePath is of the format : node1Name#node1ID#node2Name#node2ID.. */
-    private fun getNamePath(nodePath: String): String {
-        val nodeNames = mutableListOf<String>()
-        nodePath.split("#").mapIndexed {
-            index, string ->
-            if (index % 2 == 0) nodeNames.add(string)
-        }
-        return nodeNames.joinToString("#")
-    }
-
-    private fun getIDPath(nodePath: String): String {
-        val nodeNames = mutableListOf<String>()
-        nodePath.split("#").mapIndexed {
-            index, string ->
-            if (index % 1 == 0) nodeNames.add(string)
-        }
-        return nodeNames.joinToString("#")
-    }
 
     private fun createDataOrderForNode(node: Node): MutableList<String> {
 
@@ -847,41 +828,44 @@ class NodeService {
     }
 }
 
-fun main() = runBlocking{
+fun main() {
     val jsonString: String = """
-		{
-            "type" : "NodeRequest",
-            "lastEditedBy" : "USERVarun",
-			"id": "NODE1",
-            "namespaceIdentifier" : "NAMESPACE1",
-            "workspaceIdentifier" : "WORKSPACE1",
-			"data": [
-			{
-				"id": "sampleParentID",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content 1",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			},
-            {
-				"id": "1234",
-                "elementType": "paragraph",
-                "children": [
-                {
-                    "id" : "sampleChildID",
-                    "content" : "sample child content",
-                    "elementType": "paragraph",
-                    "properties" :  { "bold" : true, "italic" : true  }
-                }
-                ]
-			}
-			]
-		}
+{
+    "type" : "NodeRequest",
+    "title" : "E",
+    "nodePath": "A#B#D#E",
+    "lastEditedBy" : "USERVarun",
+    "id": "NODE5",
+    "namespaceIdentifier" : "NAMESPACE1",
+    "data": [
+    {
+        "id": "sampleParentID",
+        "elementType": "paragraph",
+        "children": [
+        {
+            "id" : "sampleChildID",
+            "content" : "sample child content 1",
+            "elementType": "paragraph",
+            "properties" :  { "bold" : true, "italic" : true  }
+        }
+        ]
+    },
+    {
+        "id": "1234",
+        "elementType": "paragraph",
+        "children": [
+        {
+            "id" : "sampleChildID",
+            "content" : "sample child content",
+            "elementType": "paragraph",
+            "properties" :  { "bold" : true, "italic" : true  }
+        }
+        ]
+    }
+    ]
+}
+
+
 		"""
 
     val jsonString1: String = """
@@ -954,6 +938,8 @@ fun main() = runBlocking{
         }
       """
 
-
+    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
+    NodeService().bulkCreateNodes(nodeRequest, "WORKSPACE1")
+    //println("Aa".commonPrefixWith("Bb"))
 
 }
