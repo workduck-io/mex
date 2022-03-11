@@ -4,15 +4,11 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
-import com.workduck.models.Node
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -20,7 +16,6 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -114,8 +109,6 @@ class WorkspaceService {
     }
 
 
-
-
     fun refreshNodeHierarchyForWorkspace(workspaceID: String) = runBlocking{
 
         val jobToGetListOfRelationships = async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ACTIVE) }
@@ -124,6 +117,7 @@ class WorkspaceService {
         /* get single nodes with no hierarchy */
         val listOfRelationships = jobToGetListOfRelationships.await()
         val mapOfNodeIDToName = jobToGetMapOfNodeIDToName.await()
+        LOG.info("Node Map : $mapOfNodeIDToName")
 
         /* can be directly appended to node hierarchy */
         val nodeHierarchy = getNodesWithNoRelationship(listOfRelationships, mapOfNodeIDToName)
@@ -135,7 +129,8 @@ class WorkspaceService {
         val workspace = jobToGetWorkspace.await() as Workspace
 
         workspace.nodeHierarchyInformation = nodeHierarchy
-
+        workspace.updatedAt = System.currentTimeMillis()
+        LOG.info(nodeHierarchy)
         repository.update(workspace)
     }
 
@@ -157,22 +152,20 @@ class WorkspaceService {
         LOG.info("Graph : $graph")
         for((startNode, _) in graph){
             if(visitedSet.contains(startNode)) continue
-            var nodePath = ""
-            visitedSet.add(startNode)
-            nodePath += startNode
-            dfsForRelationships(graph, startNode, nodePath, visitedSet, nodeHierarchy)
+            dfsForRelationships(graph, startNode, startNode, visitedSet, nodeHierarchy) /* initial path is same as start node */
 
         }
-
+        LOG.info("nodeHierarchy From DFS : $nodeHierarchy")
         return nodeHierarchy
     }
 
     /* node is of the form nodeName#nodeID */
     private fun dfsForRelationships(graph: HashMap<String, MutableList<String>>, node : String, _nodePath : String, visitedSet : MutableSet<String>, nodeHierarchy: MutableList<String>){
 
+        visitedSet.add(node)
         var nodePath = _nodePath
+
         for(childNode in graph[node]!!){
-            visitedSet.add(childNode)
             nodePath += "#$childNode"
             if(graph.containsKey(childNode)){
                 if(!visitedSet.contains(childNode)) {
@@ -239,14 +232,16 @@ class WorkspaceService {
         for((nodeID, nodeName) in mapOfNodeIDToName){
             var aloneNode = true
             for(relationship in listOfRelationships){
-                if(nodeID != relationship.startNode.id || nodeID != relationship.endNode.id){
+                if(nodeID == relationship.startNode.id || nodeID == relationship.endNode.id){
                     aloneNode = false
+                    break
                 }
             }
             if(aloneNode){
                 listOfAloneNodes.add("$nodeName#$nodeID")
             }
         }
+        LOG.info("List of Alone Nodes: $listOfAloneNodes")
 
         return listOfAloneNodes
     }
@@ -280,9 +275,4 @@ fun main() {
 			"name" : "WorkDuck Pvt. Ltd. Blrrrrrr"
 		}
 		"""
-     //WorkspaceService().createWorkspace(ObjectMapper().readValue<WDRequest>(json))
-     //WorkspaceService().updateWorkspace(ObjectMapper().readValue<WDRequest>(jsonUpdate))
-    // WorkspaceService().deleteWorkspace("WORKSPACE1")
-    WorkspaceService().refreshNodeHierarchyForWorkspace("WORKSPACE1")
-    //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 }

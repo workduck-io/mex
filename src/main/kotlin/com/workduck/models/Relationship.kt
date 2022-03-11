@@ -53,14 +53,14 @@ data class Relationship(
     @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
-    @JsonProperty("type")
-    @DynamoDBAttribute(attributeName = "type")
+    @JsonProperty("typeOfRelationship")
+    @DynamoDBAttribute(attributeName = "typeOfRelationship")
     @DynamoDBTypeConverted(converter = RelationshipTypeConverter::class)
-    var type: RelationshipType = RelationshipType.HIERARCHY,
+    var typeOfRelationship: RelationshipType = RelationshipType.HIERARCHY,
 
 
     @DynamoDBRangeKey(attributeName = "SK")
-    var sk: String = "${startNode.id}#${type.name}",
+    var sk: String = "${startNode.id}#${typeOfRelationship.name}",
 
 
     @JsonProperty("workspaceIdentifier")
