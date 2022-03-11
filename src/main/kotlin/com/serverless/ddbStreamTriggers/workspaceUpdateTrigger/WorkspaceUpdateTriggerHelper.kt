@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeVal
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.Relationship
 import com.workduck.models.RelationshipType
+import com.workduck.models.WorkspaceIdentifier
 import com.workduck.service.RelationshipService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -29,13 +30,14 @@ object WorkspaceUpdateTriggerHelper {
     }
 
 
-    fun makeNodePairsAndCreateRelationships(relationshipService: RelationshipService, nodePairListForRelationship : List<Pair<String, String>>){
+    fun makeNodePairsAndCreateRelationships(relationshipService: RelationshipService, workspaceID: String, nodePairListForRelationship : List<Pair<String, String>>){
         val listOfRelationships = mutableListOf<Relationship>()
         for (nodePair in nodePairListForRelationship) {
             listOfRelationships.add(
                     Relationship(
                             startNode = NodeIdentifier(nodePair.first),
                             endNode = NodeIdentifier(nodePair.second),
+                            workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                             type = RelationshipType.HIERARCHY
                     )
             )

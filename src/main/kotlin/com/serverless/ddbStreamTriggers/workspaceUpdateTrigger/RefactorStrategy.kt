@@ -1,5 +1,6 @@
 package com.serverless.ddbStreamTriggers.workspaceUpdateTrigger
 
+import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.makeNodePairsAndCreateRelationships
 import com.workduck.service.RelationshipService
 import com.workduck.utils.Helper.commonPrefixList
 import com.workduck.utils.Helper.commonSuffixList
@@ -8,7 +9,7 @@ import com.workduck.utils.NodeHelper.getIDPath
 class RefactorStrategy : OperationPerformedStrategy {
 
     /* refactor is used to create nodes in b/w */
-    override fun createRelationships(relationshipService: RelationshipService, newNodeHierarchy: List<String>, oldNodeHierarchy: List<String>, addedPath: List<String>, removedPath: List<String>) {
+    override fun createRelationships(relationshipService: RelationshipService, workspaceID: String, newNodeHierarchy: List<String>, oldNodeHierarchy: List<String>, addedPath: List<String>, removedPath: List<String>) {
         val oldPathNewPath = oldNodeHierarchy.zip(newNodeHierarchy)
         for(pair in oldPathNewPath){
             val oldPathIDs = getIDPath(pair.first).split("#")
@@ -29,15 +30,9 @@ class RefactorStrategy : OperationPerformedStrategy {
 
                 val nodePairListForRelationship = newPathIDs.zipWithNext()
                 println(nodePairListForRelationship)
-                WorkspaceUpdateTriggerHelper.makeNodePairsAndCreateRelationships(relationshipService, nodePairListForRelationship)
+                makeNodePairsAndCreateRelationships(relationshipService, workspaceID, nodePairListForRelationship)
 
             }
         }
     }
-}
-
-fun main(){
-    val new = listOf("A#NODE1#B#NODE2#C#NODE3", "E#NODE4", "A#NODE1#B#NODE2#F#NODE_7YDAdiEy6TjrEbniEALDx#X#NODE_YKLY3zQQp4nNzrPqR9mVt#E#NODE5")
-    val old = listOf("A#NODE1#B#NODE2#C#NODE3", "E#NODE4", "A#NODE1#B#NODE2#D#NODE_YKLY3zQQp4nNzrPqR9mVt#E#NODE5")
-    RefactorStrategy().createRelationships(RelationshipService(), new, old, listOf(""), listOf("") )
 }

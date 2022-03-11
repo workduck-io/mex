@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.getDifferenceOfList
 import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.getNodeHierarchyInformationFromImage
+import com.workduck.models.WorkspaceIdentifier
 import com.workduck.service.RelationshipService
 import org.apache.logging.log4j.LogManager
 
@@ -16,6 +17,7 @@ class WorkspaceUpdateTrigger : RequestHandler<DynamodbEvent, Void> {
         if(dynamodbEvent == null || dynamodbEvent.records == null) return null /* will be the case when warmup lambda calls it */
         for (record in dynamodbEvent.records) {
 
+            val workspaceID = record.dynamodb.newImage["PK"]?.s ?: throw Exception("Invalid Record. WorkspaceID not available")
             val newNodeHierarchyInformation =
                 getNodeHierarchyInformationFromImage(record.dynamodb.newImage["nodeHierarchyInformation"]?.l ?: listOf())
 
@@ -29,7 +31,7 @@ class WorkspaceUpdateTrigger : RequestHandler<DynamodbEvent, Void> {
             val removedPath = getDifferenceOfList(oldNodeHierarchyInformation, newNodeHierarchyInformation)
 
             val operationPerformedStrategy = RelationshipCreationStrategyFactory.getRelationshipCreationStrategy(addedPath, removedPath)
-            operationPerformedStrategy.createRelationships(relationshipService, newNodeHierarchyInformation, oldNodeHierarchyInformation, addedPath, removedPath)
+            operationPerformedStrategy.createRelationships(relationshipService, workspaceID, newNodeHierarchyInformation, oldNodeHierarchyInformation, addedPath, removedPath)
 
         }
         return null
