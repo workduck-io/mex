@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.workduck.models.ItemStatus
 import com.workduck.models.Relationship
+import com.workduck.models.RelationshipType
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
@@ -29,13 +30,13 @@ class RelationshipRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":workspaceIdentifier"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
-        expressionAttributeValues[":type"] = AttributeValue("HIERARCHY")
-        expressionAttributeValues[":status"] = AttributeValue(status.name)
+        expressionAttributeValues[":typeOfRelationship"] = AttributeValue("HIERARCHY")
+        expressionAttributeValues[":itemStatus"] = AttributeValue(status.name)
 
         return DynamoDBQueryExpression<Relationship>()
             .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
             .withIndexName("WS-itemType-index").withConsistentRead(false)
-            .withFilterExpression("type = :type and status = :status")
+            .withFilterExpression("typeOfRelationship = :typeOfRelationship and itemStatus = :itemStatus")
             .withExpressionAttributeValues(expressionAttributeValues).let {
                 mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
             }
@@ -45,7 +46,7 @@ class RelationshipRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":workspaceIdentifier"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
-        expressionAttributeValues[":type"] = AttributeValue("HIERARCHY")
+        expressionAttributeValues[":typeOfRelationship"] = AttributeValue("HIERARCHY")
         expressionAttributeValues[":startNode"] = AttributeValue(startNodeID)
         expressionAttributeValues[":itemStatus"] = AttributeValue(status.name)
 
@@ -53,7 +54,7 @@ class RelationshipRepository(
         return DynamoDBQueryExpression<Relationship>()
             .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
             .withIndexName("WS-itemType-index").withConsistentRead(false)
-            .withFilterExpression("type = :type and startNode = :startNode and itemStatus = :itemStatus ")
+            .withFilterExpression("typeOfRelationship = :typeOfRelationship and startNode = :startNode and itemStatus = :itemStatus ")
             .withExpressionAttributeValues(expressionAttributeValues).let {
                 mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
             }
@@ -63,7 +64,7 @@ class RelationshipRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":workspaceIdentifier"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
-        expressionAttributeValues[":type"] = AttributeValue("HIERARCHY")
+        expressionAttributeValues[":typeOfRelationship"] = AttributeValue("HIERARCHY")
         expressionAttributeValues[":endNode"] = AttributeValue(endNodeID)
         expressionAttributeValues[":itemStatus"] = AttributeValue(status.name)
 
@@ -71,7 +72,7 @@ class RelationshipRepository(
         return DynamoDBQueryExpression<Relationship>()
             .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
             .withIndexName("WS-itemType-index").withConsistentRead(false)
-            .withFilterExpression("type = :type and endNode = :endNode and itemStatus = :itemStatus")
+            .withFilterExpression("typeOfRelationship = :typeOfRelationship and endNode = :endNode and itemStatus = :itemStatus")
             .withExpressionAttributeValues(expressionAttributeValues).let {
                 mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
             }
@@ -99,6 +100,35 @@ class RelationshipRepository(
             }
         }
     }
+
+    fun getRelationship(startNode: String, endNode: String, workspaceID: String, relationshipType : RelationshipType) : Relationship?{
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue("$startNode#${relationshipType.name}")
+        expressionAttributeValues[":PK"] = AttributeValue("RLSP")
+        expressionAttributeValues[":typeOfRelationship"] = AttributeValue("HIERARCHY")
+        expressionAttributeValues[":endNode"] = AttributeValue(endNode)
+        expressionAttributeValues[":workspaceIdentifier"] = AttributeValue(workspaceID)
+
+        DynamoDBQueryExpression<Relationship>()
+                .withKeyConditionExpression("SK = :workspaceIdentifier  and begins_with(PK, :PK)")
+                .withIndexName("SK-PK-index").withConsistentRead(false)
+                .withFilterExpression("endNode = :endNode and workspaceIdentifier = :workspaceIdentifier")
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig).let { list ->
+                        if(list.isNotEmpty()) return list[0]
+                    }
+                }
+
+        return null
+
+    }
+
+    fun deleteRelationship(relationship: Relationship){
+        mapper.delete(relationship)
+    }
+
+
 
     private fun getRelationshipPK(relationship: Relationship): String {
         return relationship.id

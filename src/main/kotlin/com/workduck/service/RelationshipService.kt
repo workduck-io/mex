@@ -9,6 +9,7 @@ import com.workduck.repositories.RelationshipRepository
 import com.workduck.utils.DDBHelper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.workduck.models.NodeIdentifier
+import com.workduck.models.RelationshipType
 
 
 class RelationshipService (
@@ -48,6 +49,15 @@ class RelationshipService (
 
     fun changeRelationshipStatus(list: List<Relationship>, status: ItemStatus) {
         relationshipRepository.changeRelationshipStatus(list, status)
+    }
+
+
+    fun getRelationship(startNode: String, endNode: String, workspaceID: String, relationshipType : RelationshipType): Relationship?{
+        return relationshipRepository.getRelationship(startNode, endNode, workspaceID, relationshipType)
+    }
+
+    fun deleteRelationship(relationship: Relationship?){
+        relationship?.let { relationshipRepository.deleteRelationship(relationship) }
     }
 
 

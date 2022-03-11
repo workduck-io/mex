@@ -38,7 +38,7 @@ object WorkspaceUpdateTriggerHelper {
                             startNode = NodeIdentifier(nodePair.first),
                             endNode = NodeIdentifier(nodePair.second),
                             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-                            type = RelationshipType.HIERARCHY
+                            typeOfRelationship = RelationshipType.HIERARCHY
                     )
             )
         }
