@@ -280,10 +280,10 @@ Comment:
         method: get
         authorizer: mexAuthorizer
 
-RelationshipTrigger:
-  handler: com.serverless.ddbStreamTriggers.RelationshipTrigger
-  events:
-    - stream: arn:aws:dynamodb:us-east-1:418506370286:table/local-mex/stream/2022-02-22T11:31:44.345
+WorkspaceUpdateTrigger:
+  handler: com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTrigger
+#  events:
+#    - stream: arn:aws:dynamodb:us-east-1:418506370286:table/local-mex/stream/2022-02-22T11:31:44.345
 #      filterPatterns:
 #        - eventName: [MODIFY]
 #        - dynamodb:

@@ -10,7 +10,7 @@ import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NodeRequest
-import com.serverless.models.requests.RefactorNodePathRequest
+import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
@@ -28,8 +28,10 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
+import com.workduck.utils.Helper.commonPrefixList
 import com.workduck.utils.Helper.splitIgnoreEmpty
 import com.workduck.utils.NodeHelper
+import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import kotlinx.coroutines.async
@@ -40,25 +42,24 @@ import org.apache.logging.log4j.LogManager
 /**
  * contains all node related logic
  */
-class NodeService (
-    // Todo: Inject them from handlers
+class NodeService ( // Todo: Inject them from handlers
+    val objectMapper: ObjectMapper = Helper.objectMapper,
+    val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
+    val dynamoDB: DynamoDB = DynamoDB(client),
+    val mapper: DynamoDBMapper = DynamoDBMapper(client),
+    val workspaceService: WorkspaceService = WorkspaceService(),
 
-        val objectMapper: ObjectMapper = Helper.objectMapper,
-        val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
-        val dynamoDB: DynamoDB = DynamoDB(client),
-        val mapper: DynamoDBMapper = DynamoDBMapper(client),
-
-        var tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
+    var tableName: String = when (System.getenv("TABLE_NAME")) {
+    null -> "local-mex" /* for local testing without serverless offline */
+    else -> System.getenv("TABLE_NAME")
     },
 
-        var dynamoDBMapperConfig : DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
-        .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-        .build(),
+    var dynamoDBMapperConfig : DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+    .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+    .build(),
 
-        val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
-        val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
+    val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
+    val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 ){
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? {
@@ -92,7 +93,6 @@ class NodeService (
 
         val nodeRequest: NodeRequest = request as NodeRequest
         val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: return@runBlocking null
-        val workspaceService = WorkspaceService()
 
         val jobToGetStoredNode = async { getNode(node.id) as Node? }
         val jobToGetWorkspace = async { node.workspaceIdentifier.id.let { (workspaceService.getWorkspace(it) as Workspace) } }
@@ -101,7 +101,7 @@ class NodeService (
             null -> {
                 val jobToCreateNode = async {createNode(node, versionEnabled)}
                 val workspace = jobToGetWorkspace.await()
-                launch {  updateNodeHierarchyInSingleCreate(nodeRequest.referenceID, node.id, node.title, workspace, workspaceService) }
+                launch {  updateNodeHierarchyInSingleCreate(nodeRequest.referenceID, node.id, node.title, workspace) }
                 jobToCreateNode.await()
             }
             else -> {
@@ -111,7 +111,7 @@ class NodeService (
         }
     }
 
-    private fun updateNodeHierarchyInSingleCreate(referenceID: String?, nodeID: String, nodeTitle: String, workspace: Workspace, workspaceService: WorkspaceService){
+    private fun updateNodeHierarchyInSingleCreate(referenceID: String?, nodeID: String, nodeTitle: String, workspace: Workspace){
         when(referenceID){
             null -> {
                 workspaceService.addNodePathToHierarchy(workspace.id, "$nodeTitle#$nodeID")
@@ -153,13 +153,15 @@ class NodeService (
 
     }
 
-    /* these are name-paths */
+    /* will be used to insert empty nodes in between two existing nodes */
     fun refactor(wdRequest: WDRequest, workspaceID: String) = runBlocking {
 
-        val refactorNodePathRequest = wdRequest as RefactorNodePathRequest
+        val refactorNodePathRequest = wdRequest as RefactorRequest
 
+        /* existingNodePath is path from root till last node in the path and not necessarily path till a leaf node */
         val existingNodePath = refactorNodePathRequest.existingNodePath
         val newNodePath = refactorNodePathRequest.newNodePath
+
         val lastNodeID = refactorNodePathRequest.nodeID
         val lastEditedBy = refactorNodePathRequest.lastEditedBy
         val namespaceID = refactorNodePathRequest.namespaceID
@@ -169,10 +171,10 @@ class NodeService (
         val existingNodes = existingNodePath.split("#")
         val newNodes = newNodePath.split("#")
 
-        val nodeHierarchyInformation = (WorkspaceService().getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
+        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace? ?: throw IllegalArgumentException("Invalid Workspace ID")
 
-        when (existingNodes.last() == newNodes.last()) {
-            false -> { /* need to rename last node from existing path to last node from new path */
+        when (existingNodes.last() != newNodes.last()) {
+            true -> { /* need to rename last node from existing path to last node from new path */
                launch {  renameNode(lastNodeID, newNodes.last(), lastEditedBy) }
             }
         }
@@ -184,19 +186,23 @@ class NodeService (
 
         val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspaceID, namespaceID)
 
-        updateHierarchyInRefactor(existingNodePath, newNodePath, nodeHierarchyInformation, nodesToCreate)
+        launch { nodeRepository.createMultipleNodes(nodesToCreate) }
+        launch { updateHierarchyInRefactor(existingNodePath, newNodePath, workspace, nodesToCreate, lastNodeID) }
     }
 
-    private fun updateHierarchyInRefactor(existingNodePath: String, newNodePath: String, nodeHierarchyInformation: List<String>, nodesToCreate: List<Node>){
+    private fun updateHierarchyInRefactor(existingNodePath: String, newNodePath: String, workspace: Workspace, nodesToCreate: List<Node>, lastNodeID: String){
 
         val existingNodes = existingNodePath.split("#")
         val newNodes = newNodePath.split("#")
 
+        val nodeHierarchyInformation = workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
         val newNodeHierarchy = mutableListOf<String>()
+
         for(nodePath in nodeHierarchyInformation){
             val namePath = getNamePath(nodePath)
-            if(existingNodePath.commonPrefixWith(namePath).splitIgnoreEmpty("#") == existingNodes){
-
+            /* if the current nodeNamePath has all the nodes from the passed path, we know we need to change this current path */
+            if(getCommonPrefixNodePath(existingNodePath, namePath).split("#") == existingNodes){
+                LOG.info("PASSED PATH : $existingNodePath, CURRENT NAME PATH : $namePath")
                 /* break new node path in 4 parts and combine later
                 1. Unchanged Prefix Path
                 2. Path due to new Nodes in between
@@ -207,34 +213,43 @@ class NodeService (
                 val paths = mutableListOf<String>()
 
                 val idPath = getIDPath(nodePath).split("#")
+                LOG.info("ID PATH : $idPath")
 
                 val namesOfUnchangedPrefixNodes = existingNodes.dropLast(1) /* last node needs to be handled separately */
                 val idsOfUnchangedPrefixNodes = idPath.subList(0, namesOfUnchangedPrefixNodes.size)
                 val prefixString = namesOfUnchangedPrefixNodes.zip(idsOfUnchangedPrefixNodes) { name, id -> "$name#$id" }.joinToString("#")
+                LOG.info("Prefix String : $prefixString")
                 paths.add(prefixString)
 
                 // path due to potential new nodes in between
                 val newString = nodesToCreate.joinToString("#") { node -> "${node.title}#${node.id}" }
+                LOG.info("newString : $newString")
                 paths.add(newString)
 
                 // rename string
-                val idOfLastNodeInExistingPath = idPath[existingNodes.size - 1]
-                val renameString = "${newNodes.last()}#$idOfLastNodeInExistingPath"  /* even if no need to rename, we're good */
-                paths.add(renameString)
+                val renameNodePath = "${newNodes.last()}#$lastNodeID"  /* even if no need to rename, we're good */
+                LOG.info("renameString : $renameNodePath")
+                paths.add(renameNodePath)
 
                 // suffix string
-                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodePath).splitIgnoreEmpty("#")
+                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodePath).splitIgnoreEmpty("#") /* get all the nodes after last node from passed existing path */
                 val idsOfUnchangedSuffixNodes = idPath.takeLast(namesOfUnchangedSuffixNodes.size)
                 val suffixString = namesOfUnchangedSuffixNodes.zip(idsOfUnchangedSuffixNodes) { name, id -> "$name#$id" }.joinToString("#")
+                LOG.info("suffixString : $suffixString")
                 paths.add(suffixString)
 
                 newNodeHierarchy.add(paths.joinToString("#"))
-
+                LOG.info("New path : " + newNodeHierarchy.last())
             }
             else{
                 newNodeHierarchy.add(nodePath)
             }
         }
+
+        workspace.nodeHierarchyInformation = newNodeHierarchy
+        workspace.updatedAt = System.currentTimeMillis()
+        workspaceService.updateWorkspace(workspace)
+
 
 
     }
@@ -248,7 +263,7 @@ class NodeService (
         for (newNodeName in namesOfNodesToCreate) {
             listOfNodes.add(
                 Node(
-                    id = "NEED TO GET FUNCTION",
+                    id = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
                     title = newNodeName,
                     workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                     namespaceIdentifier = namespaceID?.let { NamespaceIdentifier(it) },
@@ -276,7 +291,6 @@ class NodeService (
         val nodeRequest: NodeRequest? = request as NodeRequest?
         val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: throw IllegalArgumentException("Invalid Body")
 
-        val workspaceService = WorkspaceService()
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
         val nodeHierarchyInformation = workspace.nodeHierarchyInformation as MutableList<String>
@@ -406,10 +420,10 @@ class NodeService (
     /* basically archive the nodes */
     fun deleteNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
-        val workspaceService = WorkspaceService()
+
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
 
-        val jobToGetWorkspace = async { (WorkspaceService().getWorkspace(workspaceID) as Workspace) }
+        val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
         val jobToChangeNodeStatus = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, ItemStatus.ARCHIVED) }
 
         val workspace = jobToGetWorkspace.await()
@@ -671,7 +685,7 @@ class NodeService (
     }
 
     private fun getNodeNamesToChange(nodeIDList: List<String>, workspaceID: String): Map<String, String> = runBlocking {
-        val jobToGetWorkspace = async { WorkspaceService().getWorkspace(workspaceID) as Workspace }
+        val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
         val jobToGetArchivedNodeIDToNameMap = async { getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ARCHIVED) }
         val jobToGetArchivedHierarchyRelationship = async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ARCHIVED) }
 
@@ -938,8 +952,20 @@ fun main() {
         }
       """
 
-    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
-    NodeService().bulkCreateNodes(nodeRequest, "WORKSPACE1")
-    //println("Aa".commonPrefixWith("Bb"))
+
+    val jsonForRefactor = """
+        {
+            "type" : "RefactorRequest",
+            "existingNodePath": "A#B#D",
+            "newNodePath": "A#B#F#X",
+            "lastEditedBy": "Varun",
+            "nodeID": "NODE_YKLY3zQQp4nNzrPqR9mVt"
+            
+        }      
+        """
+
+    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonForRefactor)
+    NodeService().refactor(nodeRequest, "WORKSPACE1")
+//    print(listOf(Node(title = "A", id = "Aid"), Node(title = "B", id = "Bid")).joinToString("#") { node -> "${node.title}#${node.id}" })
 
 }

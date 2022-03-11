@@ -453,7 +453,7 @@ class NodeRepository(
     }
 
     fun renameNode(nodeID: String, newName: String, lastEditedBy: String){
-
+        LOG.info("$nodeID , new name : $newName")
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
