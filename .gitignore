@@ -39,4 +39,3 @@ node_modules
 *.classpath
 reports
 sampleJson
-yarn.lock
