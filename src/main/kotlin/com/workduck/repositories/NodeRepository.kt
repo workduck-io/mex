@@ -509,6 +509,7 @@ class NodeRepository(
         return DynamoDBQueryExpression<Node>()
                 .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
                 .withIndexName("WS-itemType-index").withConsistentRead(false)
+                .withFilterExpression("itemStatus = :itemStatus")
                 .withProjectionExpression("PK, SK, title")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
                     mapper.query(Node::class.java, it, dynamoDBMapperConfig)
