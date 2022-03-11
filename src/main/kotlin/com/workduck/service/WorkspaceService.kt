@@ -283,5 +283,6 @@ fun main() {
      //WorkspaceService().createWorkspace(ObjectMapper().readValue<WDRequest>(json))
      //WorkspaceService().updateWorkspace(ObjectMapper().readValue<WDRequest>(jsonUpdate))
     // WorkspaceService().deleteWorkspace("WORKSPACE1")
+    WorkspaceService().refreshNodeHierarchyForWorkspace("WORKSPACE1")
     //println(WorkspaceService().getWorkspaceData(mutableListOf("WORKSPACE1")))
 }
