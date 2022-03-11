@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.workduck.utils.Helper.commonPrefixList
 import org.apache.logging.log4j.LogManager
 import java.security.SecureRandom
 import java.util.*
@@ -44,6 +45,19 @@ object Helper {
 
     fun validateWorkspace(workspaceID: String, workspaceIDList: List<String>): Boolean{
         return workspaceID in workspaceIDList
+    }
+
+    fun List<String>.commonPrefixList(list: List<String>) : List<String>{
+        val commonPrefixList = mutableListOf<String>()
+        for(index in 0 until minOf(this.size, list.size)){
+            if(this[index] == list[index]) commonPrefixList.add(this[index])
+            else break
+        }
+        return commonPrefixList
+    }
+
+    fun List<String>.commonSuffixList(list: List<String>) : List<String>{
+        return this.reversed().commonPrefixList(list.reversed()).reversed()
     }
 
     fun logFailureForBatchOperation(failedBatches: MutableList<DynamoDBMapper.FailedBatch>){

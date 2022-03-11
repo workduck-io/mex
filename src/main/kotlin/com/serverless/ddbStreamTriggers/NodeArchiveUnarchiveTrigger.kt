@@ -14,7 +14,8 @@ class NodeArchiveUnarchiveTrigger : RequestHandler<DynamodbEvent, Void> {
 
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context): Void? {
         LOG.info("DYNAMODB-EVENT : $dynamodbEvent")
-        for (record in dynamodbEvent?.records!!) {
+        if(dynamodbEvent == null || dynamodbEvent.records == null) return null /* will be the case when warmup lambda calls it */
+        for (record in dynamodbEvent.records) {
             LOG.info(record)
             when(getOperationType(record)){
 

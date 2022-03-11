@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("NodePathRefactorRequest")
-class RefactorNodePathRequest (
+@JsonTypeName("RefactorRequest")
+class RefactorRequest (
 
     @JsonProperty("existingNodePath")
     val existingNodePath: String,
@@ -18,6 +18,7 @@ class RefactorNodePathRequest (
     @JsonProperty("lastEditedBy")
     val lastEditedBy: String,
 
+    /* id of the last node in existingNodePath */
     @JsonProperty("nodeID")
     val nodeID : String,
 

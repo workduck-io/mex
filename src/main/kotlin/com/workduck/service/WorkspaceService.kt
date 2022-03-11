@@ -21,6 +21,7 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
+import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -200,7 +201,7 @@ class WorkspaceService {
     private fun findSuffixInNodeHierarchyAndReplace(nodeHierarchy: MutableList<String>, node: String){
         val listOfSuffix = mutableListOf<String>()
         for(nodePath in nodeHierarchy){
-            if(node.commonPrefixWith(nodePath) == node){
+            if(getCommonPrefixNodePath(node, nodePath) == node){
                 listOfSuffix.add(nodePath)
             }
         }

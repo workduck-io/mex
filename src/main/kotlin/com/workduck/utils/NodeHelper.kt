@@ -1,5 +1,6 @@
 package com.workduck.utils
 
+import com.workduck.utils.Helper.commonPrefixList
 import com.workduck.utils.Helper.splitIgnoreEmpty
 import org.apache.logging.log4j.LogManager
 
@@ -13,12 +14,12 @@ object NodeHelper {
         var longestExistingPath = ""
         nodeHierarchyInformation?.let {
             for (existingNodePath in nodeHierarchyInformation) {
-                val longestNamePath = nodeNamePath.commonPrefixWith(getNamePath(existingNodePath))
+                val longestCommonNamePath = getCommonPrefixNodePath(nodeNamePath, existingNodePath)
 
-                LOG.info(longestNamePath)
-                if(longestNamePath != ""){
+                LOG.info(longestCommonNamePath)
+                if(longestCommonNamePath != ""){
                     val nodeNamesAndIDs = existingNodePath.split("#")
-                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestNamePath.splitIgnoreEmpty("#").size)
+                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty("#").size)
 
                     if(commonNodeNamesAndIDs.size > longestExistingPath.split("#").size)
                         longestExistingPath = commonNodeNamesAndIDs.joinToString("#")
@@ -37,6 +38,10 @@ object NodeHelper {
         return longestExistingPath
     }
 
+    fun getCommonPrefixNodePath(path1: String, path2: String): String{
+        return path1.split("#").commonPrefixList(path2.split("#")).joinToString("#")
+    }
+
     /* nodePath is of the format : node1Name#node1ID#node2Name#node2ID.. */
     fun getNamePath(nodePath: String): String {
         val nodeNames = mutableListOf<String>()
@@ -51,7 +56,7 @@ object NodeHelper {
         val nodeNames = mutableListOf<String>()
         nodePath.split("#").mapIndexed {
             index, string ->
-            if (index % 1 == 0) nodeNames.add(string)
+            if (index % 2 != 0) nodeNames.add(string)
         }
         return nodeNames.joinToString("#")
     }
