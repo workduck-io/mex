@@ -49,16 +49,3 @@ class UserPreferenceService {
         )
     }
 }
-
-fun main() {
-    val json: String = """
-		{
-			"userID" : "USER49",
-			"preferenceType" : "Sound",
-			"preferenceValue" : "ta-ding"		
-		}
-		"""
-
-    // UserPreferenceService().createAndUpdateUserPreferenceRecord(json)
-    println(UserPreferenceService().getAllUserPreferencesForUser("USER49"))
-}

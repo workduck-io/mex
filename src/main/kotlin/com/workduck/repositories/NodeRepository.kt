@@ -285,12 +285,13 @@ class NodeRepository(
         }
     }
 
-    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, itemStatus: ItemStatus): MutableList<String> {
+    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, workspaceID: String, itemStatus: ItemStatus): MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":active"] = itemStatus.name
         expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":workspaceIdentifier"] = workspaceID
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
         for (nodeID in nodeIDList) {
@@ -298,13 +299,13 @@ class NodeRepository(
                 UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
                     .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
                     .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK)")
+                    .withConditionExpression("attribute_exists(PK) and workspaceIdentifier = :workspaceIdentifier")
                     .also {
                         table.updateItem(it)
                         nodesProcessedList += nodeID
                     }
             } catch (e: ConditionalCheckFailedException) {
-                LOG.warn("nodeID : $nodeID not present in the DB")
+                LOG.warn("Invalid nodeID : $nodeID for workspace : $workspaceID")
             }
         }
 
@@ -315,7 +316,7 @@ class NodeRepository(
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":active"] = ItemStatus.ARCHIVED.name
+        expressionAttributeValues[":active"] = ItemStatus.ACTIVE.name
         expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
 
         val nodesProcessedList: MutableList<String> = mutableListOf()

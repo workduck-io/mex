@@ -6,11 +6,15 @@ import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.workduck.models.ItemStatus
 import com.workduck.service.NodeService
 import com.workduck.service.RelationshipService
+import com.workduck.service.WorkspaceService
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
 class NodeArchiveUnarchiveTrigger : RequestHandler<DynamodbEvent, Void> {
     private val relationshipService = RelationshipService()
     private val nodeService = NodeService()
+    private val workspaceService = WorkspaceService()
 
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context): Void? {
         LOG.info("DYNAMODB-EVENT : $dynamodbEvent")
@@ -33,22 +37,26 @@ class NodeArchiveUnarchiveTrigger : RequestHandler<DynamodbEvent, Void> {
         return null
     }
 
-    private fun processRecord(record: DynamodbEvent.DynamodbStreamRecord, currentStatus: ItemStatus, expectedStatus: ItemStatus) {
+    private fun processRecord(record: DynamodbEvent.DynamodbStreamRecord, currentStatus: ItemStatus, expectedStatus: ItemStatus) = runBlocking {
 
         val nodeID = record.dynamodb.oldImage["PK"]?.s ?: throw Exception("Invalid Node Item")
         val workspaceID = record.dynamodb.oldImage["workspaceIdentifier"]?.s ?: throw Exception("Invalid Node Item")
 
 
+        /* if the current node is end node in a hierarchy relationship, we need to change the relationship itemStatus */
         relationshipService.getHierarchyRelationshipsWithEndNode(workspaceID, nodeID, currentStatus).let {
             relationshipService.changeRelationshipStatus(it, expectedStatus)
         }
+
+
+        if(expectedStatus == ItemStatus.ACTIVE) launch { workspaceService.refreshNodeHierarchyForWorkspace(workspaceID) }
 
         relationshipService.getHierarchyRelationshipsWithStartNode(workspaceID, nodeID, currentStatus)
                 .map { relationship -> relationship.endNode.id }
                 .let {
                     when(expectedStatus) {
-                        ItemStatus.ARCHIVED -> nodeService.deleteNodes(it)
-                        ItemStatus.ACTIVE -> nodeService.unarchiveNodes(it)
+                        ItemStatus.ARCHIVED -> nodeService.archiveNodes(it, workspaceID)
+                        ItemStatus.ACTIVE -> nodeService.unarchiveNodes(it, workspaceID)
                     }
                 }
 
@@ -60,7 +68,7 @@ class NodeArchiveUnarchiveTrigger : RequestHandler<DynamodbEvent, Void> {
         val newStatus = record.dynamodb.newImage["itemStatus"]?.s
 
         return if(oldStatus == ItemStatus.ARCHIVED.name && newStatus == ItemStatus.ACTIVE.name) ItemStatus.ACTIVE
-        else if(newStatus == ItemStatus.ACTIVE.name && newStatus == ItemStatus.ARCHIVED.name) ItemStatus.ARCHIVED
+        else if(oldStatus == ItemStatus.ACTIVE.name && newStatus == ItemStatus.ARCHIVED.name) ItemStatus.ARCHIVED
         else throw Exception("Unexpected Input : $record")
     }
 
@@ -68,24 +76,3 @@ class NodeArchiveUnarchiveTrigger : RequestHandler<DynamodbEvent, Void> {
         private val LOG = LogManager.getLogger(NodeArchiveUnarchiveTrigger::class.java)
     }
 }
-
-/*
-A -> B -> C
-       -> D -> E
-
-Archiving -> Update hierarchy at start.
-
-A
-
-A -> B
-
-Un-archiving : Check if B ka name exists.
-
-
-
-A
-B
-D -> E -> F
-[A, B, D]
-
-*/

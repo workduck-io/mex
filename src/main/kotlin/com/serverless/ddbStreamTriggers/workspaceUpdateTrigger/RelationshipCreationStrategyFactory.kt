@@ -11,7 +11,7 @@ class RelationshipCreationStrategyFactory {
                     AddedToLeafNodeStrategy() /* leaf node(s) were added either via `/create` or `/bulkCreate` */
                 }
             } else if (addedPath.size == 1 && removedPath.isEmpty()) {
-                AddedNewPathStrategy() /* a standalone node is created via `/create` or nodes were appended to non leaf node via `/bulkCreate` */
+                AddedNewPathStrategy() /* a standalone node is created via `/create` or node(s) were appended to non leaf node via `/bulkCreate` or `/create` */
             } else if (addedPath.size > 1 && removedPath.size > 1 && addedPath.size == removedPath.size) {
                 RefactorStrategy() /* nodes in middle created via `/refactor` */
             } else {

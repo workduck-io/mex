@@ -62,10 +62,3 @@ class RelationshipService (
 
 
 }
-
-fun main(){
-    RelationshipService().createRelationshipInBatch(listOf(
-            Relationship(startNode = NodeIdentifier("1"), endNode = NodeIdentifier("2"))
-    )
-    )
-}
