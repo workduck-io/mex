@@ -14,7 +14,7 @@ object NodeHelper {
         var longestExistingPath = ""
         nodeHierarchyInformation?.let {
             for (existingNodePath in nodeHierarchyInformation) {
-                val longestCommonNamePath = getCommonPrefixNodePath(nodeNamePath, existingNodePath)
+                val longestCommonNamePath = getCommonPrefixNodePath(nodeNamePath, getNamePath(existingNodePath))
 
                 LOG.info(longestCommonNamePath)
                 if(longestCommonNamePath != ""){

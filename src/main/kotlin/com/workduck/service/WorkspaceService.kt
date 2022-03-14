@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.workduck.models.Entity
+import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.Relationship
@@ -17,6 +18,8 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
+import com.workduck.utils.NodeHelper.getIDPath
+import com.workduck.utils.NodeHelper.getNamePath
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -40,7 +43,7 @@ class WorkspaceService {
     private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
     fun createWorkspace(workspaceRequest: WDRequest?): Entity? {
-        val workspace : Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
+        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
         LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
@@ -68,6 +71,13 @@ class WorkspaceService {
         repository.update(workspace)
     }
 
+    fun updateWorkspaceHierarchy(workspace: Workspace, newNodeHierarchy: List<String>, hierarchyUpdateSource: HierarchyUpdateSource) {
+        workspace.nodeHierarchyInformation = newNodeHierarchy
+        workspace.updatedAt = System.currentTimeMillis()
+        workspace.hierarchyUpdateSource = hierarchyUpdateSource
+        updateWorkspace(workspace)
+    }
+
     fun deleteWorkspace(workspaceID: String): Identifier? {
         LOG.info("Deleting workspace with id : $workspaceID")
         return repository.delete(WorkspaceIdentifier(workspaceID))
@@ -78,38 +88,58 @@ class WorkspaceService {
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
 
-    fun addNodePathToHierarchy(workspaceID: String, nodePath: String){
+    fun addNodePathToHierarchy(workspaceID: String, nodePath: String) {
         workspaceRepository.addNodePathToHierarchy(workspaceID, nodePath)
     }
 
-
-    fun updateNodeHierarchyOnDeletingNode(workspace: Workspace, nodeID: String) {
+    fun updateNodeHierarchyOnArchivingNode(workspace: Workspace, nodeID: String) {
         val updatedNodeHierarchy = getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
-        workspace.nodeHierarchyInformation = updatedNodeHierarchy
-        workspace.updatedAt = System.currentTimeMillis()
-        repository.update(workspace)
 
+        LOG.info("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
+        updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE )
     }
 
-    private fun getUpdatedNodeHierarchyOnDeletingNode(nodeHierarchyInformation: List<String>, nodeID: String): MutableList<String>{
-        val updatedNodeHierarchy = mutableListOf<String>()
-        for(nodePath in nodeHierarchyInformation){
-            when(nodePath.contains(nodeID)){
-                false -> updatedNodeHierarchy.add(nodePath)
+    private fun getUpdatedNodeHierarchyOnDeletingNode(nodeHierarchyInformation: List<String>, nodeID: String): List<String> {
+        val newNodeHierarchy = mutableListOf<String>()
+        val updatedPaths = mutableListOf<String>()
+        for (nodePath in nodeHierarchyInformation) {
+            when (nodePath.contains(nodeID)) {
+                false -> newNodeHierarchy.add(nodePath)
                 true -> {
-                    val nodeNameAndIDList = nodePath.split("#") as MutableList
-                    val indexOfName = nodeNameAndIDList.indexOf(nodeID) - 1
-                    nodeNameAndIDList.remove(nodeNameAndIDList[indexOfName])
-                    nodeNameAndIDList.remove(nodeID)
-                    updatedNodeHierarchy.add(nodeNameAndIDList.joinToString("#"))
+                    val nameList = getNamePath(nodePath).split("#")
+                    val idList = getIDPath(nodePath).split("#")
+                    val indexOfPassedNode = idList.indexOf(nodeID)
+                    val newPath = nameList.take(indexOfPassedNode).zip(idList.take(indexOfPassedNode)) { name, id -> "$name#$id" }.joinToString("#")
+                    when (newPath.isNotEmpty()) {
+                        true -> {
+                            // updatedNodeHierarchy.add(newPath)
+                            updatedPaths.add(newPath)
+                        }
+                    }
                 }
             }
         }
-        return updatedNodeHierarchy
+        return removeRedundantPaths(updatedPaths, newNodeHierarchy)
     }
 
+    private fun removeRedundantPaths(updatedPaths: MutableList<String>, nodeHierarchy: MutableList<String>): List<String> {
+        LOG.info(updatedPaths)
+        LOG.info(nodeHierarchy)
+        val pathsToAdd = mutableListOf<String>()
+        for (newPath in updatedPaths) {
+            var redundantPath = false
+            for (existingNodePath in nodeHierarchy) {
+                if (newPath.commonPrefixWith(existingNodePath) == newPath) {
+                    redundantPath = true
+                }
+            }
+            if(!redundantPath) pathsToAdd.add(newPath)
+        }
+        nodeHierarchy += pathsToAdd
+        return nodeHierarchy.distinct()
+    }
 
-    fun refreshNodeHierarchyForWorkspace(workspaceID: String) = runBlocking{
+    fun refreshNodeHierarchyForWorkspace(workspaceID: String) = runBlocking {
 
         val jobToGetListOfRelationships = async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ACTIVE) }
         val jobToGetMapOfNodeIDToName = async { NodeService().getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ACTIVE) }
@@ -122,64 +152,57 @@ class WorkspaceService {
         /* can be directly appended to node hierarchy */
         val nodeHierarchy = getNodesWithNoRelationship(listOfRelationships, mapOfNodeIDToName)
 
-        val jobToGetNodePathsFromRelationships = async {  getNodePaths(listOfRelationships, mapOfNodeIDToName) }
+        val jobToGetNodePathsFromRelationships = async { getNodePaths(listOfRelationships, mapOfNodeIDToName) }
         val jobToGetWorkspace = async { getWorkspace(workspaceID) }
 
         nodeHierarchy += jobToGetNodePathsFromRelationships.await()
         val workspace = jobToGetWorkspace.await() as Workspace
 
-        workspace.nodeHierarchyInformation = nodeHierarchy
-        workspace.updatedAt = System.currentTimeMillis()
         LOG.info(nodeHierarchy)
-        repository.update(workspace)
+        updateWorkspaceHierarchy(workspace, nodeHierarchy, HierarchyUpdateSource.REFRESH)
     }
 
-
-
-    private fun getNodePaths(listOfRelationships : List<Relationship>, mapOfNodeIDToName : Map<String, String>) : MutableList<String>{
+    private fun getNodePaths(listOfRelationships: List<Relationship>, mapOfNodeIDToName: Map<String, String>): MutableList<String> {
 
         val graph = constructGraphFromRelationships(listOfRelationships, mapOfNodeIDToName)
 
         return dfsForRelationshipsHelper(graph)
-
     }
 
-    private fun dfsForRelationshipsHelper(graph: HashMap<String, MutableList<String>>) : MutableList<String>{
+    private fun dfsForRelationshipsHelper(graph: HashMap<String, MutableList<String>>): MutableList<String> {
 
         val visitedSet = mutableSetOf<String>()
         val nodeHierarchy = mutableListOf<String>()
 
         LOG.info("Graph : $graph")
-        for((startNode, _) in graph){
-            if(visitedSet.contains(startNode)) continue
+        for ((startNode, _) in graph) {
+            if (visitedSet.contains(startNode)) continue
             dfsForRelationships(graph, startNode, startNode, visitedSet, nodeHierarchy) /* initial path is same as start node */
-
         }
         LOG.info("nodeHierarchy From DFS : $nodeHierarchy")
         return nodeHierarchy
     }
 
     /* node is of the form nodeName#nodeID */
-    private fun dfsForRelationships(graph: HashMap<String, MutableList<String>>, node : String, _nodePath : String, visitedSet : MutableSet<String>, nodeHierarchy: MutableList<String>){
+    private fun dfsForRelationships(graph: HashMap<String, MutableList<String>>, node: String, _nodePath: String, visitedSet: MutableSet<String>, nodeHierarchy: MutableList<String>) {
 
         visitedSet.add(node)
         var nodePath = _nodePath
 
-        for(childNode in graph[node]!!){
+        for (childNode in graph[node]!!) {
             nodePath += "#$childNode"
-            if(graph.containsKey(childNode)){
-                if(!visitedSet.contains(childNode)) {
+            if (graph.containsKey(childNode)) {
+                if (!visitedSet.contains(childNode)) {
                     dfsForRelationships(graph, childNode, nodePath, visitedSet, nodeHierarchy)
-                }
-                else{
+                } else {
                     /* update existing paths in list which are actually suffix */
                     findSuffixInNodeHierarchyAndReplace(nodeHierarchy, childNode)
                 }
             } else {
                 nodeHierarchy.add(nodePath)
             }
+            nodePath = nodePath.removeSuffix("#$childNode")
         }
-
     }
 
     /*
@@ -191,32 +214,31 @@ class WorkspaceService {
     So now, when we come to A for DFS, B is already visited, => suffix of an actual path is present.
     Therefore, we find all nodePaths in nodeHierarchy which start with B, remove them, prefix them with A and insert back.
      */
-    private fun findSuffixInNodeHierarchyAndReplace(nodeHierarchy: MutableList<String>, node: String){
+    private fun findSuffixInNodeHierarchyAndReplace(nodeHierarchy: MutableList<String>, node: String) {
         val listOfSuffix = mutableListOf<String>()
-        for(nodePath in nodeHierarchy){
-            if(getCommonPrefixNodePath(node, nodePath) == node){
+        for (nodePath in nodeHierarchy) {
+            if (getCommonPrefixNodePath(node, nodePath) == node) {
                 listOfSuffix.add(nodePath)
             }
         }
 
-        for(suffix in listOfSuffix){
+        for (suffix in listOfSuffix) {
             nodeHierarchy.remove(suffix)
             nodeHierarchy.add("$node#$suffix")
         }
     }
 
-
-    private fun constructGraphFromRelationships(listOfRelationships : List<Relationship>, mapOfNodeIDToName : Map<String, String>) : HashMap<String, MutableList<String>>{
+    private fun constructGraphFromRelationships(listOfRelationships: List<Relationship>, mapOfNodeIDToName: Map<String, String>): HashMap<String, MutableList<String>> {
         val graph: HashMap<String, MutableList<String>> = hashMapOf()
 
-        for(relationship in listOfRelationships){
-            val startNodeID : String = relationship.startNode.id
+        for (relationship in listOfRelationships) {
+            val startNodeID: String = relationship.startNode.id
             val startNodeName: String = mapOfNodeIDToName[startNodeID] ?: throw Exception("Invalid Node ID")
 
-            val endNodeID : String = relationship.endNode.id
+            val endNodeID: String = relationship.endNode.id
             val endNodeName: String = mapOfNodeIDToName[endNodeID] ?: throw Exception("Invalid Node ID")
 
-            if(!graph.containsKey("$startNodeName#$startNodeID")){
+            if (!graph.containsKey("$startNodeName#$startNodeID")) {
                 graph["$startNodeName#$startNodeID"] = mutableListOf("$endNodeName#$endNodeID")
             } else {
                 graph["$startNodeName#$startNodeID"]?.add("$endNodeName#$endNodeID")
@@ -226,18 +248,18 @@ class WorkspaceService {
         return graph
     }
 
-    private fun getNodesWithNoRelationship(listOfRelationships : List<Relationship>, mapOfNodeIDToName : Map<String, String>) : MutableList<String>{
-        val listOfAloneNodes  = mutableListOf<String>()
+    private fun getNodesWithNoRelationship(listOfRelationships: List<Relationship>, mapOfNodeIDToName: Map<String, String>): MutableList<String> {
+        val listOfAloneNodes = mutableListOf<String>()
 
-        for((nodeID, nodeName) in mapOfNodeIDToName){
+        for ((nodeID, nodeName) in mapOfNodeIDToName) {
             var aloneNode = true
-            for(relationship in listOfRelationships){
-                if(nodeID == relationship.startNode.id || nodeID == relationship.endNode.id){
+            for (relationship in listOfRelationships) {
+                if (nodeID == relationship.startNode.id || nodeID == relationship.endNode.id) {
                     aloneNode = false
                     break
                 }
             }
-            if(aloneNode){
+            if (aloneNode) {
                 listOfAloneNodes.add("$nodeName#$nodeID")
             }
         }
@@ -246,11 +268,12 @@ class WorkspaceService {
         return listOfAloneNodes
     }
 
-
-    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest : WorkspaceRequest?) : Workspace?{
+    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest?): Workspace? {
         return workspaceRequest?.let {
-            Workspace(id = workspaceRequest.id,
-                    name = workspaceRequest.name)
+            Workspace(
+                id = workspaceRequest.id,
+                name = workspaceRequest.name
+            )
         }
     }
 
@@ -259,20 +282,4 @@ class WorkspaceService {
     }
 }
 
-fun main() {
-    val json: String = """
-		{
-            "type": "WorkspaceRequest",
-			"id": "WORKSPACE1",
-			"name": "WorkDuck"
-		}
-		"""
 
-    val jsonUpdate: String = """
-		{
-            "type": "WorkspaceRequest",
-			"id" : "WORKSPACE1",
-			"name" : "WorkDuck Pvt. Ltd. Blrrrrrr"
-		}
-		"""
-}

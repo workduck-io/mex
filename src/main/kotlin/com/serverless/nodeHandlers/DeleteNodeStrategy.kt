@@ -13,7 +13,7 @@ class DeleteNodeStrategy : NodeStrategy {
 
         return if (nodeIDRequest != null) {
 
-            val nodeIDList =nodeService.deleteNodes(nodeIDRequest, input.headers.workspaceID)
+            val nodeIDList =nodeService.archiveNodes(nodeIDRequest, input.headers.workspaceID)
 
             ApiResponseHelper.generateStandardResponse(nodeIDList, errorMessage)
         } else {

@@ -14,6 +14,7 @@ import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
+import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.NamespaceIdentifier
@@ -28,12 +29,12 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
-import com.workduck.utils.Helper.commonPrefixList
 import com.workduck.utils.Helper.splitIgnoreEmpty
 import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
+import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -113,7 +114,7 @@ class NodeService ( // Todo: Inject them from handlers
 
     private fun updateNodeHierarchyInSingleCreate(referenceID: String?, nodeID: String, nodeTitle: String, workspace: Workspace){
         when(referenceID){
-            null -> {
+            null -> { /* just a single standalone node is created */
                 workspaceService.addNodePathToHierarchy(workspace.id, "$nodeTitle#$nodeID")
             }
             else -> {
@@ -128,7 +129,7 @@ class NodeService ( // Todo: Inject them from handlers
                    } else if(nodePath.contains(referenceID)){ /* referenceID is not leaf node, and we need to extract path till referenceID */
                        val endIndex = nodePath.indexOf(referenceID) + referenceID.length - 1
                        val pathTillRefID = nodePath.substring(0, endIndex + 1)
-                       nodePathsToAdd.add("$pathTillRefID#$nodeTitle$$nodeID")
+                       nodePathsToAdd.add("$pathTillRefID#$nodeTitle#$nodeID")
                    } else {
                        continue
                    }
@@ -141,16 +142,9 @@ class NodeService ( // Todo: Inject them from handlers
                 for(pathToAdd in nodePathsToAdd){
                     nodeHierarchy.add(pathToAdd)
                 }
-
-                workspace.nodeHierarchyInformation = nodeHierarchy
-                workspace.updatedAt = System.currentTimeMillis()
-                workspaceService.updateWorkspace(workspace)
-
+                workspaceService.updateWorkspaceHierarchy(workspace, nodeHierarchy, HierarchyUpdateSource.NODE)
             }
         }
-
-
-
     }
 
     /* will be used to insert empty nodes in between two existing nodes */
@@ -190,9 +184,9 @@ class NodeService ( // Todo: Inject them from handlers
         launch { updateHierarchyInRefactor(existingNodePath, newNodePath, workspace, nodesToCreate, lastNodeID) }
     }
 
-    private fun updateHierarchyInRefactor(existingNodePath: String, newNodePath: String, workspace: Workspace, nodesToCreate: List<Node>, lastNodeID: String){
+    private fun updateHierarchyInRefactor(existingNodeNamePath: String, newNodePath: String, workspace: Workspace, nodesToCreate: List<Node>, lastNodeID: String){
 
-        val existingNodes = existingNodePath.split("#")
+        val existingNodes = existingNodeNamePath.split("#")
         val newNodes = newNodePath.split("#")
 
         val nodeHierarchyInformation = workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
@@ -201,8 +195,8 @@ class NodeService ( // Todo: Inject them from handlers
         for(nodePath in nodeHierarchyInformation){
             val namePath = getNamePath(nodePath)
             /* if the current nodeNamePath has all the nodes from the passed path, we know we need to change this current path */
-            if(getCommonPrefixNodePath(existingNodePath, namePath).split("#") == existingNodes){
-                LOG.info("PASSED PATH : $existingNodePath, CURRENT NAME PATH : $namePath")
+            if(getCommonPrefixNodePath(existingNodeNamePath, namePath).split("#") == existingNodes){
+                LOG.info("PASSED PATH : $existingNodeNamePath, CURRENT NAME PATH : $namePath")
                 /* break new node path in 4 parts and combine later
                 1. Unchanged Prefix Path
                 2. Path due to new Nodes in between
@@ -232,7 +226,7 @@ class NodeService ( // Todo: Inject them from handlers
                 paths.add(renameNodePath)
 
                 // suffix string
-                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodePath).splitIgnoreEmpty("#") /* get all the nodes after last node from passed existing path */
+                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodeNamePath).splitIgnoreEmpty("#") /* get all the nodes after last node from passed existing path */
                 val idsOfUnchangedSuffixNodes = idPath.takeLast(namesOfUnchangedSuffixNodes.size)
                 val suffixString = namesOfUnchangedSuffixNodes.zip(idsOfUnchangedSuffixNodes) { name, id -> "$name#$id" }.joinToString("#")
                 LOG.info("suffixString : $suffixString")
@@ -246,11 +240,7 @@ class NodeService ( // Todo: Inject them from handlers
             }
         }
 
-        workspace.nodeHierarchyInformation = newNodeHierarchy
-        workspace.updatedAt = System.currentTimeMillis()
-        workspaceService.updateWorkspace(workspace)
-
-
+        workspaceService.updateWorkspaceHierarchy(workspace, newNodeHierarchy, HierarchyUpdateSource.NODE)
 
     }
 
@@ -277,15 +267,6 @@ class NodeService ( // Todo: Inject them from handlers
         return listOfNodes
     }
 
-    /*
-           A->B
-           E->F
-           [AB, EF]
-
-           A->B->C->D , LO : AB
-           [ABCD]
-
-     */
 
     fun bulkCreateNodes(request: WDRequest?, workspaceID: String) = runBlocking {
         val nodeRequest: NodeRequest? = request as NodeRequest?
@@ -317,15 +298,12 @@ class NodeService ( // Todo: Inject them from handlers
                 0 -> suffixNodePath = "${nodeToCreate.title}#${nodeToCreate.id}"
                 else -> suffixNodePath += "#${nodeToCreate.title}#${nodeToCreate.id}"
             }
-
         }
 
-        workspace.nodeHierarchyInformation = getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestExistingPath, suffixNodePath)
-        workspace.updatedAt = System.currentTimeMillis()
-
+        val updatedNodeHierarchy = getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestExistingPath, suffixNodePath)
 
         launch { nodeRepository.createMultipleNodes(listOfNodes) }
-        launch { workspaceService.updateWorkspace(workspace) }
+        launch { workspaceService.updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.NODE) }
 
     }
 
@@ -417,20 +395,20 @@ class NodeService ( // Todo: Inject them from handlers
         return node
     }
 
-    /* basically archive the nodes */
-    fun deleteNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
+
+    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
 
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
 
         val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
-        val jobToChangeNodeStatus = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, ItemStatus.ARCHIVED) }
+        val jobToChangeNodeStatus = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ARCHIVED) }
 
         val workspace = jobToGetWorkspace.await()
 
         // TODO(start using coroutines here if requests contain a lot of node ids)
         for (nodeID in nodeIDList) {
-            workspaceService.updateNodeHierarchyOnDeletingNode(workspace, nodeID)
+            workspaceService.updateNodeHierarchyOnArchivingNode(workspace, nodeID)
         }
 
         LOG.info(nodeIDList)
@@ -438,8 +416,8 @@ class NodeService ( // Todo: Inject them from handlers
     }
 
     /* Getting called Internally via trigger. No need to update hierarchy */
-    fun deleteNodes(nodeIDList: List<String>) = runBlocking {
-        nodeRepository.unarchiveOrArchiveNodes(nodeIDList, ItemStatus.ARCHIVED)
+    fun archiveNodes(nodeIDList: List<String>, workspaceID: String) = runBlocking {
+        nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ARCHIVED)
     }
 
     fun convertGenericRequestToList(genericRequest: GenericListRequest): List<String> {
@@ -672,20 +650,23 @@ class NodeService ( // Todo: Inject them from handlers
 
     fun unarchiveNodes(nodeIDRequest: WDRequest, workspaceID: String): List<String> = runBlocking {
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
-        val mapOfNodeIDToName = getNodeNamesToChange(nodeIDList, workspaceID)
+        val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID)
 
         for ((nodeID, _) in mapOfNodeIDToName) {
             nodeIDList.remove(nodeID)
         }
 
         val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName) }
-        val jobToUnarchiveNodes = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, ItemStatus.ACTIVE) }
+        val jobToUnarchiveNodes = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
 
         return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
     }
 
-    private fun getNodeNamesToChange(nodeIDList: List<String>, workspaceID: String): Map<String, String> = runBlocking {
+    /* to ensure that nodes at same level don't have same name */
+    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String): Map<String, String> = runBlocking {
+
         val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
+
         val jobToGetArchivedNodeIDToNameMap = async { getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ARCHIVED) }
         val jobToGetArchivedHierarchyRelationship = async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ARCHIVED) }
 
@@ -694,22 +675,27 @@ class NodeService ( // Todo: Inject them from handlers
         val archivedHierarchyRelationships = jobToGetArchivedHierarchyRelationship.await()
 
         val mapOfNodeIDToNodeName = mutableMapOf<String, String>()
+
+        /* nodeIDList contains all the nodeIds to be un-archived */
         for (nodeID in nodeIDList) {
-            val archivedNodeName = archivedNodeIDToNameMap[nodeID] ?: continue
+            val archivedNodeName = archivedNodeIDToNameMap[nodeID] ?: throw Exception("Invalid nodeID : $nodeID")
+            val archivedNodeParentID = findStartNodeOfEndNode(archivedHierarchyRelationships, nodeID)
+
             for (nodePath in nodeHierarchyInformation) {
-                if (nodePath.contains(archivedNodeName)) {
-                    val archivedNodeParentID = findStartNodeOfEndNode(archivedHierarchyRelationships, nodeID)
+                if (nodePath.contains(archivedNodeName)) { /* if there's an existing node with same name as node to be un-archived */
 
                     when (archivedNodeParentID == null) {
                         true -> { /* node to be un-archived is a root node */
-                            if (nodePath.startsWith(archivedNodeName)) {
+                            if (nodePath.startsWith(archivedNodeName)) { /* if there's an existing node with same name at root level */
                                 mapOfNodeIDToNodeName[nodeID] = archivedNodeName
                             }
                         }
                         false -> {
                             val activeNodesInPath = nodePath.split("#")
                             val indexOfParentNode = activeNodesInPath.indexOf(archivedNodeParentID)
-                            if (indexOfParentNode + 1 < activeNodesInPath.size && activeNodesInPath[indexOfParentNode + 1] == archivedNodeName) {
+                            /* if for some parent node, there exists a node with name "A" and node to be unarchived has same parent node with same name "A"*/
+                            if (indexOfParentNode != -1 && indexOfParentNode + 1 < activeNodesInPath.size
+                                    && activeNodesInPath[indexOfParentNode + 1] == archivedNodeName) {
                                 mapOfNodeIDToNodeName[nodeID] = archivedNodeName
                             }
                         }
@@ -720,17 +706,9 @@ class NodeService ( // Todo: Inject them from handlers
         return@runBlocking mapOfNodeIDToNodeName
     }
 
-    private fun findStartNodeOfEndNode(relationshipList: List<Relationship>, endNodeID: String): String? {
-        for (relationship in relationshipList) {
-            if (relationship.endNode.id == endNodeID) {
-                return relationship.startNode.id
-            }
-        }
-        return null
-    }
-
-    fun unarchiveNodes(nodeIDList: List<String>): MutableList<String> {
-        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, ItemStatus.ACTIVE)
+    /* this is called internally via trigger. We don't need to do sanity check for name here */
+    fun unarchiveNodes(nodeIDList: List<String>, workspaceID: String): MutableList<String> {
+        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE)
     }
 
     fun deleteArchivedNodes(nodeIDRequest: WDRequest): MutableList<String> {
@@ -745,26 +723,6 @@ class NodeService ( // Todo: Inject them from handlers
         return deletedNodesList
     }
 
-//    fun updateNodePath(wdRequest: WDRequest) {
-//
-//        val nodePathRefactorRequest = (wdRequest as NodePathRefactorRequest)
-//
-//        val newRelationship = Relationship(
-//            sourceNode = NodeIdentifier(nodePathRefactorRequest.newParentID),
-//            startNode = NodeIdentifier(nodePathRefactorRequest.newParentID),
-//            endNode = NodeIdentifier(nodePathRefactorRequest.nodeID),
-//            type = RelationshipType.LINKED
-//        )
-//
-//        val oldRelationship = Relationship(
-//            sourceNode = NodeIdentifier(nodePathRefactorRequest.currentParentID),
-//            startNode = NodeIdentifier(nodePathRefactorRequest.currentParentID),
-//            endNode = NodeIdentifier(nodePathRefactorRequest.nodeID),
-//            type = RelationshipType.LINKED
-//        )
-//
-//        nodeRepository.updateLinkedRelationship(oldRelationship, newRelationship)
-//    }
 
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
@@ -840,132 +798,4 @@ class NodeService ( // Todo: Inject them from handlers
             nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it)
         }
     }
-}
-
-fun main() {
-    val jsonString: String = """
-{
-    "type" : "NodeRequest",
-    "title" : "E",
-    "nodePath": "A#B#D#E",
-    "lastEditedBy" : "USERVarun",
-    "id": "NODE5",
-    "namespaceIdentifier" : "NAMESPACE1",
-    "data": [
-    {
-        "id": "sampleParentID",
-        "elementType": "paragraph",
-        "children": [
-        {
-            "id" : "sampleChildID",
-            "content" : "sample child content 1",
-            "elementType": "paragraph",
-            "properties" :  { "bold" : true, "italic" : true  }
-        }
-        ]
-    },
-    {
-        "id": "1234",
-        "elementType": "paragraph",
-        "children": [
-        {
-            "id" : "sampleChildID",
-            "content" : "sample child content",
-            "elementType": "paragraph",
-            "properties" :  { "bold" : true, "italic" : true  }
-        }
-        ]
-    }
-    ]
-}
-
-
-		"""
-
-    val jsonString1: String = """
-        
-    {
-        "type" : "NodeRequest",
-        "lastEditedBy" : "Varun",
-        "id": "NODE1",
-        "namespaceIdentifier" : "NAMESPACE1",
-        "workspaceIdentifier" : "WORKSPACE1",
-        "data": [
-        {
-            "id": "sampleParentID",
-            "elementType": "paragraph",
-            "children": [
-            {
-                "id" : "sampleChildID",
-                "content" : "sample child content 1",
-                "elementType": "paragraph",
-                "properties" :  { "bold" : true, "italic" : true  }
-            }
-            ]
-        }]
-        
-    }
-    """
-
-    val jsonForAppend: String = """
-        [
-            {
-            "createdBy" : "Varun",
-            "id": "xyz",
-            "content": "Sample Content 4",
-            "elementType" : "list",
-            "children": [
-            {
-               
-                "id" : "sampleChildID4",
-                "content" : "sample child content"
-            }
-            ]},
-            {
-            "createdBy" : "Varun",
-            "id": "abc",
-            "content": "Sample Content 5",
-            "elementType" : "random element type",
-            "children": [
-            {
-                "id" : "sampleChildID5",
-                "content" : "sample child content"
-            }
-            ]}
-            
-        ]
-        """
-
-    val jsonForEditBlock = """
-        {
-            "lastEditedBy" : "Varun",
-            "id" : "sampleParentID",
-            "elementType": "list",
-            "children": [
-              {
-                  "id" : "sampleChildID",
-                  "content" : "edited child content - direct set - second tryy",
-                  "elementType": "list",
-                  "properties" :  { "bold" : true, "italic" : true  }
-              }
-                ]
-        }
-      """
-
-
-    val jsonForRefactor = """
-        {
-            "type" : "RefactorRequest",
-            "existingNodePath": "A#B#D",
-            "newNodePath": "A#B#F#X",
-            "lastEditedBy": "Varun",
-            "nodeID": "NODE_YKLY3zQQp4nNzrPqR9mVt"
-            
-        }      
-        """
-
-    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonForRefactor)
-    NodeService().refactor(nodeRequest, "WORKSPACE1")
-//    print(listOf(Node(title = "A", id = "Aid"), Node(title = "B", id = "Bid")).joinToString("#") { node -> "${node.title}#${node.id}" })
-
 }

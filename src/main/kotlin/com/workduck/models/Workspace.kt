@@ -1,9 +1,22 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.workduck.converters.HierarchyUpdateSourceConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.utils.Helper
+
+enum class HierarchyUpdateSource {
+    REFRESH, /* when refresh endpoint is used or would be used */
+    NODE, /* when nodes are added */
+    ARCHIVE /* when a node is archived, we first update the hierarchy */
+}
+
+
 
 @DynamoDBTable(tableName = "sampleData")
 class Workspace(
@@ -33,7 +46,12 @@ class Workspace(
 
     @JsonProperty("nodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
-    var nodeHierarchyInformation : List<String> ?= null
+    var nodeHierarchyInformation : List<String> ?= null,
+
+    @JsonProperty("hierarchyUpdateSource")
+    @DynamoDBAttribute(attributeName = "hierarchyUpdateSource")
+    @DynamoDBTypeConverted(converter = HierarchyUpdateSourceConverter::class)
+    var hierarchyUpdateSource : HierarchyUpdateSource = HierarchyUpdateSource.NODE
 
 ) : Entity {
 

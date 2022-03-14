@@ -51,24 +51,3 @@ class UserBookmarkService {
         private val LOG = LogManager.getLogger(UserBookmarkService::class.java)
     }
 }
-
-fun main() {
-    val json: String = """
-		{
-			"userID" : "USER49",
-			"identifier" : "NAMESPACE1"
-		}
-		"""
-    // UserIdentifierMappingService().createUserIdentifierRecord(json)
-    //println(UserIdentifierMappingService().getUserRecords("USER49").toString())
-    // UserIdentifierMappingService().deleteUserIdentifierMapping("USER49", "NAMESPACE1")
-    //UserIdentifierMappingService().createBookmark("USER49", "NODE10")
-
-    //UserIdentifierMappingService().removeBookmark("USER49", "NODE10")
-    //UserIdentifierMappingService().getAllBookmarkedNodesByUser("USER49")
-
-
-    //xval list = mutableListOf("NODE11", "NODE12")
-    //UserIdentifierMappingService().createBookmarksInBatch("USER49", list)
-    //UserIdentifierMappingService().deleteBookmarksInBatch("USER49", list)
-}
