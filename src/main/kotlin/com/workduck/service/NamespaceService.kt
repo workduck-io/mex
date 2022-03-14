@@ -82,26 +82,4 @@ class NamespaceService {
     }
 }
 
-fun main() {
 
-    val json: String = """
-		{
-			"id": "NAMESPACE1",
-            "workspaceIdentifier" : "WORKSPACE1", 
-			"name": "Engineering"
-		}
-		"""
-
-    val jsonUpdate: String = """
-		{
-			"id" : "NAMESPACE1",
-			"name": "Engineering - Team 1"
-		
-		}
-		"""
-
-    // NamespaceService().createNamespace(json)
-    println(NamespaceService().getNamespace("NAMESPACE1"))
-    // NamespaceService().updateNamespace(jsonUpdate)
-    // println(NamespaceService().deleteNamespace("NAMESPACE1"))
-}

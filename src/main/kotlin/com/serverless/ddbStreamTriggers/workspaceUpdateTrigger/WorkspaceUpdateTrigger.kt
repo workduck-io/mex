@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.getDifferenceOfList
 import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.getNodeHierarchyInformationFromImage
-import com.workduck.models.WorkspaceIdentifier
 import com.workduck.service.RelationshipService
 import org.apache.logging.log4j.LogManager
 
