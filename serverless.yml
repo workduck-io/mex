@@ -73,7 +73,6 @@ plugins:
   - serverless-offline
   - serverless-domain-manager
   - serverless-plugin-warmup
-
 custom:
   serverless-offline:
     noPrependStageInUrl: true

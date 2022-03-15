@@ -313,11 +313,11 @@ class NodeRepository(
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":true"] = accessValue
+        expressionAttributeValues[":publicAccess"] = accessValue
 
         UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-            .withUpdateExpression("SET publicAccess = :true")
-            .withValueMap(expressionAttributeValues).also {
+            .withUpdateExpression("SET publicAccess = :publicAccess")
+            .withValueMap(expressionAttributeValues).let{
                 table.updateItem(it)
             }
     }

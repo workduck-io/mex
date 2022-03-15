@@ -69,11 +69,12 @@ Node:
     - httpApi:
         path: /node/makePublic/{id}
         method: patch
+        authorizer: mexAuthorizer
 
     - httpApi:
         path: /node/makePrivate/{id}
         method: patch
-
+        authorizer: mexAuthorizer
     #copy  or move a block from sourceNode to destinationNode
     - httpApi:
         path: /node/block/movement
