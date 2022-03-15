@@ -27,5 +27,7 @@ data class NodeResponse(
 
     var workspaceID: String? = null,
 
-    var isBookmarked: Boolean? = null
+    var isBookmarked: Boolean? = null,
+
+    var publicAccess: Boolean
 ) : Response, TimestampAdhereResponse
