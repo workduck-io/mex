@@ -19,7 +19,8 @@ class NodeTransformer : Transformer<Node> {
             tags = t.tags,
             namespaceID = t.namespaceIdentifier?.id,
             workspaceID = t.workspaceIdentifier?.id,
-            isBookmarked = t.isBookmarked
+            isBookmarked = t.isBookmarked,
+            publicAccess = t.publicAccess
        )
     }
 }
