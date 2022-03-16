@@ -29,10 +29,9 @@ data class Node(
 //    @DynamoDBAttribute(attributeName = "parentNodeID")
 //    var parentNodeID: String = id,
 
-    // This will always be populated by the user
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")
-    var title: String = "",
+    var title: String = "New Node",
 
 
     @JsonProperty("lastEditedBy")

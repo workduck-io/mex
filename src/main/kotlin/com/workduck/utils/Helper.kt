@@ -1,11 +1,16 @@
 package com.workduck.utils
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.serverless.utils.Constants
+import com.workduck.utils.Helper.commonPrefixList
 import org.apache.logging.log4j.LogManager
+import java.security.SecureRandom
 import java.util.*
+import com.serverless.utils.Constants
+
 
 object Helper {
 
@@ -26,6 +31,7 @@ object Helper {
     fun generateId(prefix: String?): String {
         return uuidBase32(UUID.randomUUID(), StringBuilder(prefix)).toString()
     }
+
 
     fun generateNanoID(prefix: String, separator: String = Constants.ID_SEPARATOR): String =
         "`${prefix}$separator`" +

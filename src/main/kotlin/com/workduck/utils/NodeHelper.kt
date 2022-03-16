@@ -1,5 +1,7 @@
 package com.workduck.utils
 
+import com.workduck.utils.Helper.commonPrefixList
+import com.workduck.utils.Helper.splitIgnoreEmpty
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.splitIgnoreEmpty
@@ -19,11 +21,11 @@ object NodeHelper {
 
                 LOG.info(longestCommonNamePath)
                 if(longestCommonNamePath != ""){
-                    val nodeNamesAndIDs = existingNodePath.split(Constants.DELIMITER)
-                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty(Constants.DELIMITER).size)
+                    val nodeNamesAndIDs = existingNodePath.split("#")
+                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty("#").size)
 
-                    if(commonNodeNamesAndIDs.size > longestExistingPath.split(Constants.DELIMITER).size)
-                        longestExistingPath = commonNodeNamesAndIDs.joinToString(Constants.DELIMITER)
+                    if(commonNodeNamesAndIDs.size > longestExistingPath.split("#").size)
+                        longestExistingPath = commonNodeNamesAndIDs.joinToString("#")
                     /*
                     Longest Name Path List = [A, B] => We need node name and id information of first two nodes from existing path
                     nodeNamesAndIDs = [A, Aid, B, Bid, C, Cid, D, Did ...]
