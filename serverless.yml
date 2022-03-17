@@ -51,6 +51,11 @@ provider:
             - 'lambda:InvokeFunction'
           Resource:
             - '*'
+        - Effect: Allow
+          Action:
+            - 'cognito-idp:AdminGetUser'
+          Resource:
+            - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/us-east-1_EN9ZkdtKO'
   httpApi:
     cors: true
     authorizers:
@@ -62,16 +67,16 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - 'us-east-1_Zu7FAh7hj' #userpool id
+              - 'us-east-1_EN9ZkdtKO' #userpool id
         audience:
-          - '6pvqt64p0l2kqkk2qafgdh13qe'
+          - '6ste16sv808q4809bo0k1r5g13'
 package:
   artifact: target/mex-dev.jar
 
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-  - serverless-domain-manager
+  #- serverless-domain-manager
   - serverless-plugin-warmup
 
 custom:

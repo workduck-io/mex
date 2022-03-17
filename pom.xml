@@ -21,6 +21,7 @@
         <junit.version>4.13.1</junit.version>
         <junit-jupiter-api.version>5.7.0</junit-jupiter-api.version>
         <mock.version>1.9.3</mock.version>
+        <cognitoidp.version>1.12.172</cognitoidp.version>
     </properties>
 
     <dependencyManagement>
@@ -133,7 +134,6 @@
             <version>3.21.0</version>
             <scope>test</scope>
         </dependency>
-
 
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>

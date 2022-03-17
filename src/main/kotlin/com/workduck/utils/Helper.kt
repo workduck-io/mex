@@ -28,4 +28,8 @@ object Helper {
     fun isSourceWarmup(source : String?) : Boolean {
         return "serverless-plugin-warmup" == source
     }
+
+    fun validateWorkspace(workspaceID: String, workspaceIDList: List<String>): Boolean{
+        return workspaceID in workspaceIDList
+    }
 }

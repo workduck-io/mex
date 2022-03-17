@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Header(
 
-   @JsonProperty("workspace-id")
-   val workspaceID : String
+   @JsonProperty("mex-workspace-id")
+   val workspaceID : String,
+
+   @JsonProperty("authorization")
+   val bearerToken : String
 )
