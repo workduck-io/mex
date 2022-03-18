@@ -6,6 +6,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.ExceptionParser
+import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.workduck.service.NodeService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -15,6 +16,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val nodeService = NodeService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
+        LOG.info(input)
 
         val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
 
@@ -24,6 +26,8 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         }
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
+
+        validateTokenAndWorkspace(wdInput)
 
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)

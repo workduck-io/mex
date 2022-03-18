@@ -51,6 +51,11 @@ provider:
             - 'lambda:InvokeFunction'
           Resource:
             - '*'
+        - Effect: Allow
+          Action:
+            - 'cognito-idp:AdminGetUser'
+          Resource:
+            - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/*'
   httpApi:
     cors: true
     authorizers:

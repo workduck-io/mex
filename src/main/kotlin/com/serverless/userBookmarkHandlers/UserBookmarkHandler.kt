@@ -6,6 +6,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.ExceptionParser
+import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.workduck.service.UserBookmarkService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -25,6 +26,7 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
 
         val wdInput: Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
+        validateTokenAndWorkspace(wdInput)
         val strategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
 
