@@ -25,7 +25,7 @@ data class NodeSchema(
     override val version: Int,
     val allowedProperties: List<KClass<Element>>,
     override val authorizations: Set<Auth>,
-    override var itemType: String = "NodeSchema"
+    override var itemType: ItemType = ItemType.NodeSchema
 ) : Schema(version, authorizations), Entity {
 //    override val partitionKey: String
 //        get() = TODO("Not yet implemented")

@@ -7,11 +7,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.workduck.converters.ItemStatusConverter
+import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NodeIdentifierConverter
 import com.workduck.converters.RelationshipTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.utils.Helper
-
 
 enum class RelationshipType {
     CONTAINED, /* when node size exceeds threshold */
@@ -31,22 +31,20 @@ data class Relationship(
     @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
     var sourceNode: NodeIdentifier? = null,
 
-
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
-    override var itemType: String = "Relationship",
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    override var itemType: ItemType = ItemType.Relationship,
 
     @JsonProperty("startNode")
     @DynamoDBAttribute(attributeName = "startNode")
     @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
     var startNode: NodeIdentifier = NodeIdentifier(""),
 
-
     @JsonProperty("endNode")
     @DynamoDBAttribute(attributeName = "endNode")
     @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
     var endNode: NodeIdentifier = NodeIdentifier(""),
-
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
@@ -58,10 +56,8 @@ data class Relationship(
     @DynamoDBTypeConverted(converter = RelationshipTypeConverter::class)
     var typeOfRelationship: RelationshipType = RelationshipType.HIERARCHY,
 
-
     @DynamoDBRangeKey(attributeName = "SK")
     var sk: String = "${startNode.id}#${typeOfRelationship.name}",
-
 
     @JsonProperty("workspaceIdentifier")
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)

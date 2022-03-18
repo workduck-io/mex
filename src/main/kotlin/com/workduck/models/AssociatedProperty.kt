@@ -32,7 +32,7 @@ data class Tag(
     val ownerIdentifier: OwnerIdentifier,
     val expireAt: Long? = null,
     val metaData: JsonNode? = null,
-    override val itemType: String = "Tag"
+    override val itemType: ItemType = ItemType.Tag
 
 ) : AssociatedProperty(AssociatedPropertyType.TAG), Entity {
 //    override val partitionKey: String

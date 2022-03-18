@@ -9,7 +9,7 @@ data class WorkspaceResponse(
 
     val updatedAt: Long,
 
-    val nodeHierarchy: List<String>?,
+    val nodeHierarchy: List<String>,
 
     val itemType: String = "Workspace",
 ) : Response

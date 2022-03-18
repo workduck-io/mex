@@ -25,27 +25,19 @@ class WorkspaceRepository(
     }
 
     override fun get(identifier: Identifier): Entity? {
-        return try {
-            return mapper.load(Workspace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+       return mapper.load(Workspace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
+    override fun delete(identifier: Identifier): Identifier {
         val table = dynamoDB.getTable(tableName)
 
         val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
             .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-        return try {
-            table.deleteItem(deleteItemSpec)
-            identifier
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+
+        table.deleteItem(deleteItemSpec)
+        return identifier
+
     }
 
     override fun create(t: Workspace): Workspace {
@@ -81,19 +73,15 @@ class WorkspaceRepository(
 
     }
 
-    fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?>? {
+    fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?> {
         val workspaceMap: MutableMap<String, Workspace?> = mutableMapOf()
-        return try {
-            for (workspaceID in workspaceIDList) {
-                val workspace: Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)
-                workspaceMap[workspaceID] = workspace
-            }
-            return workspaceMap
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
+
+        for (workspaceID in workspaceIDList) {
+            val workspace: Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)
+            workspaceMap[workspaceID] = workspace
         }
-        TODO("we also need to have some sort of filter which filters out all the non-workspace ids")
+        return workspaceMap
+
     }
 
     companion object {

@@ -56,7 +56,7 @@ class Namespace(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: String = "Namespace"
+    override var itemType: ItemType = ItemType.Namespace
 
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 

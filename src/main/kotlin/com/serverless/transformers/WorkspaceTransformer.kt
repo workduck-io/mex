@@ -12,7 +12,7 @@ class WorkspaceTransformer : Transformer<Workspace> {
             name = t.name,
             createdAt = t.createdAt,
             updatedAt = t.updatedAt,
-            nodeHierarchy = t.nodeHierarchyInformation
+            nodeHierarchy = t.nodeHierarchyInformation ?: listOf()
         )
     }
 }

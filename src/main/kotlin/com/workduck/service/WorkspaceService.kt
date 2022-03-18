@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.workduck.models.Entity
@@ -17,6 +18,7 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
@@ -42,8 +44,8 @@ class WorkspaceService {
     private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
     private val repository: Repository<Workspace> = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
-    fun createWorkspace(workspaceRequest: WDRequest?): Entity? {
-        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
+    fun createWorkspace(workspaceRequest: WDRequest): Entity? {
+        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest)
         LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
@@ -53,12 +55,12 @@ class WorkspaceService {
         return repository.get(WorkspaceIdentifier(workspaceID))
     }
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String>? {
-        return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation
+    fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
+        return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
     }
 
-    fun updateWorkspace(workspaceRequest: WDRequest?): Entity? {
-        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest?) ?: return null
+    fun updateWorkspace(workspaceRequest: WDRequest): Entity? {
+        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest)
 
         workspace.createdAt = null
 
@@ -83,7 +85,7 @@ class WorkspaceService {
         return repository.delete(WorkspaceIdentifier(workspaceID))
     }
 
-    fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?>? {
+    fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?> {
         LOG.info("Getting workspaces with ids : $workspaceIDList")
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
@@ -109,20 +111,21 @@ class WorkspaceService {
                     val nameList = getNamePath(nodePath).split("#")
                     val idList = getIDPath(nodePath).split("#")
                     val indexOfPassedNode = idList.indexOf(nodeID)
+
+                    /* if index of passed nodeID is 2, that means we need to pick two nodes before that nodeID */
                     val newPath = nameList.take(indexOfPassedNode).zip(idList.take(indexOfPassedNode)) { name, id -> "$name#$id" }.joinToString("#")
                     when (newPath.isNotEmpty()) {
                         true -> {
-                            // updatedNodeHierarchy.add(newPath)
                             updatedPaths.add(newPath)
                         }
                     }
                 }
             }
         }
-        return removeRedundantPaths(updatedPaths, newNodeHierarchy)
+        return removeRedundantPaths(updatedPaths.distinct(), newNodeHierarchy)
     }
 
-    private fun removeRedundantPaths(updatedPaths: MutableList<String>, nodeHierarchy: MutableList<String>): List<String> {
+    private fun removeRedundantPaths(updatedPaths: List<String>, nodeHierarchy: MutableList<String>): List<String> {
         LOG.info(updatedPaths)
         LOG.info(nodeHierarchy)
         val pathsToAdd = mutableListOf<String>()
@@ -131,6 +134,7 @@ class WorkspaceService {
             for (existingNodePath in nodeHierarchy) {
                 if (newPath.commonPrefixWith(existingNodePath) == newPath) {
                     redundantPath = true
+                    break
                 }
             }
             if(!redundantPath) pathsToAdd.add(newPath)
@@ -268,18 +272,28 @@ class WorkspaceService {
         return listOfAloneNodes
     }
 
-    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest?): Workspace? {
-        return workspaceRequest?.let {
-            Workspace(
-                id = workspaceRequest.id,
-                name = workspaceRequest.name
-            )
-        }
+    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest): Workspace {
+        return Workspace(
+            id = workspaceRequest.id,
+            name = workspaceRequest.name
+        )
     }
 
     companion object {
         private val LOG = LogManager.getLogger(WorkspaceService::class.java)
     }
+}
+
+fun main(){
+    val jsonUpdate: String = """
+            {
+                 "type": "WorkspaceRequest",
+                "id" : "WORKSPACE1",
+                "name" : "xxxxx"
+            }
+            """
+
+    WorkspaceService().updateWorkspace(Helper.objectMapper.readValue<WDRequest>(jsonUpdate))
 }
 
 

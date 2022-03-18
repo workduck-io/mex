@@ -77,7 +77,7 @@ class UserService {
 			"name": "$workspaceName"
 		}"""
 
-		val payload: WDRequest? = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
+		val payload: WDRequest = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
 
 		//LOG.info("Creating workspace with json : $jsonForWorkspaceCreation")
 

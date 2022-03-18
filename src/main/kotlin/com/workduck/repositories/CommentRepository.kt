@@ -100,10 +100,4 @@ class CommentRepository(
                 }
     }
 
-    companion object {
-        private val LOG = LogManager.getLogger(CommentRepository::class.java)
-    }
-
-
-
 }

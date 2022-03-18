@@ -1,7 +1,6 @@
 package com.workduck.utils
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.workduck.utils.Helper.commonPrefixList
@@ -10,6 +9,8 @@ import java.security.SecureRandom
 import java.util.*
 
 object Helper {
+
+    private val LOG = LogManager.getLogger(Helper::class.java)
 
     val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
 
@@ -30,7 +31,7 @@ object Helper {
     fun generateNanoID(prefix: String): String{
         val secureRandom = SecureRandom()
         val alphabet = "346789ABCDEFGHJKLMNPQRTUVWXYabcdefghijkmnpqrtwxyz".toCharArray()
-        return prefix + NanoIdUtils.randomNanoId(secureRandom, alphabet, 21)
+        return prefix + "NanoIdUtils.randomNanoId(secureRandom, alphabet, 21)"
     }
 
     fun isSourceWarmup(source : String?) : Boolean {
@@ -70,8 +71,5 @@ object Helper {
         }
 
     }
-
-
-    private val LOG = LogManager.getLogger(Helper::class.java)
 
 }
