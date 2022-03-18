@@ -2,6 +2,7 @@ package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.workduck.converters.ItemTypeConverter
 import com.workduck.utils.Helper
 
 @DynamoDBTable(tableName = "sampleData")
@@ -25,7 +26,8 @@ class User(
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
-    override var itemType: String = "User",
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    override var itemType: ItemType = ItemType.User,
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")

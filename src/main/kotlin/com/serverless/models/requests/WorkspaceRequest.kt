@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 data class WorkspaceRequest(
 
     @JsonProperty("id")
-    val id: String = "",
+    val id: String,
 
     @JsonProperty("name")
-    val name: String = ""
+    val name: String
 
 ) : WDRequest

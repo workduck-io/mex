@@ -9,15 +9,9 @@ class RefactorNodePathStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error updating node path"
 
-        val request = input.payload
+        return input.payload?.let{ request ->
+            ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.headers.workspaceID)
+                    , errorMessage)} ?: ApiResponseHelper.generateStandardErrorResponse(errorMessage)
 
-        return if(request != null){
-            val x = nodeService.refactor(request, input.headers.workspaceID)
-            ApiResponseHelper.generateStandardResponse(x, errorMessage)
-        } else{
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
-        }
     }
-
-
 }

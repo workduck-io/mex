@@ -88,7 +88,8 @@ data class Node(
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
-    override var itemType: String = "Node",
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    override var itemType: ItemType = ItemType.Node,
 
 
     @JsonProperty("itemStatus")

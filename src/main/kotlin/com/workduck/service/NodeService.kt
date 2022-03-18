@@ -799,3 +799,19 @@ class NodeService ( // Todo: Inject them from handlers
         }
     }
 }
+
+fun main(){
+    val jsonForRefactor = """
+         {
+             "type" : "RefactorRequest",
+             "existingNodePath": "A#B#D",
+             "newNodePath": "A#B#F#X",
+             "lastEditedBy": "Varun",
+             "nodeID": "NODE_YKLY3zQQp4nNzrPqR9mVt"
+
+         }
+         """
+
+    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonForRefactor)
+    NodeService().refactor(nodeRequest, "WORKSPACE1")
+}

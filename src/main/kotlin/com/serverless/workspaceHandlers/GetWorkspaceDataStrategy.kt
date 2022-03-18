@@ -15,13 +15,13 @@ class GetWorkspaceDataStrategy : WorkspaceStrategy {
 
         return if (workspaceIDs != null) {
             val workspaceIDList: List<String> = workspaceIDs.split(",")
-            val workspaces: MutableMap<String, Workspace?>? = workspaceService.getWorkspaceData(workspaceIDList)
+            val workspaces: MutableMap<String, Workspace?> = workspaceService.getWorkspaceData(workspaceIDList)
 
-            val workspaceResponseMap = workspaces?.mapValues {
+            val workspaceResponseMap = workspaces.mapValues {
                 WorkspaceHelper.convertWorkspaceToWorkspaceResponse(it.value)
             }
 
-            ApiResponseHelper.generateStandardResponse(workspaceResponseMap as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(workspaceResponseMap as Any, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)
         }

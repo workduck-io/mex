@@ -22,12 +22,7 @@ class UserRepository(
     }
 
     override fun get(identifier: Identifier): Entity? {
-        return try {
-            mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+        return mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
     }
 
     fun getAllUsersWithNamespaceID(namespaceID: String): MutableList<String>? {

@@ -9,7 +9,7 @@ class GetHierarchyStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error getting node hierarchy for workspace"
 
-        val nodeHierarchy: List<String>? = workspaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID)
+        val nodeHierarchy: List<String> = workspaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID)
 
         return ApiResponseHelper.generateStandardResponse(nodeHierarchy, errorMessage)
 

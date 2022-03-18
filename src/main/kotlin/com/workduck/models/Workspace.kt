@@ -16,8 +16,6 @@ enum class HierarchyUpdateSource {
     ARCHIVE /* when a node is archived, we first update the hierarchy */
 }
 
-
-
 @DynamoDBTable(tableName = "sampleData")
 class Workspace(
 
@@ -41,22 +39,20 @@ class Workspace(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: String = "Workspace",
-
+    override var itemType: ItemType = ItemType.Workspace,
 
     @JsonProperty("nodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
-    var nodeHierarchyInformation : List<String> ?= null,
+    var nodeHierarchyInformation: List<String> ? = null,
 
     @JsonProperty("hierarchyUpdateSource")
     @DynamoDBAttribute(attributeName = "hierarchyUpdateSource")
     @DynamoDBTypeConverted(converter = HierarchyUpdateSourceConverter::class)
-    var hierarchyUpdateSource : HierarchyUpdateSource = HierarchyUpdateSource.NODE
+    var hierarchyUpdateSource: HierarchyUpdateSource = HierarchyUpdateSource.REFRESH
 
 ) : Entity {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = System.currentTimeMillis()
-
 }
