@@ -5,8 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.TokenBody
 import com.serverless.utils.ExceptionParser
+import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.workduck.service.NodeService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -27,11 +27,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
-        val tokenBody: TokenBody = TokenBody.fromToken(wdInput.headers.bearerToken) ?: return ApiResponseHelper.generateStandardErrorResponse("Unauthorized", 401)
-
-        if(!Helper.validateWorkspace(wdInput.headers.workspaceID, tokenBody.workspaceIDList)){
-            return ApiResponseHelper.generateStandardErrorResponse("Not Authorized for the requested workspace",401)
-        }
+        validateTokenAndWorkspace(wdInput)
 
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)

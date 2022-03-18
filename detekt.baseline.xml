@@ -29,7 +29,6 @@
         <ID>MaxLineLength:WorkspaceRepository.kt$WorkspaceRepository$val workspace: Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)</ID>
         <ID>MaxLineLength:WorkspaceService.kt$WorkspaceService$private val repository: Repository&lt;Workspace&gt; = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)</ID>
         <ID>NestedBlockDepth:NodeService.kt$NodeService$private fun compareNodeWithStoredNode(node: Node, storedNode: Node)</ID>
-        <ID>NewLineAtEndOfFile:UserRegister.kt$com.workduck.models.UserRegister.kt</ID>
         <ID>NewLineAtEndOfFile:UserService.kt$com.workduck.service.UserService.kt</ID>
         <ID>NewLineAtEndOfFile:UserStrategyFactory.kt$com.serverless.userHandlers.UserStrategyFactory.kt</ID>
         <ID>SwallowedException:NamespaceRepository.kt$NamespaceRepository$catch (e: Exception) { null }</ID>

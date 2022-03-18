@@ -66,23 +66,19 @@ class UserService {
 		return repository.update(user)
 	}
 
-	fun registerUser(jsonString: String, workspaceName: String?): Entity?{
-		val user: User = objectMapper.readValue(jsonString)
+	fun registerUser(workspaceName: String?): Entity?{
 
 		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))
 
-		val jsonForWorkspaceCreation : String = """{
+		val jsonForWorkspaceCreation = """{
 			"type": "WorkspaceRequest",
 			"id": "$workspaceID",
 			"name": "$workspaceName"
 		}"""
 
-		val payload: WDRequest? = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
-
-		//LOG.info("Creating workspace with json : $jsonForWorkspaceCreation")
+		val payload: WDRequest = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
 
 		return WorkspaceService().createWorkspace(payload)
-
 	}
 
 
@@ -115,7 +111,7 @@ fun main() {
 		}
 		"""
 
-	UserService().registerUser(json, "WD")
+	UserService().registerUser("WD")
 	//UserService().createUser(json)
 	//println(UserService().getUser("USER49"))
 	//UserService().updateUser(jsonUpdated)

@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.StandardResponse
+import com.serverless.models.Input
 import com.workduck.service.UserService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -22,7 +23,9 @@ class UserHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
         }
 
-        val routeKey = input["routeKey"] as String
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
+
+        val routeKey = wdInput.routeKey
 
         val strategy = UserStrategyFactory.getUserStrategy(routeKey)
 
@@ -33,7 +36,7 @@ class UserHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(input, userService)
+        return strategy.apply(wdInput, userService)
     }
 
     companion object {

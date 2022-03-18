@@ -25,6 +25,7 @@ import com.serverless.models.requests.WorkspaceRequest
     JsonSubTypes.Type(value = BookmarkRequest::class, name = "BookmarkRequest"),
     JsonSubTypes.Type(value = UserPreferenceRequest::class, name = "UserPreferenceRequest"),
     JsonSubTypes.Type(value = CommentRequest::class, name = "CommentRequest"),
-    JsonSubTypes.Type(value = BlockMovementRequest::class, name = "BlockMovementRequest")
+    JsonSubTypes.Type(value = BlockMovementRequest::class, name = "BlockMovementRequest"),
+    JsonSubTypes.Type(value = RegisterUserRequest::class, name = "RegisterUserRequest")
 )
 interface WDRequest

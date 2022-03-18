@@ -1,5 +1,6 @@
 package com.serverless.utils
 
+import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
@@ -35,6 +36,7 @@ object ExceptionParser {
         return when(e){
             is IllegalArgumentException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 400)
             is NullPointerException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Getting NPE", 400)
+            is UnauthorizedException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Unauthorized", 401)
             is ResourceNotFoundException -> {
                 LOG.warn(e)
                 ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 500)

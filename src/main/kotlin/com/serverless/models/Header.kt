@@ -1,5 +1,6 @@
 package com.serverless.models
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -10,5 +11,6 @@ data class Header(
    val workspaceID : String,
 
    @JsonProperty("authorization")
+   @JsonAlias("Authorization")
    val bearerToken : String
 )

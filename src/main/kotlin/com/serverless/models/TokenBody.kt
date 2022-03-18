@@ -10,12 +10,15 @@ import java.util.*
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TokenBody(
     val sub: String,
+    @JsonProperty("cognito:username")
+    val userName: String,
     val iss: String,
     @JsonProperty("custom:mex_workspace_ids")
-    val workspaceIDs: String,
+    val workspaceIDs: String?,
     val email: String,
 ) {
-    val workspaceIDList: List<String> = workspaceIDs.split("#")
+    val workspaceIDList: List<String> = workspaceIDs?.split("#") ?: listOf()
+    val userPoolID: String = iss.split("/").last()
 
     companion object {
         fun fromToken(bearerToken : String) : TokenBody?{

@@ -27,8 +27,8 @@ provider:
   timeout: 20
   memorySize: 512
   environment:
-    #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
-    #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${opt:stage, 'local'}-mex
     STAGE: ${opt:stage, 'local'}
   iam:
@@ -55,7 +55,7 @@ provider:
           Action:
             - 'cognito-idp:AdminGetUser'
           Resource:
-            - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/us-east-1_EN9ZkdtKO'
+            - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/*'
   httpApi:
     cors: true
     authorizers:
@@ -67,16 +67,16 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - 'us-east-1_EN9ZkdtKO' #userpool id
+              - 'us-east-1_Zu7FAh7hj' #userpool id
         audience:
-          - '6ste16sv808q4809bo0k1r5g13'
+          - '6pvqt64p0l2kqkk2qafgdh13qe'
 package:
   artifact: target/mex-dev.jar
 
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-  #- serverless-domain-manager
+  - serverless-domain-manager
   - serverless-plugin-warmup
 
 custom:
