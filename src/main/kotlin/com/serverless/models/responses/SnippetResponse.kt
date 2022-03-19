@@ -2,12 +2,10 @@ package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
 
-data class NodeResponse(
-    val id: String? = null,
+data class SnippetResponse(
+    val id: String?,
 
-    val nodePath: String? = null,
-
-    override val data: List<AdvancedElement> ? = null,
+    override val data: List<AdvancedElement>?,
 
     override val lastEditedBy: String?,
 
@@ -17,17 +15,14 @@ data class NodeResponse(
 
     override val updatedAt: Long,
 
-    val itemType: String = "Node",
+    val itemType: String = "Snippet",
 
-    var tags: MutableList<String>?,
+    override var version: Long?,
 
-    override var version: Long? = null,
-
-    override var namespaceID: String? = null,
+    override var namespaceID: String?,
 
     override var workspaceID: String,
 
-    var isBookmarked: Boolean? = null,
-
     override var publicAccess: Boolean
+
 ) : Response, PageResponse, TimestampAdhereResponse

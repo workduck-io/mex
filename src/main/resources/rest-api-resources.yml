@@ -90,6 +90,59 @@ Node:
         method: post
         authorizer: mexAuthorizer
 
+Snippet:
+  handler: com.serverless.snippetHandlers.SnippetHandler
+  events:
+    - httpApi:
+        path: /snippet/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet
+        method: post
+        authorizer: mexAuthorizer
+
+      #deleteNodes( archive them )
+    - httpApi:
+        path: /snippet/archive
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet/unarchive
+        method: patch
+        authorizer: mexAuthorizer
+
+    #delete given snippet ids from archive section ( hence, permanently )
+    - httpApi:
+        path: /snippet/archive/delete
+        method: post
+        authorizer: mexAuthorizer
+
+    #get all archived snippets for a given workspaceID
+    - httpApi:
+        path: /snippet/archive/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    # get a public snippet
+    - httpApi:
+        path: /snippet/public/{id}
+        method: get
+
+    - httpApi:
+        path: /snippet/makePublic/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet/makePrivate/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+
+
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
   events:
@@ -161,36 +214,6 @@ Workspace:
 User:
   handler: com.serverless.userHandlers.UserHandler
   events:
-    - httpApi:
-        path: /user/{id}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/update
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/{id}
-        method: delete
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/namespace/{id}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/workspace/{id}
-        method: get
-        authorizer: mexAuthorizer
-
     - httpApi:
         path : /user/register
         method: post

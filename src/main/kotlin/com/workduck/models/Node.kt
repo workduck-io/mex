@@ -36,17 +36,16 @@ data class Node(
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
-    var lastEditedBy: String? = null,
+    override var lastEditedBy: String? = null,
 
     @JsonProperty("createdBy")
     @DynamoDBAttribute(attributeName = "createdBy")
-    var createdBy: String? = null,
+    override var createdBy: String? = null,
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
-    var data: List<AdvancedElement>? = null,
-
+    override var data: List<AdvancedElement>? = null,
 
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")
@@ -54,25 +53,25 @@ data class Node(
     var tags: MutableList<String>? = null,
 
     @DynamoDBAttribute(attributeName = "dataOrder")
-    var dataOrder: MutableList<String>? = null,
+    override var dataOrder: MutableList<String>? = null,
 
     @JsonProperty("version")
     @DynamoDBVersionAttribute(attributeName = "version")
-    var version: Long? = null,
+    override var version: Long? = null,
 
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "namespaceIdentifier")
-    var namespaceIdentifier: NamespaceIdentifier? = null,
+    override var namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")
@@ -92,27 +91,25 @@ data class Node(
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: ItemType = ItemType.Node,
 
-
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
     @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
-
     @JsonProperty("isBookmarked")
     @DynamoDBAttribute(attributeName = "isBookmarked")
-    // TODO(make it part of NodeResponse object in code cleanup)
+// TODO(make it part of NodeResponse object in code cleanup)
     var isBookmarked: Boolean? = null,
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
-    var publicAccess: Boolean = false,
+    override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = Constants.getCurrentTime()
 
-) : Entity, ItemStatusAdherence {
+) : Entity, Page, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
@@ -127,11 +124,11 @@ data class Node(
     var nodeVersionCount: Long = 0
 
     companion object {
-        fun populateNodeWithSkAkAndCreatedAt(node : Node, storedNode : Node) {
+        fun populateNodeWithSkAkAndCreatedAt(node: Node, storedNode: Node) {
             node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
-            node.ak = node.workspaceIdentifier.let{"${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"}
+            node.ak = "${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"
         }
     }
 
@@ -140,5 +137,4 @@ data class Node(
             "Node title needs to be provided by the user"
         }
     }
-
 }

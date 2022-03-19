@@ -15,7 +15,8 @@ enum class IdentifierType(s: String) {
     WORKSPACE("WORKSPACE"),
     USER("USER"),
     BOOKMARK("BOOKMARK"),
-    COMMENT("COMMENT")
+    COMMENT("COMMENT"),
+    SNIPPET("SNIPPET")
 }
 
 @JsonTypeInfo(
@@ -28,6 +29,7 @@ enum class IdentifierType(s: String) {
     JsonSubTypes.Type(value = OwnerIdentifier::class, name = "owner"),
     JsonSubTypes.Type(value = NamespaceIdentifier::class, name = "namespace"),
     JsonSubTypes.Type(value = NodeIdentifier::class, name = "node"),
+    JsonSubTypes.Type(value = SnippetIdentifier::class, name = "snippet"),
     JsonSubTypes.Type(value = AssociatedPropertyIdentifier::class, name = "as-property"),
     JsonSubTypes.Type(value = NodeSchemaIdentifier::class, name = "node-schema"),
     JsonSubTypes.Type(value = RelationshipIdentifier::class, name = "relationship"),
@@ -56,6 +58,11 @@ data class NamespaceIdentifier(
 data class NodeIdentifier(
     override var id: String = Helper.generateId(IdentifierType.NODE.name)
 ) : Identifier(IdentifierType.NODE, id)
+
+@JsonTypeName("snippet")
+data class SnippetIdentifier(
+        override var id: String = Helper.generateId(IdentifierType.SNIPPET.name)
+) : Identifier(IdentifierType.SNIPPET, id)
 
 @JsonTypeName("as-property")
 data class AssociatedPropertyIdentifier(

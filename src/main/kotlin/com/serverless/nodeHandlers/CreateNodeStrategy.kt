@@ -13,7 +13,6 @@ class CreateNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error creating node"
 
-        println("WORKSPACE-ID : " + input.headers.workspaceID)
         val nodeRequest : WDRequest? = input.payload
         val versionEnabled : Boolean? = input.queryStringParameters?.let{
             it["versionEnabled"].toBoolean()

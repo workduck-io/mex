@@ -1,0 +1,18 @@
+package com.serverless.snippetHandlers
+
+import com.serverless.ApiGatewayResponse
+import com.serverless.ApiResponseHelper
+import com.serverless.models.Input
+import com.serverless.utils.SnippetHelper
+import com.workduck.service.SnippetService
+
+class CreateSnippetStrategy : SnippetStrategy {
+    override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
+        return input.payload?.let { snippetRequest ->
+            snippetService.createAndUpdateSnippet(snippetRequest, input.headers.workspaceID)?.let {
+                ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
+            } ?: throw IllegalArgumentException("Invalid ID passed")
+        } ?: throw IllegalArgumentException("No ID passed")
+    }
+
+}
