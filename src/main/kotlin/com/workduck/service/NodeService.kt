@@ -13,7 +13,7 @@ import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
-import com.serverless.models.requests.WDRequest
+ import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.containsExistingNodes
@@ -31,6 +31,7 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.NodeVersion
+import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.NodeRepository
@@ -43,6 +44,10 @@ import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
+import com.workduck.utils.PageHelper.comparePageWithStoredPage
+import com.workduck.utils.PageHelper.convertGenericRequestToList
+import com.workduck.utils.PageHelper.createDataOrderForPage
+import com.workduck.utils.PageHelper.mergePageVersions
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -530,20 +535,19 @@ class NodeService( // Todo: Inject them from handlers
 
     fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
-        /* set idCopy = id, createdAt = null, and set AK */
-        Node.populateNodeWithSkAkAndCreatedAt(node, storedNode)
+        Page.populatePageWithCreatedFieldsAndAK(node, storedNode)
 
-        node.dataOrder = createDataOrderForNode(node)
+        node.dataOrder = createDataOrderForPage(node)
 
         /* to update block level details for accountability */
-        val nodeChanged: Boolean = compareNodeWithStoredNode(node, storedNode)
+        val nodeChanged : Boolean = comparePageWithStoredPage(node, storedNode)
 
         if (!nodeChanged) {
             return storedNode
         }
 
         /* to make the locking versions same */
-        mergeNodeVersions(node, storedNode)
+        mergePageVersions(node, storedNode)
 
         LOG.info("Updating node : $node")
         // return nodeRepository.update(node)
@@ -712,6 +716,19 @@ class NodeService( // Todo: Inject them from handlers
         nodeRequest.toNode(workspaceID)
 
 
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?, workspaceID: String) : Node? {
+        return nodeRequest?.let{
+            Node(id = nodeRequest.id,
+                idCopy = nodeRequest.id,
+                nodePath = nodeRequest.nodePath,
+                namespaceIdentifier = nodeRequest.namespaceIdentifier,
+                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+                lastEditedBy = nodeRequest.lastEditedBy,
+                tags = nodeRequest.tags,
+                data = nodeRequest.data)
+        }
+    }
+
     fun getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID: String): MutableList<String>? {
         return nodeRepository.getAllArchivedNodesOfWorkspace(workspaceID)
     }
@@ -869,7 +886,7 @@ class NodeService( // Todo: Inject them from handlers
         // TODO(list remove changes order of the original elements )
         sourceNode?.dataOrder?.let {
             it.remove(blockID)
-            nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it)
-        }
+            nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it) }
     }
+
 }

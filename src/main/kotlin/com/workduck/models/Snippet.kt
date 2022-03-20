@@ -28,7 +28,7 @@ data class Snippet(
     var idCopy: String? = id,
 
     @DynamoDBAttribute(attributeName = "AK")
-    var ak: String? = null,
+    override var ak: String? = null,
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
@@ -37,14 +37,14 @@ data class Snippet(
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
-    override val data: List<AdvancedElement>? = null,
+    override var data: List<AdvancedElement>? = null,
 
     @DynamoDBAttribute(attributeName = "dataOrder")
     override var dataOrder: MutableList<String>? = null,
 
     @JsonProperty("createdBy")
     @DynamoDBAttribute(attributeName = "createdBy")
-    override val createdBy: String? = null,
+    override var createdBy: String? = null,
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
@@ -74,11 +74,11 @@ data class Snippet(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = System.currentTimeMillis()
+    override var createdAt: Long = System.currentTimeMillis()
 
 ) : Entity, Page {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt: Long = System.currentTimeMillis()
+    override var updatedAt: Long = System.currentTimeMillis()
 }

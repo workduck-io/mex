@@ -11,7 +11,6 @@ class GetPublicNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Node not available"
 
-
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {

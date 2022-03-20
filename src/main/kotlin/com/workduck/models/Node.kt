@@ -75,7 +75,7 @@ data class Node(
 
     /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")
-    var ak: String? = null,
+    override var ak: String? = null,
 
     @JsonProperty("nodeSchemaIdentifier")
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
@@ -107,13 +107,13 @@ data class Node(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = Constants.getCurrentTime()
+    override var createdAt: Long = Constants.getCurrentTime()
 
 ) : Entity, Page, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt: Long = Constants.getCurrentTime()
+    override var updatedAt: Long = Constants.getCurrentTime()
 
     @JsonProperty("lastVersionCreatedAt")
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
@@ -125,7 +125,6 @@ data class Node(
 
     companion object {
         fun populateNodeWithSkAkAndCreatedAt(node: Node, storedNode: Node) {
-            node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
             node.ak = "${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"

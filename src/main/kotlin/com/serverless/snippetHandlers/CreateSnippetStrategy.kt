@@ -8,6 +8,8 @@ import com.workduck.service.SnippetService
 
 class CreateSnippetStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
+        val errorMessage = "Error creating snippet"
+
         return input.payload?.let { snippetRequest ->
             snippetService.createAndUpdateSnippet(snippetRequest, input.headers.workspaceID)?.let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)

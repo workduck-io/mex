@@ -11,31 +11,21 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("NodeRequest")
-open class NodeRequest : WDRequest, PageRequest {
+@JsonTypeName("SnippetRequest")
+data class SnippetRequest(
 
     @JsonProperty("lastEditedBy")
-    open val lastEditedBy: String = ""
+    override val lastEditedBy: String = "",
 
     @JsonProperty("id")
-    open val id: String = ""
-
-    @JsonProperty("referenceID")
-    open val referenceID: String? = null
-
-    @JsonProperty("title")
-    open val title: String = "New Node"
-    @JsonProperty("nodePath")
-    val nodePath: String ? = null,
+    val id: String = "",
 
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    open val namespaceIdentifier: NamespaceIdentifier? = null
+    override val namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("data")
-    open val data: List<AdvancedElement>? = null
+    override val data: List<AdvancedElement>? = null,
 
-    @JsonProperty("tags")
-    open var tags: MutableList<String>? = null
-}
+) : WDRequest, PageRequest
