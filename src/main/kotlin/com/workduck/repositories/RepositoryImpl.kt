@@ -20,15 +20,15 @@ class RepositoryImpl<T : Entity>(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-        return repository.get(identifier)
+    override fun get(identifier: Identifier, clazz: Class<T>): T? {
+        return mapper.load(clazz, identifier.id, identifier.id, dynamoDBMapperConfig)
     }
 
     override fun delete(identifier: Identifier): Identifier? {
         return repository.delete(identifier)
     }
 
-    override fun create(t: T): T? {
+    override fun create(t: T): T {
         LOG.info("creating ${t.javaClass} : $t")
         mapper.save(t, dynamoDBMapperConfig)
         return t

@@ -9,6 +9,6 @@ class GetAllArchivedSnippetsStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
         val errorMessage = "Error getting archived snippets"
 
-        return ApiResponseHelper.generateStandardResponse(snippetService.getMetaDataOfAllArchivedSnippetsOfWorkspace(input.headers.workspaceID), errorMessage)
+        return ApiResponseHelper.generateStandardResponse(snippetService.getAllArchivedSnippetIDsOfWorkspace(input.headers.workspaceID), errorMessage)
     }
 }

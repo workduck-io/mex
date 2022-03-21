@@ -32,7 +32,11 @@ data class Snippet(
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
-    override val itemType: String = "Snippet",
+    override var itemType: String = "Snippet",
+
+    @JsonProperty("itemStatus")
+    @DynamoDBAttribute(attributeName = "itemStatus")
+    var itemStatus: String = "ACTIVE",
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
@@ -48,21 +52,21 @@ data class Snippet(
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
-    override val lastEditedBy: String,
+    override var lastEditedBy: String? = null,
 
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    override val workspaceIdentifier: WorkspaceIdentifier,
+    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "namespaceIdentifier")
-    override val namespaceIdentifier: NamespaceIdentifier?,
+    override var namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("version")
     @DynamoDBVersionAttribute(attributeName = "version")
@@ -70,7 +74,7 @@ data class Snippet(
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
-    override val publicAccess: Boolean = false,
+    override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
@@ -81,4 +85,5 @@ data class Snippet(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     override var updatedAt: Long = System.currentTimeMillis()
+
 }

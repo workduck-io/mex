@@ -9,7 +9,7 @@ class DeleteArchivedSnippetStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
         val errorMessage = "Error deleting snippets"
         return input.payload?.let { snippetIDRequest ->
-            ApiResponseHelper.generateStandardResponse(snippetService.deleteArchivedSnippets(snippetIDRequest), errorMessage)
+            ApiResponseHelper.generateStandardResponse(snippetService.deleteArchivedSnippets(snippetIDRequest, input.headers.workspaceID), errorMessage)
         } ?: throw IllegalArgumentException("Invalid Body")
     }
 

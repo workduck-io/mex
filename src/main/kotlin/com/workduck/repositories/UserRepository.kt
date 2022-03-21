@@ -24,6 +24,9 @@ class UserRepository(
     override fun get(identifier: Identifier): Entity? {
         return mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
     }
+    override fun get(identifier: Identifier, clazz: Class<User>): User? {
+        TODO("Not yet implemented")
+    }
 
     fun getAllUsersWithNamespaceID(namespaceID: String): MutableList<String>? {
 

@@ -51,7 +51,7 @@ class UserService {
 
 	fun getUser(userID : String) : Entity? {
 		LOG.info("Getting user with id : $userID")
-		return repository.get(UserIdentifier(userID))
+		return repository.get(UserIdentifier(userID), User::class.java)
 	}
 
 	fun updateUser(jsonString: String) : Entity? {

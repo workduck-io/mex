@@ -4,6 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.requests.ClonePublicPageRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
@@ -34,29 +36,25 @@ class SnippetService {
         else -> System.getenv("TABLE_NAME")
     }
 
-
     private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
-            .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-            .build()
+        .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+        .build()
 
-    private val pageRepository: PageRepository = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
-    private val repository: Repository<Page> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
+    private val pageRepository: PageRepository<Snippet> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
+    private val repository: Repository<Snippet> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
-
-    fun createAndUpdateSnippet(wdRequest: WDRequest, workspaceID: String): Entity?{
-        val snippet : Snippet = createSnippetObjectFromSnippetRequest(wdRequest as SnippetRequest, workspaceID)
+    fun createAndUpdateSnippet(wdRequest: WDRequest, workspaceID: String): Entity? {
+        val snippet: Snippet = createSnippetObjectFromSnippetRequest(wdRequest as SnippetRequest, workspaceID)
         val storedSnippet = getSnippet(snippet.id) as Snippet?
 
-        return if(storedSnippet == null){
+        return if (storedSnippet == null) {
             createSnippet(snippet)
-        }
-        else{
+        } else {
             updateSnippet(snippet, storedSnippet)
         }
-
     }
 
-    private fun createSnippet(snippet: Snippet): Entity?{
+    private fun createSnippet(snippet: Snippet): Entity {
         snippet.ak = "${snippet.workspaceIdentifier.id}#${snippet.namespaceIdentifier?.id}"
         snippet.dataOrder = createDataOrderForPage(snippet)
 
@@ -75,17 +73,15 @@ class SnippetService {
         return repository.create(snippet)
     }
 
-
-    private fun updateSnippet(snippet: Snippet, storedSnippet: Snippet): Entity?{
-        /* set idCopy = id, createdAt = null, and set AK */
+    private fun updateSnippet(snippet: Snippet, storedSnippet: Snippet): Entity? {
         Page.populatePageWithCreatedFieldsAndAK(snippet, storedSnippet)
 
         snippet.dataOrder = createDataOrderForPage(snippet)
 
         /* to update block level details for accountability */
-        val nodeChanged : Boolean = comparePageWithStoredPage(snippet, storedSnippet)
+        val nodeChanged: Boolean = comparePageWithStoredPage(snippet, storedSnippet)
 
-        if(!nodeChanged){
+        if (!nodeChanged) {
             return storedSnippet
         }
 
@@ -94,11 +90,10 @@ class SnippetService {
 
         LOG.info("Updating node : $snippet")
         return repository.update(snippet)
-
     }
 
     fun getSnippet(snippetID: String): Entity? {
-        return repository.get(SnippetIdentifier(snippetID)) as Snippet?
+        return repository.get(SnippetIdentifier(snippetID), Snippet::class.java)
     }
 
     fun makeSnippetPublic(snippetID: String) {
@@ -109,35 +104,35 @@ class SnippetService {
         pageRepository.togglePagePublicAccess(snippetID, 0)
     }
 
-    fun getPublicSnippet(snippetID: String) : Entity?{
-        return pageRepository.getPublicPage(snippetID)
+    fun getPublicSnippet(snippetID: String): Entity? {
+        return pageRepository.getPublicPage(snippetID, Snippet::class.java)
     }
 
-    private fun createSnippetObjectFromSnippetRequest(snippetRequest: SnippetRequest, workspaceID: String): Snippet{
-        return Snippet(id = snippetRequest.id,
-                idCopy = snippetRequest.id,
-                namespaceIdentifier = snippetRequest.namespaceIdentifier,
-                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-                lastEditedBy = snippetRequest.lastEditedBy,
-                data = snippetRequest.data)
-
+    private fun createSnippetObjectFromSnippetRequest(snippetRequest: SnippetRequest, workspaceID: String): Snippet {
+        return Snippet(
+            id = snippetRequest.id,
+            namespaceIdentifier = snippetRequest.namespaceIdentifier,
+            workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+            lastEditedBy = snippetRequest.lastEditedBy,
+            data = snippetRequest.data
+        )
     }
 
-
-    fun archiveSnippets(wdRequest: WDRequest) : MutableList<String>{
+    fun archiveSnippets(wdRequest: WDRequest): MutableList<String> {
         val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
         LOG.info(snippetIDList)
-        return pageRepository.unarchiveOrArchiveNodes(snippetIDList, "ARCHIVED")
+        return pageRepository.unarchiveOrArchivePages(snippetIDList, "ARCHIVED")
     }
 
-    fun unarchiveSnippets(wdRequest: WDRequest) : MutableList<String>{
+    fun unarchiveSnippets(wdRequest: WDRequest): MutableList<String> {
         val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
-        return pageRepository.unarchiveOrArchiveNodes(snippetIDList, "ACTIVE")
+        return pageRepository.unarchiveOrArchivePages(snippetIDList, "ACTIVE")
     }
 
-    fun deleteArchivedSnippets(wdRequest: WDRequest) : MutableList<String> {
+    fun deleteArchivedSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
         val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
         val deletedSnippetsList: MutableList<String> = mutableListOf()
+        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == snippetIDList.sorted()) { "The passed IDs should be present and archived" }
         for (snippetID in snippetIDList) {
             repository.delete(SnippetIdentifier(snippetID))?.also {
                 deletedSnippetsList.add(it.id)
@@ -146,10 +141,29 @@ class SnippetService {
         return deletedSnippetsList
     }
 
-    fun getMetaDataOfAllArchivedSnippetsOfWorkspace(workspaceID: String): List<String> {
+    fun getAllArchivedSnippetIDsOfWorkspace(workspaceID: String): List<String> {
         return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, "Snippet")
     }
 
+    fun clonePublicSnippet(wdRequest: WDRequest, workspaceID: String): Entity {
+        val cloneRequest = wdRequest as ClonePublicPageRequest
+        val publicSnippet = getPublicSnippet(cloneRequest.publicPageID) as Snippet?
+        require(publicSnippet != null) {"Invalid Public Snippet ID passed"}
+
+        val newSnippet = createSnippetFromCloneRequestAndPublicSnippet(cloneRequest, publicSnippet, workspaceID)
+        return createSnippet(newSnippet)
+
+    }
+
+    private fun createSnippetFromCloneRequestAndPublicSnippet(cloneRequest: ClonePublicPageRequest, publicSnippet: Snippet, workspaceID: String): Snippet{
+        return Snippet(
+                id = cloneRequest.newPageID,
+                namespaceIdentifier = cloneRequest.namespaceIdentifier,
+                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+                lastEditedBy = cloneRequest.lastEditedBy,
+                data = publicSnippet.data
+        )
+    }
 
     companion object {
         private val LOG = LogManager.getLogger(SnippetService::class.java)

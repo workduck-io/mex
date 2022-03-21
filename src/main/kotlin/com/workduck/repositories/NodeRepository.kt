@@ -39,10 +39,10 @@ import java.time.Instant
 class NodeRepository(
     private val mapper: DynamoDBMapper,
     private val dynamoDB: DynamoDB,
-    var dynamoDBMapperConfig: DynamoDBMapperConfig,
+    private val dynamoDBMapperConfig: DynamoDBMapperConfig,
     private val client: AmazonDynamoDB,
-    var tableName: String
-) : Repository<Node> {
+    private var tableName: String
+)  {
 
     override fun get(identifier: Identifier): Entity? =
         mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
@@ -125,19 +125,6 @@ class NodeRepository(
             }
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
-        val table = dynamoDB.getTable(tableName)
-
-        DeleteItemSpec()
-            .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
-            .also { table.deleteItem(it) }
-
-        return identifier
-    }
-
-    override fun create(t: Node): Node {
-        TODO("Not yet implemented")
-    }
 
     fun createMultipleNodes(listOfNodes : List<Node>){
         val failedBatches = mapper.batchWrite(listOfNodes, emptyList<Any>(), dynamoDBMapperConfig)
@@ -157,9 +144,6 @@ class NodeRepository(
         }
     }
 
-    override fun update(t: Node): Node? {
-        TODO("Not yet implemented")
-    }
 
     fun updateNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
         val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()

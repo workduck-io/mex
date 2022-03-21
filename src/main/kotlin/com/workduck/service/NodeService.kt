@@ -22,19 +22,17 @@ import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNodesAfterIndex
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
-import com.workduck.models.AdvancedElement
-import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeIdentifier
-import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.NodeRepository
+import com.workduck.repositories.PageRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
@@ -48,6 +46,7 @@ import com.workduck.utils.PageHelper.comparePageWithStoredPage
 import com.workduck.utils.PageHelper.convertGenericRequestToList
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
+import com.workduck.utils.PageHelper.orderBlocks
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -78,6 +77,9 @@ class NodeService( // Todo: Inject them from handlers
     val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
 ) {
+    private val pageRepository: PageRepository<Node> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
+    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client)
+    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
@@ -497,6 +499,7 @@ class NodeService( // Todo: Inject them from handlers
         }
 
         LOG.info(nodeIDList)
+        return pageRepository.unarchiveOrArchivePages(nodeIDList, "ARCHIVED")
         return@runBlocking jobToChangeNodeStatus.await()
     }
 
@@ -729,8 +732,9 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID: String): MutableList<String>? {
-        return nodeRepository.getAllArchivedNodesOfWorkspace(workspaceID)
+
+    fun getAllArchivedSnippetIDsOfWorkspace(workspaceID : String) : MutableList<String> {
+        return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, "Node")
     }
 
     fun unarchiveNodes(nodeIDRequest: WDRequest, workspaceID: String): List<String> = runBlocking {
@@ -798,14 +802,18 @@ class NodeService( // Todo: Inject them from handlers
     /* this is called internally via trigger. We don't need to do sanity check for name here */
     fun unarchiveNodes(nodeIDList: List<String>, workspaceID: String): MutableList<String> {
         return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE)
+    fun unarchiveNodes(nodeIDRequest: WDRequest) : MutableList<String>{
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        return pageRepository.unarchiveOrArchivePages(nodeIDList, "ACTIVE")
     }
 
-    fun deleteArchivedNodes(nodeIDRequest: WDRequest): MutableList<String> {
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String) : MutableList<String> {
 
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
-        val deletedNodesList: MutableList<String> = mutableListOf()
-        for (nodeID in nodeIDList) {
-            repository.delete(NodeIdentifier(nodeID))?.also {
+        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == nodeIDList.sorted()) { "The passed IDs should be present and archived" }
+        val deletedNodesList : MutableList<String> = mutableListOf()
+        for(nodeID in nodeIDList) {
+            repository.delete(NodeIdentifier(nodeID))?.also{
                 deletedNodesList.add(it.id)
             }
         }
@@ -818,15 +826,15 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun makeNodePublic(nodeID: String) {
-        nodeRepository.toggleNodePublicAccess(nodeID, 1)
+        pageRepository.togglePagePublicAccess(nodeID, 1)
     }
 
     fun makeNodePrivate(nodeID: String) {
-        nodeRepository.toggleNodePublicAccess(nodeID, 0)
+        pageRepository.togglePagePublicAccess(nodeID, 0)
     }
 
-    fun getPublicNode(nodeID: String): Node? {
-        return nodeRepository.getPublicNode(nodeID)
+    fun getPublicNode(nodeID: String) : Node {
+        return pageRepository.getPublicPage(nodeID, Node::class.java)
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {

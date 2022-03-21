@@ -21,6 +21,8 @@ class SnippetStrategyFactory {
 
         const val getPublicSnippet = "GET /snippet/public/{id}"
 
+        const val clonePublicSnippet = "POST /snippet/clone"
+
 
         private val snippetRegistry: Map<String, SnippetStrategy> = mapOf(
                 getSnippet to GetSnippetStrategy(),
@@ -31,7 +33,8 @@ class SnippetStrategyFactory {
                 getAllArchivedSnippets to GetAllArchivedSnippetsStrategy(),
                 makeSnippetPublic to MakeSnippetPublicStrategy(),
                 makeSnippetPrivate to MakeSnippetPrivateStrategy(),
-                getPublicSnippet to GetPublicSnippetStrategy()
+                getPublicSnippet to GetPublicSnippetStrategy(),
+                clonePublicSnippet to ClonePublicSnippetStrategy()
         )
 
         fun getSnippetStrategy(routeKey: String): SnippetStrategy? {

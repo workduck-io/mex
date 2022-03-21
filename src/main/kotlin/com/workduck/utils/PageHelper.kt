@@ -1,10 +1,24 @@
 package com.workduck.utils
 
 import com.serverless.models.requests.GenericListRequest
+import com.workduck.models.Entity
 import com.workduck.models.Page
 
 object PageHelper {
 
+    fun orderBlocks(page: Page): Page =
+            page.apply {
+                page.data?.let { data ->
+                    (
+                            page.dataOrder?.mapNotNull { blockId ->
+                                data.find { element -> blockId == element.id }
+                            } ?: emptyList()
+                            )
+                            .also {
+                                page.data = it.toMutableList()
+                            }
+                }
+            }
 
     fun createDataOrderForPage(page: Page): MutableList<String> {
 

@@ -12,7 +12,7 @@ class DeleteArchivedNodeStrategy : NodeStrategy {
         val nodeIDRequest = input.payload
 
         return if(nodeIDRequest != null) {
-            val returnedNodeIDList: MutableList<String> = nodeService.deleteArchivedNodes(nodeIDRequest)
+            val returnedNodeIDList: MutableList<String> = nodeService.deleteArchivedNodes(nodeIDRequest, input.headers.workspaceID)
             ApiResponseHelper.generateStandardResponse(returnedNodeIDList as Any?, errorMessage)
         }
         else{

@@ -16,7 +16,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val nodeService = NodeService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
-        LOG.info(input)
+        //LOG.info(input)
 
         val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
 

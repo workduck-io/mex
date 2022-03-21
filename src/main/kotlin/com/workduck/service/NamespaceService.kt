@@ -47,7 +47,7 @@ class NamespaceService {
 
     fun getNamespace(namespaceID: String): Entity? {
         LOG.info("Getting namespace with id : $namespaceID")
-        return repository.get(NamespaceIdentifier(namespaceID))
+        return repository.get(NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
     fun updateNamespace(namespaceRequest: WDRequest?): Entity? {

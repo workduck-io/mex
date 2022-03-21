@@ -55,7 +55,7 @@ class WorkspaceService {
 
     fun getWorkspace(workspaceID: String): Entity? {
         LOG.info("Getting workspace with id : $workspaceID")
-        return repository.get(WorkspaceIdentifier(workspaceID))
+        return repository.get(WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
     fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {

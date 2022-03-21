@@ -12,7 +12,7 @@ class GetAllArchivedNodesStrategy : NodeStrategy {
         val workspaceID = input.pathParameters?.id
 
         return if(workspaceID != null) {
-            val nodeIDList: MutableList<String>? = nodeService.getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID)
+            val nodeIDList: MutableList<String>? = nodeService.getAllArchivedSnippetIDsOfWorkspace(workspaceID)
             ApiResponseHelper.generateStandardResponse(nodeIDList as Any?, errorMessage)
         }
         else{

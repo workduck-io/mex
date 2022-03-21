@@ -26,7 +26,7 @@ class CommentRepository(
     val table: Table = dynamoDB.getTable(tableName)
 
 
-    override fun create(t: Comment): Comment? {
+    override fun create(t: Comment): Comment {
         TODO("Not yet implemented")
     }
 
@@ -34,7 +34,7 @@ class CommentRepository(
         TODO("Not yet implemented")
     }
 
-    override fun get(identifier: Identifier): Entity? {
+    override fun get(identifier: Identifier, clazz: Class<Comment>): Comment? {
         TODO("Using getComment instead")
     }
 

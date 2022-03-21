@@ -15,60 +15,38 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.workduck.models.Entity
 import com.workduck.models.Identifier
-import com.workduck.models.Node
 import com.workduck.models.Page
 import org.apache.logging.log4j.LogManager
 
-class PageRepository(
+class PageRepository <T : Page> (
         private val mapper: DynamoDBMapper,
         private val dynamoDB: DynamoDB,
         private val dynamoDBMapperConfig: DynamoDBMapperConfig,
         private val client: AmazonDynamoDB,
         private val tableName: String
-) : Repository<Page>{
+) : Repository<T>{
 
-    override fun create(t: Page): Page? {
+    override fun create(t: T): T {
         TODO("Not yet implemented")
     }
 
-    override fun update(t: Page): Page? {
+    override fun update(t: T): T? {
         TODO("Not yet implemented")
     }
 
-    fun getPage(identifier: Identifier, clazz: Class<Page> ): Entity? =
-        mapper.load(clazz, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
 
+    override fun get(identifier: Identifier, clazz: Class<T>): T? {
+        TODO("Not yet implemented")
+    }
 
 
     override fun delete(identifier: Identifier): Identifier {
         val table = dynamoDB.getTable(tableName)
-
-        DeleteItemSpec().withPrimaryKey("PK", identifier.id, "SK", identifier.id)
-                .also { table.deleteItem(it) }
-
+        DeleteItemSpec().withPrimaryKey("PK", identifier.id, "SK", identifier.id).also { table.deleteItem(it) }
         return identifier
     }
 
-
-    private fun orderBlocks(page: Page): Entity =
-            page.apply {
-                page.data?.let { data ->
-                    (
-                            page.dataOrder?.mapNotNull { blockId ->
-                                data.find { element -> blockId == element.id }
-                            } ?: emptyList()
-                            )
-                            .also {
-                                page.data = it.toMutableList()
-                            }
-                }
-            }
-
-    override fun get(identifier: Identifier): Entity? {
-        TODO("Not yet implemented")
-    }
 
     fun togglePagePublicAccess(snippetID: String, accessValue: Long) {
         val table = dynamoDB.getTable(tableName)
@@ -83,27 +61,27 @@ class PageRepository(
                 }
     }
 
-    fun getPublicPage(pageID: String): Page? {
+    fun getPublicPage(pageID: String, clazz: Class<T>): T {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(pageID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(pageID)
         expressionAttributeValues[":true"] = AttributeValue().withN("1")
 
-        val queryExpression = DynamoDBQueryExpression<Page>()
+        val queryExpression = DynamoDBQueryExpression<T>()
                 .withKeyConditionExpression("PK = :pk and SK = :sk")
                 .withFilterExpression("publicAccess = :true")
                 .withExpressionAttributeValues(expressionAttributeValues)
 
-        val pageList: List<Page> = mapper.query(Page::class.java, queryExpression, dynamoDBMapperConfig)
+        val pageList: List<T> = mapper.query(clazz, queryExpression, dynamoDBMapperConfig)
 
         return if (pageList.isNotEmpty()) pageList[0]
-        else null
+        else throw IllegalArgumentException("Given ID is not public")
     }
 
 
 
-    fun unarchiveOrArchiveNodes(pageIDList: List<String>, status: String): MutableList<String> {
+    fun unarchiveOrArchivePages(pageIDList: List<String>, status: String): MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
