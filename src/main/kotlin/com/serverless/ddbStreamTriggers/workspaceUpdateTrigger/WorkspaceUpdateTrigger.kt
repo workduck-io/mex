@@ -12,7 +12,6 @@ class WorkspaceUpdateTrigger : RequestHandler<DynamodbEvent, Void> {
     private val relationshipService = RelationshipService()
 
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context): Void? {
-        LOG.info("DYNAMODB-EVENT : $dynamodbEvent, CONTEXT : $context")
         if(dynamodbEvent == null || dynamodbEvent.records == null) return null /* will be the case when warmup lambda calls it */
         for (record in dynamodbEvent.records) {
 

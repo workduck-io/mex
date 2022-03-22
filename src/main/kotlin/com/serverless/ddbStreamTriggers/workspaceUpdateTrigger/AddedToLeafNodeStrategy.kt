@@ -7,12 +7,15 @@ import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 
 class AddedToLeafNodeStrategy : OperationPerformedStrategy {
     override fun createRelationships(relationshipService: RelationshipService, workspaceID: String, newNodeHierarchy: List<String>, oldNodeHierarchy: List<String>, addedPath: List<String>, removedPath: List<String>) {
-        val commonPrefix = getCommonPrefixNodePath(removedPath[0], addedPath[0])
+        val addedPathString = addedPath.firstOrNull() ?: throw Exception("Added path is null")
+        val removedPathString = removedPath.firstOrNull() ?: throw Exception("Removed path is null")
+
+        val commonPrefix = getCommonPrefixNodePath(removedPathString, addedPathString)
 
         /* take last node from overlapping path since that will be starting node of the first relationship to be created */
         val relationshipList: MutableList<String> = commonPrefix.split("#").takeLast(2) as MutableList<String>
 
-        relationshipList += addedPath[0].removePrefix(commonPrefix).splitIgnoreEmpty("#")
+        relationshipList += addedPathString.removePrefix(commonPrefix).splitIgnoreEmpty("#")
 
         /* now we have a list [ node1, node1id, node2, node2id, node3, node3id.. ], we take out ids and make pairs */
         val nodePairListForRelationship = relationshipList.filterIndexed { index, _ -> index % 2 != 0 }.toList().zipWithNext()
