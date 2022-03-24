@@ -116,8 +116,8 @@ Snippet:
 
     #delete given snippet ids from archive section ( hence, permanently )
     - httpApi:
-        path: /snippet/archive/delete
-        method: post
+        path: /snippet
+        method: delete
         authorizer: mexAuthorizer
 
     #get all archived snippets for a given workspaceID

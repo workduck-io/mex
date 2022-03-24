@@ -11,7 +11,7 @@ class SnippetStrategyFactory {
 
         const val unarchiveSnippet = "PATCH /snippet/unarchive"
 
-        const val deleteArchivedSnippet = "POST /snippet/archive/delete"
+        const val deleteArchivedSnippet = "DELETE /snippet"
 
         const val getAllArchivedSnippets = "GET /snippet/archive/{id}"
 
