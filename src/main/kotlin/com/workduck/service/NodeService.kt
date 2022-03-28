@@ -6,12 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.requests.BlockMovementRequest
-import com.serverless.models.requests.ElementRequest
-import com.serverless.models.requests.GenericListRequest
-import com.serverless.models.requests.NodeRequest
-import com.serverless.models.requests.RefactorRequest
-import com.serverless.models.requests.WDRequest
+import com.serverless.models.requests.*
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
@@ -220,15 +215,15 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun updateHierarchyInRefactor(
-        existingNodeNamePath: String,
-        newNodePath: String,
+        existingNodeNamePath: NodePath,
+        newNodePath: NodePath,
         workspace: Workspace,
         nodesToCreate: List<Node>,
         lastNodeID: String
     ) {
 
-        val existingNodes = existingNodeNamePath.split("#")
-        val newNodes = newNodePath.split("#")
+        val existingNodes = existingNodeNamePath.allNodes
+        val newNodes = newNodePath.allNodes
 
         val nodeHierarchyInformation =
             workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
@@ -237,7 +232,7 @@ class NodeService( // Todo: Inject them from handlers
         for (nodePath in nodeHierarchyInformation) {
             val namePath = getNamePath(nodePath)
             /* if the current nodeNamePath has all the nodes from the passed path, we know we need to change this current path */
-            if (getCommonPrefixNodePath(existingNodeNamePath, namePath).split("#") == existingNodes) {
+            if (getCommonPrefixNodePath(existingNodeNamePath.path, namePath).split("#") == existingNodes) {
                 LOG.info("PASSED PATH : $existingNodeNamePath, CURRENT NAME PATH : $namePath")
                 /* break new node path in 4 parts and combine later
                 1. Unchanged Prefix Path
@@ -271,7 +266,7 @@ class NodeService( // Todo: Inject them from handlers
                 paths.add(renameNodePath)
 
                 // suffix string
-                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodeNamePath)
+                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodeNamePath.path)
                     .splitIgnoreEmpty("#") /* get all the nodes after last node from passed existing path */
                 val idsOfUnchangedSuffixNodes = idPath.takeLast(namesOfUnchangedSuffixNodes.size)
                 val suffixString =
