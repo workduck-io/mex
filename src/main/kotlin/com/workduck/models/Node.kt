@@ -28,9 +28,10 @@ data class Node(
 //    @DynamoDBAttribute(attributeName = "parentNodeID")
 //    var parentNodeID: String = id,
 
+    // This will always be populated by the user
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")
-    var title: String = "New Node",
+    var title: String = "",
 
 
     @JsonProperty("lastEditedBy")
@@ -131,6 +132,12 @@ data class Node(
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
             node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
+        }
+    }
+
+    init {
+        require(title.isNotBlank()){
+            "Node title needs to be provided by the user"
         }
     }
 
