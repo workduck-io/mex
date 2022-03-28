@@ -43,7 +43,7 @@ import org.apache.logging.log4j.LogManager
 /**
  * contains all node related logic
  */
-class NodeService ( // Todo: Inject them from handlers
+class NodeService( // Todo: Inject them from handlers
     val objectMapper: ObjectMapper = Helper.objectMapper,
     val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
     val dynamoDB: DynamoDB = DynamoDB(client),
@@ -51,17 +51,17 @@ class NodeService ( // Todo: Inject them from handlers
     val workspaceService: WorkspaceService = WorkspaceService(),
 
     var tableName: String = when (System.getenv("TABLE_NAME")) {
-    null -> "local-mex" /* for local testing without serverless offline */
-    else -> System.getenv("TABLE_NAME")
+        null -> "local-mex" /* for local testing without serverless offline */
+        else -> System.getenv("TABLE_NAME")
     },
 
-    var dynamoDBMapperConfig : DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
-    .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-    .build(),
+    var dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+        .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+        .build(),
 
     val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
-){
+) {
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
@@ -81,39 +81,60 @@ class NodeService ( // Todo: Inject them from handlers
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
         val nodeVersion = NodeVersion(
-            id = "${node.id}#VERSION", lastEditedBy = node.lastEditedBy, createdBy = node.createdBy,
-            data = node.data, dataOrder = node.dataOrder, createdAt = node.createdAt, ak = node.ak, namespaceIdentifier = node.namespaceIdentifier,
-            workspaceIdentifier = node.workspaceIdentifier, updatedAt = "UPDATED_AT#${node.updatedAt}"
+            id = "${node.id}#VERSION",
+            lastEditedBy = node.lastEditedBy,
+            createdBy = node.createdBy,
+            data = node.data,
+            dataOrder = node.dataOrder,
+            createdAt = node.createdAt,
+            ak = node.ak,
+            namespaceIdentifier = node.namespaceIdentifier,
+            workspaceIdentifier = node.workspaceIdentifier,
+            updatedAt = "UPDATED_AT#${node.updatedAt}"
         )
         nodeVersion.version = Helper.generateId("version")
         return nodeVersion
     }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, versionEnabled: Boolean = false): Entity? = runBlocking {
+    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, versionEnabled: Boolean = false): Entity? =
+        runBlocking {
 
-        val nodeRequest: NodeRequest = request as NodeRequest
-        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: return@runBlocking null
+            val nodeRequest: NodeRequest = request as NodeRequest
+            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: return@runBlocking null
 
-        val jobToGetStoredNode = async { getNode(node.id) as Node? }
-        val jobToGetWorkspace = async { node.workspaceIdentifier.id.let { (workspaceService.getWorkspace(it) as Workspace) } }
+            val jobToGetStoredNode = async { getNode(node.id) as Node? }
+            val jobToGetWorkspace =
+                async { node.workspaceIdentifier.id.let { (workspaceService.getWorkspace(it) as Workspace) } }
 
-        return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
-            null -> {
-                val jobToCreateNode = async {createNode(node, versionEnabled)}
-                val workspace = jobToGetWorkspace.await()
-                launch {  updateNodeHierarchyInSingleCreate(nodeRequest.referenceID, node.id, node.title, workspace) }
-                jobToCreateNode.await()
-            }
-            else -> {
-                jobToGetWorkspace.cancel()
-                updateNode(node, storedNode, versionEnabled)
+            return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
+                null -> {
+                    val jobToCreateNode = async { createNode(node, versionEnabled) }
+                    val workspace = jobToGetWorkspace.await()
+                    launch {
+                        updateNodeHierarchyInSingleCreate(
+                            nodeRequest.referenceID,
+                            node.id,
+                            node.title,
+                            workspace
+                        )
+                    }
+                    jobToCreateNode.await()
+                }
+                else -> {
+                    jobToGetWorkspace.cancel()
+                    updateNode(node, storedNode, versionEnabled)
+                }
             }
         }
-    }
 
-    private fun updateNodeHierarchyInSingleCreate(referenceID: String?, nodeID: String, nodeTitle: String, workspace: Workspace){
-        when(referenceID){
+    private fun updateNodeHierarchyInSingleCreate(
+        referenceID: String?,
+        nodeID: String,
+        nodeTitle: String,
+        workspace: Workspace
+    ) {
+        when (referenceID) {
             null -> { /* just a single standalone node is created */
                 workspaceService.addNodePathToHierarchy(workspace.id, "$nodeTitle#$nodeID")
             }
@@ -122,24 +143,24 @@ class NodeService ( // Todo: Inject them from handlers
                 val nodePathsToAdd = mutableListOf<String>()
                 val nodePathsToRemove = mutableListOf<String>()
 
-                for(nodePath in nodeHierarchy){
-                   if(nodePath.endsWith(referenceID)){ /* referenceID was a leaf node */
-                       nodePathsToAdd.add("$nodePath#$nodeTitle#$nodeID")
-                       nodePathsToRemove.add(nodePath)
-                   } else if(nodePath.contains(referenceID)){ /* referenceID is not leaf node, and we need to extract path till referenceID */
-                       val endIndex = nodePath.indexOf(referenceID) + referenceID.length - 1
-                       val pathTillRefID = nodePath.substring(0, endIndex + 1)
-                       nodePathsToAdd.add("$pathTillRefID#$nodeTitle#$nodeID")
-                   } else {
-                       continue
-                   }
+                for (nodePath in nodeHierarchy) {
+                    if (nodePath.endsWith(referenceID)) { /* referenceID was a leaf node */
+                        nodePathsToAdd.add("$nodePath#$nodeTitle#$nodeID")
+                        nodePathsToRemove.add(nodePath)
+                    } else if (nodePath.contains(referenceID)) { /* referenceID is not leaf node, and we need to extract path till referenceID */
+                        val endIndex = nodePath.indexOf(referenceID) + referenceID.length - 1
+                        val pathTillRefID = nodePath.substring(0, endIndex + 1)
+                        nodePathsToAdd.add("$pathTillRefID#$nodeTitle#$nodeID")
+                    } else {
+                        continue
+                    }
                 }
 
-                for(pathToRemove in nodePathsToRemove){
+                for (pathToRemove in nodePathsToRemove) {
                     nodeHierarchy.remove(pathToRemove)
                 }
 
-                for(pathToAdd in nodePathsToAdd){
+                for (pathToAdd in nodePathsToAdd) {
                     nodeHierarchy.add(pathToAdd)
                 }
                 workspaceService.updateWorkspaceHierarchy(workspace, nodeHierarchy, HierarchyUpdateSource.NODE)
@@ -147,8 +168,15 @@ class NodeService ( // Todo: Inject them from handlers
         }
     }
 
-    /* will be used to insert empty nodes in between two existing nodes */
+    /**
+     * Supports movements within namespace only
+     * will be used to insert empty nodes in between two existing nodes
+     *
+     */
     fun refactor(wdRequest: WDRequest, workspaceID: String) = runBlocking {
+        // This should be moved to handler ; considering this as a pre-filter
+        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace?
+            ?: throw IllegalArgumentException("Invalid Workspace ID")
 
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
@@ -158,44 +186,58 @@ class NodeService ( // Todo: Inject them from handlers
 
         val lastNodeID = refactorNodePathRequest.nodeID
         val lastEditedBy = refactorNodePathRequest.lastEditedBy
-        val namespaceID = refactorNodePathRequest.namespaceID
 
-        require(existingNodePath != newNodePath) { "Old path and new path can't be same" }
+        val existingNodes = existingNodePath.allNodes
+        val newNodes = newNodePath.allNodes
 
-        val existingNodes = existingNodePath.split("#")
-        val newNodes = newNodePath.split("#")
-
-        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace? ?: throw IllegalArgumentException("Invalid Workspace ID")
-
-        when (existingNodes.last() != newNodes.last()) {
+        // Data model has ensures that list will never be empty
+        when (existingNodePath.allNodes.last() != newNodePath.allNodes.last()) {
             true -> { /* need to rename last node from existing path to last node from new path */
-               launch {  renameNode(lastNodeID, newNodes.last(), lastEditedBy) }
+                launch { renameNode(lastNodeID, newNodes.last(), lastEditedBy) }
             }
         }
 
+        // a -> b -> c
+        // a -> b -> x -> y -> t(c)
+        // a-> e(c)
+        // Handle this case
         val namesOfNodesToCreate = newNodes.minus(existingNodes.toSet()) as MutableList
 
         /* since the last node just needs renaming at max, we don't need to create it again */
         namesOfNodesToCreate.remove(newNodes.last())
-
-        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspaceID, namespaceID)
-
+        val nodesToCreate: List<Node> =
+            setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspaceID, refactorNodePathRequest.namespaceID)
         launch { nodeRepository.createMultipleNodes(nodesToCreate) }
-        launch { updateHierarchyInRefactor(existingNodePath, newNodePath, workspace, nodesToCreate, lastNodeID) }
+        launch {
+            updateHierarchyInRefactor(
+                existingNodePath.path,
+                newNodePath.path,
+                workspace,
+                nodesToCreate,
+                lastNodeID
+            )
+        }
     }
 
-    private fun updateHierarchyInRefactor(existingNodeNamePath: String, newNodePath: String, workspace: Workspace, nodesToCreate: List<Node>, lastNodeID: String){
+    private fun updateHierarchyInRefactor(
+        existingNodeNamePath: String,
+        newNodePath: String,
+        workspace: Workspace,
+        nodesToCreate: List<Node>,
+        lastNodeID: String
+    ) {
 
         val existingNodes = existingNodeNamePath.split("#")
         val newNodes = newNodePath.split("#")
 
-        val nodeHierarchyInformation = workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
+        val nodeHierarchyInformation =
+            workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
         val newNodeHierarchy = mutableListOf<String>()
 
-        for(nodePath in nodeHierarchyInformation){
+        for (nodePath in nodeHierarchyInformation) {
             val namePath = getNamePath(nodePath)
             /* if the current nodeNamePath has all the nodes from the passed path, we know we need to change this current path */
-            if(getCommonPrefixNodePath(existingNodeNamePath, namePath).split("#") == existingNodes){
+            if (getCommonPrefixNodePath(existingNodeNamePath, namePath).split("#") == existingNodes) {
                 LOG.info("PASSED PATH : $existingNodeNamePath, CURRENT NAME PATH : $namePath")
                 /* break new node path in 4 parts and combine later
                 1. Unchanged Prefix Path
@@ -209,9 +251,12 @@ class NodeService ( // Todo: Inject them from handlers
                 val idPath = getIDPath(nodePath).split("#")
                 LOG.info("ID PATH : $idPath")
 
-                val namesOfUnchangedPrefixNodes = existingNodes.dropLast(1) /* last node needs to be handled separately */
+                val namesOfUnchangedPrefixNodes =
+                    existingNodes.dropLast(1) /* last node needs to be handled separately */
                 val idsOfUnchangedPrefixNodes = idPath.subList(0, namesOfUnchangedPrefixNodes.size)
-                val prefixString = namesOfUnchangedPrefixNodes.zip(idsOfUnchangedPrefixNodes) { name, id -> "$name#$id" }.joinToString("#")
+                val prefixString =
+                    namesOfUnchangedPrefixNodes.zip(idsOfUnchangedPrefixNodes) { name, id -> "$name#$id" }
+                        .joinToString("#")
                 LOG.info("Prefix String : $prefixString")
                 paths.add(prefixString)
 
@@ -226,16 +271,18 @@ class NodeService ( // Todo: Inject them from handlers
                 paths.add(renameNodePath)
 
                 // suffix string
-                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodeNamePath).splitIgnoreEmpty("#") /* get all the nodes after last node from passed existing path */
+                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodeNamePath)
+                    .splitIgnoreEmpty("#") /* get all the nodes after last node from passed existing path */
                 val idsOfUnchangedSuffixNodes = idPath.takeLast(namesOfUnchangedSuffixNodes.size)
-                val suffixString = namesOfUnchangedSuffixNodes.zip(idsOfUnchangedSuffixNodes) { name, id -> "$name#$id" }.joinToString("#")
+                val suffixString =
+                    namesOfUnchangedSuffixNodes.zip(idsOfUnchangedSuffixNodes) { name, id -> "$name#$id" }
+                        .joinToString("#")
                 LOG.info("suffixString : $suffixString")
                 paths.add(suffixString)
 
                 newNodeHierarchy.add(paths.joinToString("#"))
                 LOG.info("New path : " + newNodeHierarchy.last())
-            }
-            else{
+            } else {
                 newNodeHierarchy.add(nodePath)
             }
         }
@@ -244,16 +291,21 @@ class NodeService ( // Todo: Inject them from handlers
 
     }
 
-    private fun renameNode(nodeID: String, newName: String, lastEditedBy: String){
+    private fun renameNode(nodeID: String, newName: String, lastEditedBy: String) {
         nodeRepository.renameNode(nodeID, newName, lastEditedBy)
     }
 
-    private fun setMetaDataForEmptyNodes(namesOfNodesToCreate: MutableList<String>, lastEditedBy: String, workspaceID: String, namespaceID: String?) : MutableList<Node> {
+    private fun setMetaDataForEmptyNodes(
+        namesOfNodesToCreate: MutableList<String>,
+        lastEditedBy: String,
+        workspaceID: String,
+        namespaceID: String?
+    ): MutableList<Node> {
         val listOfNodes = mutableListOf<Node>()
         for (newNodeName in namesOfNodesToCreate) {
             listOfNodes.add(
                 Node(
-                    id = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
+                    id = Helper.generateNanoID("${IdentifierType.NODE.name}"),
                     title = newNodeName,
                     workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                     namespaceIdentifier = namespaceID?.let { NamespaceIdentifier(it) },
@@ -270,7 +322,8 @@ class NodeService ( // Todo: Inject them from handlers
 
     fun bulkCreateNodes(request: WDRequest?, workspaceID: String) = runBlocking {
         val nodeRequest: NodeRequest? = request as NodeRequest?
-        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: throw IllegalArgumentException("Invalid Body")
+        val node: Node =
+            createNodeObjectFromNodeRequest(nodeRequest, workspaceID) ?: throw IllegalArgumentException("Invalid Body")
 
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
@@ -294,20 +347,31 @@ class NodeService ( // Todo: Inject them from handlers
         /* path from new nodes to be created (will either be a suffix or an independent string)*/
         var suffixNodePath = ""
         for ((index, nodeToCreate) in listOfNodes.withIndex()) {
-            when(index){
+            when (index) {
                 0 -> suffixNodePath = "${nodeToCreate.title}#${nodeToCreate.id}"
                 else -> suffixNodePath += "#${nodeToCreate.title}#${nodeToCreate.id}"
             }
         }
 
-        val updatedNodeHierarchy = getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestExistingPath, suffixNodePath)
+        val updatedNodeHierarchy =
+            getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestExistingPath, suffixNodePath)
 
         launch { nodeRepository.createMultipleNodes(listOfNodes) }
-        launch { workspaceService.updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.NODE) }
+        launch {
+            workspaceService.updateWorkspaceHierarchy(
+                workspace,
+                updatedNodeHierarchy,
+                HierarchyUpdateSource.NODE
+            )
+        }
 
     }
 
-    private fun getUpdatedNodeHierarchyInformation(nodeHierarchyInformation: MutableList<String>, longestExistingPath: String, suffixNodePath: String): List<String> {
+    private fun getUpdatedNodeHierarchyInformation(
+        nodeHierarchyInformation: MutableList<String>,
+        longestExistingPath: String,
+        suffixNodePath: String
+    ): List<String> {
 
         var nodePathToRemove: String? = null
 
@@ -402,7 +466,8 @@ class NodeService ( // Todo: Inject them from handlers
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
 
         val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
-        val jobToChangeNodeStatus = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ARCHIVED) }
+        val jobToChangeNodeStatus =
+            async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ARCHIVED) }
 
         val workspace = jobToGetWorkspace.await()
 
@@ -657,54 +722,58 @@ class NodeService ( // Todo: Inject them from handlers
         }
 
         val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName) }
-        val jobToUnarchiveNodes = async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
+        val jobToUnarchiveNodes =
+            async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
 
         return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
     }
 
     /* to ensure that nodes at same level don't have same name */
-    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String): Map<String, String> = runBlocking {
+    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String): Map<String, String> =
+        runBlocking {
 
-        val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
+            val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
 
-        val jobToGetArchivedNodeIDToNameMap = async { getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ARCHIVED) }
-        val jobToGetArchivedHierarchyRelationship = async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ARCHIVED) }
+            val jobToGetArchivedNodeIDToNameMap = async { getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ARCHIVED) }
+            val jobToGetArchivedHierarchyRelationship =
+                async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ARCHIVED) }
 
-        val nodeHierarchyInformation = jobToGetWorkspace.await().nodeHierarchyInformation ?: listOf()
-        val archivedNodeIDToNameMap = jobToGetArchivedNodeIDToNameMap.await()
-        val archivedHierarchyRelationships = jobToGetArchivedHierarchyRelationship.await()
+            val nodeHierarchyInformation = jobToGetWorkspace.await().nodeHierarchyInformation ?: listOf()
+            val archivedNodeIDToNameMap = jobToGetArchivedNodeIDToNameMap.await()
+            val archivedHierarchyRelationships = jobToGetArchivedHierarchyRelationship.await()
 
-        val mapOfNodeIDToNodeName = mutableMapOf<String, String>()
+            val mapOfNodeIDToNodeName = mutableMapOf<String, String>()
 
-        /* nodeIDList contains all the nodeIds to be un-archived */
-        for (nodeID in nodeIDList) {
-            val archivedNodeName = archivedNodeIDToNameMap[nodeID] ?: throw Exception("Invalid nodeID : $nodeID")
-            val archivedNodeParentID = findStartNodeOfEndNode(archivedHierarchyRelationships, nodeID)
+            /* nodeIDList contains all the nodeIds to be un-archived */
+            for (nodeID in nodeIDList) {
+                val archivedNodeName = archivedNodeIDToNameMap[nodeID] ?: throw Exception("Invalid nodeID : $nodeID")
+                val archivedNodeParentID = findStartNodeOfEndNode(archivedHierarchyRelationships, nodeID)
 
-            for (nodePath in nodeHierarchyInformation) {
-                if (nodePath.contains(archivedNodeName)) { /* if there's an existing node with same name as node to be un-archived */
+                for (nodePath in nodeHierarchyInformation) {
+                    if (nodePath.contains(archivedNodeName)) { /* if there's an existing node with same name as node to be un-archived */
 
-                    when (archivedNodeParentID == null) {
-                        true -> { /* node to be un-archived is a root node */
-                            if (nodePath.startsWith(archivedNodeName)) { /* if there's an existing node with same name at root level */
-                                mapOfNodeIDToNodeName[nodeID] = archivedNodeName
+                        when (archivedNodeParentID == null) {
+                            true -> { /* node to be un-archived is a root node */
+                                if (nodePath.startsWith(archivedNodeName)) { /* if there's an existing node with same name at root level */
+                                    mapOfNodeIDToNodeName[nodeID] = archivedNodeName
+                                }
                             }
-                        }
-                        false -> {
-                            val activeNodesInPath = nodePath.split("#")
-                            val indexOfParentNode = activeNodesInPath.indexOf(archivedNodeParentID)
-                            /* if for some parent node, there exists a node with name "A" and node to be unarchived has same parent node with same name "A"*/
-                            if (indexOfParentNode != -1 && indexOfParentNode + 1 < activeNodesInPath.size
-                                    && activeNodesInPath[indexOfParentNode + 1] == archivedNodeName) {
-                                mapOfNodeIDToNodeName[nodeID] = archivedNodeName
+                            false -> {
+                                val activeNodesInPath = nodePath.split("#")
+                                val indexOfParentNode = activeNodesInPath.indexOf(archivedNodeParentID)
+                                /* if for some parent node, there exists a node with name "A" and node to be unarchived has same parent node with same name "A"*/
+                                if (indexOfParentNode != -1 && indexOfParentNode + 1 < activeNodesInPath.size
+                                    && activeNodesInPath[indexOfParentNode + 1] == archivedNodeName
+                                ) {
+                                    mapOfNodeIDToNodeName[nodeID] = archivedNodeName
+                                }
                             }
                         }
                     }
                 }
             }
+            return@runBlocking mapOfNodeIDToNodeName
         }
-        return@runBlocking mapOfNodeIDToNodeName
-    }
 
     /* this is called internally via trigger. We don't need to do sanity check for name here */
     fun unarchiveNodes(nodeIDList: List<String>, workspaceID: String): MutableList<String> {
@@ -755,24 +824,26 @@ class NodeService ( // Todo: Inject them from handlers
             else -> throw IllegalArgumentException("Invalid action")
         }
     }
-    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking {
-        require(destinationNodeID != sourceNodeID) {
-            "Source NodeID can't be equal to Destination NodeID"
+
+    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) =
+        runBlocking {
+            require(destinationNodeID != sourceNodeID) {
+                "Source NodeID can't be equal to Destination NodeID"
+            }
+
+            val jobToGetSourceNodeWorkspaceID = async { getWorkspaceIDOfNode(sourceNodeID) }
+            val jobToGetDestinationNodeWorkspaceID = async { getWorkspaceIDOfNode(destinationNodeID) }
+
+            val sourceNodeWorkspaceID = jobToGetSourceNodeWorkspaceID.await()
+
+            require(sourceNodeWorkspaceID == jobToGetDestinationNodeWorkspaceID.await()) {
+                "NodeIDs should belong to same workspace"
+            }
+
+            require(sourceNodeWorkspaceID == workspaceID) {
+                "Passed NodeIDs should belong to the current workspace"
+            }
         }
-
-        val jobToGetSourceNodeWorkspaceID = async { getWorkspaceIDOfNode(sourceNodeID) }
-        val jobToGetDestinationNodeWorkspaceID = async { getWorkspaceIDOfNode(destinationNodeID) }
-
-        val sourceNodeWorkspaceID = jobToGetSourceNodeWorkspaceID.await()
-
-        require(sourceNodeWorkspaceID == jobToGetDestinationNodeWorkspaceID.await()) {
-            "NodeIDs should belong to same workspace"
-        }
-
-        require(sourceNodeWorkspaceID == workspaceID) {
-            "Passed NodeIDs should belong to the current workspace"
-        }
-    }
 
     private fun getWorkspaceIDOfNode(nodeID: String): String {
         return nodeRepository.getWorkspaceIDOfNode(nodeID)
@@ -800,7 +871,7 @@ class NodeService ( // Todo: Inject them from handlers
     }
 }
 
-fun main(){
+fun main() {
     val jsonForRefactor = """
          {
              "type" : "RefactorRequest",
