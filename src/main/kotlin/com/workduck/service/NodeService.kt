@@ -1,5 +1,6 @@
 package com.workduck.service
 
+import abc
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
@@ -34,6 +35,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
+import toNode
 
 /**
  * contains all node related logic
@@ -201,7 +203,12 @@ class NodeService( // Todo: Inject them from handlers
         /* since the last node just needs renaming at max, we don't need to create it again */
         namesOfNodesToCreate.remove(newNodes.last())
         val nodesToCreate: List<Node> =
-            setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspaceID, refactorNodePathRequest.namespaceID)
+            setMetaDataForEmptyNodes(
+                namesOfNodesToCreate,
+                lastEditedBy,
+                workspaceID,
+                refactorNodePathRequest.namespaceID
+            )
         launch { nodeRepository.createMultipleNodes(nodesToCreate) }
         launch {
             updateHierarchyInRefactor(
@@ -688,21 +695,9 @@ class NodeService( // Todo: Inject them from handlers
         return nodeChanged
     }
 
-    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?, workspaceID: String): Node? {
-        val node = nodeRequest?.let {
-            Node(
-                id = nodeRequest.id,
-                title = nodeRequest.title,
-                namespaceIdentifier = nodeRequest.namespaceIdentifier,
-                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-                lastEditedBy = nodeRequest.lastEditedBy,
-                tags = nodeRequest.tags,
-                data = nodeRequest.data
-            )
-        }
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest?, workspaceID: String): Node? =
+        nodeRequest.toNode(workspaceID)
 
-        return node
-    }
 
     fun getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID: String): MutableList<String>? {
         return nodeRepository.getAllArchivedNodesOfWorkspace(workspaceID)
