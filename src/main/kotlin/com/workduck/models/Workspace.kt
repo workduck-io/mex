@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.serverless.utils.Constants
 import com.workduck.converters.HierarchyUpdateSourceConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.utils.Helper
@@ -34,7 +35,7 @@ class Workspace(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long? = System.currentTimeMillis(),
+    var createdAt: Long? = Constants.getCurrentTime(),
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
@@ -54,5 +55,5 @@ class Workspace(
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt: Long = System.currentTimeMillis()
+    var updatedAt: Long = Constants.getCurrentTime()
 }

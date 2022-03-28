@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.document.Item
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.serverless.utils.Constants
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
@@ -30,7 +31,7 @@ class UserIdentifierRecord(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long? = System.currentTimeMillis(),
+    var createdAt: Long? = Constants.getCurrentTime(),
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
@@ -41,5 +42,5 @@ class UserIdentifierRecord(
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updateAt: Long = System.currentTimeMillis()
+    var updateAt: Long = Constants.getCurrentTime()
 }

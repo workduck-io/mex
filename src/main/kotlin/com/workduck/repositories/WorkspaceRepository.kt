@@ -53,7 +53,7 @@ class WorkspaceRepository(
         LOG.info("$workspaceID, $nodePath")
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":nodePath"] = mutableListOf(nodePath)
         expressionAttributeValues[":empty_list"] = mutableListOf<String>()
 

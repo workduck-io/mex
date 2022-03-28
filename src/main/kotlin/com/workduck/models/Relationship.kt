@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.serverless.utils.Constants
 import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NodeIdentifierConverter
@@ -70,13 +71,13 @@ data class Relationship(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = Constants.getCurrentTime()
 
 ) : Entity, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt = System.currentTimeMillis()
+    var updatedAt = Constants.getCurrentTime()
 
 //    init {
 //        Preconditions.checkArgument(startNode.id != endNode.id)

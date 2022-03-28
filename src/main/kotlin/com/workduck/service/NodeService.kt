@@ -501,7 +501,7 @@ class NodeService( // Todo: Inject them from handlers
             orderList += e.id
 
             e.lastEditedBy = e.createdBy
-            e.createdAt = System.currentTimeMillis()
+            e.createdAt = getCurrentTime()
             e.updatedAt = e.createdAt
             userID = e.createdBy as String
         }
@@ -591,7 +591,7 @@ class NodeService( // Todo: Inject them from handlers
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val element = elementsListRequestConverted.elements.let { it[0] }
 
-        element.updatedAt = System.currentTimeMillis()
+        element.updatedAt = getCurrentTime()
 
         // TODO(since we directly set the block info, createdAt and createdBy get lost since we're not getting anything from ddb)
         val blockData = objectMapper.writeValueAsString(element)
@@ -668,7 +668,7 @@ class NodeService( // Todo: Inject them from handlers
                             else {
                                 nodeChanged = true
                                 currElement.createdAt = storedElement.createdAt
-                                currElement.updatedAt = System.currentTimeMillis()
+                                currElement.updatedAt = getCurrentTime()
                                 currElement.createdBy = storedElement.createdBy
                                 currElement.lastEditedBy = node.lastEditedBy
                             }
