@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.serverless.utils.Constants
 import org.apache.logging.log4j.LogManager
 
 class UserBookmarkRepository(
@@ -23,7 +24,7 @@ class UserBookmarkRepository(
 
 
             return UpdateItemSpec()
-                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withPrimaryKey("PK", "$userID${Constants.DELIMITER}BOOKMARK", "SK", "$userID${Constants.DELIMITER}BOOKMARK")
                     .withUpdateExpression("set bookmarkedNodes = :map")
                     .withConditionExpression("attribute_not_exists(bookmarkedNodes)")
                     .withValueMap(expressionAttributeValues)
@@ -38,7 +39,7 @@ class UserBookmarkRepository(
             val updateExpression = "set bookmarkedNodes.${nodeID} = :nodeID"
 
             return UpdateItemSpec()
-                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withPrimaryKey("PK", "$userID${Constants.DELIMITER}BOOKMARK", "SK", "$userID${Constants.DELIMITER}BOOKMARK")
                     .withUpdateExpression(updateExpression)
                     .withValueMap(expressionAttributeValues)
                     .let{
@@ -51,7 +52,7 @@ class UserBookmarkRepository(
     fun deleteBookmark(userID: String, nodeID: String) {
 
         return UpdateItemSpec()
-                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withPrimaryKey("PK", "$userID${Constants.DELIMITER}BOOKMARK", "SK", "$userID${Constants.DELIMITER}BOOKMARK")
                     .withUpdateExpression("remove bookmarkedNodes.${nodeID}")
                     .let {
                         table.updateItem(it)
@@ -61,8 +62,8 @@ class UserBookmarkRepository(
     fun isNodeBookmarkedForUser(nodeID: String, userID: String) : Boolean? {
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":pk"] = "$userID#BOOKMARK"
-        expressionAttributeValues[":sk"] = "$userID#BOOKMARK"
+        expressionAttributeValues[":pk"] = "$userID${Constants.DELIMITER}BOOKMARK"
+        expressionAttributeValues[":sk"] = "$userID${Constants.DELIMITER}BOOKMARK"
 
 
         val querySpec: QuerySpec = QuerySpec()
@@ -83,8 +84,8 @@ class UserBookmarkRepository(
     fun getAllBookmarkedNodesByUser(userID: String) : MutableList<String>? {
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":pk"] = "$userID#BOOKMARK"
-        expressionAttributeValues[":sk"] = "$userID#BOOKMARK"
+        expressionAttributeValues[":pk"] = "$userID${Constants.DELIMITER}BOOKMARK"
+        expressionAttributeValues[":sk"] = "$userID${Constants.DELIMITER}BOOKMARK"
 
         val items: ItemCollection<QueryOutcome?>? = QuerySpec()
                 .withKeyConditionExpression("PK = :pk and SK = :sk")
@@ -126,7 +127,7 @@ class UserBookmarkRepository(
             expressionAttributeValues[":map"] = nodeIDMap
 
             UpdateItemSpec()
-                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withPrimaryKey("PK", "$userID${Constants.DELIMITER}BOOKMARK", "SK", "$userID${Constants.DELIMITER}BOOKMARK")
                     .withUpdateExpression("set bookmarkedNodes = :map")
                     .withConditionExpression("attribute_not_exists(bookmarkedNodes)")
                     .withValueMap(expressionAttributeValues)
@@ -148,7 +149,7 @@ class UserBookmarkRepository(
             updateExpression = updateExpression.dropLast(1)
 
             UpdateItemSpec()
-                    .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                    .withPrimaryKey("PK", "$userID${Constants.DELIMITER}BOOKMARK", "SK", "$userID${Constants.DELIMITER}BOOKMARK")
                     .withUpdateExpression(updateExpression)
                     .withValueMap(expressionAttributeValues)
                     .let {
@@ -168,7 +169,7 @@ class UserBookmarkRepository(
         /* remove the extra comma */
         updateExpression = updateExpression.dropLast(1)
         UpdateItemSpec()
-                .withPrimaryKey("PK", "$userID#BOOKMARK", "SK", "$userID#BOOKMARK")
+                .withPrimaryKey("PK", "$userID${Constants.DELIMITER}BOOKMARK", "SK", "$userID${Constants.DELIMITER}BOOKMARK")
                 .withUpdateExpression(updateExpression)
                 .let{
                     table.updateItem(it)

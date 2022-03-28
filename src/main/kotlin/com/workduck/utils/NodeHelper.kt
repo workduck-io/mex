@@ -1,5 +1,6 @@
 package com.workduck.utils
 
+import com.serverless.utils.Constants
 import com.workduck.utils.Helper.commonPrefixList
 import com.workduck.utils.Helper.splitIgnoreEmpty
 import org.apache.logging.log4j.LogManager
@@ -18,11 +19,11 @@ object NodeHelper {
 
                 LOG.info(longestCommonNamePath)
                 if(longestCommonNamePath != ""){
-                    val nodeNamesAndIDs = existingNodePath.split("#")
-                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty("#").size)
+                    val nodeNamesAndIDs = existingNodePath.split(Constants.DELIMITER)
+                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty(Constants.DELIMITER).size)
 
-                    if(commonNodeNamesAndIDs.size > longestExistingPath.split("#").size)
-                        longestExistingPath = commonNodeNamesAndIDs.joinToString("#")
+                    if(commonNodeNamesAndIDs.size > longestExistingPath.split(Constants.DELIMITER).size)
+                        longestExistingPath = commonNodeNamesAndIDs.joinToString(Constants.DELIMITER)
                     /*
                     Longest Name Path List = [A, B] => We need node name and id information of first two nodes from existing path
                     nodeNamesAndIDs = [A, Aid, B, Bid, C, Cid, D, Did ...]
@@ -39,26 +40,26 @@ object NodeHelper {
     }
 
     fun getCommonPrefixNodePath(path1: String, path2: String): String{
-        return path1.split("#").commonPrefixList(path2.split("#")).joinToString("#")
+        return path1.split(Constants.DELIMITER).commonPrefixList(path2.split(Constants.DELIMITER)).joinToString(Constants.DELIMITER)
     }
 
     /* nodePath is of the format : node1Name#node1ID#node2Name#node2ID.. */
     fun getNamePath(nodePath: String): String {
         val nodeNames = mutableListOf<String>()
-        nodePath.split("#").mapIndexed {
+        nodePath.split(Constants.DELIMITER).mapIndexed {
             index, string ->
             if (index % 2 == 0) nodeNames.add(string)
         }
-        return nodeNames.joinToString("#")
+        return nodeNames.joinToString(Constants.DELIMITER)
     }
 
     fun getIDPath(nodePath: String): String {
         val nodeNames = mutableListOf<String>()
-        nodePath.split("#").mapIndexed {
+        nodePath.split(Constants.DELIMITER).mapIndexed {
             index, string ->
             if (index % 2 != 0) nodeNames.add(string)
         }
-        return nodeNames.joinToString("#")
+        return nodeNames.joinToString(Constants.DELIMITER)
     }
 
 

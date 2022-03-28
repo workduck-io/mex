@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
+import com.serverless.utils.Constants
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
@@ -75,7 +76,7 @@ class WorkspaceService {
 
     fun updateWorkspaceHierarchy(workspace: Workspace, newNodeHierarchy: List<String>, hierarchyUpdateSource: HierarchyUpdateSource) {
         workspace.nodeHierarchyInformation = newNodeHierarchy
-        workspace.updatedAt = getCurrentTime()
+        workspace.updatedAt = Constants.getCurrentTime()
         workspace.hierarchyUpdateSource = hierarchyUpdateSource
         updateWorkspace(workspace)
     }
@@ -108,12 +109,12 @@ class WorkspaceService {
             when (nodePath.contains(nodeID)) {
                 false -> newNodeHierarchy.add(nodePath)
                 true -> {
-                    val nameList = getNamePath(nodePath).split("#")
-                    val idList = getIDPath(nodePath).split("#")
+                    val nameList = getNamePath(nodePath).split(Constants.DELIMITER)
+                    val idList = getIDPath(nodePath).split(Constants.DELIMITER)
                     val indexOfPassedNode = idList.indexOf(nodeID)
 
                     /* if index of passed nodeID is 2, that means we need to pick two nodes before that nodeID */
-                    val newPath = nameList.take(indexOfPassedNode).zip(idList.take(indexOfPassedNode)) { name, id -> "$name#$id" }.joinToString("#")
+                    val newPath = nameList.take(indexOfPassedNode).zip(idList.take(indexOfPassedNode)) { name, id -> "$name${Constants.DELIMITER}$id" }.joinToString(Constants.DELIMITER)
                     when (newPath.isNotEmpty()) {
                         true -> {
                             updatedPaths.add(newPath)
@@ -194,7 +195,7 @@ class WorkspaceService {
         var nodePath = _nodePath
 
         for (childNode in graph[node]!!) {
-            nodePath += "#$childNode"
+            nodePath += "${Constants.DELIMITER}$childNode"
             if (graph.containsKey(childNode)) {
                 if (!visitedSet.contains(childNode)) {
                     dfsForRelationships(graph, childNode, nodePath, visitedSet, nodeHierarchy)
@@ -205,7 +206,7 @@ class WorkspaceService {
             } else {
                 nodeHierarchy.add(nodePath)
             }
-            nodePath = nodePath.removeSuffix("#$childNode")
+            nodePath = nodePath.removeSuffix("${Constants.DELIMITER}$childNode")
         }
     }
 
@@ -228,7 +229,7 @@ class WorkspaceService {
 
         for (suffix in listOfSuffix) {
             nodeHierarchy.remove(suffix)
-            nodeHierarchy.add("$node#$suffix")
+            nodeHierarchy.add("$node${Constants.DELIMITER}$suffix")
         }
     }
 
@@ -242,10 +243,10 @@ class WorkspaceService {
             val endNodeID: String = relationship.endNode.id
             val endNodeName: String = mapOfNodeIDToName[endNodeID] ?: throw Exception("Invalid Node ID")
 
-            if (!graph.containsKey("$startNodeName#$startNodeID")) {
-                graph["$startNodeName#$startNodeID"] = mutableListOf("$endNodeName#$endNodeID")
+            if (!graph.containsKey("$startNodeName${Constants.DELIMITER}$startNodeID")) {
+                graph["$startNodeName${Constants.DELIMITER}$startNodeID"] = mutableListOf("$endNodeName${Constants.DELIMITER}$endNodeID")
             } else {
-                graph["$startNodeName#$startNodeID"]?.add("$endNodeName#$endNodeID")
+                graph["$startNodeName${Constants.DELIMITER}$startNodeID"]?.add("$endNodeName${Constants.DELIMITER}$endNodeID")
             }
         }
 
@@ -264,7 +265,7 @@ class WorkspaceService {
                 }
             }
             if (aloneNode) {
-                listOfAloneNodes.add("$nodeName#$nodeID")
+                listOfAloneNodes.add("$nodeName${Constants.DELIMITER}$nodeID")
             }
         }
         LOG.info("List of Alone Nodes: $listOfAloneNodes")

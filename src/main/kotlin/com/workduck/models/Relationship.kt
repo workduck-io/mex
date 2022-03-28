@@ -58,7 +58,7 @@ data class Relationship(
     var typeOfRelationship: RelationshipType = RelationshipType.HIERARCHY,
 
     @DynamoDBRangeKey(attributeName = "SK")
-    var sk: String = "${startNode.id}#${typeOfRelationship.name}",
+    var sk: String = "${startNode.id}${Constants.DELIMITER}${typeOfRelationship.name}",
 
     @JsonProperty("workspaceIdentifier")
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)

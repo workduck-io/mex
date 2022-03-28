@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.serverless.utils.Constants
 import com.workduck.models.Element
 import com.workduck.models.Workspace
 import com.workduck.models.Entity
@@ -53,7 +54,7 @@ class WorkspaceRepository(
         LOG.info("$workspaceID, $nodePath")
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
         expressionAttributeValues[":nodePath"] = mutableListOf(nodePath)
         expressionAttributeValues[":empty_list"] = mutableListOf<String>()
 

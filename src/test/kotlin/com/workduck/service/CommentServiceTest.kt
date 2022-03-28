@@ -2,6 +2,7 @@ package com.workduck.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.Constants
 import com.workduck.models.Comment
 import com.workduck.repositories.CommentRepository
 import com.workduck.repositories.Repository
@@ -23,16 +24,16 @@ internal class CommentServiceTest {
 
     @Test
     fun getComment() {
-        every { commentRepository.getComment(any(),any()) } returns Comment(pk = "NODE1#COMMENT", sk = "COMMENT1")
+        every { commentRepository.getComment(any(),any()) } returns Comment(pk = "NODE1${Constants.DELIMITER}COMMENT", sk = "COMMENT1")
         val result = commentService.getComment("NODE1", "COMMENT1")
 
-        verify { commentRepository.getComment("NODE1#COMMENT", "COMMENT1") }
-        assertThat("NODE1#COMMENT").isEqualTo(result?.pk)
+        verify { commentRepository.getComment("NODE1${Constants.DELIMITER}COMMENT", "COMMENT1") }
+        assertThat("NODE1${Constants.DELIMITER}COMMENT").isEqualTo(result?.pk)
     }
 
     @Test
     fun createComment() {
-        every{ repository.create(any()) } returns Comment(pk = "NODE1#COMMENT", sk = "COMMENT1")
+        every{ repository.create(any()) } returns Comment(pk = "NODE1${Constants.DELIMITER}COMMENT", sk = "COMMENT1")
 
         val json = """
             {
@@ -49,7 +50,7 @@ internal class CommentServiceTest {
 
         val request = Helper.objectMapper.readValue<WDRequest>(json)
         val result  = commentService.createComment(request)
-        assertThat("NODE1#COMMENT").isEqualTo(result?.pk)
+        assertThat("NODE1${Constants.DELIMITER}COMMENT").isEqualTo(result?.pk)
     }
 
     @Test
@@ -79,7 +80,7 @@ internal class CommentServiceTest {
     fun deleteComment() {
         every{ commentRepository.deleteComment(any(), any()) } returns Unit
         commentService.deleteComment("NODE1", "COMMENT1")
-        verify { commentRepository.deleteComment("NODE1#COMMENT", "COMMENT1") }
+        verify { commentRepository.deleteComment("NODE1${Constants.DELIMITER}COMMENT", "COMMENT1") }
     }
 
     @Nested
