@@ -132,7 +132,7 @@ data class Node(
             node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
-            node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
+            node.ak = node.workspaceIdentifier.let{"${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"}
         }
     }
 

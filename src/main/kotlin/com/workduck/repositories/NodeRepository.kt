@@ -21,6 +21,7 @@ import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.amazonaws.services.dynamodbv2.model.Update
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.utils.Constants
 import com.serverless.utils.Constants.getCurrentTime
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
@@ -94,7 +95,7 @@ class NodeRepository(
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
-        val akValue = "$workspaceID#$namespaceID"
+        val akValue = "$workspaceID${Constants.DELIMITER}$namespaceID"
         return try {
             DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
         } catch (e: Exception) {
@@ -207,7 +208,7 @@ class NodeRepository(
         println("Inside getAllVersionsOfNode function")
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue().withS("$nodeID#VERSION")
+        expressionAttributeValues[":pk"] = AttributeValue().withS("$nodeID${Constants.DELIMITER}VERSION")
         expressionAttributeValues[":status"] = AttributeValue().withS("ACTIVE")
         expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
 
@@ -275,7 +276,7 @@ class NodeRepository(
         expressionAttributeValues[":ttl"] = (now + ttl)
         expressionAttributeValues[":status"] = "INACTIVE"
 
-        val u = UpdateItemSpec().withPrimaryKey("PK", "$nodeID#VERSION", "SK", oldestUpdatedAt)
+        val u = UpdateItemSpec().withPrimaryKey("PK", "$nodeID${Constants.DELIMITER}VERSION", "SK", oldestUpdatedAt)
             .withUpdateExpression("SET timeToLive = :ttl, versionStatus = :status ")
             .withValueMap(expressionAttributeValues)
 

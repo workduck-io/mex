@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.serverless.utils.Constants
 import com.workduck.models.ItemStatus
 import com.workduck.models.Relationship
 import com.workduck.models.RelationshipType
@@ -104,7 +105,7 @@ class RelationshipRepository(
     fun getRelationship(startNode: String, endNode: String, workspaceID: String, relationshipType : RelationshipType) : Relationship?{
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":SK"] = AttributeValue("$startNode#${relationshipType.name}")
+        expressionAttributeValues[":SK"] = AttributeValue("$startNode${Constants.DELIMITER}${relationshipType.name}")
         expressionAttributeValues[":PK"] = AttributeValue("RLSP")
         expressionAttributeValues[":typeOfRelationship"] = AttributeValue("HIERARCHY")
         expressionAttributeValues[":endNode"] = AttributeValue(endNode)

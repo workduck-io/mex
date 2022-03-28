@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.serverless.models.requests.CommentRequest
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.Constants
 import com.workduck.models.Comment
 import com.workduck.models.UserIdentifier
 import com.workduck.repositories.CommentRepository
@@ -73,11 +74,11 @@ class CommentService (
 
     private fun isBlockID(id : String) = id.startsWith("TEMP") || id.startsWith("SYNC")
 
-    private fun generatePK(entityID: String) : String = "$entityID#COMMENT"
+    private fun generatePK(entityID: String) : String = "$entityID${Constants.DELIMITER}COMMENT"
 
     private fun createCommentObjectFromCommentRequest(commentRequest: CommentRequest) : Comment {
         return Comment(
-            pk = "${commentRequest.entityID}#COMMENT",
+            pk = "${commentRequest.entityID}${Constants.DELIMITER}COMMENT",
             sk = commentRequest.commentID,
             commentBody = commentRequest.commentBody,
             commentedBy = UserIdentifier(commentRequest.commentedBy)

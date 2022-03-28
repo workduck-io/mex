@@ -11,29 +11,33 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("NodeRequest")
-open class NodeRequest : WDRequest {
+@JsonTypeName("NodeBulkRequest")
+data class NodeBulkRequest(
 
     @JsonProperty("lastEditedBy")
-    open val lastEditedBy: String = ""
+    override val lastEditedBy: String = "",
 
     @JsonProperty("id")
-    open val id: String = ""
+    override val id: String = "",
+
+    @JsonProperty("nodePath")
+    val nodePath: NodePath,
 
     @JsonProperty("referenceID")
-    open val referenceID: String? = null
+    override val referenceID: String ? = null,
 
     @JsonProperty("title")
-    open val title: String = "New Node"
+    override val title: String,
 
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    open val namespaceIdentifier: NamespaceIdentifier? = null
+    override val namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("data")
-    open val data: List<AdvancedElement>? = null
+    override val data: List<AdvancedElement>? = null,
 
     @JsonProperty("tags")
-    open var tags: MutableList<String>? = null
-}
+    override var tags: MutableList<String>? = null,
+
+) : NodeRequest()
