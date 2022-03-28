@@ -75,7 +75,7 @@ class WorkspaceService {
 
     fun updateWorkspaceHierarchy(workspace: Workspace, newNodeHierarchy: List<String>, hierarchyUpdateSource: HierarchyUpdateSource) {
         workspace.nodeHierarchyInformation = newNodeHierarchy
-        workspace.updatedAt = System.currentTimeMillis()
+        workspace.updatedAt = getCurrentTime()
         workspace.hierarchyUpdateSource = hierarchyUpdateSource
         updateWorkspace(workspace)
     }

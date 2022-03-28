@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.serverless.utils.Constants
 import com.workduck.converters.ItemTypeConverter
 
 @DynamoDBTable(tableName = "local-mex")
@@ -31,7 +32,7 @@ data class UserPreferenceRecord(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = Constants.getCurrentTime()
 ) {
 
 }

@@ -21,6 +21,7 @@ import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.amazonaws.services.dynamodbv2.model.Update
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.utils.Constants.getCurrentTime
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
 import com.workduck.models.Entity
@@ -77,7 +78,7 @@ class NodeRepository(
         }
 
         expressionAttributeValues[":userID"] = userID
-        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
@@ -290,7 +291,7 @@ class NodeRepository(
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":active"] = itemStatus.name
-        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":workspaceIdentifier"] = workspaceID
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
@@ -317,7 +318,7 @@ class NodeRepository(
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":active"] = ItemStatus.ACTIVE.name
-        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
 
@@ -390,7 +391,7 @@ class NodeRepository(
 
     fun moveBlock(block: AdvancedElement?, sourceNodeID: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
 
-        val currentTime = System.currentTimeMillis()
+        val currentTime = getCurrentTime()
 
         val deleteBlock = getUpdateToDeleteBlockFromNode(block, sourceNodeID, dataOrderSourceNode, currentTime)
         val addBlock = getUpdateToAddBlockToNode(block, destinationNodeID, currentTime)
@@ -460,7 +461,7 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":title"] = newName
         expressionAttributeValues[":lastEditedBy"] = lastEditedBy
-        expressionAttributeValues[":updatedAt"] = System.currentTimeMillis()
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
 
         try {
             UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)

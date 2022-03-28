@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.serverless.utils.Constants
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
@@ -110,13 +111,13 @@ data class Node(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = Constants.getCurrentTime()
 
 ) : Entity, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt: Long = System.currentTimeMillis()
+    var updatedAt: Long = Constants.getCurrentTime()
 
     @JsonProperty("lastVersionCreatedAt")
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
