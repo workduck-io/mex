@@ -1,5 +1,6 @@
 package com.serverless.models
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -11,6 +12,7 @@ import java.util.*
 data class TokenBody(
     val sub: String,
     @JsonProperty("cognito:username")
+    @JsonAlias("username")
     val userName: String,
     val iss: String,
     @JsonProperty("custom:mex_workspace_ids")
