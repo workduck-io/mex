@@ -4,9 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.serverless.utils.Constants
-import com.workduck.utils.Helper.commonPrefixList
 import org.apache.logging.log4j.LogManager
-import java.security.SecureRandom
 import java.util.*
 
 object Helper {
@@ -35,25 +33,6 @@ object Helper {
 
     fun isSourceWarmup(source: String?): Boolean {
         return "serverless-plugin-warmup" == source
-    }
-
-    fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
-        return this.split(*delimiters).filter {
-            it.isNotEmpty()
-        }
-    }
-
-    fun List<String>.commonPrefixList(list: List<String>): List<String> {
-        val commonPrefixList = mutableListOf<String>()
-        for (index in 0 until minOf(this.size, list.size)) {
-            if (this[index] == list[index]) commonPrefixList.add(this[index])
-            else break
-        }
-        return commonPrefixList
-    }
-
-    fun List<String>.commonSuffixList(list: List<String>): List<String> {
-        return this.reversed().commonPrefixList(list.reversed()).reversed()
     }
 
     fun logFailureForBatchOperation(failedBatches: MutableList<DynamoDBMapper.FailedBatch>) {
