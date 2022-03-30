@@ -180,22 +180,16 @@ class NodeService( // Todo: Inject them from handlers
      * will be used to insert empty nodes in between two existing nodes
      *
      */
-    fun refactor(wdRequest: WDRequest, workspaceID: String) = runBlocking {
-        // This should be moved to handler ; considering this as a pre-filter
-        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace?
-            ?: throw IllegalArgumentException("Invalid Workspace ID")
+    fun refactor(wdRequest: WDRequest, workspace: Workspace) = runBlocking {
 
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
         /* existingNodePath is path from root till last node in the path and not necessarily path till a leaf node */
-        val existingNodePath = refactorNodePathRequest.existingNodePath
-        val newNodePath = refactorNodePathRequest.newNodePath
-
         val lastNodeID = refactorNodePathRequest.nodeID
         val lastEditedBy = refactorNodePathRequest.lastEditedBy
 
-        val existingNodes = existingNodePath.allNodes
-        val newNodes = newNodePath.allNodes
+        val existingNodes = refactorNodePathRequest.existingNodePath.allNodes
+        val newNodes = refactorNodePathRequest.newNodePath.allNodes
 
         // Data model has ensures that list will never be empty
         when (existingNodes.last() != newNodes.last()) {
@@ -206,13 +200,13 @@ class NodeService( // Todo: Inject them from handlers
 
         val namesOfNodesToCreate = getNodesToCreateInRefactor(existingNodes, newNodes)
 
-        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspaceID, refactorNodePathRequest.namespaceID)
+        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspace.id, refactorNodePathRequest.namespaceID)
 
         launch { nodeRepository.createMultipleNodes(nodesToCreate) }
 
         val unchangedNodes = existingNodes.commonPrefixList(newNodes) as MutableList
-        
-        launch { updateHierarchyInRefactor(unchangedNodes, newNodePath, workspace, nodesToCreate, lastNodeID) }
+
+        launch { updateHierarchyInRefactor(unchangedNodes, newNodes, workspace, nodesToCreate, lastNodeID) }
     }
 
     private fun getNodesToCreateInRefactor(existingNodes : List<String>, newNodes : List<String>) : MutableList<String>{
@@ -225,14 +219,11 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun updateHierarchyInRefactor(
             unchangedNodes: List<String>,
-            newNodePath: NodePath,
+            newNodes: List<String>,
             workspace: Workspace,
             nodesToCreate: List<Node>,
             lastNodeID: String
     ) {
-        // contains delimiter separated names
-        //val existingNodes = existingNodeNamePath.allNodes // a -> b -> c
-        val newNodes = newNodePath.allNodes // a->e (c)
 
         val nodeHierarchyInformation =
             workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
