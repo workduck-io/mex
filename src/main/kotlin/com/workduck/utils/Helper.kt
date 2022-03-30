@@ -4,9 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.serverless.utils.Constants
-import com.workduck.utils.Helper.commonPrefixList
 import org.apache.logging.log4j.LogManager
-import java.security.SecureRandom
 import java.util.*
 
 object Helper {

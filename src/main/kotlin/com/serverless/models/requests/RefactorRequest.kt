@@ -26,7 +26,7 @@ data class RefactorRequest(
 
     init {
         // assuming single workspace
-        require(existingNodePath != newNodePath) {
+        require(existingNodePath.path != newNodePath.path) {
             "Old path and new path can't be same"
         }
 

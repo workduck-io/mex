@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -15,7 +14,12 @@ import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
+import com.serverless.utils.commonPrefixList
+import com.serverless.utils.convertToPathString
+import com.serverless.utils.getListOfNodes
+import com.serverless.utils.getNodesAfterIndex
 import com.serverless.utils.removePrefix
+import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
@@ -32,7 +36,6 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
-import com.workduck.utils.Helper.splitIgnoreEmpty
 import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
@@ -201,43 +204,35 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
 
-        // a -> b -> c
-        // a -> b -> x -> y -> t(c)
-        // a-> e(c)
-        // Handle this case
-        val namesOfNodesToCreate = newNodes.minus(existingNodes.toSet()) as MutableList
+        val namesOfNodesToCreate = getNodesToCreateInRefactor(existingNodes, newNodes)
 
-        /* since the last node just needs renaming at max, we don't need to create it again */
-        namesOfNodesToCreate.remove(newNodes.last())
-        val nodesToCreate: List<Node> =
-            setMetaDataForEmptyNodes(
-                namesOfNodesToCreate,
-                lastEditedBy,
-                workspaceID,
-                refactorNodePathRequest.namespaceID
-            )
+        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspaceID, refactorNodePathRequest.namespaceID)
+
         launch { nodeRepository.createMultipleNodes(nodesToCreate) }
-        launch {
-            updateHierarchyInRefactor(
-                existingNodePath,
-                newNodePath,
-                workspace,
-                nodesToCreate,
-                lastNodeID
-            )
-        }
+
+        val unchangedNodes = existingNodes.commonPrefixList(newNodes) as MutableList
+        
+        launch { updateHierarchyInRefactor(unchangedNodes, newNodePath, workspace, nodesToCreate, lastNodeID) }
     }
 
+    private fun getNodesToCreateInRefactor(existingNodes : List<String>, newNodes : List<String>) : MutableList<String>{
+        val namesOfNodesToCreate = newNodes.minus(existingNodes.toSet()) as MutableList
+        /* since the last node just needs renaming at max, we don't need to create it again */
+        namesOfNodesToCreate.remove(newNodes.last())
+        return namesOfNodesToCreate
+    }
+
+
     private fun updateHierarchyInRefactor(
-            existingNodeNamePath: NodePath,
+            unchangedNodes: List<String>,
             newNodePath: NodePath,
             workspace: Workspace,
             nodesToCreate: List<Node>,
             lastNodeID: String
     ) {
         // contains delimiter separated names
-        val existingNodes = existingNodeNamePath.allNodes
-        val newNodes = newNodePath.allNodes
+        //val existingNodes = existingNodeNamePath.allNodes // a -> b -> c
+        val newNodes = newNodePath.allNodes // a->e (c)
 
         val nodeHierarchyInformation =
             workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
@@ -246,8 +241,11 @@ class NodeService( // Todo: Inject them from handlers
         for (nodePath in nodeHierarchyInformation) {
             val namePath = getNamePath(nodePath)
             /* if the current nodeNamePath has all the nodes from the passed path, we know we need to change this current path */
-            if (getCommonPrefixNodePath(existingNodeNamePath.path, namePath).split(Constants.DELIMITER) == existingNodes) {
-                LOG.info("PASSED PATH : ${existingNodeNamePath.path}, CURRENT NAME PATH : $namePath")
+            if (getCommonPrefixNodePath(unchangedNodes.convertToPathString(), namePath).split(Constants.DELIMITER) == unchangedNodes
+                    && nodePath.contains(lastNodeID)) {
+
+                LOG.info("UNCHANGED NODE PATH : ${unchangedNodes.convertToPathString()}, CURRENT NAME PATH : $namePath")
+
                 /* break new node path in 4 parts and combine later
                 1. Unchanged Prefix Path
                 2. Path due to new Nodes in between
@@ -260,12 +258,11 @@ class NodeService( // Todo: Inject them from handlers
                 val idPath = getIDPath(nodePath).split(Constants.DELIMITER)
                 LOG.info("ID PATH : $idPath")
 
-                val namesOfUnchangedPrefixNodes =
-                    existingNodes.dropLast(1) /* last node needs to be handled separately */
-                val idsOfUnchangedPrefixNodes = idPath.subList(0, namesOfUnchangedPrefixNodes.size)
+                val idsOfUnchangedPrefixNodes = idPath.subList(0, unchangedNodes.size)
                 val prefixString =
-                    namesOfUnchangedPrefixNodes.zip(idsOfUnchangedPrefixNodes) { name, id -> "$name${Constants.DELIMITER}$id" }
-                        .joinToString(Constants.DELIMITER)
+                        unchangedNodes.zip(idsOfUnchangedPrefixNodes) { name, id -> "$name${Constants.DELIMITER}$id" }
+                                .joinToString(Constants.DELIMITER)
+
                 LOG.info("Prefix String : $prefixString")
                 paths.add(prefixString)
 
@@ -280,9 +277,9 @@ class NodeService( // Todo: Inject them from handlers
                 paths.add(renameNodePath)
 
                 // suffix string
-                val namesOfUnchangedSuffixNodes = namePath.removePrefix(existingNodeNamePath.path)
-                    .splitIgnoreEmpty(Constants.DELIMITER) /* get all the nodes after last node from passed existing path */
-                val idsOfUnchangedSuffixNodes = idPath.takeLast(namesOfUnchangedSuffixNodes.size)
+                val idsOfUnchangedSuffixNodes = idPath.getNodesAfterIndex(idPath.indexOf(lastNodeID))
+                val namesOfUnchangedSuffixNodes = namePath.getListOfNodes().takeLast(idsOfUnchangedSuffixNodes.size) /* get all the nodes after last node from passed existing path */
+
                 val suffixString =
                     namesOfUnchangedSuffixNodes.zip(idsOfUnchangedSuffixNodes) { name, id -> "$name${Constants.DELIMITER}$id" }
                         .joinToString(Constants.DELIMITER)
@@ -880,6 +877,7 @@ fun main() {
          }
          """
 
-    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonForRefactor)
-    NodeService().refactor(nodeRequest, "WORKSPACE1")
+    //val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonForRefactor)
+   //NodeService().refactor(nodeRequest, "WORKSPACE1")
+
 }
