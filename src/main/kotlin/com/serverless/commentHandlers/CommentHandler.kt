@@ -16,14 +16,13 @@ class CommentHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
-        validateTokenAndWorkspace(wdInput)
-
 
         val strategy = CommentStrategyFactory.getCommentStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
 
 
         return try {
+            validateTokenAndWorkspace(wdInput)
             strategy.apply(wdInput, commentService)
         }
         catch(e : Exception){

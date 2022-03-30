@@ -6,6 +6,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.StandardResponse
 import com.serverless.models.Input
+import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.workduck.service.UserPreferenceService
 import com.workduck.utils.Helper
@@ -26,7 +27,6 @@ class UserPreferenceHandler : RequestHandler<Map<String, Any>, ApiGatewayRespons
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
-        validateTokenAndWorkspace(wdInput)
         val strategy = UserPreferenceStrategyFactory.getUserPreferenceStrategy(wdInput.routeKey)
 
         if (strategy == null) {
@@ -36,7 +36,13 @@ class UserPreferenceHandler : RequestHandler<Map<String, Any>, ApiGatewayRespons
                 objectBody = responseBody
             }
         }
-        return strategy.apply(wdInput, userPreferenceService)
+
+        return try {
+            validateTokenAndWorkspace(wdInput)
+            strategy.apply(wdInput, userPreferenceService)
+        } catch (e: Exception) {
+            ExceptionParser.exceptionHandler(e)
+        }
     }
 
     companion object {

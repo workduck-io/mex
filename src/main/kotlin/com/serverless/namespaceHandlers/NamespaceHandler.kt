@@ -6,6 +6,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.StandardResponse
 import com.serverless.models.Input
+import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.workduck.service.NamespaceService
 import com.workduck.utils.Helper
@@ -26,7 +27,6 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
-        validateTokenAndWorkspace(wdInput)
 
         val strategy = NamespaceStrategyFactory.getNamespaceStrategy(wdInput.routeKey)
 
@@ -37,7 +37,15 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
                 objectBody = responseBody
             }
         }
-        return strategy.apply(wdInput, namespaceService)
+
+        return try {
+            validateTokenAndWorkspace(wdInput)
+            strategy.apply(wdInput, namespaceService)
+        }
+        catch(e : Exception){
+            ExceptionParser.exceptionHandler(e)
+        }
+
     }
 
     companion object {

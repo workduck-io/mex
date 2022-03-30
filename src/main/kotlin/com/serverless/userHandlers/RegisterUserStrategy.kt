@@ -80,6 +80,8 @@ class RegisterUserStrategy : UserStrategy {
         newAttribute.name = "custom:mex_workspace_ids"
         newAttribute.value = getUpdatedWorkspaceIDString(workspaceString, workspaceID)
 
+        println(Gson().toJson(newAttribute))
+
         val adminUpdateUserAttributesRequest = AdminUpdateUserAttributesRequest()
                 .withUserPoolId(tokenBody.userPoolID)
                 .withUsername(tokenBody.userName)

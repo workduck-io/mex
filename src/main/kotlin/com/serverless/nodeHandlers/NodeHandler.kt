@@ -27,12 +27,11 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
 
-        validateTokenAndWorkspace(wdInput)
-
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
 
         return try {
+            validateTokenAndWorkspace(wdInput)
             strategy.apply(wdInput, nodeService)
         }
         catch(e : Exception){
