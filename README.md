@@ -55,11 +55,11 @@ Range Attribute : SK, Type : String
 - Go to `serverless.yml` and uncomment AWS credentials ( Make sure to uncomment this when pushing any changes )
 
 - Add a `.env` file and add your aws credentials to it ( since this file is present in .gitignore, it won't be pushed to repository )
-Also add PRIMARY_TABLE=local_mex
+
 ```
 AWS_ACCESS_KEY_ID=***************
 AWS_SECRET_ACCESS_KEY=***************
-PRIMARY_TABLE=local-mex
+
 ```
 
 - run `sls offline` in terminal . APIs should be available on port **4000**. 
