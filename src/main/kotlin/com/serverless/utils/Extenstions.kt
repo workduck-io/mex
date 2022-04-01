@@ -22,7 +22,6 @@ fun NodePath.removePrefix(prefix: String): String {
 }
 
 
-
 fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
     return this.split(*delimiters).filter {
         it.isNotEmpty()
@@ -42,17 +41,20 @@ fun List<String>.commonSuffixList(list: List<String>): List<String> {
     return this.reversed().commonPrefixList(list.reversed()).reversed()
 }
 
-fun List<String>.convertToPathString(delimiter: String = Constants.DELIMITER) : String {
+fun List<String>.convertToPathString(delimiter: String = Constants.DELIMITER): String {
     return this.joinToString(delimiter)
 }
 
-fun List<String>.getNodesAfterIndex(index: Int) : List<String> {
-    return if(index + 1 >= this.size) listOf()
-    else{
-        this.subList(index+1, this.size)
+fun List<String>.getNodesAfterIndex(index: Int): List<String> {
+    require(index >= 0 && index < this.size) {
+        "Index out of bound"
+    }
+    return if (index + 1 == this.size) listOf()
+    else {
+        this.subList(index + 1, this.size)
     }
 }
 
-fun String.getListOfNodes(delimiter: String = Constants.DELIMITER) : List<String> {
+fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String> {
     return this.split(delimiter)
 }
