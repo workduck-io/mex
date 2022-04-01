@@ -1,8 +1,8 @@
 package com.workduck.utils
 
 import com.serverless.utils.Constants
-import com.workduck.utils.Helper.commonPrefixList
-import com.workduck.utils.Helper.splitIgnoreEmpty
+import com.serverless.utils.commonPrefixList
+import com.serverless.utils.splitIgnoreEmpty
 import org.apache.logging.log4j.LogManager
 
 object NodeHelper {
