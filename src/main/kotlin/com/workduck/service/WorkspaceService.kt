@@ -105,7 +105,7 @@ class WorkspaceService {
             getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
 
         LOG.info("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
-        updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
+        //updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
     }
 
     private fun getUpdatedNodeHierarchyOnDeletingNode(
@@ -143,11 +143,20 @@ class WorkspaceService {
     ): List<String> {
         LOG.debug(updatedPaths)
         LOG.debug(nodeHierarchy)
-        nodeHierarchy.addAll(updatedPaths.map { newPath ->
-            nodeHierarchy.filterNot {
-                newPath.commonPrefixWith(it) == newPath
+
+        val pathsToAdd = mutableListOf<String>()
+        for (newPath in updatedPaths) {
+            var redundantPath = false
+            for (existingNodePath in nodeHierarchy) {
+                if (newPath.commonPrefixWith(existingNodePath) == newPath) {
+                    redundantPath = true
+                    break
+                }
             }
-        }.flatten())
+            if(!redundantPath) pathsToAdd.add(newPath)
+        }
+        nodeHierarchy += pathsToAdd
+
         return nodeHierarchy.distinct()
     }
 
