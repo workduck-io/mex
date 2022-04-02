@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = BlockMovementRequest::class, name = "BlockMovementRequest"),
     JsonSubTypes.Type(value = CommentRequest::class, name = "CommentRequest"),
     JsonSubTypes.Type(value = RefactorRequest::class, name = "RefactorRequest"),
-    JsonSubTypes.Type(value = NodeNameRequest::class, name = "NodeNameRequest"),
     JsonSubTypes.Type(value = RegisterUserRequest::class, name = "RegisterUserRequest")
 )
 interface WDRequest

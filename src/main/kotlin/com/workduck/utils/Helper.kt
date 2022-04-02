@@ -28,8 +28,8 @@ object Helper {
     }
 
     fun generateNanoID(prefix: String, separator: String = Constants.ID_SEPARATOR): String =
-        "`${prefix}${separator}`" +
-                "NanoIdUtils.randomNanoId(SecureRandom(), Constants.NANO_ID_RANGE, 21)"
+        "`${prefix}$separator`" +
+            "NanoIdUtils.randomNanoId(SecureRandom(), Constants.NANO_ID_RANGE, 21)"
 
     fun isSourceWarmup(source: String?): Boolean {
         return "serverless-plugin-warmup" == source
@@ -41,12 +41,11 @@ object Helper {
         }
     }
 
-    fun List<String>.commonPrefixList(list: List<String>): List<String> {
-    fun validateWorkspace(workspaceID: String, workspaceIDList: List<String>): Boolean{
+    fun validateWorkspace(workspaceID: String, workspaceIDList: List<String>): Boolean {
         return workspaceID in workspaceIDList
     }
 
-    fun List<String>.commonPrefixList(list: List<String>) : List<String>{
+    fun List<String>.commonPrefixList(list: List<String>): List<String> {
         val commonPrefixList = mutableListOf<String>()
         for (index in 0 until minOf(this.size, list.size)) {
             if (this[index] == list[index]) commonPrefixList.add(this[index])
@@ -62,7 +61,7 @@ object Helper {
     fun logFailureForBatchOperation(failedBatches: MutableList<DynamoDBMapper.FailedBatch>) {
 
         for (batch in failedBatches) {
-            LOG.info("Failed to create some items: " + batch.exception);
+            LOG.info("Failed to create some items: " + batch.exception)
             val items = batch.unprocessedItems
             for (entry in items) {
                 for (request in entry.value) {
@@ -71,7 +70,5 @@ object Helper {
                 }
             }
         }
-
     }
-
 }
