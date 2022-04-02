@@ -1,10 +1,10 @@
 package com.serverless.ddbStreamTriggers.workspaceUpdateTrigger
 
 import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.makeNodePairsAndCreateRelationships
+import com.serverless.utils.commonPrefixList
+import com.serverless.utils.commonSuffixList
 import com.workduck.models.RelationshipType
 import com.workduck.service.RelationshipService
-import com.workduck.utils.Helper.commonPrefixList
-import com.workduck.utils.Helper.commonSuffixList
 import com.workduck.utils.NodeHelper.getIDPath
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch

@@ -1,8 +1,8 @@
 package com.serverless.ddbStreamTriggers.workspaceUpdateTrigger
 
 import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTriggerHelper.makeNodePairsAndCreateRelationships
+import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.service.RelationshipService
-import com.workduck.utils.Helper.splitIgnoreEmpty
 import com.workduck.utils.NodeHelper.getLongestExistingPath
 import com.workduck.utils.NodeHelper.getNamePath
 

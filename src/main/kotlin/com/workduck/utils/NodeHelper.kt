@@ -1,7 +1,6 @@
 package com.workduck.utils
 
-import com.workduck.utils.Helper.commonPrefixList
-import com.workduck.utils.Helper.splitIgnoreEmpty
+
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.splitIgnoreEmpty
