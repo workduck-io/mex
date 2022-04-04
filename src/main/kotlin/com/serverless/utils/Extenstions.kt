@@ -55,6 +55,28 @@ fun List<String>.getNodesAfterIndex(index: Int): List<String> {
     }
 }
 
+fun List<String>.isNewPathCreated(removedPath: List<String>) : Boolean {
+    return this.size == 1 && removedPath.isEmpty()
+}
+
+fun List<String>.isRefactorWithNodeAddition(removedPath: List<String>) : Boolean {
+    return this.size > 1 && removedPath.size > 1 && this.size == removedPath.size
+}
+
+fun List<String>.isRefactorWithPathDivision(removedPath: List<String>) : Boolean {
+    return this.size > 1 && removedPath.isNotEmpty() && this.size == removedPath.size + 1
+}
+
+
+fun String.isLastNodeSame(path: String, delimiter: String = Constants.DELIMITER) : Boolean {
+    return this.split(delimiter).last() == path.split(delimiter).last()
+}
+
+
 fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String> {
     return this.split(delimiter)
+}
+
+fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER) : Boolean {
+    return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
 }

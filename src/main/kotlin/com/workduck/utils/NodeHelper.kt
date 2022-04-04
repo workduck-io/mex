@@ -4,6 +4,7 @@ package com.workduck.utils
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.splitIgnoreEmpty
+import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
 
 object NodeHelper {
@@ -20,11 +21,11 @@ object NodeHelper {
 
                 LOG.info(longestCommonNamePath)
                 if(longestCommonNamePath != ""){
-                    val nodeNamesAndIDs = existingNodePath.split("#")
-                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty("#").size)
+                    val nodeNamesAndIDs = existingNodePath.split(Constants.DELIMITER)
+                    val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty(Constants.DELIMITER).size)
 
-                    if(commonNodeNamesAndIDs.size > longestExistingPath.split("#").size)
-                        longestExistingPath = commonNodeNamesAndIDs.joinToString("#")
+                    if(commonNodeNamesAndIDs.size > longestExistingPath.split(Constants.DELIMITER).size)
+                        longestExistingPath = commonNodeNamesAndIDs.joinToString(Constants.DELIMITER)
                     /*
                     Longest Name Path List = [A, B] => We need node name and id information of first two nodes from existing path
                     nodeNamesAndIDs = [A, Aid, B, Bid, C, Cid, D, Did ...]
@@ -62,6 +63,32 @@ object NodeHelper {
         }
         return nodeNames.joinToString(Constants.DELIMITER)
     }
+
+    fun isExistingPathDividedInRefactor(unchangedNodes: List<String>, existingNodes: List<String>): Boolean{
+        return unchangedNodes + existingNodes.last() != existingNodes
+    }
+
+    fun removeRedundantPaths(
+            updatedPaths: List<String>,
+            nodeHierarchy: MutableList<String>
+    ): List<String> {
+
+        val pathsToAdd = mutableListOf<String>()
+        for (newPath in updatedPaths) {
+            var redundantPath = false
+            for (existingNodePath in nodeHierarchy) {
+                if (newPath.commonPrefixWith(existingNodePath) == newPath) {
+                    redundantPath = true
+                    break
+                }
+            }
+            if(!redundantPath) pathsToAdd.add(newPath)
+        }
+        nodeHierarchy += pathsToAdd
+
+        return nodeHierarchy.distinct()
+    }
+
 
 
 

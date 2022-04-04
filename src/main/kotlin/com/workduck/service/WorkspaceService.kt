@@ -23,6 +23,7 @@ import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
+import com.workduck.utils.NodeHelper.removeRedundantPaths
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -137,28 +138,6 @@ class WorkspaceService {
         return removeRedundantPaths(updatedPaths.distinct(), newNodeHierarchy)
     }
 
-    private fun removeRedundantPaths(
-        updatedPaths: List<String>,
-        nodeHierarchy: MutableList<String>
-    ): List<String> {
-        LOG.debug(updatedPaths)
-        LOG.debug(nodeHierarchy)
-
-        val pathsToAdd = mutableListOf<String>()
-        for (newPath in updatedPaths) {
-            var redundantPath = false
-            for (existingNodePath in nodeHierarchy) {
-                if (newPath.commonPrefixWith(existingNodePath) == newPath) {
-                    redundantPath = true
-                    break
-                }
-            }
-            if(!redundantPath) pathsToAdd.add(newPath)
-        }
-        nodeHierarchy += pathsToAdd
-
-        return nodeHierarchy.distinct()
-    }
 
     fun refreshNodeHierarchyForWorkspace(workspaceID: String) = runBlocking {
 
@@ -324,17 +303,3 @@ class WorkspaceService {
         private val LOG = LogManager.getLogger(WorkspaceService::class.java)
     }
 }
-
-fun main() {
-    val jsonUpdate: String = """
-            {
-                 "type": "WorkspaceRequest",
-                "id" : "WORKSPACE1",
-                "name" : "xxxxx"
-            }
-            """
-
-    WorkspaceService().updateWorkspace(Helper.objectMapper.readValue<WDRequest>(jsonUpdate))
-}
-
-

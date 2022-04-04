@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -15,6 +16,7 @@ import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
+import com.serverless.utils.containsExistingNodes
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNodesAfterIndex
@@ -46,6 +48,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import com.serverless.utils.toNode
+import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
+import com.workduck.utils.NodeHelper.removeRedundantPaths
 
 /**
  * contains all node related logic
@@ -202,11 +206,11 @@ class NodeService( // Todo: Inject them from handlers
 
         val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspace.id, refactorNodePathRequest.namespaceID)
 
-        launch { nodeRepository.createMultipleNodes(nodesToCreate) }
+       // launch { nodeRepository.createMultipleNodes(nodesToCreate) }
 
         val unchangedNodes = existingNodes.commonPrefixList(newNodes) as MutableList
 
-        launch { updateHierarchyInRefactor(unchangedNodes, newNodes, workspace, nodesToCreate, lastNodeID) }
+        launch { updateHierarchyInRefactor(unchangedNodes, newNodes, workspace, nodesToCreate, lastNodeID, existingNodes) }
     }
 
     private fun getNodesToCreateInRefactor(existingNodes : List<String>, newNodes : List<String>) : MutableList<String>{
@@ -222,15 +226,19 @@ class NodeService( // Todo: Inject them from handlers
             newNodes: List<String>,
             workspace: Workspace,
             nodesToCreate: List<Node>,
-            lastNodeID: String
+            lastNodeID: String,
+            existingNodes: List<String>,
     ) {
 
         val nodeHierarchyInformation =
             workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
-        val newNodeHierarchy = mutableListOf<String>()
+        var newNodeHierarchy = mutableListOf<String>()
+        var nodePathWithIDsOfExistingNodes = ""
 
         for (nodePath in nodeHierarchyInformation) {
             val namePath = getNamePath(nodePath)
+            if(namePath.containsExistingNodes(existingNodes)) nodePathWithIDsOfExistingNodes = nodePath
+
             /* if the current nodeNamePath has all the nodes from the passed path, we know we need to change this current path */
             if (getCommonPrefixNodePath(unchangedNodes.convertToPathString(), namePath).split(Constants.DELIMITER) == unchangedNodes
                     && nodePath.contains(lastNodeID)) {
@@ -284,8 +292,18 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
 
-        workspaceService.updateWorkspaceHierarchy(workspace, newNodeHierarchy, HierarchyUpdateSource.NODE)
+        if(isExistingPathDividedInRefactor(unchangedNodes, existingNodes)){
+            newNodeHierarchy = removeRedundantPaths(listOf(getFirstPath(nodePathWithIDsOfExistingNodes, lastNodeID)), newNodeHierarchy) as MutableList<String>
+        }
 
+        LOG.debug(newNodeHierarchy)
+        //workspaceService.updateWorkspaceHierarchy(workspace, newNodeHierarchy, HierarchyUpdateSource.NODE)
+
+    }
+
+    private fun getFirstPath(nodePathWithIDsOfExistingNodes: String, lastNodeID: String): String{
+        val indexOfLastNode = nodePathWithIDsOfExistingNodes.getListOfNodes().indexOf(lastNodeID)
+        return nodePathWithIDsOfExistingNodes.getListOfNodes().take(indexOfLastNode-1).convertToPathString()
     }
 
     private fun renameNode(nodeID: String, newName: String, lastEditedBy: String) {
@@ -854,21 +872,4 @@ class NodeService( // Todo: Inject them from handlers
             nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it)
         }
     }
-}
-
-fun main() {
-    val jsonForRefactor = """
-         {
-             "type" : "RefactorRequest",
-             "existingNodePath": "A#B#D",
-             "newNodePath": "A#B#F#X",
-             "lastEditedBy": "Varun",
-             "nodeID": "NODE_YKLY3zQQp4nNzrPqR9mVt"
-
-         }
-         """
-
-    //val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonForRefactor)
-   //NodeService().refactor(nodeRequest, "WORKSPACE1")
-
 }
