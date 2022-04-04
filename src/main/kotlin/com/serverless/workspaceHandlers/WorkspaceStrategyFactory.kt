@@ -20,12 +20,18 @@ class WorkspaceStrategyFactory {
 
         const val getWorkspaceDataObject = "GET /workspace/data/{ids}"
 
+        const val refreshNodeHierarchyObject = "PATCH /workspace/refreshHierarchy"
+
+        const val getNodeHierarchyObject = "GET /workspace/hierarchy"
+
         private val workspaceRegistry: Map<String, WorkspaceStrategy> = mapOf(
             getWorkspaceObject to GetWorkspaceStrategy(),
             createWorkspaceObject to CreateWorkspaceStrategy(),
             updateWorkspaceObject to UpdateWorkspaceStrategy(),
             deleteWorkspaceObject to DeleteWorkspaceStrategy(),
-            getWorkspaceDataObject to GetWorkspaceDataStrategy()
+            getWorkspaceDataObject to GetWorkspaceDataStrategy(),
+            refreshNodeHierarchyObject to RefreshHierarchyStrategy(),
+            getNodeHierarchyObject to GetHierarchyStrategy()
         )
 
         fun getWorkspaceStrategy(routeKey: String): WorkspaceStrategy? {

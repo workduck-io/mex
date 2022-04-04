@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.utils.Constants
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -18,7 +19,7 @@ data class TokenBody(
     @JsonProperty("custom:mex_workspace_ids")
     val workspaceIDs: String?,
 ) {
-    val workspaceIDList: List<String> = workspaceIDs?.split("#") ?: listOf()
+    val workspaceIDList: List<String> = workspaceIDs?.split(Constants.DELIMITER) ?: listOf()
     val userPoolID: String = iss.split("/").last()
 
     companion object {

@@ -12,15 +12,10 @@ class GetWorkspaceStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         val errorMessage = "Error getting workspace"
 
-        val workspaceID = input.pathParameters?.id
+        val workspace: Entity? = workspaceService.getWorkspace(input.headers.workspaceID)
 
-        return if (workspaceID != null) {
-            val workspace: Entity? = workspaceService.getWorkspace(workspaceID)
+        val workspaceResponse : Response? = WorkspaceHelper.convertWorkspaceToWorkspaceResponse(workspace)
+        return ApiResponseHelper.generateStandardResponse(workspaceResponse, errorMessage)
 
-            val workspaceResponse : Response? = WorkspaceHelper.convertWorkspaceToWorkspaceResponse(workspace)
-            ApiResponseHelper.generateStandardResponse(workspaceResponse, errorMessage)
-        } else {
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
-        }
     }
 }

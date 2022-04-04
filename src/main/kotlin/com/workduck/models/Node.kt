@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.serverless.utils.Constants
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
@@ -17,16 +18,21 @@ data class Node(
 
     @JsonProperty("id")
     @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateId(IdentifierType.NODE.name),
+    var id: String = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
 
     /* For convenient deletion */
     @JsonProperty("idCopy")
     @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String? = id,
 
-    @JsonProperty("nodePath")
-    @DynamoDBAttribute(attributeName = "nodePath")
-    var nodePath: String? = null,
+//    @JsonProperty("parentNodeID")
+//    @DynamoDBAttribute(attributeName = "parentNodeID")
+//    var parentNodeID: String = id,
+
+    @JsonProperty("title")
+    @DynamoDBAttribute(attributeName = "title")
+    var title: String = "New Node",
+
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
@@ -83,12 +89,14 @@ data class Node(
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
-    override var itemType: String = "Node",
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    override var itemType: ItemType = ItemType.Node,
 
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
-    var itemStatus: String = "ACTIVE",
+    @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
+    override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
 
     @JsonProperty("isBookmarked")
@@ -102,13 +110,13 @@ data class Node(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = System.currentTimeMillis()
+    var createdAt: Long = Constants.getCurrentTime()
 
-) : Entity {
+) : Entity, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt: Long = System.currentTimeMillis()
+    var updatedAt: Long = Constants.getCurrentTime()
 
     @JsonProperty("lastVersionCreatedAt")
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
@@ -123,7 +131,13 @@ data class Node(
             node.idCopy = node.id
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
-            node.ak = node.workspaceIdentifier?.let{"${node.workspaceIdentifier?.id}#${node.namespaceIdentifier?.id}"}
+            node.ak = node.workspaceIdentifier.let{"${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"}
+        }
+    }
+
+    init {
+        require(title.isNotBlank()){
+            "Node title needs to be provided by the user"
         }
     }
 

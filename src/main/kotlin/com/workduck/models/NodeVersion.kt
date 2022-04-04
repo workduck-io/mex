@@ -1,9 +1,11 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.amazonaws.services.dynamodbv2.document.Item
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.serverless.utils.Constants
 import com.workduck.converters.*
 
 @DynamoDBTable(tableName = "local-mex")
@@ -67,11 +69,12 @@ data class NodeVersion(
 
         @JsonProperty("itemType")
         @DynamoDBAttribute(attributeName = "itemType")
-        override var itemType: String = "Node Version",
+        @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+        override var itemType: ItemType = ItemType.NodeVersion,
 
         @JsonProperty("createdAt")
         @DynamoDBAttribute(attributeName = "createdAt")
-        var createdAt: Long? = System.currentTimeMillis(),
+        var createdAt: Long? = Constants.getCurrentTime(),
 
 
         @JsonProperty("versionStatus")

@@ -11,4 +11,5 @@ interface Repository<T : Entity> {
     fun get(identifier: Identifier): Entity?
 
     fun delete(identifier: Identifier): Identifier?
+
 }

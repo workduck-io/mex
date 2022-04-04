@@ -7,38 +7,33 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
-import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.WorkspaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
-data class NodeRequest(
+open class NodeRequest : WDRequest {
 
     @JsonProperty("lastEditedBy")
-    val lastEditedBy: String = "",
+    open val lastEditedBy: String = ""
 
     @JsonProperty("id")
-    val id: String = "",
+    open val id: String = ""
 
-    @JsonProperty("nodePath")
-    val nodePath: String ?= null,
+    @JsonProperty("referenceID")
+    open val referenceID: String? = null
+
+    @JsonProperty("title")
+    open val title: String = "New Node"
 
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    val namespaceIdentifier: NamespaceIdentifier? = null,
-
-//    @JsonProperty("workspaceIdentifier")
-//    @JsonSerialize(converter = IdentifierSerializer::class)
-//    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-//    val workspaceIdentifier: WorkspaceIdentifier? = null,
+    open val namespaceIdentifier: NamespaceIdentifier? = null
 
     @JsonProperty("data")
-    val data: List<AdvancedElement>? = null,
+    open val data: List<AdvancedElement>? = null
 
     @JsonProperty("tags")
-    var tags: MutableList<String>? = null,
-
-) : WDRequest
+    open var tags: MutableList<String>? = null
+}

@@ -91,31 +91,3 @@ class UserService {
 	}
 
 }
-
-
-fun main() {
-
-	val json : String = """
-		{
-			"id" : "USER49",
-			"name" : "Varun",
-			"email" : "varun.iitp@gmail.com"		
-		}
-		"""
-
-	val jsonUpdated : String = """
-		{
-			"id" : "USER49",
-			"name" : "Varun Garg",
-			"email" : "varun.garg@workduck.io"
-		}
-		"""
-
-	UserService().registerUser("WD")
-	//UserService().createUser(json)
-	//println(UserService().getUser("USER49"))
-	//UserService().updateUser(jsonUpdated)
-	//UserService().deleteUser("USER49")
-	//println(UserService().getAllUsersWithNamespaceID("NAMESPACE1"))
-	//UserService().getAllUsersByWorkspaceID()
-}

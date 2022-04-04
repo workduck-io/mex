@@ -24,12 +24,7 @@ class NamespaceRepository(
     }
 
     override fun get(identifier: Identifier): Entity? {
-        return try {
-            return mapper.load(Namespace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+        return mapper.load(Namespace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
     }
 
     override fun create(t: Namespace): Namespace {
@@ -42,13 +37,10 @@ class NamespaceRepository(
         val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
             .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
 
-        return try {
-            table.deleteItem(deleteItemSpec)
-            identifier
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+
+        table.deleteItem(deleteItemSpec)
+        return identifier
+
     }
 
     override fun update(t: Namespace): Namespace {
@@ -57,22 +49,16 @@ class NamespaceRepository(
 
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {
         val namespaceMap: MutableMap<String, Namespace?> = mutableMapOf()
-        return try {
-            for (namespaceID in namespaceIDList) {
-                val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID, dynamoDBMapperConfig)
-                namespaceMap[namespaceID] = namespace
-            }
-            namespaceMap
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
+
+        for (namespaceID in namespaceIDList) {
+            val namespace: Namespace? = mapper.load(Namespace::class.java, namespaceID, namespaceID, dynamoDBMapperConfig)
+            namespaceMap[namespaceID] = namespace
         }
+        return namespaceMap
+
         TODO("we also need to have some sort of filter which filters out all the non-namespace ids")
         TODO("this code can be reused for similar workspace functionality")
     }
 
 
-    companion object {
-        private val LOG = LogManager.getLogger(NamespaceRepository::class.java)
-    }
 }

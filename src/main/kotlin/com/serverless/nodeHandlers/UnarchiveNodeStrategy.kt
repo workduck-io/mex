@@ -12,7 +12,7 @@ class UnarchiveNodeStrategy : NodeStrategy {
         val nodeIDRequest = input.payload
 
         return if(nodeIDRequest != null) {
-            val nodeIDList = nodeService.unarchiveNodes(nodeIDRequest)
+            val nodeIDList = nodeService.unarchiveNodes(nodeIDRequest, input.headers.workspaceID)
             return ApiResponseHelper.generateStandardResponse(nodeIDList, errorMessage)
         }
         else{
