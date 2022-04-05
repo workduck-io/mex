@@ -21,12 +21,33 @@ class UserRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-        return mapper.load(User::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
-    }
     override fun get(identifier: Identifier, clazz: Class<User>): User? {
         TODO("Not yet implemented")
     }
+
+    override fun create(t: User): User {
+        TODO("Not yet implemented")
+    }
+
+    override fun update(t: User): User {
+        TODO("Not yet implemented")
+    }
+
+    override fun delete(identifier: Identifier): Identifier? {
+        val table = dynamoDB.getTable(tableName)
+
+        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
+                .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
+
+        return try {
+            table.deleteItem(deleteItemSpec)
+            identifier
+        } catch (e: Exception) {
+            LOG.info(e)
+            null
+        }
+    }
+
 
     fun getAllUsersWithNamespaceID(namespaceID: String): MutableList<String>? {
 
@@ -48,28 +69,6 @@ class UserRepository(
         }
     }
 
-    override fun create(t: User): User {
-        TODO("Not yet implemented")
-    }
-
-    override fun update(t: User): User {
-        TODO("Not yet implemented")
-    }
-
-    override fun delete(identifier: Identifier): Identifier? {
-        val table = dynamoDB.getTable(tableName)
-
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-            .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
-
-        return try {
-            table.deleteItem(deleteItemSpec)
-            identifier
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
-    }
 
     companion object {
         private val LOG = LogManager.getLogger(UserRepository::class.java)

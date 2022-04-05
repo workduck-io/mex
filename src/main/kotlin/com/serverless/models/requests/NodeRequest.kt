@@ -15,7 +15,7 @@ import com.workduck.models.NamespaceIdentifier
 open class NodeRequest : WDRequest, PageRequest {
 
     @JsonProperty("lastEditedBy")
-    open val lastEditedBy: String = ""
+    override val lastEditedBy: String = ""
 
     @JsonProperty("id")
     open val id: String = ""
@@ -25,16 +25,14 @@ open class NodeRequest : WDRequest, PageRequest {
 
     @JsonProperty("title")
     open val title: String = "New Node"
-    @JsonProperty("nodePath")
-    val nodePath: String ? = null,
 
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    open val namespaceIdentifier: NamespaceIdentifier? = null
+    override val namespaceIdentifier: NamespaceIdentifier? = null
 
     @JsonProperty("data")
-    open val data: List<AdvancedElement>? = null
+    override val data: List<AdvancedElement>? = null
 
     @JsonProperty("tags")
     open var tags: MutableList<String>? = null

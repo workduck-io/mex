@@ -15,7 +15,9 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.serverless.utils.Constants
 import com.workduck.models.Identifier
+import com.workduck.models.ItemStatus
 import com.workduck.models.Page
 import org.apache.logging.log4j.LogManager
 
@@ -81,19 +83,21 @@ class PageRepository <T : Page> (
 
 
 
-    fun unarchiveOrArchivePages(pageIDList: List<String>, status: String): MutableList<String> {
+    fun unarchiveOrArchivePages(pageIDList: List<String>, workspaceID: String, itemStatus: ItemStatus): MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":active"] = status
+        expressionAttributeValues[":active"] = itemStatus.name
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":workspaceIdentifier"] = workspaceID
 
         val pagesProcessedList: MutableList<String> = mutableListOf()
         for (pageID in pageIDList) {
             try {
                 UpdateItemSpec().withPrimaryKey("PK", pageID, "SK", pageID)
-                        .withUpdateExpression("SET itemStatus = :active")
+                        .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
                         .withValueMap(expressionAttributeValues)
-                        .withConditionExpression("attribute_exists(PK)")
+                        .withConditionExpression("attribute_exists(PK) and workspaceIdentifier = :workspaceIdentifier")
                         .also {
                             table.updateItem(it)
                             pagesProcessedList += pageID

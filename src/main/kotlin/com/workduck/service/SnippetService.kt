@@ -4,12 +4,12 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.ClonePublicPageRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.Entity
+import com.workduck.models.ItemStatus
 import com.workduck.models.Page
 import com.workduck.models.Snippet
 import com.workduck.models.SnippetIdentifier
@@ -118,15 +118,15 @@ class SnippetService {
         )
     }
 
-    fun archiveSnippets(wdRequest: WDRequest): MutableList<String> {
+    fun archiveSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
         val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
         LOG.info(snippetIDList)
-        return pageRepository.unarchiveOrArchivePages(snippetIDList, "ARCHIVED")
+        return pageRepository.unarchiveOrArchivePages(snippetIDList, workspaceID, ItemStatus.ARCHIVED)
     }
 
-    fun unarchiveSnippets(wdRequest: WDRequest): MutableList<String> {
+    fun unarchiveSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
         val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
-        return pageRepository.unarchiveOrArchivePages(snippetIDList, "ACTIVE")
+        return pageRepository.unarchiveOrArchivePages(snippetIDList, workspaceID, ItemStatus.ACTIVE)
     }
 
     fun deleteArchivedSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {

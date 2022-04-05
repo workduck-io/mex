@@ -25,9 +25,19 @@ class WorkspaceRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-       return mapper.load(Workspace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+
+    override fun get(identifier: Identifier, clazz: Class<Workspace>): Workspace? {
+        TODO("Not yet implemented")
     }
+
+    override fun create(t: Workspace): Workspace {
+        TODO("Not yet implemented")
+    }
+
+    override fun update(t: Workspace): Workspace {
+        TODO("Not yet implemented")
+    }
+
 
     override fun delete(identifier: Identifier): Identifier {
         val table = dynamoDB.getTable(tableName)
@@ -39,14 +49,6 @@ class WorkspaceRepository(
         table.deleteItem(deleteItemSpec)
         return identifier
 
-    }
-
-    override fun create(t: Workspace): Workspace {
-        TODO("Not yet implemented")
-    }
-
-    override fun update(t: Workspace): Workspace {
-        TODO("Not yet implemented")
     }
 
     fun addNodePathToHierarchy(workspaceID: String, nodePath: String){

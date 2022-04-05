@@ -9,7 +9,7 @@ class UnarchiveSnippetStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
         val errorMessage = "Error un-archiving snippets"
         return input.payload?.let { snippetIDRequest ->
-            ApiResponseHelper.generateStandardResponse(snippetService.unarchiveSnippets(snippetIDRequest), errorMessage)
+            ApiResponseHelper.generateStandardResponse(snippetService.unarchiveSnippets(snippetIDRequest, input.headers.workspaceID), errorMessage)
         } ?: throw IllegalArgumentException("Invalid Body")
     }
 

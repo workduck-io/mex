@@ -32,7 +32,7 @@ data class Snippet(
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
-    override var itemType: String = "Snippet",
+    override var itemType: ItemType = ItemType.Snippet,
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
@@ -85,5 +85,4 @@ data class Snippet(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     override var updatedAt: Long = System.currentTimeMillis()
-
 }

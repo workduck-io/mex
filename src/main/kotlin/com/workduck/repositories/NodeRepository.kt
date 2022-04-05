@@ -11,7 +11,6 @@ import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
@@ -25,8 +24,6 @@ import com.serverless.utils.Constants
 import com.serverless.utils.Constants.getCurrentTime
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
-import com.workduck.models.Entity
-import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.Node
 import com.workduck.models.NodeVersion
@@ -43,23 +40,6 @@ class NodeRepository(
     private val client: AmazonDynamoDB,
     private var tableName: String
 )  {
-
-    override fun get(identifier: Identifier): Entity? =
-        mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
-
-    private fun orderBlocks(node: Node): Entity =
-        node.apply {
-            node.data?.let { data ->
-                (
-                    node.dataOrder?.mapNotNull { blockId ->
-                        data.find { element -> blockId == element.id }
-                    } ?: emptyList()
-                    )
-                    .also {
-                        node.data = it.toMutableList()
-                    }
-            }
-        }
 
     fun append(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
@@ -271,33 +251,6 @@ class NodeRepository(
         }
     }
 
-    fun unarchiveOrArchiveNodes(nodeIDList: List<String>, workspaceID: String, itemStatus: ItemStatus): MutableList<String> {
-        val table: Table = dynamoDB.getTable(tableName)
-
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":active"] = itemStatus.name
-        expressionAttributeValues[":updatedAt"] = getCurrentTime()
-        expressionAttributeValues[":workspaceIdentifier"] = workspaceID
-
-        val nodesProcessedList: MutableList<String> = mutableListOf()
-        for (nodeID in nodeIDList) {
-            try {
-                UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
-                    .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
-                    .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK) and workspaceIdentifier = :workspaceIdentifier")
-                    .also {
-                        table.updateItem(it)
-                        nodesProcessedList += nodeID
-                    }
-            } catch (e: ConditionalCheckFailedException) {
-                LOG.warn("Invalid nodeID : $nodeID for workspace : $workspaceID")
-            }
-        }
-
-        return nodesProcessedList
-    }
-
     fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>) : MutableList<String>{
         val table: Table = dynamoDB.getTable(tableName)
 
@@ -461,14 +414,6 @@ class NodeRepository(
         }
     }
 
-//    fun updateLinkedRelationship(oldRelationship: Relationship, newRelationship: Relationship) {
-//
-//        val transactionWriteRequest = TransactionWriteRequest()
-//        transactionWriteRequest.addDelete(oldRelationship)
-//        transactionWriteRequest.addPut(newRelationship)
-//
-//        mapper.transactionWrite(transactionWriteRequest)
-//    }
     fun getWorkspaceIDOfNode(nodeID: String) : String{
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(nodeID)

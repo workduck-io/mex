@@ -20,8 +20,7 @@ data class NodeBulkRequest(
     @JsonProperty("id")
     override val id: String = "",
 
-    @JsonProperty("nodePath")
-    val nodePath: NodePath,
+    @JsonProperty("nodePath") val nodePath: NodePath,
 
     @JsonProperty("referenceID")
     override val referenceID: String ? = null,
