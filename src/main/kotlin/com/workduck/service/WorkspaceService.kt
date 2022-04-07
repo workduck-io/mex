@@ -106,7 +106,7 @@ class WorkspaceService {
             getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
 
         LOG.info("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
-        //updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
+        updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
     }
 
     private fun getUpdatedNodeHierarchyOnDeletingNode(

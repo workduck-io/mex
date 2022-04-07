@@ -297,7 +297,7 @@ class NodeService( // Todo: Inject them from handlers
         }
 
         LOG.debug(newNodeHierarchy)
-        //workspaceService.updateWorkspaceHierarchy(workspace, newNodeHierarchy, HierarchyUpdateSource.NODE)
+        workspaceService.updateWorkspaceHierarchy(workspace, newNodeHierarchy, HierarchyUpdateSource.NODE)
 
     }
 
@@ -546,7 +546,6 @@ class NodeService( // Todo: Inject them from handlers
         mergeNodeVersions(node, storedNode)
 
         LOG.info("Updating node : $node")
-        // return nodeRepository.update(node)
 
         if (versionEnabled) {
             /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
