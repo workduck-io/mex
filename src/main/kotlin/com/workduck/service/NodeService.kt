@@ -206,7 +206,7 @@ class NodeService( // Todo: Inject them from handlers
 
         val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspace.id, refactorNodePathRequest.namespaceID)
 
-       // launch { nodeRepository.createMultipleNodes(nodesToCreate) }
+        launch { nodeRepository.createMultipleNodes(nodesToCreate) }
 
         val unchangedNodes = existingNodes.commonPrefixList(newNodes) as MutableList
 
