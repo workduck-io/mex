@@ -31,8 +31,7 @@ data class Node(
 
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")
-    var title: String = "New Node",
-
+    override var title: String = "New Node",
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
@@ -63,8 +62,7 @@ data class Node(
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "namespaceIdentifier")
-    override var namespaceIdentifier: NamespaceIdentifier? = null,
+    @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
@@ -75,7 +73,7 @@ data class Node(
 
     /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")
-    override var ak: String? = null,
+    var ak: String = "${workspaceIdentifier.id}${Constants.DELIMITER}${namespaceIdentifier?.id}",
 
     @JsonProperty("nodeSchemaIdentifier")
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
@@ -132,7 +130,7 @@ data class Node(
     }
 
     init {
-        require(title.isNotBlank()){
+        require(title.isNotBlank()) {
             "Node title needs to be provided by the user"
         }
     }

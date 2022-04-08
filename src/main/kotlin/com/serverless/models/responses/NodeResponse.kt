@@ -23,7 +23,7 @@ data class NodeResponse(
 
     override var version: Long? = null,
 
-    override var namespaceID: String? = null,
+    var namespaceID: String? = null,
 
     override var workspaceID: String,
 

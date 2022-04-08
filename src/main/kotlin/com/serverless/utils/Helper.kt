@@ -8,9 +8,7 @@ import com.workduck.utils.Helper
 object Helper {
 
     fun validateTokenAndWorkspace(input: Input){
-        val tokenBody: TokenBody = TokenBody.fromToken(input.headers.bearerToken) ?: throw UnauthorizedException("Unauthorized")
-
-        if(!Helper.validateWorkspace(input.headers.workspaceID, tokenBody.workspaceIDList)){
+        if(!Helper.validateWorkspace(input.headers.workspaceID, input.tokenBody.workspaceIDList)){
             throw UnauthorizedException("Not Authorized for the requested workspace")
         }
 

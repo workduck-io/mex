@@ -5,9 +5,9 @@ import com.workduck.models.NamespaceIdentifier
 
 interface PageRequest {
 
-    val lastEditedBy: String
+    //val namespaceIdentifier: NamespaceIdentifier?
 
-    val namespaceIdentifier: NamespaceIdentifier?
+    val title: String
 
     val data: List<AdvancedElement>?
 

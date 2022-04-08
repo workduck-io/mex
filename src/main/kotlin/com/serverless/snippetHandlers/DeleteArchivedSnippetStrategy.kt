@@ -10,7 +10,7 @@ class DeleteArchivedSnippetStrategy : SnippetStrategy {
         val errorMessage = "Error deleting snippets"
         return input.payload?.let { snippetIDRequest ->
             ApiResponseHelper.generateStandardResponse(snippetService.deleteArchivedSnippets(snippetIDRequest, input.headers.workspaceID), errorMessage)
-        } ?: throw IllegalArgumentException("Invalid Body")
+        } ?: throw IllegalArgumentException("Malformed Request")
     }
 
 }

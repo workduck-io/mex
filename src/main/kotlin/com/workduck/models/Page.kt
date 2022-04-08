@@ -1,19 +1,18 @@
 package com.workduck.models
 
 interface Page : Entity {
-    var ak: String?
 
     var data: List<AdvancedElement>?
 
     var dataOrder: MutableList<String>?
+
+    val title: String
 
     var createdBy: String?
 
     val lastEditedBy: String?
 
     val workspaceIdentifier: WorkspaceIdentifier
-
-    val namespaceIdentifier: NamespaceIdentifier?
 
     val publicAccess: Boolean
 
@@ -24,10 +23,9 @@ interface Page : Entity {
     var version: Long?
 
     companion object {
-        fun populatePageWithCreatedFieldsAndAK(page: Page, storedPage: Page) {
+        fun populatePageWithCreatedFields(page: Page, storedPage: Page) {
             page.createdAt = storedPage.createdAt
             page.createdBy = storedPage.createdBy
-            page.ak = "${page.workspaceIdentifier.id}#${page.namespaceIdentifier?.id}"
         }
     }
 }

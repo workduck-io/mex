@@ -9,8 +9,6 @@ interface PageResponse {
 
     val createdBy: String?
 
-    val namespaceID: String?
-
     val workspaceID: String
 
     var version: Long?

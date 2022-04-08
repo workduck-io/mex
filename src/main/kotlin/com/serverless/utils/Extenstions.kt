@@ -5,13 +5,13 @@ import com.serverless.models.requests.NodeRequest
 import com.workduck.models.Node
 import com.workduck.models.WorkspaceIdentifier
 
-fun NodeRequest.toNode(workspaceID: String): Node =
+fun NodeRequest.toNode(workspaceID: String, userEmail: String): Node =
     Node(
         id = this.id,
         title = this.title,
         namespaceIdentifier = this.namespaceIdentifier,
         workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-        lastEditedBy = this.lastEditedBy,
+        lastEditedBy = userEmail,
         tags = this.tags,
         data = this.data
     )

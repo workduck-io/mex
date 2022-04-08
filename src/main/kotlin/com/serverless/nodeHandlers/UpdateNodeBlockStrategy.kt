@@ -17,7 +17,7 @@ class UpdateNodeBlockStrategy : NodeStrategy {
 
         val nodeID = input.pathParameters?.id
         return if (nodeID != null && elementListRequest != null) {
-            val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, elementListRequest)
+            val element: AdvancedElement? = nodeService.updateNodeBlock(nodeID, input.tokenBody.email, elementListRequest)
             ApiResponseHelper.generateStandardResponse(element as Any?, errorMessage)
         } else {
             ApiResponseHelper.generateStandardErrorResponse(errorMessage)

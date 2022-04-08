@@ -14,7 +14,6 @@ class SnippetTransformer : Transformer<Snippet> {
                 createdAt = t.createdAt,
                 updatedAt = t.updatedAt,
                 version = t.version,
-                namespaceID = t.namespaceIdentifier?.id,
                 workspaceID = t.workspaceIdentifier.id,
                 publicAccess = t.publicAccess
         )

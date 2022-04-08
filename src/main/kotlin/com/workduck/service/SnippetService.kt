@@ -4,7 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.serverless.models.requests.ClonePublicPageRequest
+import com.serverless.models.requests.CloneSnippetRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
@@ -43,8 +43,8 @@ class SnippetService {
     private val pageRepository: PageRepository<Snippet> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val repository: Repository<Snippet> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
-    fun createAndUpdateSnippet(wdRequest: WDRequest, workspaceID: String): Entity? {
-        val snippet: Snippet = createSnippetObjectFromSnippetRequest(wdRequest as SnippetRequest, workspaceID)
+    fun createAndUpdateSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity? {
+        val snippet: Snippet = createSnippetObjectFromSnippetRequest(wdRequest as SnippetRequest, userEmail, workspaceID)
         val storedSnippet = getSnippet(snippet.id) as Snippet?
 
         return if (storedSnippet == null) {
@@ -55,7 +55,6 @@ class SnippetService {
     }
 
     private fun createSnippet(snippet: Snippet): Entity {
-        snippet.ak = "${snippet.workspaceIdentifier.id}#${snippet.namespaceIdentifier?.id}"
         snippet.dataOrder = createDataOrderForPage(snippet)
 
         /* only when node is actually being created */
@@ -74,7 +73,7 @@ class SnippetService {
     }
 
     private fun updateSnippet(snippet: Snippet, storedSnippet: Snippet): Entity? {
-        Page.populatePageWithCreatedFieldsAndAK(snippet, storedSnippet)
+        Page.populatePageWithCreatedFields(snippet, storedSnippet)
 
         snippet.dataOrder = createDataOrderForPage(snippet)
 
@@ -108,12 +107,11 @@ class SnippetService {
         return pageRepository.getPublicPage(snippetID, Snippet::class.java)
     }
 
-    private fun createSnippetObjectFromSnippetRequest(snippetRequest: SnippetRequest, workspaceID: String): Snippet {
+    private fun createSnippetObjectFromSnippetRequest(snippetRequest: SnippetRequest, userEmail: String, workspaceID: String): Snippet {
         return Snippet(
             id = snippetRequest.id,
-            namespaceIdentifier = snippetRequest.namespaceIdentifier,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-            lastEditedBy = snippetRequest.lastEditedBy,
+            lastEditedBy = userEmail,
             data = snippetRequest.data
         )
     }
@@ -145,22 +143,20 @@ class SnippetService {
         return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, "Snippet")
     }
 
-    fun clonePublicSnippet(wdRequest: WDRequest, workspaceID: String): Entity {
-        val cloneRequest = wdRequest as ClonePublicPageRequest
-        val publicSnippet = getPublicSnippet(cloneRequest.publicPageID) as Snippet?
+    fun clonePublicSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity {
+        val cloneRequest = wdRequest as CloneSnippetRequest
+        val publicSnippet = getPublicSnippet(cloneRequest.snippetID) as Snippet?
         require(publicSnippet != null) {"Invalid Public Snippet ID passed"}
 
-        val newSnippet = createSnippetFromCloneRequestAndPublicSnippet(cloneRequest, publicSnippet, workspaceID)
+        val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userEmail, workspaceID)
         return createSnippet(newSnippet)
 
     }
 
-    private fun createSnippetFromCloneRequestAndPublicSnippet(cloneRequest: ClonePublicPageRequest, publicSnippet: Snippet, workspaceID: String): Snippet{
+    private fun createSnippetFromPublicSnippet(publicSnippet: Snippet, userEmail: String, workspaceID: String): Snippet{
         return Snippet(
-                id = cloneRequest.newPageID,
-                namespaceIdentifier = cloneRequest.namespaceIdentifier,
                 workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-                lastEditedBy = cloneRequest.lastEditedBy,
+                lastEditedBy = userEmail,
                 data = publicSnippet.data
         )
     }

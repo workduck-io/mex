@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -43,7 +42,6 @@ import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
 import com.workduck.utils.PageHelper.comparePageWithStoredPage
-import com.workduck.utils.PageHelper.convertGenericRequestToList
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.PageHelper.orderBlocks
@@ -118,11 +116,11 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, versionEnabled: Boolean = false): Entity? =
+    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userEmail: String, versionEnabled: Boolean = false): Entity? =
         runBlocking {
 
             val nodeRequest: NodeRequest = request as NodeRequest
-            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID)
+            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userEmail)
 
             val jobToGetStoredNode = async { getNode(node.id) as Node? }
             val jobToGetWorkspace =
@@ -194,13 +192,12 @@ class NodeService( // Todo: Inject them from handlers
      * will be used to insert empty nodes in between two existing nodes
      *
      */
-    fun refactor(wdRequest: WDRequest, workspace: Workspace) = runBlocking {
+    fun refactor(wdRequest: WDRequest, userEmail: String, workspace: Workspace) = runBlocking {
 
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
         /* existingNodePath is path from root till last node in the path and not necessarily path till a leaf node */
         val lastNodeID = refactorNodePathRequest.nodeID
-        val lastEditedBy = refactorNodePathRequest.lastEditedBy
 
         val existingNodes = refactorNodePathRequest.existingNodePath.allNodes
         val newNodes = refactorNodePathRequest.newNodePath.allNodes
@@ -208,13 +205,13 @@ class NodeService( // Todo: Inject them from handlers
         // Data model has ensures that list will never be empty
         when (existingNodes.last() != newNodes.last()) {
             true -> { /* need to rename last node from existing path to last node from new path */
-                launch { renameNode(lastNodeID, newNodes.last(), lastEditedBy) }
+                launch { renameNode(lastNodeID, newNodes.last(), userEmail) }
             }
         }
 
         val namesOfNodesToCreate = getNodesToCreateInRefactor(existingNodes, newNodes)
 
-        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspace.id, refactorNodePathRequest.namespaceID)
+        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, userEmail, workspace.id, refactorNodePathRequest.namespaceID)
 
        // launch { nodeRepository.createMultipleNodes(nodesToCreate) }
 
@@ -345,10 +342,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-    fun bulkCreateNodes(request: WDRequest, workspaceID: String) = runBlocking {
+    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userEmail: String) = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
-        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID)
+        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userEmail)
 
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
@@ -517,7 +514,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodeIDToNodeNameMap(workspaceID, itemStatus)
     }
 
-    fun append(nodeID: String, elementsListRequest: WDRequest): Map<String, Any>? {
+    fun append(nodeID: String, userEmail: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val elements = elementsListRequestConverted.elements
@@ -525,21 +522,19 @@ class NodeService( // Todo: Inject them from handlers
         LOG.info(elements)
 
         val orderList = mutableListOf<String>()
-        var userID = ""
         for (e in elements) {
             orderList += e.id
 
-            e.lastEditedBy = e.createdBy
+            e.lastEditedBy = userEmail
             e.createdAt = Constants.getCurrentTime()
             e.updatedAt = e.createdAt
-            userID = e.createdBy as String
         }
-        return nodeRepository.append(nodeID, userID, elements, orderList)
+        return nodeRepository.append(nodeID, userEmail, elements, orderList)
     }
 
     fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
-        Page.populatePageWithCreatedFieldsAndAK(node, storedNode)
+        Page.populatePageWithCreatedFields(node, storedNode)
 
         node.dataOrder = createDataOrderForPage(node)
 
@@ -614,7 +609,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
 
-    fun updateNodeBlock(nodeID: String, elementsListRequest: WDRequest): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, userEmail: String, elementsListRequest: WDRequest): AdvancedElement? {
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val element = elementsListRequestConverted.elements.let { it[0] }
@@ -624,11 +619,11 @@ class NodeService( // Todo: Inject them from handlers
         // TODO(since we directly set the block info, createdAt and createdBy get lost since we're not getting anything from ddb)
         val blockData = objectMapper.writeValueAsString(element)
 
-        return nodeRepository.updateNodeBlock(nodeID, blockData, element.id, element.lastEditedBy as String)
+        return nodeRepository.updateNodeBlock(nodeID, blockData, element.id, userEmail)
     }
 
-    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String): Node =
-        nodeRequest.toNode(workspaceID)
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userEmail: String): Node =
+        nodeRequest.toNode(workspaceID, userEmail)
 
 
     fun getAllArchivedSnippetIDsOfWorkspace(workspaceID : String) : MutableList<String> {

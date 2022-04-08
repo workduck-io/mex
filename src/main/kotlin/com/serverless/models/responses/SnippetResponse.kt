@@ -19,8 +19,6 @@ data class SnippetResponse(
 
     override var version: Long?,
 
-    override var namespaceID: String?,
-
     override var workspaceID: String,
 
     override var publicAccess: Boolean

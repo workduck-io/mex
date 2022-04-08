@@ -41,7 +41,7 @@ class NodeRepository(
     private var tableName: String
 )  {
 
-    fun append(nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+    fun append(nodeID: String, userEmail: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -58,7 +58,7 @@ class NodeRepository(
             expressionAttributeValues[":val$counter"] = entry
         }
 
-        expressionAttributeValues[":userID"] = userID
+        expressionAttributeValues[":userID"] = userEmail
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
@@ -149,13 +149,13 @@ class NodeRepository(
         }
     }
 
-    fun updateNodeBlock(nodeID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, updatedBlock: String, blockID: String, userEmail: String): AdvancedElement? {
         val table = dynamoDB.getTable(tableName)
         val objectMapper = ObjectMapper()
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedBlock"] = updatedBlock
-        expressionAttributeValues[":userID"] = userID
+        expressionAttributeValues[":userID"] = userEmail
 
         return UpdateItemSpec().withPrimaryKey("PK", nodeID, "SK", nodeID)
             .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
@@ -194,38 +194,6 @@ class NodeRepository(
         } catch (e: Exception) {
             println(e)
             null
-        }
-    }
-
-    fun getAllArchivedNodesOfWorkspace(workspaceID: String): MutableList<String>? {
-
-        try {
-            val table: Table = dynamoDB.getTable(tableName)
-            val index: Index = table.getIndex("WS-itemStatus-Index")
-
-            val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-            expressionAttributeValues[":workspaceID"] = workspaceID
-            expressionAttributeValues[":archived"] = "ARCHIVED"
-            expressionAttributeValues[":node"] = "Node"
-
-            val querySpec = QuerySpec()
-                .withKeyConditionExpression("workspaceIdentifier = :workspaceID and itemStatus = :archived")
-                .withFilterExpression("itemType = :node")
-                .withValueMap(expressionAttributeValues)
-                .withProjectionExpression("PK")
-
-            val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
-            val iterator: Iterator<Item> = items!!.iterator()
-
-            var nodeIDList: MutableList<String> = mutableListOf()
-            while (iterator.hasNext()) {
-                val item: Item = iterator.next()
-                nodeIDList = (nodeIDList + (item["PK"] as String)).toMutableList()
-            }
-            return nodeIDList
-        } catch (e: Exception) {
-            println(e)
-            return null
         }
     }
 

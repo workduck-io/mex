@@ -132,6 +132,10 @@ Snippet:
         method: get
 
     - httpApi:
+        path: POST /snippet/clone/{id}
+        method: post
+
+    - httpApi:
         path: /snippet/makePublic/{id}
         method: patch
         authorizer: mexAuthorizer

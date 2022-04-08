@@ -1,10 +1,12 @@
 package com.serverless.snippetHandlers
 
+import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
+import com.serverless.models.TokenBody
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.workduck.service.SnippetService

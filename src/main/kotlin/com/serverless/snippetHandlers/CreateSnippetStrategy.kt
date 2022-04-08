@@ -11,10 +11,10 @@ class CreateSnippetStrategy : SnippetStrategy {
         val errorMessage = "Error creating snippet"
 
         return input.payload?.let { snippetRequest ->
-            snippetService.createAndUpdateSnippet(snippetRequest, input.headers.workspaceID)?.let {
+            snippetService.createAndUpdateSnippet(snippetRequest, input.tokenBody.email, input.headers.workspaceID)?.let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             } ?: throw IllegalArgumentException("Invalid ID passed")
-        } ?: throw IllegalArgumentException("No ID passed")
+        } ?: throw IllegalArgumentException("Malformed Request")
     }
 
 }

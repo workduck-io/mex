@@ -14,7 +14,7 @@ class GetSnippetStrategy : SnippetStrategy {
             snippetService.getSnippet(snippetID)?.let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             } ?: throw IllegalArgumentException("Invalid ID passed")
-        } ?: throw IllegalArgumentException("No ID passed")
+        }!!
 
     }
 }

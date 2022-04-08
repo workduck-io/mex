@@ -14,7 +14,7 @@ class GetPublicSnippetStrategy : SnippetStrategy {
             snippetService.getPublicSnippet(snippetID)?.let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             } ?: throw IllegalArgumentException("Invalid SnippetID")
-        } ?: throw IllegalArgumentException("SnippetID can't be null")
+        }!!
     }
 
 }

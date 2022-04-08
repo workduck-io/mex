@@ -20,19 +20,23 @@ data class Snippet(
 
     @JsonProperty("id")
     @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateId(IdentifierType.SNIPPET.name),
+    var id: String = Helper.generateNanoID(IdentifierType.SNIPPET.name),
 
     /* For convenient deletion */
     @JsonProperty("idCopy")
     @DynamoDBRangeKey(attributeName = "SK")
     var idCopy: String? = id,
 
-    @DynamoDBAttribute(attributeName = "AK")
-    override var ak: String? = null,
+//    @DynamoDBAttribute(attributeName = "AK")
+//    var ak: String? = null,
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     override var itemType: ItemType = ItemType.Snippet,
+
+    @JsonProperty("title")
+    @DynamoDBAttribute(attributeName = "title")
+    override var title: String = "New Snippet",
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
@@ -61,12 +65,12 @@ data class Snippet(
     @DynamoDBAttribute(attributeName = "workspaceIdentifier")
     override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
-    @JsonProperty("namespaceIdentifier")
-    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "namespaceIdentifier")
-    override var namespaceIdentifier: NamespaceIdentifier? = null,
+//    @JsonProperty("namespaceIdentifier")
+//    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
+//    @JsonSerialize(converter = IdentifierSerializer::class)
+//    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
+//    @DynamoDBAttribute(attributeName = "namespaceIdentifier")
+//    override var namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("version")
     @DynamoDBVersionAttribute(attributeName = "version")

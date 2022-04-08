@@ -18,6 +18,7 @@ data class TokenBody(
     val iss: String,
     @JsonProperty("custom:mex_workspace_ids")
     val workspaceIDs: String?,
+    val email: String
 ) {
     val workspaceIDList: List<String> = workspaceIDs?.split(Constants.DELIMITER) ?: listOf()
     val userPoolID: String = iss.split("/").last()

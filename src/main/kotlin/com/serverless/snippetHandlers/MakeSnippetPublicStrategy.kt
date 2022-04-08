@@ -12,7 +12,7 @@ class MakeSnippetPublicStrategy : SnippetStrategy {
         return input.pathParameters?.id?.let { snippetID ->
             snippetService.makeSnippetPublic(snippetID)
             ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
-        } ?: throw IllegalArgumentException("Invalid SnippetID")
+        } !!
     }
 
 }
