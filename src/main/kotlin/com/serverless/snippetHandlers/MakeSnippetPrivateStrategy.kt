@@ -10,7 +10,7 @@ class MakeSnippetPrivateStrategy : SnippetStrategy {
         val errorMessage = "Error making snippet private"
 
         return input.pathParameters?.id?.let { snippetID ->
-            snippetService.makeSnippetPublic(snippetID)
+            snippetService.makeSnippetPrivate(snippetID, input.headers.workspaceID)
             ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
         }!!
 

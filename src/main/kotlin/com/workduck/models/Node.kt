@@ -17,13 +17,15 @@ enum class NodeStatus {
 data class Node(
 
     @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
+    @DynamoDBRangeKey(attributeName = "PK")
+    var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
-    /* For convenient deletion */
-    @JsonProperty("idCopy")
-    @DynamoDBRangeKey(attributeName = "SK")
-    var idCopy: String? = id,
+    @JsonProperty("workspaceIdentifier")
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    @DynamoDBHashKey(attributeName = "PK")
+    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
 //    @JsonProperty("parentNodeID")
 //    @DynamoDBAttribute(attributeName = "parentNodeID")
@@ -63,13 +65,6 @@ data class Node(
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
-
-    @JsonProperty("workspaceIdentifier")
-    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-    @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")

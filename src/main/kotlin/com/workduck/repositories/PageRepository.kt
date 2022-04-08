@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
 import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
+import com.workduck.models.ItemType
 import com.workduck.models.Page
 import org.apache.logging.log4j.LogManager
 
@@ -38,35 +39,33 @@ class PageRepository <T : Page> (
     }
 
 
-    override fun get(identifier: Identifier, clazz: Class<T>): T? {
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
         TODO("Not yet implemented")
     }
 
 
-    override fun delete(identifier: Identifier): Identifier {
-        val table = dynamoDB.getTable(tableName)
-        DeleteItemSpec().withPrimaryKey("PK", identifier.id, "SK", identifier.id).also { table.deleteItem(it) }
-        return identifier
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
+        TODO("Using deleteComment instead")
     }
 
 
-    fun togglePagePublicAccess(snippetID: String, accessValue: Long) {
+    fun togglePagePublicAccess(pageID: String, workspaceID: String, accessValue: Long) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":publicAccess"] = accessValue
 
-        UpdateItemSpec().withPrimaryKey("PK", snippetID, "SK", snippetID)
+        UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", pageID)
                 .withUpdateExpression("SET publicAccess = :publicAccess")
                 .withValueMap(expressionAttributeValues).let{
                     table.updateItem(it)
                 }
     }
 
-    fun getPublicPage(pageID: String, clazz: Class<T>): T {
+    fun getPublicPage(pageID: String, workspaceID: String, clazz: Class<T>): T {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue().withS(pageID)
+        expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(pageID)
         expressionAttributeValues[":true"] = AttributeValue().withN("1")
 
@@ -94,7 +93,7 @@ class PageRepository <T : Page> (
         val pagesProcessedList: MutableList<String> = mutableListOf()
         for (pageID in pageIDList) {
             try {
-                UpdateItemSpec().withPrimaryKey("PK", pageID, "SK", pageID)
+                UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", pageID)
                         .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
                         .withValueMap(expressionAttributeValues)
                         .withConditionExpression("attribute_exists(PK) and workspaceIdentifier = :workspaceIdentifier")
@@ -111,31 +110,30 @@ class PageRepository <T : Page> (
     }
 
 
-    fun getAllArchivedPagesOfWorkspace(workspaceID: String, itemType: String): MutableList<String> {
+    fun getAllArchivedPagesOfWorkspace(workspaceID: String, itemType: ItemType): MutableList<String> {
 
         val table: Table = dynamoDB.getTable(tableName)
-        val index: Index = table.getIndex("WS-itemStatus-Index")
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":workspaceID"] = workspaceID
-        expressionAttributeValues[":archived"] = "ARCHIVED"
-        expressionAttributeValues[":node"] = itemType
+        expressionAttributeValues[":archived"] = ItemStatus.ARCHIVED.name
+        expressionAttributeValues[":itemType"] = itemType.name.uppercase()
 
         val querySpec = QuerySpec()
-                .withKeyConditionExpression("workspaceIdentifier = :workspaceID and itemStatus = :archived")
-                .withFilterExpression("itemType = :node")
+                .withKeyConditionExpression("PK = :workspaceID and begins_with(SK, :itemType)")
+                .withFilterExpression("itemStatus = :archived")
                 .withValueMap(expressionAttributeValues)
-                .withProjectionExpression("PK")
+                .withProjectionExpression("SK")
 
-        val items: ItemCollection<QueryOutcome?>? = index.query(querySpec)
+        val items: ItemCollection<QueryOutcome?>? = table.query(querySpec)
         val iterator: Iterator<Item> = items!!.iterator()
 
-        var nodeIDList: MutableList<String> = mutableListOf()
+        var pageIDList: MutableList<String> = mutableListOf()
         while (iterator.hasNext()) {
             val item: Item = iterator.next()
-            nodeIDList = (nodeIDList + (item["PK"] as String)).toMutableList()
+            pageIDList = (pageIDList + (item["SK"] as String)).toMutableList()
         }
-        return nodeIDList
+        return pageIDList
 
     }
 

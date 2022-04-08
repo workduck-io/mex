@@ -11,7 +11,7 @@ class GetSnippetStrategy : SnippetStrategy {
         val errorMessage = "Error getting snippet"
 
         return input.pathParameters?.id?.let { snippetID ->
-            snippetService.getSnippet(snippetID)?.let {
+            snippetService.getSnippet(snippetID, input.headers.workspaceID)?.let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             } ?: throw IllegalArgumentException("Invalid ID passed")
         }!!

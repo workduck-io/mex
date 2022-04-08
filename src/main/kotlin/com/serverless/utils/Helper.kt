@@ -2,8 +2,8 @@ package com.serverless.utils
 
 import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.serverless.models.Input
-import com.serverless.models.TokenBody
 import com.workduck.utils.Helper
+import java.util.regex.Pattern
 
 object Helper {
 
@@ -13,4 +13,14 @@ object Helper {
         }
 
     }
+
+    val EMAIL_ADDRESS_PATTERN: Pattern = Pattern.compile(
+            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+                    "\\@" +
+                    "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+                    "(" +
+                    "\\." +
+                    "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+                    ")+"
+    )
 }

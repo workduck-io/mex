@@ -47,7 +47,7 @@ class NamespaceService {
 
     fun getNamespace(namespaceID: String): Entity? {
         LOG.info("Getting namespace with id : $namespaceID")
-        return repository.get(NamespaceIdentifier(namespaceID), Namespace::class.java)
+        return repository.get(NamespaceIdentifier(namespaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
     fun updateNamespace(namespaceRequest: WDRequest?): Entity? {
@@ -61,7 +61,7 @@ class NamespaceService {
 
     fun deleteNamespace(namespaceID: String): Identifier? {
         LOG.info("Deleting namespace with id : $namespaceID")
-        return repository.delete(NamespaceIdentifier(namespaceID))
+        return repository.delete(NamespaceIdentifier(namespaceID), NamespaceIdentifier(namespaceID))
     }
 
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {

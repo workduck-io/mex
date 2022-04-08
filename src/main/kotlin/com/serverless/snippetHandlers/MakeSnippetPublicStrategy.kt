@@ -10,7 +10,7 @@ class MakeSnippetPublicStrategy : SnippetStrategy {
         val errorMessage = "Error making snippet public"
 
         return input.pathParameters?.id?.let { snippetID ->
-            snippetService.makeSnippetPublic(snippetID)
+            snippetService.makeSnippetPublic(snippetID, input.headers.workspaceID)
             ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
         } !!
     }

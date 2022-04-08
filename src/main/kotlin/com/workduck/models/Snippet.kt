@@ -19,13 +19,16 @@ import com.workduck.utils.Helper
 data class Snippet(
 
     @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
+    @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.SNIPPET.name),
 
-    /* For convenient deletion */
-    @JsonProperty("idCopy")
-    @DynamoDBRangeKey(attributeName = "SK")
-    var idCopy: String? = id,
+    @JsonProperty("workspaceIdentifier")
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    @DynamoDBHashKey(attributeName = "PK")
+    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+
 
 //    @DynamoDBAttribute(attributeName = "AK")
 //    var ak: String? = null,
@@ -58,12 +61,6 @@ data class Snippet(
     @DynamoDBAttribute(attributeName = "lastEditedBy")
     override var lastEditedBy: String? = null,
 
-    @JsonProperty("workspaceIdentifier")
-    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-    @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
 //    @JsonProperty("namespaceIdentifier")
 //    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)

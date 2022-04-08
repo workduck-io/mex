@@ -23,7 +23,7 @@ class NamespaceRepository(
     }
 
 
-    override fun get(identifier: Identifier, clazz: Class<Namespace>): Namespace? {
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Namespace>): Namespace? {
         TODO("Not yet implemented")
     }
 
@@ -36,14 +36,8 @@ class NamespaceRepository(
     }
 
 
-    override fun delete(identifier: Identifier): Identifier? {
-        val table = dynamoDB.getTable(tableName)
-
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-            .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
-
-        table.deleteItem(deleteItemSpec)
-        return identifier
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
+        TODO("Using deleteComment instead")
     }
 
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {

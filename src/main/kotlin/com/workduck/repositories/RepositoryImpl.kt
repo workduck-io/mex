@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveBehavior
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import org.apache.logging.log4j.LogManager
@@ -20,12 +21,14 @@ class RepositoryImpl<T : Entity>(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier, clazz: Class<T>): T? {
-        return mapper.load(clazz, identifier.id, identifier.id, dynamoDBMapperConfig)
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
+        return mapper.load(clazz, pkIdentifier.id, skIdentifier.id, dynamoDBMapperConfig)
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
-        return repository.delete(identifier)
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
+        val table = dynamoDB.getTable(tableName)
+        DeleteItemSpec().withPrimaryKey("PK", pkIdentifier.id, "SK", skIdentifier.id).also { table.deleteItem(it) }
+        return skIdentifier
     }
 
     override fun create(t: T): T {

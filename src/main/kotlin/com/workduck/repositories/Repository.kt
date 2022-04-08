@@ -8,8 +8,8 @@ interface Repository<T : Entity> {
 
     fun update(t: T): T?
 
-    fun get(identifier: Identifier, clazz: Class<T>): T?
+    fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T?
 
-    fun delete(identifier: Identifier): Identifier?
+    fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier
 
 }

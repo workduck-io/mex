@@ -34,11 +34,11 @@ class CommentRepository(
         TODO("Not yet implemented")
     }
 
-    override fun get(identifier: Identifier, clazz: Class<Comment>): Comment? {
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Comment>): Comment? {
         TODO("Using getComment instead")
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
         TODO("Using deleteComment instead")
     }
 
@@ -65,8 +65,6 @@ class CommentRepository(
     }
 
     fun deleteComment(pk: String, sk: String) {
-
-
         DeleteItemSpec()
                 .withPrimaryKey("PK", pk, "SK", sk).let {
                     table.deleteItem(it)

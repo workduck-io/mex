@@ -10,6 +10,7 @@ import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.Entity
 import com.workduck.models.ItemStatus
+import com.workduck.models.ItemType
 import com.workduck.models.Page
 import com.workduck.models.Snippet
 import com.workduck.models.SnippetIdentifier
@@ -23,6 +24,8 @@ import com.workduck.utils.PageHelper.comparePageWithStoredPage
 import com.workduck.utils.PageHelper.convertGenericRequestToList
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
 class SnippetService {
@@ -45,7 +48,7 @@ class SnippetService {
 
     fun createAndUpdateSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity? {
         val snippet: Snippet = createSnippetObjectFromSnippetRequest(wdRequest as SnippetRequest, userEmail, workspaceID)
-        val storedSnippet = getSnippet(snippet.id) as Snippet?
+        val storedSnippet = getSnippet(snippet.id, workspaceID) as Snippet?
 
         return if (storedSnippet == null) {
             createSnippet(snippet)
@@ -91,20 +94,20 @@ class SnippetService {
         return repository.update(snippet)
     }
 
-    fun getSnippet(snippetID: String): Entity? {
-        return repository.get(SnippetIdentifier(snippetID), Snippet::class.java)
+    fun getSnippet(snippetID: String, workspaceID: String): Entity? {
+        return repository.get(WorkspaceIdentifier(workspaceID), SnippetIdentifier(snippetID), Snippet::class.java)
     }
 
-    fun makeSnippetPublic(snippetID: String) {
-        pageRepository.togglePagePublicAccess(snippetID, 1)
+    fun makeSnippetPublic(snippetID: String, workspaceID: String) = runBlocking {
+        launch {pageRepository.togglePagePublicAccess(snippetID, workspaceID,  1) }
     }
 
-    fun makeSnippetPrivate(snippetID: String) {
-        pageRepository.togglePagePublicAccess(snippetID, 0)
+    fun makeSnippetPrivate(snippetID: String, workspaceID: String) {
+        pageRepository.togglePagePublicAccess(snippetID, workspaceID, 0)
     }
 
-    fun getPublicSnippet(snippetID: String): Entity? {
-        return pageRepository.getPublicPage(snippetID, Snippet::class.java)
+    fun getPublicSnippet(snippetID: String, workspaceID: String): Entity? {
+        return pageRepository.getPublicPage(snippetID, workspaceID, Snippet::class.java)
     }
 
     private fun createSnippetObjectFromSnippetRequest(snippetRequest: SnippetRequest, userEmail: String, workspaceID: String): Snippet {
@@ -132,7 +135,7 @@ class SnippetService {
         val deletedSnippetsList: MutableList<String> = mutableListOf()
         require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == snippetIDList.sorted()) { "The passed IDs should be present and archived" }
         for (snippetID in snippetIDList) {
-            repository.delete(SnippetIdentifier(snippetID))?.also {
+            repository.delete(WorkspaceIdentifier(workspaceID), SnippetIdentifier(snippetID))?.also {
                 deletedSnippetsList.add(it.id)
             }
         }
@@ -140,12 +143,12 @@ class SnippetService {
     }
 
     fun getAllArchivedSnippetIDsOfWorkspace(workspaceID: String): List<String> {
-        return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, "Snippet")
+        return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Snippet)
     }
 
     fun clonePublicSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity {
         val cloneRequest = wdRequest as CloneSnippetRequest
-        val publicSnippet = getPublicSnippet(cloneRequest.snippetID) as Snippet?
+        val publicSnippet = getPublicSnippet(cloneRequest.snippetID, workspaceID) as Snippet?
         require(publicSnippet != null) {"Invalid Public Snippet ID passed"}
 
         val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userEmail, workspaceID)

@@ -27,7 +27,7 @@ class GetNodeStrategy : NodeStrategy {
             it["userID"]
         }
 
-        val node: Entity? = nodeService.getNode(nodeID, bookmarkInfo, userID)
+        val node: Entity? = nodeService.getNode(nodeID, input.headers.workspaceID, bookmarkInfo, userID)
 
         val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)

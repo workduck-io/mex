@@ -26,7 +26,7 @@ class WorkspaceRepository(
     }
 
 
-    override fun get(identifier: Identifier, clazz: Class<Workspace>): Workspace? {
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Workspace>): Workspace? {
         TODO("Not yet implemented")
     }
 
@@ -38,17 +38,8 @@ class WorkspaceRepository(
         TODO("Not yet implemented")
     }
 
-
-    override fun delete(identifier: Identifier): Identifier {
-        val table = dynamoDB.getTable(tableName)
-
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-            .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
-
-
-        table.deleteItem(deleteItemSpec)
-        return identifier
-
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
+        TODO("Not yet implemented")
     }
 
     fun addNodePathToHierarchy(workspaceID: String, nodePath: String){

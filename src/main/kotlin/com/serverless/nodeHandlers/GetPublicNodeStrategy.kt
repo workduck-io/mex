@@ -14,7 +14,7 @@ class GetPublicNodeStrategy : NodeStrategy {
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {
-            val node: Node? = nodeService.getPublicNode(nodeID)
+            val node: Node? = nodeService.getPublicNode(nodeID, input.headers.workspaceID)
 
             val nodeResponse = NodeHelper.convertNodeToNodeResponse(node)
             ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
