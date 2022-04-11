@@ -9,9 +9,5 @@ interface PageResponse {
 
     val createdBy: String?
 
-    val workspaceID: String
-
     var version: Long?
-
-    val publicAccess: Boolean
 }

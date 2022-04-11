@@ -35,6 +35,7 @@ object ExceptionParser {
         println("in the exception parser")
         return when(e){
             is IllegalArgumentException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 400)
+            is NoSuchElementException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Not Found", 404)
             is NullPointerException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Getting NPE", 400)
             is UnauthorizedException ->{
                 LOG.info("Unauthorized")

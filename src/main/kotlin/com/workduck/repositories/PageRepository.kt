@@ -20,6 +20,7 @@ import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Page
+import com.workduck.models.Relationship
 import org.apache.logging.log4j.LogManager
 
 class PageRepository <T : Page> (
@@ -62,22 +63,24 @@ class PageRepository <T : Page> (
                 }
     }
 
-    fun getPublicPage(pageID: String, workspaceID: String, clazz: Class<T>): T {
+    fun getPublicPage(pageID: String, clazz: Class<T>): T {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
-        expressionAttributeValues[":sk"] = AttributeValue().withS(pageID)
+        expressionAttributeValues[":SK"] = AttributeValue(pageID)
+        expressionAttributeValues[":PK"] = AttributeValue("WORKSPACE")
         expressionAttributeValues[":true"] = AttributeValue().withN("1")
+        expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
-        val queryExpression = DynamoDBQueryExpression<T>()
-                .withKeyConditionExpression("PK = :pk and SK = :sk")
-                .withFilterExpression("publicAccess = :true")
-                .withExpressionAttributeValues(expressionAttributeValues)
-
-        val pageList: List<T> = mapper.query(clazz, queryExpression, dynamoDBMapperConfig)
-
-        return if (pageList.isNotEmpty()) pageList[0]
-        else throw IllegalArgumentException("Given ID is not public")
+        return DynamoDBQueryExpression<T>()
+                .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
+                .withIndexName("SK-PK-index").withConsistentRead(false)
+                .withFilterExpression("publicAccess = :true and itemStatus = :itemStatus")
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(clazz, it, dynamoDBMapperConfig).let { list ->
+                        if(list.isNotEmpty()) list[0]
+                        else throw NoSuchElementException("Requested Resource Not Found")
+                    }
+                }
     }
 
 

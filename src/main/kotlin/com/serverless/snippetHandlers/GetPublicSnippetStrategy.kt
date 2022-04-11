@@ -11,7 +11,7 @@ class GetPublicSnippetStrategy : SnippetStrategy {
         val errorMessage = "Error getting snippet"
 
         return input.pathParameters?.id?.let { snippetID ->
-            snippetService.getPublicSnippet(snippetID, input.headers.workspaceID)?.let {
+            snippetService.getPublicSnippet(snippetID)?.let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             } ?: throw IllegalArgumentException("Invalid SnippetID")
         }!!

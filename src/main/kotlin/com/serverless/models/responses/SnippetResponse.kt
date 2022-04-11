@@ -15,12 +15,7 @@ data class SnippetResponse(
 
     override val updatedAt: Long,
 
-    val itemType: String = "Snippet",
-
     override var version: Long?,
 
-    override var workspaceID: String,
-
-    override var publicAccess: Boolean
 
 ) : Response, PageResponse, TimestampAdhereResponse

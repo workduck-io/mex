@@ -25,9 +25,9 @@ data class NodeResponse(
 
     var namespaceID: String? = null,
 
-    override var workspaceID: String,
+    var workspaceID: String,
 
     var isBookmarked: Boolean? = null,
 
-    override var publicAccess: Boolean
+    var publicAccess: Boolean
 ) : Response, PageResponse, TimestampAdhereResponse

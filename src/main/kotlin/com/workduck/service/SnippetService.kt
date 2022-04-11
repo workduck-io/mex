@@ -99,15 +99,16 @@ class SnippetService {
     }
 
     fun makeSnippetPublic(snippetID: String, workspaceID: String) = runBlocking {
-        launch {pageRepository.togglePagePublicAccess(snippetID, workspaceID,  1) }
+        launch { pageRepository.togglePagePublicAccess(snippetID, workspaceID,  1) }
+        //cloneSnippetToWorkspace(getSnippet(snippetID, workspaceID) as Snippet, userEmail, "WORKSPACE_PUBLIC")
     }
 
     fun makeSnippetPrivate(snippetID: String, workspaceID: String) {
         pageRepository.togglePagePublicAccess(snippetID, workspaceID, 0)
     }
 
-    fun getPublicSnippet(snippetID: String, workspaceID: String): Entity? {
-        return pageRepository.getPublicPage(snippetID, workspaceID, Snippet::class.java)
+    fun getPublicSnippet(snippetID: String): Entity? {
+        return pageRepository.getPublicPage(snippetID, Snippet::class.java)
     }
 
     private fun createSnippetObjectFromSnippetRequest(snippetRequest: SnippetRequest, userEmail: String, workspaceID: String): Snippet {
@@ -146,9 +147,14 @@ class SnippetService {
         return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Snippet)
     }
 
+    private fun cloneSnippetToWorkspace(snippet: Snippet, userEmail: String, workspaceID: String){
+        val newSnippet = createSnippetFromPublicSnippet(snippet, userEmail, workspaceID)
+        createSnippet(newSnippet)
+    }
+
     fun clonePublicSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity {
         val cloneRequest = wdRequest as CloneSnippetRequest
-        val publicSnippet = getPublicSnippet(cloneRequest.snippetID, workspaceID) as Snippet?
+        val publicSnippet = getPublicSnippet(cloneRequest.snippetID) as Snippet?
         require(publicSnippet != null) {"Invalid Public Snippet ID passed"}
 
         val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userEmail, workspaceID)

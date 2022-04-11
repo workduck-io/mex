@@ -721,7 +721,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getPublicNode(nodeID: String, workspaceID: String) : Node {
-        return pageRepository.getPublicPage(nodeID, workspaceID, Node::class.java)
+        return pageRepository.getPublicPage(nodeID, Node::class.java)
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
