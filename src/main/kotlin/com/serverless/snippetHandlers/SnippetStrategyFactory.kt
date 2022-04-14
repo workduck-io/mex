@@ -11,21 +11,23 @@ class SnippetStrategyFactory {
 
         const val updateSameSnippetVersion = "PUT /snippet"
 
-        const val archiveSnippet = "PATCH /snippet/archive"
+        const val archiveSnippet = "PUT /snippet/archive"
 
-        const val unarchiveSnippet = "PATCH /snippet/unarchive"
+        const val unarchiveSnippet = "PUT /snippet/unarchive"
 
-        const val deleteArchivedSnippet = "DELETE /snippet"
+        const val deleteSnippet = "DELETE /snippet/{id}/{version}"
+
+        const val deleteAllVersionsOfSnippet = "DELETE /snippet/{id}/all"
 
         const val getAllArchivedSnippets = "GET /snippet/archive/{id}"
 
-        const val makeSnippetPublic = "PATCH /snippet/makePublic/{id}"
+        const val makeSnippetPublic = "PATCH /snippet/makePublic/{id}/{version}"
 
-        const val makeSnippetPrivate = "PATCH /snippet/makePrivate/{id}"
+        const val makeSnippetPrivate = "PATCH /snippet/makePrivate/{id}/{version}"
 
-        const val getPublicSnippet = "GET /snippet/public/{id}"
+        const val getPublicSnippet = "GET /snippet/public/{id}/{version}"
 
-        const val clonePublicSnippet = "POST /snippet/clone"
+        const val clonePublicSnippet = "POST /snippet/clone/{id}/{version}"
 
         const val getAllSnippetVersions = "GET /snippet/{id}/all"
 
@@ -36,8 +38,9 @@ class SnippetStrategyFactory {
                 createNewVersion to CreateNewVersionStrategy(),
                 updateSameSnippetVersion to UpdateSameSnippetVersionStrategy(),
                 archiveSnippet to ArchiveSnippetStrategy(),
-                archiveSnippet to UnarchiveSnippetStrategy(),
-                deleteArchivedSnippet to DeleteArchivedSnippetStrategy(),
+                unarchiveSnippet to UnarchiveSnippetStrategy(),
+                deleteSnippet to DeleteSnippetStrategy(),
+                deleteAllVersionsOfSnippet to DeleteAllVersionsOfSnippetStrategy(),
                 getAllArchivedSnippets to GetAllArchivedSnippetsStrategy(),
                 makeSnippetPublic to MakeSnippetPublicStrategy(),
                 makeSnippetPrivate to MakeSnippetPrivateStrategy(),

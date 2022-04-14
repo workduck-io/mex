@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = NodeRequest::class, name = "NodeRequest"),
     JsonSubTypes.Type(value = SnippetRequest::class, name = "SnippetRequest"),
     JsonSubTypes.Type(value = UpdateSnippetVersionRequest::class, name = "UpdateSnippetVersionRequest"),
-    JsonSubTypes.Type(value = CloneSnippetRequest::class, name = "CloneSnippetRequest"),
     JsonSubTypes.Type(value = ElementRequest::class, name = "ElementRequest"),
     JsonSubTypes.Type(value = WorkspaceRequest::class, name = "WorkspaceRequest"),
     JsonSubTypes.Type(value = NamespaceRequest::class, name = "NamespaceRequest"),

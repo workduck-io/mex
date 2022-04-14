@@ -22,7 +22,12 @@ Node:
       #deleteNodes( archive them )
     - httpApi:
         path: /node/archive
-        method: post
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/unarchive
+        method: put
         authorizer: mexAuthorizer
 
     - httpApi:
@@ -43,11 +48,6 @@ Node:
     - httpApi:
         path: /node/{id}/version/metadata
         method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /node/unarchive
-        method: post
         authorizer: mexAuthorizer
 
       #delete given nodes ids from archive section ( hence, permanently )
@@ -116,27 +116,32 @@ Snippet:
         method: put
         authorizer: mexAuthorizer
 
-    - httpApi:
-        path: /snippet/archive
-        method: patch
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /snippet/unarchive
-        method: patch
-        authorizer: mexAuthorizer
+#    - httpApi:
+#        path: /snippet/archive
+#        method: put
+#        authorizer: mexAuthorizer
+#
+#    - httpApi:
+#        path: /snippet/unarchive
+#        method: put
+#        authorizer: mexAuthorizer
 
     #delete given snippet ids from archive section ( hence, permanently )
     - httpApi:
-        path: /snippet
+        path: /snippet/{id}/{version}
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet/{id}/all
         method: delete
         authorizer: mexAuthorizer
 
     #get all archived snippets for a given workspaceID
-    - httpApi:
-        path: /snippet/archive/{id}
-        method: get
-        authorizer: mexAuthorizer
+#    - httpApi:
+#        path: /snippet/archive/{id}
+#        method: get
+#        authorizer: mexAuthorizer
 
     # get a public snippet
     - httpApi:
@@ -146,6 +151,7 @@ Snippet:
     - httpApi:
         path: /snippet/clone/{id}/{version}
         method: post
+        authorizer: mexAuthorizer
 
     - httpApi:
         path: /snippet/makePublic/{id}/{version}
@@ -153,7 +159,7 @@ Snippet:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /snippet/makePrivate/{id}
+        path: /snippet/makePrivate/{id}/{version}
         method: patch
         authorizer: mexAuthorizer
 

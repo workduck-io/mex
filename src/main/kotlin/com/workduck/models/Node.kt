@@ -17,7 +17,7 @@ enum class NodeStatus {
 data class Node(
 
     @JsonProperty("id")
-    @DynamoDBRangeKey(attributeName = "PK")
+    @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
     @JsonProperty("workspaceIdentifier")

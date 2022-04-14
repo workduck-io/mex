@@ -12,8 +12,7 @@ class GetAllSnippetVersionsStrategy : SnippetStrategy {
 
         return input.pathParameters?.id?.let { snippetID ->
             snippetService.getAllVersionsOfSnippet(snippetID, input.headers.workspaceID).let {
-                ApiResponseHelper.generateStandardResponse(it.map { snippet ->
-                    SnippetHelper.convertSnippetToSnippetResponse(snippet) }, errorMessage)
+                ApiResponseHelper.generateStandardResponse(it, errorMessage)
             }
         }!!
     }

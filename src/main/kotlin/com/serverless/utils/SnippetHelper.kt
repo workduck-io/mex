@@ -14,21 +14,31 @@ object SnippetHelper {
         return snippetTransformer.transform(snippet as Snippet?)
     }
 
-    fun getSnippetVersion(version : String) : Long{
+    fun getSnippetVersionWithLatestAllowed(version : String) : Long{
         return if(version.lowercase() == "latest") -1
         else if (version.toDoubleOrNull() != null){
-            when(version.matches("\\d+".toRegex())){
-                false -> throw IllegalArgumentException("Enter a whole number")
-                true -> {
-                    when(version.toLong() > 0 ){
-                        true -> version.toLong()
-                        false -> throw IllegalArgumentException("Enter a positive number")
-
-                    }
-                }
-            }
+            return checkForWholeNumber(version)
         }
         else throw IllegalArgumentException("Enter a valid version")
 
+    }
+
+
+    fun getSnippetVersion(version : String) : Long{
+        return if(version.toDoubleOrNull() != null) checkForWholeNumber(version)
+        else throw IllegalArgumentException("Enter a valid version")
+    }
+
+    private fun checkForWholeNumber(version: String) : Long {
+        return when(version.matches("\\d+".toRegex())){
+            false -> throw IllegalArgumentException("Enter a whole number")
+            true -> {
+                when(version.toLong() > 0 ){
+                    true -> version.toLong()
+                    false -> throw IllegalArgumentException("Enter a positive number")
+
+                }
+            }
+        }
     }
 }

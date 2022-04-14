@@ -475,7 +475,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getNode(nodeID: String, workspaceID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Entity? {
-        val node =  (repository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node?
+        val node =  (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node?
         if (bookmarkInfo == true && userID != null) {
             node?.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
         }
@@ -784,4 +784,9 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
+}
+
+
+fun main(){
+    NodeService().getNode("NODE_3pxDMh8gdDXzKbtCqKYjY", "WORKSPACE1")
 }

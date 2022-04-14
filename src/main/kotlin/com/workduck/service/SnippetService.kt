@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.requests.CloneSnippetRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.UpdateSnippetVersionRequest
@@ -84,7 +83,7 @@ class SnippetService {
         }
     }
 
-    fun getAllVersionsOfSnippet(snippetID: String, workspaceID: String) : List<Entity> {
+    fun getAllVersionsOfSnippet(snippetID: String, workspaceID: String) : List<Long?> {
         return snippetRepository.getAllVersionsOfSnippet(snippetID, workspaceID)
     }
 
@@ -124,10 +123,6 @@ class SnippetService {
     }
 
 
-    fun getSnippet(snippetID: String, workspaceID: String): Entity? {
-        return repository.get(WorkspaceIdentifier(workspaceID), SnippetIdentifier(snippetID), Snippet::class.java)
-    }
-
     fun makeSnippetPublic(snippetID: String, workspaceID: String, version: Long) {
         togglePublicAccess(snippetID, workspaceID, version, 1)
     }
@@ -162,16 +157,35 @@ class SnippetService {
         return pageRepository.unarchiveOrArchivePages(snippetIDList, workspaceID, ItemStatus.ACTIVE)
     }
 
-    fun deleteArchivedSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
-        val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
-        val deletedSnippetsList: MutableList<String> = mutableListOf()
-        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == snippetIDList.sorted()) { "The passed IDs should be present and archived" }
-        for (snippetID in snippetIDList) {
-            repository.delete(WorkspaceIdentifier(workspaceID), SnippetIdentifier(snippetID))?.also {
-                deletedSnippetsList.add(it.id)
-            }
+//    fun deleteArchivedSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
+//        val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
+//        val deletedSnippetsList: MutableList<String> = mutableListOf()
+//        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == snippetIDList.sorted()) { "The passed IDs should be present and archived" }
+//        for (snippetID in snippetIDList) {
+//            repository.delete(WorkspaceIdentifier(workspaceID), SnippetIdentifier(snippetID))?.also {
+//                deletedSnippetsList.add(it.id)
+//            }
+//        }
+//        return deletedSnippetsList
+//    }
+
+    fun deleteSnippetVersion(snippetID: String, version: Long, workspaceID: String) {
+        snippetRepository.deleteSnippetByVersion(snippetID, workspaceID, version)
+    }
+
+    fun deleteAllVersionsOfSnippet(snippetID: String, workspaceID: String){
+        val listOfSnippets = createSnippetsWithPKSK(getAllVersionsOfSnippet(snippetID, workspaceID), snippetID, workspaceID)
+        snippetRepository.batchDeleteVersions(listOfSnippets)
+    }
+
+    private fun createSnippetsWithPKSK(list : List<Long?>,snippetID: String,  workspaceID: String) : List<Snippet> {
+        return list.map{
+            Snippet(
+                    id = snippetID,
+                    workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+                    version = it
+            )
         }
-        return deletedSnippetsList
     }
 
     fun getAllArchivedSnippetIDsOfWorkspace(workspaceID: String): List<String> {
@@ -179,11 +193,8 @@ class SnippetService {
     }
 
 
-    fun clonePublicSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity {
-        val cloneRequest = wdRequest as CloneSnippetRequest
-        val publicSnippet = getPublicSnippet(cloneRequest.snippetID, cloneRequest.version) as Snippet?
-        require(publicSnippet != null) {"Invalid Public Snippet ID passed"}
-
+    fun clonePublicSnippet(snippetID: String, version: Long, userEmail: String, workspaceID: String): Entity {
+        val publicSnippet = getPublicSnippet(snippetID, version) as Snippet? ?: throw NoSuchElementException("Requested Snippet Not Found")
         val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userEmail, workspaceID)
         return createSnippetWithVersion(newSnippet)
 
@@ -194,7 +205,8 @@ class SnippetService {
                 workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                 lastEditedBy = userEmail,
                 data = publicSnippet.data,
-                referenceSnippet = SnippetIdentifier(publicSnippet.id)
+                referenceSnippet = SnippetIdentifier(publicSnippet.id),
+                title = publicSnippet.title
         )
     }
 
@@ -240,7 +252,6 @@ fun main(){
  }
 """
 
-    val snippetRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
-    SnippetService().createNextSnippetVersion(snippetRequest, "varuntest@workduck.io", "WORKSPACE1")
+    SnippetService().deleteSnippetVersion("SNIPPET1", 3, "WORKSPACE2")
 
 }

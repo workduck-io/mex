@@ -21,6 +21,9 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Page
 import com.workduck.models.Relationship
+import com.workduck.models.Snippet
+import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.SnippetHelper
 import org.apache.logging.log4j.LogManager
 
 class PageRepository <T : Page> (
@@ -41,7 +44,7 @@ class PageRepository <T : Page> (
 
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
-        TODO("Not yet implemented")
+        return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig) ?: throw NoSuchElementException("Not found")
     }
 
 
@@ -74,7 +77,7 @@ class PageRepository <T : Page> (
         return DynamoDBQueryExpression<T>()
                 .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
                 .withIndexName("SK-PK-Index").withConsistentRead(false)
-                .withConditionalOperator("publicAccess = :true and itemStatus = :itemStatus")
+                .withFilterExpression("publicAccess = :true and itemStatus = :itemStatus")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
                     mapper.query(clazz, it, dynamoDBMapperConfig).let { list ->
                         if(list.isNotEmpty()) list[0]
