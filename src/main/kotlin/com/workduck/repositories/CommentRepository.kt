@@ -30,7 +30,7 @@ class CommentRepository(
         TODO("Not yet implemented")
     }
 
-    override fun update(t: Comment): Comment? {
+    override fun update(t: Comment): Comment {
         TODO("Not yet implemented")
     }
 

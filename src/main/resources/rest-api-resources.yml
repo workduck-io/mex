@@ -98,12 +98,24 @@ Snippet:
         method: get
         authorizer: mexAuthorizer
 
+    # create a new snippet
     - httpApi:
         path: /snippet
         method: post
         authorizer: mexAuthorizer
 
-      #deleteNodes( archive them )
+    # create a new version of existing snippet
+    - httpApi:
+        path: /snippet/newVersion
+        method: post
+        authorizer: mexAuthorizer
+
+    # update an existing version
+    - httpApi:
+        path: /snippet
+        method: put
+        authorizer: mexAuthorizer
+
     - httpApi:
         path: /snippet/archive
         method: patch
@@ -128,21 +140,27 @@ Snippet:
 
     # get a public snippet
     - httpApi:
-        path: /snippet/public/{id}
+        path: /snippet/public/{id}/{version}
         method: get
 
     - httpApi:
-        path: POST /snippet/clone/{id}
+        path: /snippet/clone/{id}/{version}
         method: post
 
     - httpApi:
-        path: /snippet/makePublic/{id}
+        path: /snippet/makePublic/{id}/{version}
         method: patch
         authorizer: mexAuthorizer
 
     - httpApi:
         path: /snippet/makePrivate/{id}
         method: patch
+        authorizer: mexAuthorizer
+
+    # get all versions of a snippet
+    - httpApi:
+        path: /snippet/{id}/all
+        method: get
         authorizer: mexAuthorizer
 
 

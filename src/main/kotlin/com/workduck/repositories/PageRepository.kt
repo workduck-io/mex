@@ -35,7 +35,7 @@ class PageRepository <T : Page> (
         TODO("Not yet implemented")
     }
 
-    override fun update(t: T): T? {
+    override fun update(t: T): T {
         TODO("Not yet implemented")
     }
 
@@ -50,31 +50,31 @@ class PageRepository <T : Page> (
     }
 
 
-    fun togglePagePublicAccess(pageID: String, workspaceID: String, accessValue: Long) {
+    fun togglePagePublicAccess(sk: String, workspaceID: String, accessValue: Long) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":publicAccess"] = accessValue
 
-        UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", pageID)
+        UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", sk)
                 .withUpdateExpression("SET publicAccess = :publicAccess")
                 .withValueMap(expressionAttributeValues).let{
                     table.updateItem(it)
                 }
     }
 
-    fun getPublicPage(pageID: String, clazz: Class<T>): T {
+    fun getPublicPage(sk: String, clazz: Class<T>): T {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":SK"] = AttributeValue(pageID)
+        expressionAttributeValues[":SK"] = AttributeValue(sk)
         expressionAttributeValues[":PK"] = AttributeValue("WORKSPACE")
         expressionAttributeValues[":true"] = AttributeValue().withN("1")
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
         return DynamoDBQueryExpression<T>()
                 .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
-                .withIndexName("SK-PK-index").withConsistentRead(false)
-                .withFilterExpression("publicAccess = :true and itemStatus = :itemStatus")
+                .withIndexName("SK-PK-Index").withConsistentRead(false)
+                .withConditionalOperator("publicAccess = :true and itemStatus = :itemStatus")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
                     mapper.query(clazz, it, dynamoDBMapperConfig).let { list ->
                         if(list.isNotEmpty()) list[0]

@@ -7,6 +7,10 @@ class SnippetStrategyFactory {
 
         const val createSnippet = "POST /snippet"
 
+        const val createNewVersion = "POST /snippet/newVersion"
+
+        const val updateSameSnippetVersion = "PUT /snippet"
+
         const val archiveSnippet = "PATCH /snippet/archive"
 
         const val unarchiveSnippet = "PATCH /snippet/unarchive"
@@ -23,10 +27,14 @@ class SnippetStrategyFactory {
 
         const val clonePublicSnippet = "POST /snippet/clone"
 
+        const val getAllSnippetVersions = "GET /snippet/{id}/all"
+
 
         private val snippetRegistry: Map<String, SnippetStrategy> = mapOf(
                 getSnippet to GetSnippetStrategy(),
                 createSnippet to CreateSnippetStrategy(),
+                createNewVersion to CreateNewVersionStrategy(),
+                updateSameSnippetVersion to UpdateSameSnippetVersionStrategy(),
                 archiveSnippet to ArchiveSnippetStrategy(),
                 archiveSnippet to UnarchiveSnippetStrategy(),
                 deleteArchivedSnippet to DeleteArchivedSnippetStrategy(),
@@ -34,7 +42,8 @@ class SnippetStrategyFactory {
                 makeSnippetPublic to MakeSnippetPublicStrategy(),
                 makeSnippetPrivate to MakeSnippetPrivateStrategy(),
                 getPublicSnippet to GetPublicSnippetStrategy(),
-                clonePublicSnippet to ClonePublicSnippetStrategy()
+                clonePublicSnippet to ClonePublicSnippetStrategy(),
+                getAllSnippetVersions to GetAllSnippetVersionsStrategy()
         )
 
         fun getSnippetStrategy(routeKey: String): SnippetStrategy? {

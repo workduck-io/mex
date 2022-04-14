@@ -25,7 +25,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
         }
 
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)

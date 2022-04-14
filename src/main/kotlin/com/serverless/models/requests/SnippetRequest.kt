@@ -10,7 +10,7 @@ import com.workduck.models.AdvancedElement
 data class SnippetRequest(
 
     @JsonProperty("id")
-    val id: String = "",
+    val id: String,
 
 //    @JsonProperty("namespaceIdentifier")
 //    @JsonSerialize(converter = IdentifierSerializer::class)

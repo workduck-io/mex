@@ -14,7 +14,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <uuid.version>4.0.1</uuid.version>
-        <dynamo.version>1.12.70</dynamo.version>
+        <dynamo.version>1.12.197</dynamo.version>
         <jackson.version>2.9.10</jackson.version>
         <detekt.version>1.18.1.1</detekt.version>
         <coroutines.version>1.5.2</coroutines.version>

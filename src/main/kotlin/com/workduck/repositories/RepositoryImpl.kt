@@ -37,7 +37,7 @@ class RepositoryImpl<T : Entity>(
         return t
     }
 
-    override fun update(t: T): T? {
+    override fun update(t: T): T {
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)

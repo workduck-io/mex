@@ -29,7 +29,7 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
-        - IndexName: SK-PK-index
+        - IndexName: SK-PK-Index
           KeySchema:
             - AttributeName: SK
               KeyType: HASH

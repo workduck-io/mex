@@ -16,7 +16,7 @@ interface Page : Entity {
 
     val publicAccess: Boolean
 
-    var createdAt: Long
+    var createdAt: Long?
 
     val updatedAt: Long
 

@@ -25,7 +25,7 @@ class UserPreferenceHandler : RequestHandler<Map<String, Any>, ApiGatewayRespons
             return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
         }
 
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
         val strategy = UserPreferenceStrategyFactory.getUserPreferenceStrategy(wdInput.routeKey)
 

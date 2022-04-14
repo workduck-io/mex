@@ -13,4 +13,22 @@ object SnippetHelper {
     fun convertSnippetToSnippetResponse(snippet : Entity?) : Response? {
         return snippetTransformer.transform(snippet as Snippet?)
     }
+
+    fun getSnippetVersion(version : String) : Long{
+        return if(version.lowercase() == "latest") -1
+        else if (version.toDoubleOrNull() != null){
+            when(version.matches("\\d+".toRegex())){
+                false -> throw IllegalArgumentException("Enter a whole number")
+                true -> {
+                    when(version.toLong() > 0 ){
+                        true -> version.toLong()
+                        false -> throw IllegalArgumentException("Enter a positive number")
+
+                    }
+                }
+            }
+        }
+        else throw IllegalArgumentException("Enter a valid version")
+
+    }
 }

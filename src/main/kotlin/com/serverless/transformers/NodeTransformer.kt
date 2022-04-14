@@ -12,7 +12,7 @@ class NodeTransformer : Transformer<Node> {
             data = t.data,
             lastEditedBy = t.lastEditedBy,
             createdBy = t.createdBy,
-            createdAt = t.createdAt,
+            createdAt = t.createdAt!!,
             updatedAt = t.updatedAt,
             version = t.version,
             tags = t.tags,

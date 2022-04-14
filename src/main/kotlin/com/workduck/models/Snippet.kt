@@ -4,23 +4,20 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBVersionAttribute
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.serverless.utils.Constants
 import com.workduck.converters.IdentifierSerializer
-import com.workduck.converters.NamespaceIdentifierConverter
-import com.workduck.converters.NamespaceIdentifierDeserializer
+import com.workduck.converters.ItemStatusConverter
+import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.SnippetIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
 data class Snippet(
-
-    @JsonProperty("id")
-    @DynamoDBRangeKey(attributeName = "SK")
-    var id: String = Helper.generateNanoID(IdentifierType.SNIPPET.name),
 
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
@@ -29,12 +26,16 @@ data class Snippet(
     @DynamoDBHashKey(attributeName = "PK")
     override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
+    @JsonProperty("version")
+    @DynamoDBAttribute(attributeName = "version")
+    override var version: Long? = 1,
 
-//    @DynamoDBAttribute(attributeName = "AK")
-//    var ak: String? = null,
+    @JsonProperty("id")
+    var id: String = Helper.generateNanoID(IdentifierType.SNIPPET.name),
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: ItemType = ItemType.Snippet,
 
     @JsonProperty("title")
@@ -43,7 +44,8 @@ data class Snippet(
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
-    var itemStatus: String = "ACTIVE",
+    @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
+    var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
@@ -61,6 +63,10 @@ data class Snippet(
     @DynamoDBAttribute(attributeName = "lastEditedBy")
     override var lastEditedBy: String? = null,
 
+    @JsonProperty("referenceSnippet")
+    @DynamoDBAttribute(attributeName = "referenceSnippet")
+    @DynamoDBTypeConverted(converter = SnippetIdentifierConverter::class)
+    var referenceSnippet : SnippetIdentifier? = null,
 
 //    @JsonProperty("namespaceIdentifier")
 //    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
@@ -69,21 +75,28 @@ data class Snippet(
 //    @DynamoDBAttribute(attributeName = "namespaceIdentifier")
 //    override var namespaceIdentifier: NamespaceIdentifier? = null,
 
-    @JsonProperty("version")
-    @DynamoDBVersionAttribute(attributeName = "version")
-    override var version: Long? = null,
-
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
     override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    override var createdAt: Long = System.currentTimeMillis()
+    override var createdAt: Long? = System.currentTimeMillis()
 
 ) : Entity, Page {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     override var updatedAt: Long = System.currentTimeMillis()
+
+    @JsonProperty("sk")
+    @DynamoDBRangeKey(attributeName = "SK")
+    var sk: String = "$id${Constants.DELIMITER}$version"
+
+    companion object {
+        fun setCreatedFieldsNull(page: Page){
+            page.createdAt = null
+            page.createdBy = null
+        }
+    }
 }
