@@ -1,9 +1,24 @@
 package com.workduck.models
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.serverless.utils.Constants
+import com.workduck.converters.IdentifierSerializer
+import com.workduck.converters.ItemTypeConverter
+import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.NodeIdentifierConverter
+import com.workduck.converters.NodeIdentifierListConverter
+import com.workduck.converters.WorkspaceIdentifierConverter
+import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
 /**
@@ -27,17 +42,46 @@ sealed class AssociatedProperty(
 
 @JsonTypeName("tag")
 data class Tag(
-    val id: String = Helper.generateId("TAG"),
-    val name: String,
-    val ownerIdentifier: OwnerIdentifier,
-    val expireAt: Long? = null,
-    val metaData: JsonNode? = null,
+
+    @JsonProperty("workspaceIdentifier")
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    @DynamoDBHashKey(attributeName = "PK")
+    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+
+    @JsonProperty("name")
+    @DynamoDBRangeKey(attributeName = "tagID")
+    var name: String = "New Tag",
+
+    @JsonProperty("id")
+    @DynamoDBAttribute(attributeName = "tagID")
+    var id: String = Helper.generateNanoID("TAG"),
+
+
+    @JsonProperty("createdAt")
+    @DynamoDBAttribute(attributeName = "createdAt")
+    var createdAt: Long = Constants.getCurrentTime(),
+
+
+    //val ownerIdentifier: OwnerIdentifier,
+    //val expireAt: Long? = null,
+    //val metaData: JsonNode? = null,
+
+    @JsonProperty("nodes")
+    @DynamoDBTypeConverted(converter = NodeIdentifierListConverter::class)
+    @DynamoDBAttribute(attributeName = "nodeData")
+    var nodes: List<NodeIdentifier>? = null,
+
+    @JsonProperty("itemType")
+    @DynamoDBAttribute(attributeName = "itemType")
+    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override val itemType: ItemType = ItemType.Tag
 
 ) : AssociatedProperty(AssociatedPropertyType.TAG), Entity {
-//    override val partitionKey: String
-//        get() = TODO("Not yet implemented")
-//
-//    override val sortKey: List<String>
-//        get() = TODO("Not yet implemented")
+
+    @JsonProperty("updatedAt")
+    @DynamoDBAttribute(attributeName = "updatedAt")
+    var updatedAt: Long = Constants.getCurrentTime()
+
 }
