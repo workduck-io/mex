@@ -13,7 +13,7 @@ class ClonePublicSnippetStrategy: SnippetStrategy {
         val version = input.pathParameters?.version?.let { SnippetHelper.getSnippetVersion(it) } !!
 
         return input.pathParameters.id?.let { snippetID ->
-            snippetService.clonePublicSnippet(snippetID, version, input.tokenBody.email, input.headers.workspaceID).let {
+            snippetService.clonePublicSnippet(snippetID, version, input.tokenBody.userID, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             }
         }!! /* id will always exist ( non-null ) since path is being matched */

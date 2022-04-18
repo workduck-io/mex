@@ -10,7 +10,7 @@ class BulkCreateNodesStrategy : NodeStrategy {
         val errorMessage = "Error updating node path"
 
     return input.payload?.let{ request ->
-        ApiResponseHelper.generateStandardResponse(nodeService.bulkCreateNodes(request, input.headers.workspaceID, input.tokenBody.email)
+        ApiResponseHelper.generateStandardResponse(nodeService.bulkCreateNodes(request, input.headers.workspaceID, input.tokenBody.userID)
                 , errorMessage)} ?: ApiResponseHelper.generateStandardErrorResponse(errorMessage)
 
     }

@@ -26,11 +26,11 @@ class GetAllNodesStrategy : NodeStrategy {
                                 ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
                             }
 
-                        checkEmail(idList[0]) ->
+                        else ->
                             nodeService.getAllNodesWithUserID(idList[0]).let {
                                 ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
                             }
-                        else -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
+
                     }
 
                 2 -> when {

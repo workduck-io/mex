@@ -118,11 +118,11 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userEmail: String, versionEnabled: Boolean = false): Entity? =
+    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userID: String, versionEnabled: Boolean = false): Entity? =
         runBlocking {
 
             val nodeRequest: NodeRequest = request as NodeRequest
-            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userEmail)
+            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
             val jobToGetStoredNode = async { getNode(node.id, workspaceID) as Node? }
             val jobToGetWorkspace =
@@ -194,7 +194,7 @@ class NodeService( // Todo: Inject them from handlers
      * will be used to insert empty nodes in between two existing nodes
      *
      */
-    fun refactor(wdRequest: WDRequest, userEmail: String, workspace: Workspace) = runBlocking {
+    fun refactor(wdRequest: WDRequest, userID: String, workspace: Workspace) = runBlocking {
 
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
@@ -207,13 +207,13 @@ class NodeService( // Todo: Inject them from handlers
         // Data model has ensures that list will never be empty
         when (existingNodes.last() != newNodes.last()) {
             true -> { /* need to rename last node from existing path to last node from new path */
-                launch { renameNode(lastNodeID, newNodes.last(), userEmail, workspace.id) }
+                launch { renameNode(lastNodeID, newNodes.last(), userID, workspace.id) }
             }
         }
 
         val namesOfNodesToCreate = getNodesToCreateInRefactor(existingNodes, newNodes)
 
-        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, userEmail, workspace.id, refactorNodePathRequest.namespaceID)
+        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, userID, workspace.id, refactorNodePathRequest.namespaceID)
 
        // launch { nodeRepository.createMultipleNodes(nodesToCreate) }
 
@@ -315,8 +315,8 @@ class NodeService( // Todo: Inject them from handlers
         return nodePathWithIDsOfExistingNodes.getListOfNodes().take(indexOfLastNode-1).convertToPathString()
     }
 
-    private fun renameNode(nodeID: String, newName: String, userEmail: String, workspaceID: String) {
-        nodeRepository.renameNode(nodeID, newName, userEmail, workspaceID)
+    private fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String) {
+        nodeRepository.renameNode(nodeID, newName, userID, workspaceID)
     }
 
     private fun setMetaDataForEmptyNodes(
@@ -344,10 +344,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userEmail: String) = runBlocking {
+    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String) = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
-        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userEmail)
+        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
@@ -516,7 +516,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodeIDToNodeNameMap(workspaceID, itemStatus)
     }
 
-    fun append(nodeID: String, workspaceID: String, userEmail: String, elementsListRequest: WDRequest): Map<String, Any>? {
+    fun append(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val elements = elementsListRequestConverted.elements
@@ -527,11 +527,11 @@ class NodeService( // Todo: Inject them from handlers
         for (e in elements) {
             orderList += e.id
 
-            e.lastEditedBy = userEmail
+            e.lastEditedBy = userID
             e.createdAt = Constants.getCurrentTime()
             e.updatedAt = e.createdAt
         }
-        return nodeRepository.append(nodeID, workspaceID, userEmail, elements, orderList)
+        return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
     }
 
     fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? {
@@ -602,8 +602,8 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithWorkspaceID(workspaceID)
     }
 
-    fun getAllNodesWithUserID(userEmail: String): List<String> {
-        return nodeRepository.getAllNodesWithUserID(userEmail)
+    fun getAllNodesWithUserID(userID: String): List<String> {
+        return nodeRepository.getAllNodesWithUserID(userID)
     }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
@@ -611,7 +611,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
 
-    fun updateNodeBlock(nodeID: String, workspaceID: String, userEmail: String, elementsListRequest: WDRequest): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val element = elementsListRequestConverted.elements.let { it[0] }
@@ -621,11 +621,11 @@ class NodeService( // Todo: Inject them from handlers
         // TODO(since we directly set the block info, createdAt and createdBy get lost since we're not getting anything from ddb)
         val blockData = objectMapper.writeValueAsString(element)
 
-        return nodeRepository.updateNodeBlock(nodeID, workspaceID, blockData, element.id, userEmail)
+        return nodeRepository.updateNodeBlock(nodeID, workspaceID, blockData, element.id, userID)
     }
 
-    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userEmail: String): Node =
-        nodeRequest.toNode(workspaceID, userEmail)
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userID: String): Node =
+        nodeRequest.toNode(workspaceID, userID)
 
 
     fun getAllArchivedSnippetIDsOfWorkspace(workspaceID : String) : MutableList<String> {

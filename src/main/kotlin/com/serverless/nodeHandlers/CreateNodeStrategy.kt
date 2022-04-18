@@ -19,8 +19,8 @@ class CreateNodeStrategy : NodeStrategy {
         }
 
         val node: Entity? = if(versionEnabled != null)
-            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.email, versionEnabled)
-        else nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.email)
+            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID, versionEnabled)
+        else nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID)
 
         val nodeResponse: Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)

@@ -8,23 +8,23 @@ import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 
-fun NodeRequest.toNode(workspaceID: String, userEmail: String): Node =
+fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
     Node(
         id = this.id,
         title = this.title,
         namespaceIdentifier = this.namespaceIdentifier,
         workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-        lastEditedBy = userEmail,
+        lastEditedBy = userID,
         tags = this.tags,
         data = this.data
     )
 
 
-fun SnippetRequest.createSnippetObjectFromSnippetRequest(userEmail: String, workspaceID: String, version: Int = 1): Snippet =
+fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String, version: Int = 1): Snippet =
     Snippet(
             id = this.id,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-            lastEditedBy = userEmail,
+            lastEditedBy = userID,
             data = this.data,
             title = this.title,
             version = version

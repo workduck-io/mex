@@ -11,7 +11,7 @@ class CreateSnippetStrategy : SnippetStrategy {
         val errorMessage = "Error creating snippet"
 
         return input.payload?.let { snippetRequest ->
-            snippetService.createSnippet(snippetRequest, input.tokenBody.email, input.headers.workspaceID).let {
+            snippetService.createSnippet(snippetRequest, input.tokenBody.userID, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             }
         } ?: throw IllegalArgumentException("Malformed Request")

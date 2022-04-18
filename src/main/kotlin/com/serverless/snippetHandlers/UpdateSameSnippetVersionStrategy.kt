@@ -12,7 +12,7 @@ class UpdateSameSnippetVersionStrategy : SnippetStrategy {
 
         val version = input.pathParameters?.version?.let { SnippetHelper.getSnippetVersion(it) } !!
         return input.payload?.let { snippetRequest ->
-            snippetService.updateSnippet(snippetRequest, version, input.tokenBody.email, input.headers.workspaceID).let {
+            snippetService.updateSnippet(snippetRequest, version, input.tokenBody.userID, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(null,204, errorMessage)
             }
         } ?: throw IllegalArgumentException("Malformed Request")

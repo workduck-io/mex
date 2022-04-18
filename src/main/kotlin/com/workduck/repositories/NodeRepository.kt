@@ -41,7 +41,7 @@ class NodeRepository(
     private var tableName: String
 )  {
 
-    fun append(nodeID: String, workspaceID: String, userEmail: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
+    fun append(nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
 
         /* this is to ensure correct ordering of blocks/ elements */
@@ -58,7 +58,7 @@ class NodeRepository(
             expressionAttributeValues[":val$counter"] = entry
         }
 
-        expressionAttributeValues[":userID"] = userEmail
+        expressionAttributeValues[":userID"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
@@ -167,13 +167,13 @@ class NodeRepository(
         }
     }
 
-    fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userEmail: String): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
         val table = dynamoDB.getTable(tableName)
         val objectMapper = ObjectMapper()
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedBlock"] = updatedBlock
-        expressionAttributeValues[":userID"] = userEmail
+        expressionAttributeValues[":userID"] = userID
 
         return UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
             .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
@@ -347,13 +347,13 @@ class NodeRepository(
                         .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-    fun renameNode(nodeID: String, newName: String, userEmail: String, workspaceID: String){
+    fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String){
         LOG.info("$nodeID , new name : $newName")
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":title"] = newName
-        expressionAttributeValues[":lastEditedBy"] = userEmail
+        expressionAttributeValues[":lastEditedBy"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
 
         try {

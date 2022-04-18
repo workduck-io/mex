@@ -16,7 +16,7 @@ class RefactorNodePathStrategy : NodeStrategy {
 
 
         return input.payload?.let{ request ->
-            ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.tokenBody.email, workspace)
+            ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.tokenBody.userID, workspace)
                     , errorMessage)} ?: ApiResponseHelper.generateStandardErrorResponse(errorMessage)
 
     }

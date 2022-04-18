@@ -51,8 +51,8 @@ class SnippetService {
     private val pageRepository: PageRepository<Snippet> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val repository: Repository<Snippet> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
-    fun createSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String): Entity {
-        val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userEmail, workspaceID)
+    fun createSnippet(wdRequest: WDRequest, userID: String, workspaceID: String): Entity {
+        val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)
         return createSnippetWithVersion(snippet)
     }
 
@@ -98,10 +98,10 @@ class SnippetService {
 
 
     /* given a snippet version, update snippet info and keep the version number same */
-    fun updateSnippet(wdRequest: WDRequest, version: Int, userEmail: String, workspaceID: String) : Entity {
+    fun updateSnippet(wdRequest: WDRequest, version: Int, userID: String, workspaceID: String) : Entity {
         val updateRequest = wdRequest as SnippetRequest
 
-        val snippet: Snippet = updateRequest.createSnippetObjectFromSnippetRequest(userEmail, workspaceID, version)
+        val snippet: Snippet = updateRequest.createSnippetObjectFromSnippetRequest(userID, workspaceID, version)
 
         /* since null fields won't be edited in DDB */
         Snippet.setCreatedFieldsNull(snippet)
@@ -113,8 +113,8 @@ class SnippetService {
 
     }
 
-    fun createNextSnippetVersion(wdRequest: WDRequest, userEmail: String, workspaceID: String) : Entity {
-        val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userEmail, workspaceID)
+    fun createNextSnippetVersion(wdRequest: WDRequest, userID: String, workspaceID: String) : Entity {
+        val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)
         val latestSnippetVersion = getLatestVersionNumberOfSnippet(snippet.id, workspaceID)
         return createSnippetWithVersion(snippet, latestSnippetVersion + 1)
     }
@@ -194,17 +194,17 @@ class SnippetService {
     }
 
 
-    fun clonePublicSnippet(snippetID: String, version: Int, userEmail: String, workspaceID: String): Entity {
+    fun clonePublicSnippet(snippetID: String, version: Int, userID: String, workspaceID: String): Entity {
         val publicSnippet = getPublicSnippet(snippetID, version) as Snippet? ?: throw NoSuchElementException("Requested Snippet Not Found")
-        val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userEmail, workspaceID)
+        val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userID, workspaceID)
         return createSnippetWithVersion(newSnippet)
 
     }
 
-    private fun createSnippetFromPublicSnippet(publicSnippet: Snippet, userEmail: String, workspaceID: String): Snippet{
+    private fun createSnippetFromPublicSnippet(publicSnippet: Snippet, userID: String, workspaceID: String): Snippet{
         return Snippet(
                 workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-                lastEditedBy = userEmail,
+                lastEditedBy = userID,
                 data = publicSnippet.data,
                 referenceSnippet = SnippetIdentifier(publicSnippet.id),
                 title = publicSnippet.title
