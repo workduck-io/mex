@@ -9,12 +9,12 @@ import com.workduck.models.AdvancedElement
 data class UpdateSnippetVersionRequest(
     val id: String,
 
-    override val data: List<AdvancedElement>?,
+    val data: List<AdvancedElement>?,
 
-    override val title: String,
+    val title: String,
 
     val version: Long
-) : WDRequest, PageRequest {
+) : WDRequest {
 
     init {
         require(version > 0) {

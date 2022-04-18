@@ -14,7 +14,7 @@ object SnippetHelper {
         return snippetTransformer.transform(snippet as Snippet?)
     }
 
-    fun getSnippetVersionWithLatestAllowed(version : String) : Long{
+    fun getSnippetVersionWithLatestAllowed(version : String) : Int{
         return if(version.lowercase() == "latest") -1
         else if (version.toDoubleOrNull() != null){
             return checkForWholeNumber(version)
@@ -24,17 +24,17 @@ object SnippetHelper {
     }
 
 
-    fun getSnippetVersion(version : String) : Long{
+    fun getSnippetVersion(version : String) : Int{
         return if(version.toDoubleOrNull() != null) checkForWholeNumber(version)
         else throw IllegalArgumentException("Enter a valid version")
     }
 
-    private fun checkForWholeNumber(version: String) : Long {
+    private fun checkForWholeNumber(version: String) : Int {
         return when(version.matches("\\d+".toRegex())){
             false -> throw IllegalArgumentException("Enter a whole number")
             true -> {
-                when(version.toLong() > 0 ){
-                    true -> version.toLong()
+                when(version.toInt() > 0 ){
+                    true -> version.toInt()
                     false -> throw IllegalArgumentException("Enter a positive number")
 
                 }

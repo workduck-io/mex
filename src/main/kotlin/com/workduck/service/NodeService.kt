@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -788,5 +789,43 @@ class NodeService( // Todo: Inject them from handlers
 
 
 fun main(){
-    NodeService().getNode("NODE_3pxDMh8gdDXzKbtCqKYjY", "WORKSPACE1")
+    val jsonString: String = """
+ {
+     "type" : "NodeRequest",
+     "title" : "F",
+     "referenceID": "NODE2",
+     "lastEditedBy" : "USERVarun",
+     "id": "NODE6",
+     "namespaceIdentifier" : "NAMESPACE1",
+     "data": [
+     {
+         "id": "sampleParentID",
+         "elementType": "paragraph",
+         "children": [
+         {
+             "id" : "sampleChildID",
+             "content" : "sample child content 1",
+             "elementType": "paragraph",
+             "properties" :  { "bold" : true, "italic" : true  }
+         }
+         ]
+     },
+     {
+         "id": "1234",
+         "elementType": "paragraph",
+         "children": [
+         {
+             "id" : "sampleChildID",
+             "content" : "sample child content",
+             "elementType": "paragraph",
+             "properties" :  { "bold" : true, "italic" : true  }
+         }
+         ]
+     }
+     ]
+ }"""
+
+    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
+    println(nodeRequest)
+    //NodeService().createAndUpdateNode(nodeRequest, "WORKSPACE1", "v@gmail.com")
 }

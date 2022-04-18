@@ -25,18 +25,18 @@ class SnippetRepository(
         private val tableName: String
 ) {
 
-    fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Long) : Entity {
+    fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Int) : Entity {
         return mapper.load(Snippet::class.java, WorkspaceIdentifier(workspaceID), getSnippetSK(snippetID, version), dynamoDBMapperConfig) ?:
             throw NoSuchElementException("Not found")
     }
 
-    fun deleteSnippetByVersion(snippetID: String, workspaceID: String, version: Long) {
+    fun deleteSnippetByVersion(snippetID: String, workspaceID: String, version: Int) {
         val table = dynamoDB.getTable(tableName)
         DeleteItemSpec().withPrimaryKey("PK", workspaceID, "SK", getSnippetSK(snippetID, version)).also { table.deleteItem(it) }
 
     }
 
-    fun getLatestVersionNumberOfSnippet(snippetID: String, workspaceID: String): Long {
+    fun getLatestVersionNumberOfSnippet(snippetID: String, workspaceID: String): Int {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
@@ -57,7 +57,7 @@ class SnippetRepository(
 
     }
 
-    fun getAllVersionsOfSnippet(snippetID: String, workspaceID: String): List<Long?> {
+    fun getAllVersionsOfSnippet(snippetID: String, workspaceID: String): List<Int?> {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)

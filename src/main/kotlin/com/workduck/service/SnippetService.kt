@@ -56,7 +56,7 @@ class SnippetService {
         return createSnippetWithVersion(snippet)
     }
 
-    private fun createSnippetWithVersion(snippet: Snippet, version: Long = 1) : Entity{
+    private fun createSnippetWithVersion(snippet: Snippet, version: Int = 1) : Entity{
         snippet.dataOrder = createDataOrderForPage(snippet)
 
         snippet.setVersion(version)
@@ -76,14 +76,14 @@ class SnippetService {
         return repository.create(snippet)
     }
 
-    fun getSnippet(snippetID: String, workspaceID: String, version: Long? = null) : Entity {
+    fun getSnippet(snippetID: String, workspaceID: String, version: Int? = null) : Entity {
         return when(version){
             null -> getLatestSnippet(snippetID, workspaceID)
             else -> getSnippetByVersion(snippetID, workspaceID, version)
         }
     }
 
-    fun getAllVersionsOfSnippet(snippetID: String, workspaceID: String) : List<Long?> {
+    fun getAllVersionsOfSnippet(snippetID: String, workspaceID: String) : List<Int?> {
         return snippetRepository.getAllVersionsOfSnippet(snippetID, workspaceID)
     }
 
@@ -92,15 +92,16 @@ class SnippetService {
     }
 
 
-    fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Long) : Entity {
+    fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Int) : Entity {
         return snippetRepository.getSnippetByVersion(snippetID, workspaceID, version)
     }
 
 
     /* given a snippet version, update snippet info and keep the version number same */
-    fun updateSnippet(wdRequest: WDRequest, userEmail: String, workspaceID: String) : Entity {
-        val updateRequest = wdRequest as UpdateSnippetVersionRequest
-        val snippet: Snippet = updateRequest.createSnippetObjectFromUpdateSnippetVersionRequest(userEmail, workspaceID, updateRequest.version)
+    fun updateSnippet(wdRequest: WDRequest, version: Int, userEmail: String, workspaceID: String) : Entity {
+        val updateRequest = wdRequest as SnippetRequest
+
+        val snippet: Snippet = updateRequest.createSnippetObjectFromSnippetRequest(userEmail, workspaceID, version)
 
         /* since null fields won't be edited in DDB */
         Snippet.setCreatedFieldsNull(snippet)
@@ -118,21 +119,21 @@ class SnippetService {
         return createSnippetWithVersion(snippet, latestSnippetVersion + 1)
     }
 
-    private fun getLatestVersionNumberOfSnippet(snippetID: String, workspaceID: String) : Long{
+    private fun getLatestVersionNumberOfSnippet(snippetID: String, workspaceID: String) : Int{
         return snippetRepository.getLatestVersionNumberOfSnippet(snippetID, workspaceID)
     }
 
 
-    fun makeSnippetPublic(snippetID: String, workspaceID: String, version: Long) {
+    fun makeSnippetPublic(snippetID: String, workspaceID: String, version: Int) {
         togglePublicAccess(snippetID, workspaceID, version, 1)
     }
 
-    fun makeSnippetPrivate(snippetID: String, workspaceID: String, version: Long) {
+    fun makeSnippetPrivate(snippetID: String, workspaceID: String, version: Int) {
         togglePublicAccess(snippetID, workspaceID, version, 0)
     }
 
-    private fun togglePublicAccess(snippetID: String, workspaceID: String, version: Long, accessValue: Long){
-        when(version == -1L ){
+    private fun togglePublicAccess(snippetID: String, workspaceID: String, version: Int, accessValue: Long){
+        when(version == -1 ){
             true -> {
                 val latestVersion = snippetRepository.getLatestVersionNumberOfSnippet(snippetID, workspaceID)
                 pageRepository.togglePagePublicAccess(getSnippetSK(snippetID, latestVersion), workspaceID, accessValue)
@@ -141,7 +142,7 @@ class SnippetService {
         }
     }
 
-    fun getPublicSnippet(snippetID: String, version: Long): Entity? {
+    fun getPublicSnippet(snippetID: String, version: Int): Entity? {
         return pageRepository.getPublicPage(getSnippetSK(snippetID, version), Snippet::class.java)
     }
 
@@ -169,7 +170,7 @@ class SnippetService {
 //        return deletedSnippetsList
 //    }
 
-    fun deleteSnippetVersion(snippetID: String, version: Long, workspaceID: String) {
+    fun deleteSnippetVersion(snippetID: String, version: Int, workspaceID: String) {
         snippetRepository.deleteSnippetByVersion(snippetID, workspaceID, version)
     }
 
@@ -178,7 +179,7 @@ class SnippetService {
         snippetRepository.batchDeleteVersions(listOfSnippets)
     }
 
-    private fun createSnippetsWithPKSK(list : List<Long?>,snippetID: String,  workspaceID: String) : List<Snippet> {
+    private fun createSnippetsWithPKSK(list : List<Int?>,snippetID: String,  workspaceID: String) : List<Snippet> {
         return list.map{
             Snippet(
                     id = snippetID,
@@ -193,7 +194,7 @@ class SnippetService {
     }
 
 
-    fun clonePublicSnippet(snippetID: String, version: Long, userEmail: String, workspaceID: String): Entity {
+    fun clonePublicSnippet(snippetID: String, version: Int, userEmail: String, workspaceID: String): Entity {
         val publicSnippet = getPublicSnippet(snippetID, version) as Snippet? ?: throw NoSuchElementException("Requested Snippet Not Found")
         val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userEmail, workspaceID)
         return createSnippetWithVersion(newSnippet)

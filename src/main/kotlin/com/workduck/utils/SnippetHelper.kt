@@ -4,5 +4,5 @@ import com.serverless.utils.Constants
 
 object SnippetHelper {
 
-    fun getSnippetSK(snippetID: String, version: Long) : String = "$snippetID${Constants.DELIMITER}$version"
+    fun getSnippetSK(snippetID: String, version: Int) : String = "$snippetID${Constants.DELIMITER}$version"
 }

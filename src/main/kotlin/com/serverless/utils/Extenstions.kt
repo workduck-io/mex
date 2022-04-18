@@ -20,28 +20,18 @@ fun NodeRequest.toNode(workspaceID: String, userEmail: String): Node =
     )
 
 
-fun SnippetRequest.createSnippetObjectFromSnippetRequest(userEmail: String, workspaceID: String): Snippet =
+fun SnippetRequest.createSnippetObjectFromSnippetRequest(userEmail: String, workspaceID: String, version: Int = 1): Snippet =
     Snippet(
             id = this.id,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
             lastEditedBy = userEmail,
             data = this.data,
-            title = this.title
+            title = this.title,
+            version = version
     )
 
 
-fun UpdateSnippetVersionRequest.createSnippetObjectFromUpdateSnippetVersionRequest(userEmail: String, workspaceID: String, version: Long): Snippet =
-    Snippet(
-            id = this.id,
-            version = this.version,
-            workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-            lastEditedBy = userEmail,
-            data = this.data,
-            title = this.title
-    )
-
-
-fun Snippet.setVersion(version: Long){
+fun Snippet.setVersion(version: Int){
     this.version = version
     this.sk = "${this.id}${Constants.DELIMITER}$version"
 }

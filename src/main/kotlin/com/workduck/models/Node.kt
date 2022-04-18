@@ -58,7 +58,7 @@ data class Node(
 
     @JsonProperty("version")
     @DynamoDBVersionAttribute(attributeName = "version")
-    override var version: Long? = null,
+    override var version: Int? = null,
 
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)

@@ -11,7 +11,7 @@ class GetSnippetStrategy : SnippetStrategy {
         val errorMessage = "Error getting snippet"
 
         val version = input.queryStringParameters?.let{
-            it["version"]?.toLong()
+            it["version"]?.toInt()
         }
 
         return input.pathParameters?.id?.let { snippetID ->

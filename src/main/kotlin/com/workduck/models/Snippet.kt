@@ -28,7 +28,7 @@ data class Snippet(
 
     @JsonProperty("version")
     @DynamoDBAttribute(attributeName = "version")
-    override var version: Long? = 1,
+    override var version: Int? = 1,
 
     @JsonProperty("id")
     var id: String = Helper.generateNanoID(IdentifierType.SNIPPET.name),

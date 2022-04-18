@@ -22,7 +22,7 @@ interface Page : Entity {
 
     val updatedAt: Long
 
-    var version: Long?
+    var version: Int?
 
     companion object {
         fun populatePageWithCreatedFields(page: Page, storedPage: Page) {

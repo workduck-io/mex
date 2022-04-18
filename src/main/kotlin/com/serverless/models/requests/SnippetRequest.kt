@@ -18,9 +18,14 @@ data class SnippetRequest(
 //    override val namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("data")
-    override val data: List<AdvancedElement>? = null,
+    val data: List<AdvancedElement>? = null,
 
     @JsonProperty("title")
-    override val title: String,
+    val title: String,
 
-) : WDRequest, PageRequest
+) : WDRequest {
+
+    init {
+        require(title.isNotEmpty()) { "Title is required" }
+    }
+}

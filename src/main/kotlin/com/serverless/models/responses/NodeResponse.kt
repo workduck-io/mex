@@ -5,11 +5,11 @@ import com.workduck.models.AdvancedElement
 data class NodeResponse(
     val id: String? = null,
 
-    override val data: List<AdvancedElement> ? = null,
+    val data: List<AdvancedElement> ? = null,
 
-    override val lastEditedBy: String?,
+    val lastEditedBy: String?,
 
-    override val createdBy: String?,
+    val createdBy: String?,
 
     override val createdAt: Long,
 
@@ -19,7 +19,7 @@ data class NodeResponse(
 
     var tags: MutableList<String>?,
 
-    override var version: Long? = null,
+    var version: Int? = null,
 
     var namespaceID: String? = null,
 
@@ -28,4 +28,4 @@ data class NodeResponse(
     var isBookmarked: Boolean? = null,
 
     var publicAccess: Boolean
-) : Response, PageResponse, TimestampAdhereResponse
+) : Response, TimestampAdhereResponse

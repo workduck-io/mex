@@ -5,17 +5,17 @@ import com.workduck.models.AdvancedElement
 data class SnippetResponse(
     val id: String?,
 
-    override val data: List<AdvancedElement>?,
+    val data: List<AdvancedElement>?,
 
-    override val lastEditedBy: String?,
+    val lastEditedBy: String?,
 
-    override val createdBy: String?,
+    val createdBy: String?,
 
     override val createdAt: Long,
 
     override val updatedAt: Long,
 
-    override var version: Long?,
+    var version: Int?,
 
 
-) : Response, PageResponse, TimestampAdhereResponse
+) : Response, TimestampAdhereResponse
