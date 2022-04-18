@@ -3,6 +3,7 @@ package com.workduck.models
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
@@ -41,6 +42,7 @@ sealed class AssociatedProperty(
 )
 
 @JsonTypeName("tag")
+@DynamoDBTable(tableName = "local-mex")
 data class Tag(
 
     @JsonProperty("workspaceIdentifier")
@@ -51,12 +53,11 @@ data class Tag(
     var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     @JsonProperty("name")
-    @DynamoDBRangeKey(attributeName = "tagID")
+    @DynamoDBRangeKey(attributeName = "SK")
     var name: String = "New Tag",
 
-    @JsonProperty("id")
-    @DynamoDBAttribute(attributeName = "tagID")
-    var id: String = Helper.generateNanoID("TAG"),
+//    @DynamoDBAttribute(attributeName = "tagID")
+//    var id: String = Helper.generateNanoID("TAG"),
 
 
     @JsonProperty("createdAt")
@@ -70,13 +71,13 @@ data class Tag(
 
     @JsonProperty("nodes")
     @DynamoDBTypeConverted(converter = NodeIdentifierListConverter::class)
-    @DynamoDBAttribute(attributeName = "nodeData")
+    @DynamoDBAttribute(attributeName = "nodes")
     var nodes: List<NodeIdentifier>? = null,
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override val itemType: ItemType = ItemType.Tag
+    override var itemType: ItemType = ItemType.Tag
 
 ) : AssociatedProperty(AssociatedPropertyType.TAG), Entity {
 
