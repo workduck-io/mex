@@ -4,13 +4,13 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.SnippetRequest
-import com.serverless.models.requests.UpdateSnippetVersionRequest
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.SnippetHelper
 import com.serverless.utils.createSnippetObjectFromSnippetRequest
-import com.serverless.utils.createSnippetObjectFromUpdateSnippetVersionRequest
 import com.serverless.utils.setVersion
 import com.workduck.models.Entity
 import com.workduck.models.ItemStatus
@@ -24,12 +24,10 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.SnippetRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
-import com.workduck.utils.PageHelper.comparePageWithStoredPage
 import com.workduck.utils.PageHelper.convertGenericRequestToList
 import com.workduck.utils.PageHelper.createDataOrderForPage
-import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.SnippetHelper.getSnippetSK
-import kotlinx.coroutines.runBlocking
+import com.workduck.utils.SnippetHelper.isCreatePossible
 import org.apache.logging.log4j.LogManager
 
 class SnippetService {
@@ -51,18 +49,56 @@ class SnippetService {
     private val pageRepository: PageRepository<Snippet> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val repository: Repository<Snippet> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
-    fun createSnippet(wdRequest: WDRequest, userID: String, workspaceID: String): Entity {
+    fun createAndUpdateSnippet(wdRequest: WDRequest, userID: String, workspaceID: String, createNextVersion: Boolean = false): Entity {
         val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)
-        return createSnippetWithVersion(snippet)
+
+        LOG.info(snippet)
+
+        setMetadata(snippet)
+
+        LOG.info(createNextVersion)
+        return if(!createNextVersion) { /* either create a new snippet or update the existing version */
+            if (isCreatePossible(snippet.version!!)) { /* update and create both allowed */
+                createOrUpdate(snippet)
+            } else { /* only update allowed */
+                LOG.info("Updating snippet")
+                updateSnippet(snippet)
+            }
+        } else{
+            createNextVersion(snippet)
+        }
+
     }
 
-    private fun createSnippetWithVersion(snippet: Snippet, version: Int = 1) : Entity{
+
+    private fun createNextVersion(snippet: Snippet) : Entity{
+        require(getLatestVersionNumberOfSnippet(snippet.id, snippet.workspaceIdentifier.id) == snippet.version ) {
+            "To create next version, pass the latest existing version number"
+        }
+        snippet.setVersion(snippet.version!! + 1)
+        return snippetRepository.createSnippet(snippet)
+    }
+
+    private fun createOrUpdate(snippet: Snippet) : Entity {
+        return try{
+            snippetRepository.createSnippet(snippet)
+        } catch (e : ConditionalCheckFailedException){
+            updateSnippet(snippet)
+        }
+    }
+
+
+    private fun updateSnippet(snippet: Snippet) : Entity{
+        Snippet.setCreatedFieldsNull(snippet)
+        LOG.info("Updating node : $snippet")
+        return snippetRepository.updateSnippet(snippet)
+    }
+
+
+    private fun setMetadata(snippet: Snippet){
         snippet.dataOrder = createDataOrderForPage(snippet)
 
-        snippet.setVersion(version)
-
-        /* only when node is actually being created */
-        snippet.createdBy = snippet.lastEditedBy
+        snippet.createdBy = snippet.lastEditedBy /* if an update operation is expected, this field will be set to null */
 
         for (e in snippet.data!!) {
             e.createdBy = snippet.lastEditedBy
@@ -71,8 +107,12 @@ class SnippetService {
             e.updatedAt = snippet.createdAt
         }
 
-        LOG.info("Creating node : $snippet")
+    }
 
+
+    private fun createSnippetWithVersion(snippet: Snippet, version: Int = 1) : Entity{
+        setMetadata(snippet)
+        snippet.setVersion(version)
         return repository.create(snippet)
     }
 
@@ -94,29 +134,6 @@ class SnippetService {
 
     fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Int) : Entity {
         return snippetRepository.getSnippetByVersion(snippetID, workspaceID, version)
-    }
-
-
-    /* given a snippet version, update snippet info and keep the version number same */
-    fun updateSnippet(wdRequest: WDRequest, version: Int, userID: String, workspaceID: String) : Entity {
-        val updateRequest = wdRequest as SnippetRequest
-
-        val snippet: Snippet = updateRequest.createSnippetObjectFromSnippetRequest(userID, workspaceID, version)
-
-        /* since null fields won't be edited in DDB */
-        Snippet.setCreatedFieldsNull(snippet)
-
-        snippet.dataOrder = createDataOrderForPage(snippet)
-
-        LOG.info("Updating node : $snippet")
-        return repository.update(snippet)
-
-    }
-
-    fun createNextSnippetVersion(wdRequest: WDRequest, userID: String, workspaceID: String) : Entity {
-        val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)
-        val latestSnippetVersion = getLatestVersionNumberOfSnippet(snippet.id, workspaceID)
-        return createSnippetWithVersion(snippet, latestSnippetVersion + 1)
     }
 
     private fun getLatestVersionNumberOfSnippet(snippetID: String, workspaceID: String) : Int{
@@ -146,29 +163,6 @@ class SnippetService {
         return pageRepository.getPublicPage(getSnippetSK(snippetID, version), Snippet::class.java)
     }
 
-
-    fun archiveSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
-        val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
-        LOG.info(snippetIDList)
-        return pageRepository.unarchiveOrArchivePages(snippetIDList, workspaceID, ItemStatus.ARCHIVED)
-    }
-
-    fun unarchiveSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
-        val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
-        return pageRepository.unarchiveOrArchivePages(snippetIDList, workspaceID, ItemStatus.ACTIVE)
-    }
-
-//    fun deleteArchivedSnippets(wdRequest: WDRequest, workspaceID: String): MutableList<String> {
-//        val snippetIDList = convertGenericRequestToList(wdRequest as GenericListRequest)
-//        val deletedSnippetsList: MutableList<String> = mutableListOf()
-//        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == snippetIDList.sorted()) { "The passed IDs should be present and archived" }
-//        for (snippetID in snippetIDList) {
-//            repository.delete(WorkspaceIdentifier(workspaceID), SnippetIdentifier(snippetID))?.also {
-//                deletedSnippetsList.add(it.id)
-//            }
-//        }
-//        return deletedSnippetsList
-//    }
 
     fun deleteSnippetVersion(snippetID: String, version: Int, workspaceID: String) {
         snippetRepository.deleteSnippetByVersion(snippetID, workspaceID, version)
@@ -221,9 +215,9 @@ fun main(){
     val jsonString: String = """
  {
      "type" : "SnippetRequest",
-     "lastEditedBy" : "USERVarun",
      "id": "SNIPPET1",
      "title" : "Random Heading 2",
+     "version" : 1.5,
      "data": [
      {
          "id": "sampleParentID",
@@ -253,6 +247,8 @@ fun main(){
  }
 """
 
-    SnippetService().deleteSnippetVersion("SNIPPET1", 3, "WORKSPACE2")
+    val r = Helper.objectMapper.readValue<WDRequest>(jsonString)
+    println(r)
+   // SnippetService().createAndUpdateSnippet(Helper.objectMapper.readValue<WDRequest>(jsonString), "test@workduck", "WORKSPACE1", true)
 
 }

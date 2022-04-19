@@ -3,6 +3,7 @@ package com.workduck.models
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -17,6 +18,7 @@ import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
+@DynamoDBTable(tableName = "local-mex")
 data class Snippet(
 
     @JsonProperty("workspaceIdentifier")
@@ -81,13 +83,13 @@ data class Snippet(
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    override var createdAt: Long? = System.currentTimeMillis()
+    override var createdAt: Long? = Constants.getCurrentTime()
 
 ) : Entity, Page {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    override var updatedAt: Long = System.currentTimeMillis()
+    override var updatedAt: Long = Constants.getCurrentTime()
 
     @JsonProperty("sk")
     @DynamoDBRangeKey(attributeName = "SK")

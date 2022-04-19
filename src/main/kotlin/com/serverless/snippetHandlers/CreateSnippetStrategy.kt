@@ -10,8 +10,12 @@ class CreateSnippetStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
         val errorMessage = "Error creating snippet"
 
+        val createNextVersion = input.queryStringParameters?.let{
+            it["createNextVersion"]?.toBoolean()
+        } ?: false
+
         return input.payload?.let { snippetRequest ->
-            snippetService.createSnippet(snippetRequest, input.tokenBody.userID, input.headers.workspaceID).let {
+            snippetService.createAndUpdateSnippet(snippetRequest, input.tokenBody.userID, input.headers.workspaceID, createNextVersion).let {
                 ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), errorMessage)
             }
         } ?: throw IllegalArgumentException("Malformed Request")

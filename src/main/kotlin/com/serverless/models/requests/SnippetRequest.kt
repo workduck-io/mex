@@ -23,9 +23,18 @@ data class SnippetRequest(
     @JsonProperty("title")
     val title: String,
 
+    @JsonProperty("version")
+    val version: Int = 1
+
 ) : WDRequest {
 
     init {
-        require(title.isNotEmpty()) { "Title is required" }
+        require(title.isNotEmpty()) {
+            "Title is required"
+        }
+
+        require(version > 0) {
+            "Enter a valid version number"
+        }
     }
 }

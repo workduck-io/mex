@@ -35,10 +35,6 @@ class SnippetStrategyFactory {
         private val snippetRegistry: Map<String, SnippetStrategy> = mapOf(
                 getSnippet to GetSnippetStrategy(),
                 createSnippet to CreateSnippetStrategy(),
-                createNewVersion to CreateNewVersionStrategy(),
-                updateSameSnippetVersion to UpdateSameSnippetVersionStrategy(),
-                archiveSnippet to ArchiveSnippetStrategy(),
-                unarchiveSnippet to UnarchiveSnippetStrategy(),
                 deleteSnippet to DeleteSnippetStrategy(),
                 deleteAllVersionsOfSnippet to DeleteAllVersionsOfSnippetStrategy(),
                 getAllArchivedSnippets to GetAllArchivedSnippetsStrategy(),

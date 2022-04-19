@@ -9,9 +9,10 @@ class SnippetTransformer : Transformer<Snippet> {
         SnippetResponse(
                 id = t.id,
                 data = t.data,
+                title = t.title,
                 lastEditedBy = t.lastEditedBy,
                 createdBy = t.createdBy,
-                createdAt = t.createdAt!!,
+                createdAt = t.createdAt,
                 updatedAt = t.updatedAt,
                 version = t.version,
         )

@@ -3,7 +3,6 @@ package com.serverless.utils
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.SnippetRequest
-import com.serverless.models.requests.UpdateSnippetVersionRequest
 import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
@@ -20,14 +19,14 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
     )
 
 
-fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String, version: Int = 1): Snippet =
+fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
     Snippet(
             id = this.id,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
             lastEditedBy = userID,
             data = this.data,
             title = this.title,
-            version = version
+            version = this.version
     )
 
 

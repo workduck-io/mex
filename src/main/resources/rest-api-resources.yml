@@ -98,33 +98,12 @@ Snippet:
         method: get
         authorizer: mexAuthorizer
 
-    # create a new snippet
+    # create/ update a new snippet
     - httpApi:
         path: /snippet
         method: post
         authorizer: mexAuthorizer
 
-    # create a new version of existing snippet
-    - httpApi:
-        path: /snippet/newVersion
-        method: post
-        authorizer: mexAuthorizer
-
-    # update an existing version
-    - httpApi:
-        path: /snippet
-        method: put
-        authorizer: mexAuthorizer
-
-#    - httpApi:
-#        path: /snippet/archive
-#        method: put
-#        authorizer: mexAuthorizer
-#
-#    - httpApi:
-#        path: /snippet/unarchive
-#        method: put
-#        authorizer: mexAuthorizer
 
     #delete given snippet ids from archive section ( hence, permanently )
     - httpApi:

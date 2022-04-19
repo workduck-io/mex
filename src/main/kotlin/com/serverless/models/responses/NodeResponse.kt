@@ -11,7 +11,7 @@ data class NodeResponse(
 
     val createdBy: String?,
 
-    override val createdAt: Long,
+    override val createdAt: Long?,
 
     override val updatedAt: Long,
 

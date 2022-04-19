@@ -7,11 +7,13 @@ data class SnippetResponse(
 
     val data: List<AdvancedElement>?,
 
+    val title: String,
+
     val lastEditedBy: String?,
 
     val createdBy: String?,
 
-    override val createdAt: Long,
+    override val createdAt: Long?,
 
     override val updatedAt: Long,
 

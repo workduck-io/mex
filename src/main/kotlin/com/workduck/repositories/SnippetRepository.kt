@@ -4,18 +4,23 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.amazonaws.services.dynamodbv2.model.ConditionalOperator
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue
+import com.serverless.utils.Constants.getCurrentTime
 import com.workduck.models.Entity
-import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.Helper
 import com.workduck.utils.SnippetHelper.getSnippetSK
+import kotlin.math.exp
 
 class SnippetRepository(
         private val mapper: DynamoDBMapper,
@@ -24,6 +29,39 @@ class SnippetRepository(
         private val client: AmazonDynamoDB,
         private val tableName: String
 ) {
+
+    fun createSnippet(snippet: Snippet) : Entity {
+        val saveExpression = DynamoDBSaveExpression()
+        val expected = HashMap<String, ExpectedAttributeValue>()
+        expected["PK"] = ExpectedAttributeValue(false);
+        expected["SK"] = ExpectedAttributeValue(false)
+        saveExpression.expected = expected
+        saveExpression.setConditionalOperator(ConditionalOperator.AND)
+        mapper.save(snippet, saveExpression)
+        return snippet
+    }
+
+    fun updateSnippet(snippet: Snippet) : Entity{
+        val dynamoDBMapperConfigForUpdate = DynamoDBMapperConfig.Builder()
+                .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
+                .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+                .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
+                .build()
+
+        val saveExpression = DynamoDBSaveExpression()
+        val expected = HashMap<String, ExpectedAttributeValue>()
+        expected["PK"] = ExpectedAttributeValue(AttributeValue(snippet.workspaceIdentifier.id));
+        expected["SK"] = ExpectedAttributeValue(AttributeValue(getSnippetSK(snippet.id, snippet.version!!)))
+        saveExpression.expected = expected
+        saveExpression.setConditionalOperator(ConditionalOperator.AND)
+
+
+        mapper.save(snippet, saveExpression, dynamoDBMapperConfigForUpdate )
+        return snippet
+
+    }
+
+
 
     fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Int) : Entity {
         return mapper.load(Snippet::class.java, WorkspaceIdentifier(workspaceID), getSnippetSK(snippetID, version), dynamoDBMapperConfig) ?:
