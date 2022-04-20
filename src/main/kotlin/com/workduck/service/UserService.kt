@@ -15,7 +15,6 @@ import com.workduck.models.IdentifierType
 import com.workduck.models.Identifier
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
-import com.workduck.repositories.UserRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -36,36 +35,6 @@ class UserService {
 		.withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
 		.build()
 
-	private val userRepository: UserRepository = UserRepository(dynamoDB, mapper, dynamoDBMapperConfig)
-	private val repository: Repository<User> = RepositoryImpl(dynamoDB, mapper, userRepository, dynamoDBMapperConfig)
-
-    fun createUser(jsonString: String): Entity? {
-
-		val user: User = objectMapper.readValue(jsonString)
-
-		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-		user.idCopy = user.id
-		LOG.info("Creating user : $user")
-		return repository.create(user)
-	}
-
-	fun getUser(userID : String) : Entity? {
-		LOG.info("Getting user with id : $userID")
-		return repository.get(UserIdentifier(userID))
-	}
-
-	fun updateUser(jsonString: String) : Entity? {
-		val user: User = objectMapper.readValue(jsonString)
-
-		/* since idCopy is SK for Namespace object, it can't be null if not sent from frontend */
-		user.idCopy = user.id
-
-		/* to avoid updating createdAt un-necessarily */
-		user.createdAt = null
-
-		return repository.update(user)
-	}
-
 	fun registerUser(workspaceName: String?): Entity?{
 
 		val workspaceID = Helper.generateId(Helper.generateId(IdentifierType.WORKSPACE.name))
@@ -79,15 +48,6 @@ class UserService {
 		val payload: WDRequest = Helper.objectMapper.readValue(jsonForWorkspaceCreation)
 
 		return WorkspaceService().createWorkspace(payload)
-	}
-
-
-	fun deleteUser(userID: String) : Identifier? {
-		return repository.delete(UserIdentifier(userID))
-	}
-
-	companion object {
-		private val LOG = LogManager.getLogger(UserService::class.java)
 	}
 
 }

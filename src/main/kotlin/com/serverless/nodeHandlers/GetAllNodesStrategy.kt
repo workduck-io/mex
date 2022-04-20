@@ -3,6 +3,8 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
+import com.serverless.utils.Constants
+import com.serverless.utils.Helper.EMAIL_ADDRESS_PATTERN
 import com.workduck.service.NodeService
 
 class GetAllNodesStrategy : NodeStrategy {
@@ -14,31 +16,29 @@ class GetAllNodesStrategy : NodeStrategy {
             if by workspace : id = workspaceID
             if by user : id = userID
          */
-        val idList = input.pathParameters?.id?.split("$")
+        val idList = input.pathParameters?.id?.split(Constants.PATH_PARAMETER_SEPARATOR)
 
         return if (idList != null) {
             when (idList.size) {
                 1 -> when {
-                    isValidWorkspaceOrUserID(idList[0]) -> when {
                         idList[0].startsWith("WORKSPACE") ->
                             nodeService.getAllNodesWithWorkspaceID(idList[0]).let {
                                 ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
                             }
 
-                        idList[0].startsWith("USER") ->
+                        else ->
                             nodeService.getAllNodesWithUserID(idList[0]).let {
                                 ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
                             }
-                        else -> ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+
                     }
-                    else -> ApiResponseHelper.generateStandardErrorResponse(errorMessage)
-                }
+
                 2 -> when {
                     isValidNamespaceAndWorkspaceID(idList[0], idList[1]) ->
                         nodeService.getAllNodesWithNamespaceID(idList[0], idList[1]).let {
                             ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
                         }
-                    else -> ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+                    else -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
                 }
                 else -> throw IllegalArgumentException("Invalid ID")
@@ -49,17 +49,11 @@ class GetAllNodesStrategy : NodeStrategy {
 
     }
 
-    private fun isValidWorkspaceOrUserID(id : String) : Boolean{
-        when(id.startsWith("WORKSPACE") || id.startsWith("USER")) {
-            true -> return true
-            false -> throw IllegalArgumentException("Invalid ID")
-        }
+    private fun checkEmail(email: String): Boolean {
+        return EMAIL_ADDRESS_PATTERN.matcher(email).matches()
     }
 
     private fun isValidNamespaceAndWorkspaceID(namespaceID: String, workspaceID: String) : Boolean{
-        when(namespaceID.startsWith("NAMESPACE") && workspaceID.startsWith("WORKSPACE")){
-            true -> return true
-            false -> throw IllegalArgumentException("Invalid ID")
-        }
+       return namespaceID.startsWith("NAMESPACE") && workspaceID.startsWith("WORKSPACE")
     }
 }

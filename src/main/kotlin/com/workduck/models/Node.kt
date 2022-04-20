@@ -17,13 +17,15 @@ enum class NodeStatus {
 data class Node(
 
     @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateNanoID("${IdentifierType.NODE.name}_"),
-
-    /* For convenient deletion */
-    @JsonProperty("idCopy")
     @DynamoDBRangeKey(attributeName = "SK")
-    var idCopy: String? = id,
+    var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
+
+    @JsonProperty("workspaceIdentifier")
+    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
+    @JsonSerialize(converter = IdentifierSerializer::class)
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    @DynamoDBHashKey(attributeName = "PK")
+    override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
 //    @JsonProperty("parentNodeID")
 //    @DynamoDBAttribute(attributeName = "parentNodeID")
@@ -31,22 +33,20 @@ data class Node(
 
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")
-    var title: String = "New Node",
-
+    override var title: String = "New Node",
 
     @JsonProperty("lastEditedBy")
     @DynamoDBAttribute(attributeName = "lastEditedBy")
-    var lastEditedBy: String? = null,
+    override var lastEditedBy: String? = null,
 
     @JsonProperty("createdBy")
     @DynamoDBAttribute(attributeName = "createdBy")
-    var createdBy: String? = null,
+    override var createdBy: String? = null,
 
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
-    var data: List<AdvancedElement>? = null,
-
+    override var data: List<AdvancedElement>? = null,
 
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")
@@ -54,29 +54,21 @@ data class Node(
     var tags: MutableList<String>? = null,
 
     @DynamoDBAttribute(attributeName = "dataOrder")
-    var dataOrder: MutableList<String>? = null,
+    override var dataOrder: MutableList<String>? = null,
 
     @JsonProperty("version")
     @DynamoDBVersionAttribute(attributeName = "version")
-    var version: Long? = null,
+    override var version: Int? = null,
 
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "namespaceIdentifier")
-    var namespaceIdentifier: NamespaceIdentifier? = null,
-
-    @JsonProperty("workspaceIdentifier")
-    @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
-    @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+    @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
 
     /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")
-    var ak: String? = null,
+    var ak: String = "${workspaceIdentifier.id}${Constants.DELIMITER}${namespaceIdentifier?.id}",
 
     @JsonProperty("nodeSchemaIdentifier")
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
@@ -92,31 +84,29 @@ data class Node(
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: ItemType = ItemType.Node,
 
-
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
     @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
-
     @JsonProperty("isBookmarked")
     @DynamoDBAttribute(attributeName = "isBookmarked")
-    // TODO(make it part of NodeResponse object in code cleanup)
+// TODO(make it part of NodeResponse object in code cleanup)
     var isBookmarked: Boolean? = null,
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
-    var publicAccess: Boolean = false,
+    override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
-    var createdAt: Long = Constants.getCurrentTime()
+    override var createdAt: Long? = Constants.getCurrentTime()
 
-) : Entity, ItemStatusAdherence {
+) : Entity, Page, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt: Long = Constants.getCurrentTime()
+    override var updatedAt: Long = Constants.getCurrentTime()
 
     @JsonProperty("lastVersionCreatedAt")
     @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
@@ -127,18 +117,16 @@ data class Node(
     var nodeVersionCount: Long = 0
 
     companion object {
-        fun populateNodeWithSkAkAndCreatedAt(node : Node, storedNode : Node) {
-            node.idCopy = node.id
+        fun populateNodeWithSkAkAndCreatedAt(node: Node, storedNode: Node) {
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy
-            node.ak = node.workspaceIdentifier.let{"${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"}
+            node.ak = "${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"
         }
     }
 
     init {
-        require(title.isNotBlank()){
+        require(title.isNotBlank()) {
             "Node title needs to be provided by the user"
         }
     }
-
 }

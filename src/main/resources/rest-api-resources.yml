@@ -22,7 +22,12 @@ Node:
       #deleteNodes( archive them )
     - httpApi:
         path: /node/archive
-        method: post
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/unarchive
+        method: put
         authorizer: mexAuthorizer
 
     - httpApi:
@@ -43,11 +48,6 @@ Node:
     - httpApi:
         path: /node/{id}/version/metadata
         method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /node/unarchive
-        method: post
         authorizer: mexAuthorizer
 
       #delete given nodes ids from archive section ( hence, permanently )
@@ -89,6 +89,66 @@ Node:
         path: /node/bulkCreate
         method: post
         authorizer: mexAuthorizer
+
+Snippet:
+  handler: com.serverless.snippetHandlers.SnippetHandler
+  events:
+    - httpApi:
+        path: /snippet/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    # create/ update a new snippet
+    - httpApi:
+        path: /snippet
+        method: post
+        authorizer: mexAuthorizer
+
+
+    #delete given snippet ids from archive section ( hence, permanently )
+    - httpApi:
+        path: /snippet/{id}/{version}
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet/{id}/all
+        method: delete
+        authorizer: mexAuthorizer
+
+    #get all archived snippets for a given workspaceID
+#    - httpApi:
+#        path: /snippet/archive/{id}
+#        method: get
+#        authorizer: mexAuthorizer
+
+    # get a public snippet
+    - httpApi:
+        path: /snippet/public/{id}/{version}
+        method: get
+
+    - httpApi:
+        path: /snippet/clone/{id}/{version}
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet/makePublic/{id}/{version}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /snippet/makePrivate/{id}/{version}
+        method: patch
+        authorizer: mexAuthorizer
+
+    # get all versions of a snippet
+    - httpApi:
+        path: /snippet/{id}/all
+        method: get
+        authorizer: mexAuthorizer
+
+
 
 Namespace:
   handler: com.serverless.namespaceHandlers.NamespaceHandler
@@ -161,36 +221,6 @@ Workspace:
 User:
   handler: com.serverless.userHandlers.UserHandler
   events:
-    - httpApi:
-        path: /user/{id}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/update
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/{id}
-        method: delete
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/namespace/{id}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /user/workspace/{id}
-        method: get
-        authorizer: mexAuthorizer
-
     - httpApi:
         path : /user/register
         method: post

@@ -16,7 +16,7 @@ class AppendToNodeStrategy : NodeStrategy {
         //TODO(create an ElementResponse object. And , make NodeResponse.data of the type List<ElementResponse>)
         return if (nodeID != null && elementListRequest!= null) {
 
-            val map: Map<String, Any>? = nodeService.append(nodeID, elementListRequest)
+            val map: Map<String, Any>? = nodeService.append(nodeID, input.headers.workspaceID, input.tokenBody.userID,elementListRequest)
 
             ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
         } else {

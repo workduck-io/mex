@@ -58,12 +58,12 @@ class RegisterUserStrategy : UserStrategy {
         val client = AWSCognitoIdentityProviderClientBuilder.standard().build()
 
         println("userPoolID : ${tokenBody.userPoolID}")
-        println("userName : ${tokenBody.userName}")
+        println("userName : ${tokenBody.userID}")
 
 
         val adminGetUserRequest = AdminGetUserRequest()
                 .withUserPoolId(tokenBody.userPoolID)
-                .withUsername(tokenBody.userName)
+                .withUsername(tokenBody.userID)
 
         val adminGetUserResult : AdminGetUserResult = client.adminGetUser(adminGetUserRequest)
 
@@ -84,7 +84,7 @@ class RegisterUserStrategy : UserStrategy {
 
         val adminUpdateUserAttributesRequest = AdminUpdateUserAttributesRequest()
                 .withUserPoolId(tokenBody.userPoolID)
-                .withUsername(tokenBody.userName)
+                .withUsername(tokenBody.userID)
                 .withUserAttributes(newAttribute)
 
         client.adminUpdateUserAttributes(adminUpdateUserAttributesRequest)

@@ -12,7 +12,7 @@ class MakeNodePublicStrategy : NodeStrategy {
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {
-            nodeService.makeNodePublic(nodeID)
+            nodeService.makeNodePublic(nodeID, input.headers.workspaceID)
             ApiResponseHelper.generateStandardResponse(nodeID, errorMessage)
         }
         else{

@@ -14,10 +14,11 @@ data class TokenBody(
     val sub: String,
     @JsonProperty("cognito:username")
     @JsonAlias("username")
-    val userName: String,
+    val userID: String,
     val iss: String,
     @JsonProperty("custom:mex_workspace_ids")
     val workspaceIDs: String?,
+    //val email: String
 ) {
     val workspaceIDList: List<String> = workspaceIDs?.split(Constants.DELIMITER) ?: listOf()
     val userPoolID: String = iss.split("/").last()

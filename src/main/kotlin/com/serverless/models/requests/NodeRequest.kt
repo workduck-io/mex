@@ -12,28 +12,30 @@ import com.workduck.models.NamespaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
-open class NodeRequest : WDRequest {
-
-    @JsonProperty("lastEditedBy")
-    open val lastEditedBy: String = ""
+open class NodeRequest(
 
     @JsonProperty("id")
-    open val id: String = ""
+    open val id: String = "",
 
     @JsonProperty("referenceID")
-    open val referenceID: String? = null
+    open val referenceID: String? = null,
 
     @JsonProperty("title")
-    open val title: String = "New Node"
+    open val title: String = "",
 
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    open val namespaceIdentifier: NamespaceIdentifier? = null
+    open val namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("data")
-    open val data: List<AdvancedElement>? = null
+    open val data: List<AdvancedElement>? = null,
 
     @JsonProperty("tags")
-    open var tags: MutableList<String>? = null
+    open var tags: MutableList<String>? = null,
+) : WDRequest {
+
+    init {
+        require(title.isNotEmpty()) { "Title is required" }
+    }
 }

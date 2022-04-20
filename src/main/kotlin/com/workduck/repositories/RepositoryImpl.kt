@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveBehavior
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import org.apache.logging.log4j.LogManager
@@ -20,21 +21,23 @@ class RepositoryImpl<T : Entity>(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-        return repository.get(identifier)
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
+        return mapper.load(clazz, pkIdentifier.id, skIdentifier.id, dynamoDBMapperConfig)
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
-        return repository.delete(identifier)
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
+        val table = dynamoDB.getTable(tableName)
+        DeleteItemSpec().withPrimaryKey("PK", pkIdentifier.id, "SK", skIdentifier.id).also { table.deleteItem(it) }
+        return skIdentifier
     }
 
-    override fun create(t: T): T? {
+    override fun create(t: T): T {
         LOG.info("creating ${t.javaClass} : $t")
         mapper.save(t, dynamoDBMapperConfig)
         return t
     }
 
-    override fun update(t: T): T? {
+    override fun update(t: T): T {
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)

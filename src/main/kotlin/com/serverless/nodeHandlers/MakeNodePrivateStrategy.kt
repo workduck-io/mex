@@ -12,7 +12,7 @@ class MakeNodePrivateStrategy : NodeStrategy {
         val nodeID = input.pathParameters?.id
 
         return if(nodeID != null) {
-            nodeService.makeNodePrivate(nodeID)
+            nodeService.makeNodePrivate(nodeID, input.headers.workspaceID)
             ApiResponseHelper.generateStandardResponse(nodeID, errorMessage)
         }
         else{

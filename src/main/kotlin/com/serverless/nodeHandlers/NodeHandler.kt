@@ -16,7 +16,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val nodeService = NodeService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
-        LOG.info(input)
+        //LOG.info(input)
 
         val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
 
@@ -25,7 +25,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
         }
 
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)

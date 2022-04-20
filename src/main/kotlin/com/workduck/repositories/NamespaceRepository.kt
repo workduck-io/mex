@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
-import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.Namespace
 
@@ -23,28 +22,22 @@ class NamespaceRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
-    override fun get(identifier: Identifier): Entity? {
-        return mapper.load(Namespace::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)
+
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Namespace>): Namespace? {
+        TODO("Not yet implemented")
     }
 
     override fun create(t: Namespace): Namespace {
         TODO("Not yet implemented")
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
-        val table = dynamoDB.getTable(tableName)
-
-        val deleteItemSpec: DeleteItemSpec = DeleteItemSpec()
-            .withPrimaryKey("PK", identifier.id, "SK", identifier.id)
-
-
-        table.deleteItem(deleteItemSpec)
-        return identifier
-
-    }
-
     override fun update(t: Namespace): Namespace {
         TODO("Not yet implemented")
+    }
+
+
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
+        TODO("Using deleteComment instead")
     }
 
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {
@@ -59,6 +52,5 @@ class NamespaceRepository(
         TODO("we also need to have some sort of filter which filters out all the non-namespace ids")
         TODO("this code can be reused for similar workspace functionality")
     }
-
 
 }

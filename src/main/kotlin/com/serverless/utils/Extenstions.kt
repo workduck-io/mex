@@ -2,20 +2,38 @@ package com.serverless.utils
 
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.SnippetRequest
 import com.workduck.models.Node
+import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 
-fun NodeRequest.toNode(workspaceID: String): Node =
+fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
     Node(
         id = this.id,
         title = this.title,
         namespaceIdentifier = this.namespaceIdentifier,
         workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-        lastEditedBy = this.lastEditedBy,
+        lastEditedBy = userID,
         tags = this.tags,
         data = this.data
     )
 
+
+fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
+    Snippet(
+            id = this.id,
+            workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+            lastEditedBy = userID,
+            data = this.data,
+            title = this.title,
+            version = this.version
+    )
+
+
+fun Snippet.setVersion(version: Int){
+    this.version = version
+    this.sk = "${this.id}${Constants.DELIMITER}$version"
+}
 
 fun NodePath.removePrefix(prefix: String): String {
     return this.path.removePrefix(prefix)

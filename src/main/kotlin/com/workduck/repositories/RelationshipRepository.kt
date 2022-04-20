@@ -113,7 +113,7 @@ class RelationshipRepository(
 
         DynamoDBQueryExpression<Relationship>()
                 .withKeyConditionExpression("SK = :workspaceIdentifier  and begins_with(PK, :PK)")
-                .withIndexName("SK-PK-index").withConsistentRead(false)
+                .withIndexName("SK-PK-Index").withConsistentRead(false)
                 .withFilterExpression("endNode = :endNode and workspaceIdentifier = :workspaceIdentifier")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
                     mapper.query(Relationship::class.java, it, dynamoDBMapperConfig).let { list ->

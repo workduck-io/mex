@@ -55,7 +55,7 @@ class WorkspaceService {
 
     fun getWorkspace(workspaceID: String): Entity? {
         LOG.info("Getting workspace with id : $workspaceID")
-        return repository.get(WorkspaceIdentifier(workspaceID))
+        return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
     fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
@@ -89,7 +89,7 @@ class WorkspaceService {
 
     fun deleteWorkspace(workspaceID: String): Identifier? {
         LOG.info("Deleting workspace with id : $workspaceID")
-        return repository.delete(WorkspaceIdentifier(workspaceID))
+        return repository.delete(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID),)
     }
 
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?> {

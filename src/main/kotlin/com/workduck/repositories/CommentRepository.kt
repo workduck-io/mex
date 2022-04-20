@@ -26,19 +26,19 @@ class CommentRepository(
     val table: Table = dynamoDB.getTable(tableName)
 
 
-    override fun create(t: Comment): Comment? {
+    override fun create(t: Comment): Comment {
         TODO("Not yet implemented")
     }
 
-    override fun update(t: Comment): Comment? {
+    override fun update(t: Comment): Comment {
         TODO("Not yet implemented")
     }
 
-    override fun get(identifier: Identifier): Entity? {
+    override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Comment>): Comment? {
         TODO("Using getComment instead")
     }
 
-    override fun delete(identifier: Identifier): Identifier? {
+    override fun delete(pkIdentifier: Identifier, skIdentifier: Identifier): Identifier {
         TODO("Using deleteComment instead")
     }
 
@@ -65,8 +65,6 @@ class CommentRepository(
     }
 
     fun deleteComment(pk: String, sk: String) {
-
-
         DeleteItemSpec()
                 .withPrimaryKey("PK", pk, "SK", sk).let {
                     table.deleteItem(it)

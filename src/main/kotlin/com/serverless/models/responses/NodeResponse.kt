@@ -11,7 +11,7 @@ data class NodeResponse(
 
     val createdBy: String?,
 
-    override val createdAt: Long,
+    override val createdAt: Long?,
 
     override val updatedAt: Long,
 
@@ -19,11 +19,11 @@ data class NodeResponse(
 
     var tags: MutableList<String>?,
 
-    var version: Long? = null,
+    var version: Int? = null,
 
     var namespaceID: String? = null,
 
-    var workspaceID: String? = null,
+    var workspaceID: String,
 
     var isBookmarked: Boolean? = null,
 

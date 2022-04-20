@@ -10,7 +10,7 @@ class NodeStrategyFactory {
         const val createNodeObject = "POST /node"
 
         /* since we're not hard deleting, just moving to archive */
-        const val deleteNodeObject = "POST /node/archive"
+        const val archiveNodeObject = "PUT /node/archive"
 
         const val appendToNodeObject = "POST /node/{id}/append"
 
@@ -18,7 +18,7 @@ class NodeStrategyFactory {
 
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
-        const val unarchiveNodeObject = "POST /node/unarchive"
+        const val unarchiveNodeObject = "PUT /node/unarchive"
 
         const val deleteArchivedNodeObject = "POST /node/archive/delete"
 
@@ -41,7 +41,7 @@ class NodeStrategyFactory {
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
-            deleteNodeObject to DeleteNodeStrategy(),
+            archiveNodeObject to DeleteNodeStrategy(),
             appendToNodeObject to AppendToNodeStrategy(),
             updateNodeBlock to UpdateNodeBlockStrategy(),
             getNodeVersionMetadata to GetNodeVersionMetaDataStrategy(),

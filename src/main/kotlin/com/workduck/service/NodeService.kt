@@ -13,7 +13,7 @@ import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
-import com.serverless.models.requests.WDRequest
+ import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.containsExistingNodes
@@ -22,18 +22,17 @@ import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNodesAfterIndex
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
-import com.workduck.models.AdvancedElement
-import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeIdentifier
-import com.workduck.models.NodeVersion
+import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.NodeRepository
+import com.workduck.repositories.PageRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
@@ -43,11 +42,19 @@ import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
+import com.workduck.utils.PageHelper.comparePageWithStoredPage
+import com.workduck.utils.PageHelper.createDataOrderForPage
+import com.workduck.utils.PageHelper.mergePageVersions
+import com.workduck.utils.PageHelper.orderBlocks
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import com.serverless.utils.toNode
+import com.workduck.models.AdvancedElement
+import com.workduck.models.Entity
+import com.workduck.models.ItemType
+import com.workduck.models.NodeVersion
 import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 
@@ -70,15 +77,18 @@ class NodeService( // Todo: Inject them from handlers
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
         .build(),
 
-    val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
-    val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, nodeRepository, dynamoDBMapperConfig)
+    private val pageRepository: PageRepository<Node> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
+
+    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
+    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
+
 ) {
+
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? {
         LOG.info("Should be created in the table : $tableName")
         LOG.info("ENV TABLE : " + System.getenv("TABLE_NAME"))
         setMetadataOfNodeToCreate(node)
-        LOG.info("Creating node : $node")
 
         return if (versionEnabled) {
             node.lastVersionCreatedAt = node.createdAt
@@ -108,13 +118,13 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, versionEnabled: Boolean = false): Entity? =
+    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userID: String, versionEnabled: Boolean = false): Entity? =
         runBlocking {
 
             val nodeRequest: NodeRequest = request as NodeRequest
-            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID)
+            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
-            val jobToGetStoredNode = async { getNode(node.id) as Node? }
+            val jobToGetStoredNode = async { getNode(node.id, workspaceID) as Node? }
             val jobToGetWorkspace =
                 async { node.workspaceIdentifier.id.let { (workspaceService.getWorkspace(it) as Workspace) } }
 
@@ -184,13 +194,12 @@ class NodeService( // Todo: Inject them from handlers
      * will be used to insert empty nodes in between two existing nodes
      *
      */
-    fun refactor(wdRequest: WDRequest, workspace: Workspace) = runBlocking {
+    fun refactor(wdRequest: WDRequest, userID: String, workspace: Workspace) = runBlocking {
 
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
         /* existingNodePath is path from root till last node in the path and not necessarily path till a leaf node */
         val lastNodeID = refactorNodePathRequest.nodeID
-        val lastEditedBy = refactorNodePathRequest.lastEditedBy
 
         val existingNodes = refactorNodePathRequest.existingNodePath.allNodes
         val newNodes = refactorNodePathRequest.newNodePath.allNodes
@@ -198,13 +207,13 @@ class NodeService( // Todo: Inject them from handlers
         // Data model has ensures that list will never be empty
         when (existingNodes.last() != newNodes.last()) {
             true -> { /* need to rename last node from existing path to last node from new path */
-                launch { renameNode(lastNodeID, newNodes.last(), lastEditedBy) }
+                launch { renameNode(lastNodeID, newNodes.last(), userID, workspace.id) }
             }
         }
 
         val namesOfNodesToCreate = getNodesToCreateInRefactor(existingNodes, newNodes)
 
-        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, lastEditedBy, workspace.id, refactorNodePathRequest.namespaceID)
+        val nodesToCreate: List<Node> = setMetaDataForEmptyNodes(namesOfNodesToCreate, userID, workspace.id, refactorNodePathRequest.namespaceID)
 
         launch { nodeRepository.createMultipleNodes(nodesToCreate) }
 
@@ -306,8 +315,8 @@ class NodeService( // Todo: Inject them from handlers
         return nodePathWithIDsOfExistingNodes.getListOfNodes().take(indexOfLastNode-1).convertToPathString()
     }
 
-    private fun renameNode(nodeID: String, newName: String, lastEditedBy: String) {
-        nodeRepository.renameNode(nodeID, newName, lastEditedBy)
+    private fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String) {
+        nodeRepository.renameNode(nodeID, newName, userID, workspaceID)
     }
 
     private fun setMetaDataForEmptyNodes(
@@ -335,10 +344,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-    fun bulkCreateNodes(request: WDRequest, workspaceID: String) = runBlocking {
+    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String) = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
-        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID)
+        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
@@ -466,8 +475,8 @@ class NodeService( // Todo: Inject them from handlers
         return list
     }
 
-    fun getNode(nodeID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Entity? {
-        val node = repository.get(NodeIdentifier(nodeID)) as Node?
+    fun getNode(nodeID: String, workspaceID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Entity? {
+        val node =  (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node?
         if (bookmarkInfo == true && userID != null) {
             node?.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
         }
@@ -477,12 +486,11 @@ class NodeService( // Todo: Inject them from handlers
 
     fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
-
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
 
         val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
         val jobToChangeNodeStatus =
-            async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ARCHIVED) }
+            async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ARCHIVED) }
 
         val workspace = jobToGetWorkspace.await()
 
@@ -497,7 +505,7 @@ class NodeService( // Todo: Inject them from handlers
 
     /* Getting called Internally via trigger. No need to update hierarchy */
     fun archiveNodes(nodeIDList: List<String>, workspaceID: String) = runBlocking {
-        nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ARCHIVED)
+        pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ARCHIVED)
     }
 
     fun convertGenericRequestToList(genericRequest: GenericListRequest): List<String> {
@@ -508,7 +516,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodeIDToNodeNameMap(workspaceID, itemStatus)
     }
 
-    fun append(nodeID: String, elementsListRequest: WDRequest): Map<String, Any>? {
+    fun append(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val elements = elementsListRequestConverted.elements
@@ -516,34 +524,31 @@ class NodeService( // Todo: Inject them from handlers
         LOG.info(elements)
 
         val orderList = mutableListOf<String>()
-        var userID = ""
         for (e in elements) {
             orderList += e.id
 
-            e.lastEditedBy = e.createdBy
+            e.lastEditedBy = userID
             e.createdAt = Constants.getCurrentTime()
             e.updatedAt = e.createdAt
-            userID = e.createdBy as String
         }
-        return nodeRepository.append(nodeID, userID, elements, orderList)
+        return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
     }
 
     fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? {
 
-        /* set idCopy = id, createdAt = null, and set AK */
-        Node.populateNodeWithSkAkAndCreatedAt(node, storedNode)
+        Page.populatePageWithCreatedFields(node, storedNode)
 
-        node.dataOrder = createDataOrderForNode(node)
+        node.dataOrder = createDataOrderForPage(node)
 
         /* to update block level details for accountability */
-        val nodeChanged: Boolean = compareNodeWithStoredNode(node, storedNode)
+        val nodeChanged : Boolean = comparePageWithStoredPage(node, storedNode)
 
         if (!nodeChanged) {
             return storedNode
         }
 
         /* to make the locking versions same */
-        mergeNodeVersions(node, storedNode)
+        mergePageVersions(node, storedNode)
 
         LOG.info("Updating node : $node")
 
@@ -605,7 +610,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
 
-    fun updateNodeBlock(nodeID: String, elementsListRequest: WDRequest): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val element = elementsListRequestConverted.elements.let { it[0] }
@@ -615,104 +620,15 @@ class NodeService( // Todo: Inject them from handlers
         // TODO(since we directly set the block info, createdAt and createdBy get lost since we're not getting anything from ddb)
         val blockData = objectMapper.writeValueAsString(element)
 
-        return nodeRepository.updateNodeBlock(nodeID, blockData, element.id, element.lastEditedBy as String)
+        return nodeRepository.updateNodeBlock(nodeID, workspaceID, blockData, element.id, userID)
     }
 
-    private fun mergeNodeVersions(node: Node, storedNode: Node) {
-
-        /* if the same user edited the node the last time, he can overwrite anything */
-        if (node.lastEditedBy == storedNode.lastEditedBy) {
-            node.version = storedNode.version
-            return
-        }
-        /* currently just handling when more blocks have been added */
-
-        /* not handling the case when
-            1. same block(s) has/have been edited
-            2. some blocks deleted either by user1 or user2
-        */
-        val storedNodeDataOrder = storedNode.dataOrder
-        val sentDataOrder = node.dataOrder
-        val finalDataOrder = mutableListOf<String>()
-
-        // very basic handling of maintaining rough order amongst blocks
-        if (storedNodeDataOrder != null && sentDataOrder != null) {
-
-            for (storedNodeID in storedNodeDataOrder) {
-                finalDataOrder.add(storedNodeID)
-            }
-
-            for (storedNodeID in storedNodeDataOrder) {
-                for (sentNodeID in sentDataOrder) {
-                    if (storedNodeID == sentNodeID && storedNodeID !in finalDataOrder) {
-                        finalDataOrder.add(storedNodeID)
-                    }
-                }
-            }
-
-            for (sentNodeID in sentDataOrder) {
-                if (sentNodeID !in finalDataOrder) finalDataOrder.add(sentNodeID)
-            }
-        }
-
-        node.dataOrder = finalDataOrder
-        node.version = storedNode.version
-
-        // TODO(explore autoMerge cmd line)
-    }
-
-    private fun compareNodeWithStoredNode(node: Node, storedNode: Node): Boolean {
-        var nodeChanged = false
-
-        /* in case a block has been deleted */
-        if (node.data != storedNode.data) nodeChanged = true
-
-        if (node.data != null) {
-            for (currElement in node.data!!) {
-                var isPresent = false
-                if (storedNode.data != null) {
-                    for (storedElement in storedNode.data!!) {
-                        if (storedElement.id == currElement.id) {
-                            isPresent = true
-
-                            /* if the block has not been updated */
-                            if (currElement == storedElement) {
-                                currElement.createdAt = storedElement.createdAt
-                                currElement.updatedAt = storedElement.updatedAt
-                                currElement.createdBy = storedElement.createdBy
-                                currElement.lastEditedBy = storedElement.lastEditedBy
-                            }
-
-                            /* when the block has been updated */
-                            else {
-                                nodeChanged = true
-                                currElement.createdAt = storedElement.createdAt
-                                currElement.updatedAt = Constants.getCurrentTime()
-                                currElement.createdBy = storedElement.createdBy
-                                currElement.lastEditedBy = node.lastEditedBy
-                            }
-                        }
-                    }
-
-                    if (!isPresent) {
-                        nodeChanged = true
-                        currElement.createdAt = node.updatedAt
-                        currElement.updatedAt = node.updatedAt
-                        currElement.createdBy = node.lastEditedBy
-                        currElement.lastEditedBy = node.lastEditedBy
-                    }
-                }
-            }
-        }
-        return nodeChanged
-    }
-
-    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String): Node =
-        nodeRequest.toNode(workspaceID)
+    private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userID: String): Node =
+        nodeRequest.toNode(workspaceID, userID)
 
 
-    fun getMetaDataOfAllArchivedNodesOfWorkspace(workspaceID: String): MutableList<String>? {
-        return nodeRepository.getAllArchivedNodesOfWorkspace(workspaceID)
+    fun getAllArchivedSnippetIDsOfWorkspace(workspaceID : String) : MutableList<String> {
+        return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Node)
     }
 
     fun unarchiveNodes(nodeIDRequest: WDRequest, workspaceID: String): List<String> = runBlocking {
@@ -723,11 +639,16 @@ class NodeService( // Todo: Inject them from handlers
             nodeIDList.remove(nodeID)
         }
 
-        val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName) }
+        val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName, workspaceID) }
         val jobToUnarchiveNodes =
-            async { nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
+            async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
 
         return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
+    }
+
+    /* this is called internally via trigger. We don't need to do sanity check for name here */
+    fun unarchiveNodes(nodeIDList: List<String>, workspaceID: String): MutableList<String> {
+        return pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE)
     }
 
     /* to ensure that nodes at same level don't have same name */
@@ -777,38 +698,30 @@ class NodeService( // Todo: Inject them from handlers
             return@runBlocking mapOfNodeIDToNodeName
         }
 
-    /* this is called internally via trigger. We don't need to do sanity check for name here */
-    fun unarchiveNodes(nodeIDList: List<String>, workspaceID: String): MutableList<String> {
-        return nodeRepository.unarchiveOrArchiveNodes(nodeIDList, workspaceID, ItemStatus.ACTIVE)
-    }
 
-    fun deleteArchivedNodes(nodeIDRequest: WDRequest): MutableList<String> {
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String) : MutableList<String> {
 
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
-        val deletedNodesList: MutableList<String> = mutableListOf()
-        for (nodeID in nodeIDList) {
-            repository.delete(NodeIdentifier(nodeID))?.also {
+        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == nodeIDList.sorted()) { "The passed IDs should be present and archived" }
+        val deletedNodesList : MutableList<String> = mutableListOf()
+        for(nodeID in nodeIDList) {
+            repository.delete(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID))?.also{
                 deletedNodesList.add(it.id)
             }
         }
         return deletedNodesList
     }
 
-
-    companion object {
-        private val LOG = LogManager.getLogger(NodeService::class.java)
+    fun makeNodePublic(nodeID: String, workspaceID: String) {
+        pageRepository.togglePagePublicAccess(nodeID, workspaceID, 1)
     }
 
-    fun makeNodePublic(nodeID: String) {
-        nodeRepository.toggleNodePublicAccess(nodeID, 1)
+    fun makeNodePrivate(nodeID: String, workspaceID: String) {
+        pageRepository.togglePagePublicAccess(nodeID, workspaceID, 0)
     }
 
-    fun makeNodePrivate(nodeID: String) {
-        nodeRepository.toggleNodePublicAccess(nodeID, 0)
-    }
-
-    fun getPublicNode(nodeID: String): Node? {
-        return nodeRepository.getPublicNode(nodeID)
+    fun getPublicNode(nodeID: String, workspaceID: String) : Node {
+        return pageRepository.getPublicPage(nodeID, Node::class.java)
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
@@ -821,54 +734,97 @@ class NodeService( // Todo: Inject them from handlers
         workspaceLevelChecksForMovement(destinationNodeID, sourceNodeID, workspaceID)
 
         when (copyOrMoveBlockRequest.action.lowercase()) {
-            "copy" -> copyBlock(blockID, sourceNodeID, destinationNodeID)
-            "move" -> moveBlock(blockID, sourceNodeID, destinationNodeID)
+            "copy" -> copyBlock(blockID, workspaceID, sourceNodeID, destinationNodeID)
+            "move" -> moveBlock(blockID, workspaceID, sourceNodeID, destinationNodeID)
             else -> throw IllegalArgumentException("Invalid action")
         }
     }
 
-    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) =
-        runBlocking {
+    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking {
             require(destinationNodeID != sourceNodeID) {
                 "Source NodeID can't be equal to Destination NodeID"
             }
 
-            val jobToGetSourceNodeWorkspaceID = async { getWorkspaceIDOfNode(sourceNodeID) }
-            val jobToGetDestinationNodeWorkspaceID = async { getWorkspaceIDOfNode(destinationNodeID) }
+            val jobToGetSourceNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
+            val jobToGetDestinationNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
 
-            val sourceNodeWorkspaceID = jobToGetSourceNodeWorkspaceID.await()
 
-            require(sourceNodeWorkspaceID == jobToGetDestinationNodeWorkspaceID.await()) {
-                "NodeIDs should belong to same workspace"
+            require(jobToGetSourceNodeWorkspaceID.await() && jobToGetDestinationNodeWorkspaceID.await()) {
+                "NodeIDs don't exist"
             }
-
-            require(sourceNodeWorkspaceID == workspaceID) {
-                "Passed NodeIDs should belong to the current workspace"
-            }
-        }
-
-    private fun getWorkspaceIDOfNode(nodeID: String): String {
-        return nodeRepository.getWorkspaceIDOfNode(nodeID)
     }
 
-    private fun copyBlock(blockID: String, sourceNodeID: String, destinationNodeID: String) {
+    private fun checkIfNodeExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
+        return nodeRepository.checkIfNodeExistsForWorkspace(nodeID, workspaceID)
+    }
+
+    private fun copyBlock(blockID: String, workspaceID: String, sourceNodeID: String, destinationNodeID: String) {
         /* this node contains only valid block info and dataOrder info */
-        val sourceNode: Node? = nodeRepository.getBlock(sourceNodeID, blockID)
+        val sourceNode: Node? = nodeRepository.getBlock(sourceNodeID, blockID, workspaceID)
 
         val block = sourceNode?.data?.get(0)
         val userID = block?.createdBy as String
 
-        nodeRepository.append(destinationNodeID, userID, listOf(block), mutableListOf(block.id))
+        nodeRepository.append(destinationNodeID, workspaceID, userID, listOf(block), mutableListOf(block.id))
     }
 
-    private fun moveBlock(blockID: String, sourceNodeID: String, destinationNodeID: String) {
+    private fun moveBlock(blockID: String, workspaceID: String, sourceNodeID: String, destinationNodeID: String) {
         /* this node contains only valid block info and dataOrder info  */
-        val sourceNode: Node? = nodeRepository.getBlock(sourceNodeID, blockID)
+        val sourceNode: Node? = nodeRepository.getBlock(sourceNodeID, blockID, workspaceID)
 
         // TODO(list remove changes order of the original elements )
         sourceNode?.dataOrder?.let {
             it.remove(blockID)
-            nodeRepository.moveBlock(sourceNode.data?.get(0), sourceNodeID, destinationNodeID, it)
-        }
+            nodeRepository.moveBlock(sourceNode.data?.get(0), workspaceID, sourceNodeID, destinationNodeID, it) }
     }
+
+
+    companion object {
+        private val LOG = LogManager.getLogger(NodeService::class.java)
+    }
+
+
+}
+
+
+fun main(){
+    val jsonString: String = """
+ {
+     "type" : "NodeRequest",
+     "title" : "F",
+     "referenceID": "NODE2",
+     "lastEditedBy" : "USERVarun",
+     "id": "NODE6",
+     "namespaceIdentifier" : "NAMESPACE1",
+     "data": [
+     {
+         "id": "sampleParentID",
+         "elementType": "paragraph",
+         "children": [
+         {
+             "id" : "sampleChildID",
+             "content" : "sample child content 1",
+             "elementType": "paragraph",
+             "properties" :  { "bold" : true, "italic" : true  }
+         }
+         ]
+     },
+     {
+         "id": "1234",
+         "elementType": "paragraph",
+         "children": [
+         {
+             "id" : "sampleChildID",
+             "content" : "sample child content",
+             "elementType": "paragraph",
+             "properties" :  { "bold" : true, "italic" : true  }
+         }
+         ]
+     }
+     ]
+ }"""
+
+    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
+    println(nodeRequest)
+    //NodeService().createAndUpdateNode(nodeRequest, "WORKSPACE1", "v@gmail.com")
 }

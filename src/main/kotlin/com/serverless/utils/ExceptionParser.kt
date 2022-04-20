@@ -1,6 +1,7 @@
 package com.serverless.utils
 
 import com.amazonaws.services.cognitoidp.model.UnauthorizedException
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMappingException
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
@@ -35,6 +36,7 @@ object ExceptionParser {
         println("in the exception parser")
         return when(e){
             is IllegalArgumentException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 400)
+            is NoSuchElementException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Not Found", 404)
             is NullPointerException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Getting NPE", 400)
             is UnauthorizedException ->{
                 LOG.info("Unauthorized")
@@ -42,10 +44,12 @@ object ExceptionParser {
             }
             is ResourceNotFoundException -> {
                 LOG.warn(e)
-                ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 500)
+                ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 404)
             }
+            is ClassCastException -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
             is ConditionalCheckFailedException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
             is AmazonDynamoDBException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
+            is DynamoDBMappingException -> ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 500)
             else -> {
                 throw e
             }

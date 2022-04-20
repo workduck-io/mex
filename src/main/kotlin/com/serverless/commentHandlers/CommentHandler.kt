@@ -14,7 +14,7 @@ class CommentHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
     var commentService = CommentService()
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Error in Input", 500)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
 
         val strategy = CommentStrategyFactory.getCommentStrategy(wdInput.routeKey)
