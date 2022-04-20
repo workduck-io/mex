@@ -328,3 +328,6 @@ WorkspaceUpdateTrigger:
 
 NodeArchiveUnarchiveTrigger:
   handler: com.serverless.ddbStreamTriggers.NodeArchiveUnarchiveTrigger
+
+Tag:
+  handler: com.serverless.tagHandlers.TagHandler

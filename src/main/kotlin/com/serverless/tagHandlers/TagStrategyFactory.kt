@@ -4,9 +4,9 @@ class TagStrategyFactory {
 
     companion object {
 
-        private const val addTagForNode = "POST /tag/{tagName}/{nodeID}"
+        private const val addTagForNode = "POST /tag"
 
-        private const val deleteTagForNode = "POST /tag/{tagName}/{nodeID}"
+        private const val deleteTagForNode = "DELETE /tag"
 
         private const val getAllTagsOfWorkspace = "GET /tag/{workspaceID}"
 

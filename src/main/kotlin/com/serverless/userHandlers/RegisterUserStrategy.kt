@@ -57,9 +57,6 @@ class RegisterUserStrategy : UserStrategy {
 
         val client = AWSCognitoIdentityProviderClientBuilder.standard().build()
 
-        println("userPoolID : ${tokenBody.userPoolID}")
-        println("userName : ${tokenBody.userID}")
-
 
         val adminGetUserRequest = AdminGetUserRequest()
                 .withUserPoolId(tokenBody.userPoolID)

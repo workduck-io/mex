@@ -4,8 +4,12 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.lambda.AWSLambdaClient
+import com.amazonaws.services.lambda.model.InvokeRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.Gson
+import com.serverless.models.Input
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -63,6 +67,8 @@ import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.isNodeIDInPath
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 import kotlinx.coroutines.Deferred
+import com.workduck.utils.TagHelper.createTags
+import com.workduck.utils.TagHelper.updateTags
 import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
@@ -92,12 +98,14 @@ class NodeService( // Todo: Inject them from handlers
 ) {
 
 
-    fun createNode(node: Node, versionEnabled: Boolean): Entity? {
+    fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking{
         LOG.info("Should be created in the table : $tableName")
-        LOG.info("ENV TABLE : " + System.getenv("TABLE_NAME"))
+
         setMetadataOfNodeToCreate(node)
 
-        return if (versionEnabled) {
+        launch { createTags(node.tags, node.id) }
+
+        return@runBlocking if (versionEnabled) {
             node.lastVersionCreatedAt = node.createdAt
             val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
             node.nodeVersionCount = 1
@@ -565,7 +573,9 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
     }
 
-    fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity?  = runBlocking{
+    fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? = runBlocking {
+
+        launch { updateTags(node.tags, storedNode.tags, node.id) }
 
         Page.populatePageWithCreatedFields(node, storedNode)
 
@@ -841,25 +851,5 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
-
-}
-
-fun main(){
-
-    val json = """
-        {
-                "type" : "RefactorRequest",
-                "existingNodePath": {
-                    "path" : "F"
-                },
-                "newNodePath": {
-                    "path" : "X"
-                },
-                "nodeID": "NODE1"
-            }"""
-
-    val x = Helper.objectMapper.readValue<RefactorRequest>(json)
-    println(NodeService().refactor(x, "vgarg", WorkspaceService().getWorkspace("WORKSPACE1") as Workspace))
-    //println(x)
 
 }

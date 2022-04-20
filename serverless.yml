@@ -75,7 +75,7 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - 'us-east-1_Zu7FAh7hj' #userpool id
+              - 'us-east-1_EN9ZkdtKO' #userpool id
         audience:
           - '6pvqt64p0l2kqkk2qafgdh13qe'
 package:
@@ -84,7 +84,7 @@ package:
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-  - serverless-domain-manager
+  #- serverless-domain-manager
   - serverless-plugin-warmup
 custom:
   serverless-offline:

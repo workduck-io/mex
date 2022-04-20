@@ -5,6 +5,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.serverless.models.requests.TagRequest
+import com.serverless.models.requests.WDRequest
 import com.workduck.models.NodeIdentifier
 import com.workduck.models.Tag
 import com.workduck.models.WorkspaceIdentifier
@@ -21,8 +23,7 @@ class TagService(
 
         private val tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    },
+        else -> System.getenv("TABLE_NAME") },
 
         var dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -33,7 +34,13 @@ class TagService(
         private val tagRepository: TagRepository = TagRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
 ) {
 
-    fun addNodeForTag(tagNameList: List<String>, nodeID: String, workspaceID: String) = runBlocking {
+
+
+
+    fun addNodeForTags(wdRequest: WDRequest, workspaceID: String) = runBlocking {
+        val tagNameList = (wdRequest as TagRequest).tagNames
+        val nodeID = wdRequest.nodeID
+
         val existingTags = tagRepository.batchGetTags(tagNameList, workspaceID)
         LOG.info(existingTags)
         val tagsToBeCreated = getTagObjectsFromNameList(getTagNamesToBeCreated(tagNameList, existingTags.map{ it.name }), nodeID, workspaceID)
@@ -43,10 +50,9 @@ class TagService(
     }
 
 
-    fun deleteNodeFromTag(tagNameList: List<String>, nodeID: String, workspaceID: String) {
-
-        tagNameList.map { tagRepository.deleteNodeFromTag(it, nodeID, workspaceID) }
-
+    fun deleteNodeFromTags(wdRequest: WDRequest, workspaceID: String) {
+        val nodeID = (wdRequest as TagRequest).nodeID
+        wdRequest.tagNames.map { tagRepository.deleteNodeFromTag(it, nodeID, workspaceID) }
     }
 
 

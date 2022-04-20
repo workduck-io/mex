@@ -2,6 +2,7 @@ package com.serverless.tagHandlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.google.gson.Gson
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
@@ -15,7 +16,9 @@ class TagHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val tagService = TagService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
+        LOG.info(input)
         val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
+
 
         if (isWarmup) {
             LOG.info("WarmUp - Lambda is warm!")
