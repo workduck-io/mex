@@ -404,6 +404,21 @@ class NodeRepository(
                 }
     }
 
+    fun getTags(nodeID: String, workspaceID: String) : MutableList<String>? {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(nodeID)
+
+
+        return DynamoDBQueryExpression<Node>()
+                .withKeyConditionExpression("PK = :PK and SK=:SK")
+                .withProjectionExpression("tags")
+                .withExpressionAttributeValues(expressionAttributeValues).let { query ->
+                    mapper.query(Node::class.java, query, dynamoDBMapperConfig).getOrNull(0)?.tags
+                    }
+    }
+
+
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }

@@ -331,3 +331,18 @@ NodeArchiveUnarchiveTrigger:
 
 Tag:
   handler: com.serverless.tagHandlers.TagHandler
+  events:
+    #get all tags of a workspace
+    - httpApi:
+        path: /tag/{workspaceID}
+        method: get
+        authorizer: mexAuthorizer
+
+    #get all node ids which have a tag
+    - httpApi:
+        path: /tag/{tagName}/node
+        method: get
+        authorizer: mexAuthorizer
+
+InternalTag:
+  handler: com.serverless.internalTagHandlers.TagHandler

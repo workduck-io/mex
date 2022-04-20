@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.model.InvokeRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
+import com.serverless.internalTagHandlers.TagInput
 import com.serverless.models.Input
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
@@ -68,6 +69,7 @@ import com.workduck.utils.NodeHelper.isNodeIDInPath
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 import kotlinx.coroutines.Deferred
 import com.workduck.utils.TagHelper.createTags
+import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
@@ -103,8 +105,7 @@ class NodeService( // Todo: Inject them from handlers
 
         setMetadataOfNodeToCreate(node)
 
-        launch { createTags(node.tags, node.id) }
-
+        launch { createTags(node.tags, node.id, node.workspaceIdentifier.id) }
         return@runBlocking if (versionEnabled) {
             node.lastVersionCreatedAt = node.createdAt
             val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
@@ -575,8 +576,6 @@ class NodeService( // Todo: Inject them from handlers
 
     fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? = runBlocking {
 
-        launch { updateTags(node.tags, storedNode.tags, node.id) }
-
         Page.populatePageWithCreatedFields(node, storedNode)
 
         node.dataOrder = createDataOrderForPage(node)
@@ -584,7 +583,7 @@ class NodeService( // Todo: Inject them from handlers
         /* to update block level details for accountability */
         val nodeChanged : Boolean = comparePageWithStoredPage(node, storedNode)
 
-        if (!nodeChanged) {
+        if (!nodeChanged && (node.tags == storedNode.tags)) {
             return@runBlocking storedNode
         }
 
@@ -595,6 +594,7 @@ class NodeService( // Todo: Inject them from handlers
 
         LOG.info("Updating node : $node")
 
+        launch { updateTags(node.tags, storedNode.tags, node.id, node.workspaceIdentifier.id) }
         if (versionEnabled) {
             /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
             if (node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
@@ -767,17 +767,19 @@ class NodeService( // Todo: Inject them from handlers
         }
 
 
-    fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String) : MutableList<String> {
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String) : MutableList<String> = runBlocking {
 
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
         require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == nodeIDList.sorted()) { "The passed IDs should be present and archived" }
         val deletedNodesList : MutableList<String> = mutableListOf()
         for(nodeID in nodeIDList) {
+            val tags = nodeRepository.getTags(nodeID, workspaceID)
+            if(!tags.isNullOrEmpty()) launch { deleteTags(tags, nodeID, workspaceID) }
             repository.delete(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID))?.also{
                 deletedNodesList.add(it.id)
             }
         }
-        return deletedNodesList
+        return@runBlocking deletedNodesList
     }
 
     fun makeNodePublic(nodeID: String, workspaceID: String) {
@@ -846,10 +848,6 @@ class NodeService( // Todo: Inject them from handlers
             nodeRepository.moveBlock(sourceNode.data?.get(0), workspaceID, sourceNodeID, destinationNodeID, it) }
     }
 
-
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
-
-
-}

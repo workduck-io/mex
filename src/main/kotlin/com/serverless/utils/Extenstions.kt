@@ -14,7 +14,7 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
         namespaceIdentifier = this.namespaceIdentifier,
         workspaceIdentifier = WorkspaceIdentifier(workspaceID),
         lastEditedBy = userID,
-        tags = this.tags,
+        tags = this.tags ?: mutableListOf(),
         data = this.data
     )
 

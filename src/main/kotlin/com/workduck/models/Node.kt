@@ -51,7 +51,7 @@ data class Node(
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")
     @DynamoDBAttribute(attributeName = "tags")
-    var tags: MutableList<String>? = null,
+    var tags: MutableList<String> = mutableListOf(),
 
     @DynamoDBAttribute(attributeName = "dataOrder")
     override var dataOrder: MutableList<String>? = null,
