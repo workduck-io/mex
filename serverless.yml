@@ -110,15 +110,14 @@ custom:
         - schedule: cron(0/15 * ? * SAT-SUN *)
       concurrency: 2
       role: IamRoleLambdaExecution
-
   customDomain:
     rest:
-      domainName: api.workduck.io
+      domainName: api-${opt:stage, self:provider.stage}.workduck.io
       basePath: 'mex'
       stage: ${opt:stage, self:provider.stage}
       createRoute53Record: true
     http:
-      domainName: http.workduck.io
+      domainName: http-${opt:stage, self:provider.stage}.workduck.io
       basePath: 'mex'
       stage: ${opt:stage, self:provider.stage}
       createRoute53Record: true

@@ -24,8 +24,8 @@ Resources:
         - AttributeName: SK
           KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+        ReadCapacityUnits: 15
+        WriteCapacityUnits: 15
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
@@ -38,8 +38,8 @@ Resources:
           Projection:
             ProjectionType: ALL
           ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
+            ReadCapacityUnits: 15
+            WriteCapacityUnits: 15
         - IndexName: itemType-AK-index
           KeySchema:
             - AttributeName: itemType
@@ -49,8 +49,8 @@ Resources:
           Projection:
             ProjectionType: ALL
           ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
+            ReadCapacityUnits: 15
+            WriteCapacityUnits: 15
         - IndexName: WS-itemStatus-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -82,8 +82,6 @@ Resources:
           Projection:
             ProjectionType: ALL
           ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
-
-
+            ReadCapacityUnits: 15
+            WriteCapacityUnits: 15
 
