@@ -44,7 +44,7 @@ class PageRepository <T : Page> (
 
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
-        return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig) ?: throw NoSuchElementException("Not found")
+        return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig)
     }
 
 
