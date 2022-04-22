@@ -9,15 +9,11 @@ class ShareNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error sharing node"
 
-        val onlyRead = input.queryStringParameters?.let{
-            it["version"]?.toBoolean()
-        } ?: false
-
-        return input.pathParameters?.nodeID?.let { nodeID ->
-            nodeService.shareNode(nodeID, input.tokenBody.userID, input.headers.workspaceID, input.pathParameters.userID!!, onlyRead).let {
+        return input.payload?.let {
+            nodeService.shareNode(it, input.tokenBody.userID, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
             }
-        }!!
+        } ?: ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
     }
 }

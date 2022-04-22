@@ -38,6 +38,18 @@ class NodeStrategyFactory {
 
         const val bulkCreateNodesObject = "POST /node/bulkCreate"
 
+        const val shareNode = "POST /node/shared"
+
+        const val getSharedNode = "GET /node/shared/{nodeID}"
+
+        const val revokeNodeAccess = "DELETE /node/shared"
+
+        const val updateSharedNodeAccess = "PUT /node/shared"
+
+        const val updateSharedNode = "POST /node/shared/update"
+
+        const val getAllSharedUsers = "GET /node/{id}/shared/users"
+
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
@@ -57,7 +69,13 @@ class NodeStrategyFactory {
             copyOrMoveBlockObject to CopyOrMoveBlockStrategy(),
             getAllNodesObject to GetAllNodesStrategy(),
             refactorNodePathObject to RefactorNodePathStrategy(),
-            bulkCreateNodesObject to BulkCreateNodesStrategy()
+            bulkCreateNodesObject to BulkCreateNodesStrategy(),
+            shareNode to ShareNodeStrategy(),
+            getSharedNode to GetSharedNodeStrategy(),
+            revokeNodeAccess to RevokeNodeAccessStrategy(),
+            updateSharedNodeAccess to UpdateSharedNodeAccessStrategy(),
+            updateSharedNode to UpdateSharedNodeStrategy(),
+            getAllSharedUsers to GetAllSharedUsersStrategy(),
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {

@@ -9,11 +9,11 @@ class UpdateSharedNodeAccessStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error updating access"
 
-        return input.pathParameters?.nodeID?.let { nodeID ->
-            nodeService.changeAccessType(nodeID, input.headers.workspaceID, input.pathParameters.userID!!, input.pathParameters.access!!).let {
+        return input.payload?.let {
+            nodeService.changeAccessType(it, input.tokenBody.userID, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
             }
-        }!!
+        } ?: ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
     }
 }

@@ -90,6 +90,37 @@ Node:
         method: post
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /node/shared/{nodeID}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/shared
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/shared
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/shared
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/shared/update
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /node/{id}/shared/users
+        method: get
+        authorizer: mexAuthorizer
+
+
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler
   events:

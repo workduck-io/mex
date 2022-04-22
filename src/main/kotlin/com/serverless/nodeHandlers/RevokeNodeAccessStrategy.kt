@@ -9,11 +9,11 @@ class RevokeNodeAccessStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error updating access"
 
-        return input.pathParameters?.nodeID?.let { nodeID ->
-            nodeService.revokeSharedAccess(nodeID, input.headers.workspaceID, input.pathParameters.userID!!).let {
+        return input.payload?.let {
+            nodeService.revokeSharedAccess(it, input.tokenBody.userID, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
             }
-        }!!
+        } ?: ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
     }
 }

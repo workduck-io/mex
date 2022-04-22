@@ -8,6 +8,17 @@ import com.workduck.models.NodeIdentifier
 
 object AccessItemHelper {
 
+    fun getNodeAccessItems(nodeID: String, ownerID: String, userIDList: List<String>, accessType: AccessType): List<NodeAccess> {
+        return userIDList.map {
+            NodeAccess(
+                    node = NodeIdentifier(nodeID),
+                    ownerID = ownerID,
+                    userID = it,
+                    accessType = accessType
+            )
+        }
+    }
+
     fun createAccessItem(nodeID: String, mentioningUserID: String, mentionedUserID: String, accessType: AccessType) : NodeAccess{
         return NodeAccess(
                 node = NodeIdentifier(nodeID),
