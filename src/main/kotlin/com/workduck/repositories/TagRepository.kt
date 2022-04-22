@@ -55,7 +55,7 @@ class TagRepository(
 
     }
 
-    fun batchGetTags(tagNameList: List<String>, workspaceID: String) : List<Tag> {
+    fun batchGetTags(tagNameList: Set<String>, workspaceID: String) : List<Tag> {
         val keyPairList = tagNameList.map {
             val keyPair = KeyPair()
             keyPair.withHashKey(WorkspaceIdentifier(workspaceID))

@@ -23,7 +23,7 @@ data class TagInput(
             return try {
                 Helper.objectMapper.convertValue(rawInput, TagInput::class.java)
             } catch (e : Exception){
-                LOG.info(e)
+                LOG.error(e)
                 null
             }
         }

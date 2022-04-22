@@ -54,20 +54,11 @@ data class Tag(
 
     @JsonProperty("name")
     @DynamoDBRangeKey(attributeName = "SK")
-    var name: String = "New Tag",
-
-//    @DynamoDBAttribute(attributeName = "tagID")
-//    var id: String = Helper.generateNanoID("TAG"),
-
+    var name: String = "",
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = Constants.getCurrentTime(),
-
-
-    //val ownerIdentifier: OwnerIdentifier,
-    //val expireAt: Long? = null,
-    //val metaData: JsonNode? = null,
 
     @JsonProperty("nodes")
     @DynamoDBTypeConverted(converter = NodeIdentifierListConverter::class)
@@ -84,5 +75,9 @@ data class Tag(
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = Constants.getCurrentTime()
+
+    init {
+        require(name.isNotEmpty()) { "Tag name cannot be empty" }
+    }
 
 }

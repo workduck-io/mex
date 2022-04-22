@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.TagRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.NodeIdentifier
@@ -12,6 +13,7 @@ import com.workduck.models.Tag
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.TagRepository
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -38,12 +40,12 @@ class TagService(
 
 
     fun addNodeForTags(wdRequest: WDRequest, workspaceID: String) = runBlocking {
-        val tagNameList = (wdRequest as TagRequest).tagNames
+        val tagNameSet = (wdRequest as TagRequest).tagNames
         val nodeID = wdRequest.nodeID
 
-        val existingTags = tagRepository.batchGetTags(tagNameList, workspaceID)
+        val existingTags = tagRepository.batchGetTags(tagNameSet, workspaceID)
         LOG.info(existingTags)
-        val tagsToBeCreated = getTagObjectsFromNameList(getTagNamesToBeCreated(tagNameList, existingTags.map{ it.name }), nodeID, workspaceID)
+        val tagsToBeCreated = getTagObjectsFromNameList(getTagNamesToBeCreated(tagNameSet, existingTags.map{ it.name }), nodeID, workspaceID)
         LOG.info(tagsToBeCreated)
         launch { tagRepository.batchCreateTags(tagsToBeCreated) }
         updateExistingTags(existingTags, nodeID, workspaceID)
@@ -75,8 +77,8 @@ class TagService(
         existingTags.map {  tagRepository.updateExistingTag(it, nodeID, workspaceID) }
     }
 
-    private fun getTagNamesToBeCreated(listOfNames : List<String>, existingNames: List<String>) : List<String> {
-        return listOfNames.minus(existingNames.toSet())
+    private fun getTagNamesToBeCreated(listOfNames : Set<String>, existingNames: List<String>) : List<String> {
+        return listOfNames.toList().minus(existingNames.toSet())
     }
 
     private fun getTagObjectsFromNameList(tagNameList: List<String>, nodeID: String, workspaceID: String) : List<Tag> {
@@ -95,21 +97,3 @@ class TagService(
         private val LOG = LogManager.getLogger(TagService::class.java)
     }
 }
-
-
-fun main(){
-    val tag = Tag(
-            name = "2 - XYZ",
-            workspaceIdentifier = WorkspaceIdentifier("WORKSPACE2")
-    )
-
-    //println(listOf(1, 2, 4).minus(listOf(4, 1)))
-
-    //TagService().save(tag)
-    //TagService().addTagForNode(listOf("XYZ"), "", "WORKSPACE1")
-    //TagService().addNodeForTag(listOf("ABC", "GGWP"), "NODE1", "WORKSPACE1")
-
-    //TagService().deleteNodeFromTag(listOf("ABC"), "NODE1", "WORKSPACE1")
-
-}
-
