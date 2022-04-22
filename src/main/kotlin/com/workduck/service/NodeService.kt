@@ -52,10 +52,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import com.serverless.utils.toNode
+import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
 import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
+import com.workduck.utils.AccessItemHelper.createAccessItem
+import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
+import com.workduck.utils.NodeHelper.isNodeIDInPath
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
@@ -817,6 +821,48 @@ class NodeService( // Todo: Inject them from handlers
             it.remove(blockID)
             nodeRepository.moveBlock(sourceNode.data?.get(0), workspaceID, sourceNodeID, destinationNodeID, it) }
     }
+
+
+    fun shareNode(nodeID: String, mentioningUserID: String, workspaceID: String, mentionedUserID: String, onlyRead: Boolean){
+        if(!checkIfNodeExistsForWorkspace(nodeID, workspaceID)) throw NoSuchElementException("Node you're trying to share does not exist")
+        when(onlyRead){
+            true -> nodeRepository.createNodeAccessItem(createAccessItem(nodeID, mentioningUserID, mentionedUserID, AccessType.READ))
+            false -> nodeRepository.createNodeAccessItem(createAccessItem(nodeID, mentioningUserID, mentionedUserID, AccessType.WRITE))
+        }
+    }
+
+    fun getSharedNode(nodeID: String, userID: String) : Entity {
+        require (nodeRepository.getUserIDsWithNodeAccess(nodeID).contains(userID)) { "Error Accessing Node" }
+        return nodeRepository.getNodeByNodeID(nodeID)
+    }
+
+    fun changeAccessType(nodeID: String, workspaceID: String, userID: String, accessType: String){
+        if(!checkIfNodeExistsForWorkspace(nodeID, workspaceID)) throw NoSuchElementException("Node you're trying to share does not exist")
+        when(accessType.lowercase()){
+            "read" -> nodeRepository.updateNodeAccess(nodeID, userID, AccessType.READ)
+            "write" -> nodeRepository.updateNodeAccess(nodeID, userID, AccessType.WRITE)
+            else -> throw IllegalArgumentException("Invalid Access Value")
+        }
+
+
+    }
+
+    fun updateSharedNode(wdRequest: WDRequest, userID: String) : Entity?{
+        val nodeRequest = wdRequest as NodeRequest
+        require (nodeRepository.getUserIDsWithNodeAccess(nodeRequest.id, filterWriteAccess = true).contains(userID)) { "Error Accessing Node" }
+        val storedNode =  nodeRepository.getNodeByNodeID(nodeRequest.id)
+        val node = createNodeObjectFromNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, userID)
+        return updateNode(node, storedNode, false)
+    }
+
+
+    fun revokeSharedAccess(nodeID: String, workspaceID: String, userID: String){
+        if(!checkIfNodeExistsForWorkspace(nodeID, workspaceID)) throw NoSuchElementException("Node you're trying to access does not exist")
+        nodeRepository.deleteNodeAccess(nodeID, userID)
+
+    }
+
+
 
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
