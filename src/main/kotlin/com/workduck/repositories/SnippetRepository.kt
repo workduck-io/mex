@@ -37,7 +37,7 @@ class SnippetRepository(
         expected["SK"] = ExpectedAttributeValue(false)
         saveExpression.expected = expected
         saveExpression.setConditionalOperator(ConditionalOperator.AND)
-        mapper.save(snippet, saveExpression)
+        mapper.save(snippet, saveExpression, dynamoDBMapperConfig)
         return snippet
     }
 
