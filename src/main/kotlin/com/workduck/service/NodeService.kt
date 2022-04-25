@@ -20,6 +20,7 @@ import com.serverless.utils.containsExistingNodes
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNodesAfterIndex
+import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.models.HierarchyUpdateSource
@@ -56,6 +57,7 @@ import com.workduck.models.Entity
 import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
 import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
+import com.workduck.utils.NodeHelper.isNodeIDInPath
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 
 /**
@@ -534,7 +536,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
     }
 
-    fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? {
+    fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity?  = runBlocking{
 
         Page.populatePageWithCreatedFields(node, storedNode)
 
@@ -544,11 +546,13 @@ class NodeService( // Todo: Inject them from handlers
         val nodeChanged : Boolean = comparePageWithStoredPage(node, storedNode)
 
         if (!nodeChanged) {
-            return storedNode
+            return@runBlocking storedNode
         }
 
         /* to make the locking versions same */
         mergePageVersions(node, storedNode)
+
+        launch { updateHierarchyIfRename(node, storedNode)}
 
         LOG.info("Updating node : $node")
 
@@ -556,7 +560,7 @@ class NodeService( // Todo: Inject them from handlers
             /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
             if (node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
                 node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
-                return repository.update(node)
+                return@runBlocking repository.update(node)
             }
             node.lastVersionCreatedAt = node.updatedAt
             checkNodeVersionCount(node, storedNode.nodeVersionCount)
@@ -565,9 +569,32 @@ class NodeService( // Todo: Inject them from handlers
             nodeVersion.createdAt = storedNode.createdAt
             nodeVersion.createdBy = storedNode.createdBy
 
-            return nodeRepository.updateNodeWithVersion(node, nodeVersion)
+            return@runBlocking nodeRepository.updateNodeWithVersion(node, nodeVersion)
         } else {
-            return repository.update(node)
+            return@runBlocking repository.update(node)
+        }
+    }
+
+
+    private fun updateHierarchyIfRename(node: Node, storedNode: Node){
+        val newHierarchy = mutableListOf<String>()
+        if(node.title != storedNode.title){
+            val workspace = workspaceService.getWorkspace(node.workspaceIdentifier.id) as Workspace
+            val currentHierarchy = workspace.nodeHierarchyInformation ?: listOf()
+            for(nodePath in currentHierarchy){
+                val idList = getIDPath(nodePath).getListOfNodes()
+                val indexOfNodeID = idList.indexOf(node.id)
+                if(indexOfNodeID != -1){
+                    val nameList = getNamePath(nodePath).getListOfNodes() as MutableList
+                    nameList[indexOfNodeID] = node.title
+                    newHierarchy.add(nameList.mix(idList).convertToPathString())
+                }
+                else {
+                    newHierarchy.add(nodePath)
+                }
+
+            }
+            workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy, HierarchyUpdateSource.RENAME)
         }
     }
 
@@ -784,47 +811,4 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-}
-
-
-fun main(){
-    val jsonString: String = """
- {
-     "type" : "NodeRequest",
-     "title" : "F",
-     "referenceID": "NODE2",
-     "lastEditedBy" : "USERVarun",
-     "id": "NODE6",
-     "namespaceIdentifier" : "NAMESPACE1",
-     "data": [
-     {
-         "id": "sampleParentID",
-         "elementType": "paragraph",
-         "children": [
-         {
-             "id" : "sampleChildID",
-             "content" : "sample child content 1",
-             "elementType": "paragraph",
-             "properties" :  { "bold" : true, "italic" : true  }
-         }
-         ]
-     },
-     {
-         "id": "1234",
-         "elementType": "paragraph",
-         "children": [
-         {
-             "id" : "sampleChildID",
-             "content" : "sample child content",
-             "elementType": "paragraph",
-             "properties" :  { "bold" : true, "italic" : true  }
-         }
-         ]
-     }
-     ]
- }"""
-
-    val nodeRequest = Helper.objectMapper.readValue<WDRequest>(jsonString)
-    println(nodeRequest)
-    //NodeService().createAndUpdateNode(nodeRequest, "WORKSPACE1", "v@gmail.com")
 }

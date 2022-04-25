@@ -14,7 +14,8 @@ import com.workduck.utils.Helper
 enum class HierarchyUpdateSource {
     REFRESH, /* when refresh endpoint is used or would be used */
     NODE, /* when nodes are added */
-    ARCHIVE /* when a node is archived, we first update the hierarchy */
+    ARCHIVE, /* when a node is archived, we first update the hierarchy */
+    RENAME
 }
 
 @DynamoDBTable(tableName = "sampleData")
