@@ -85,6 +85,17 @@ fun List<String>.isRefactorWithPathDivision(removedPath: List<String>) : Boolean
     return this.size > 1 && removedPath.isNotEmpty() && this.size == removedPath.size + 1
 }
 
+fun <T> List<T>.mix(other: List<T>): List<T> {
+    val first = iterator()
+    val second = other.iterator()
+    val list = ArrayList<T>(minOf(this.size, other.size))
+    while (first.hasNext() && second.hasNext()) {
+        list.add(first.next())
+        list.add(second.next())
+    }
+    return list
+}
+
 
 fun String.isLastNodeSame(path: String, delimiter: String = Constants.DELIMITER) : Boolean {
     return this.split(delimiter).last() == path.split(delimiter).last()

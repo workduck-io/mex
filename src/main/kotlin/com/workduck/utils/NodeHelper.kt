@@ -64,6 +64,10 @@ object NodeHelper {
         return nodeNames.joinToString(Constants.DELIMITER)
     }
 
+    fun isNodeIDInPath(nodePath: String, nodeID: String) : Boolean {
+        return nodePath.split(Constants.DELIMITER).contains(nodeID)
+    }
+
     fun isExistingPathDividedInRefactor(unchangedNodes: List<String>, existingNodes: List<String>): Boolean{
         return unchangedNodes + existingNodes.last() != existingNodes
     }
