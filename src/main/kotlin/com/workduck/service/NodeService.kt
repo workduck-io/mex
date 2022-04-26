@@ -57,6 +57,7 @@ import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
 import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.removeRedundantPaths
+import kotlinx.coroutines.Deferred
 
 /**
  * contains all node related logic
@@ -635,11 +636,13 @@ class NodeService( // Todo: Inject them from handlers
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
         val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID)
 
+        LOG.debug(mapOfNodeIDToName)
         for ((nodeID, _) in mapOfNodeIDToName) {
             nodeIDList.remove(nodeID)
         }
 
         val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName, workspaceID) }
+
         val jobToUnarchiveNodes =
             async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
 

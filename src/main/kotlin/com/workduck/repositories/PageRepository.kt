@@ -94,7 +94,6 @@ class PageRepository <T : Page> (
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":active"] = itemStatus.name
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
-        expressionAttributeValues[":workspaceIdentifier"] = workspaceID
 
         val pagesProcessedList: MutableList<String> = mutableListOf()
         for (pageID in pageIDList) {
@@ -102,13 +101,13 @@ class PageRepository <T : Page> (
                 UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", pageID)
                         .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
                         .withValueMap(expressionAttributeValues)
-                        .withConditionExpression("attribute_exists(PK) and workspaceIdentifier = :workspaceIdentifier")
+                        .withConditionExpression("attribute_exists(PK)")
                         .also {
                             table.updateItem(it)
                             pagesProcessedList += pageID
                         }
             } catch (e: ConditionalCheckFailedException) {
-                LOG.warn("pageID : $pageID not present in the DB")
+                LOG.warn("Conditional check failed for $pageID : ${e.message}")
             }
         }
 

@@ -7,7 +7,9 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
+import com.workduck.utils.Helper.objectMapper
 
 
 /**
@@ -34,18 +36,13 @@ object ExceptionParser {
     //TODO(should be combine all DDB Exceptions together?)
     fun exceptionHandler(e: Exception) : ApiGatewayResponse{
         println("in the exception parser")
+        logStackTrace(e)
         return when(e){
             is IllegalArgumentException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 400)
             is NoSuchElementException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Not Found", 404)
             is NullPointerException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Getting NPE", 400)
-            is UnauthorizedException ->{
-                LOG.info("Unauthorized")
-                ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Unauthorized", 401)
-            }
-            is ResourceNotFoundException -> {
-                LOG.warn(e)
-                ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 404)
-            }
+            is UnauthorizedException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Unauthorized", 401)
+            is ResourceNotFoundException -> ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 404)
             is ClassCastException -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
             is ConditionalCheckFailedException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
             is AmazonDynamoDBException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
@@ -53,8 +50,11 @@ object ExceptionParser {
             else -> {
                 throw e
             }
-
         }
+    }
+
+    private fun logStackTrace(exception : Exception){
+        LOG.error(exception.stackTraceToString())
     }
 
 

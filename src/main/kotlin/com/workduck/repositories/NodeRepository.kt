@@ -238,8 +238,9 @@ class NodeRepository(
     }
 
     fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>, workspaceID: String) : MutableList<String>{
-        val table: Table = dynamoDB.getTable(tableName)
+        if(mapOfNodeIDToName.isEmpty()) return mutableListOf()
 
+        val table: Table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":active"] = ItemStatus.ACTIVE.name
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
@@ -393,7 +394,7 @@ class NodeRepository(
 
 
         return DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("PK = :workspaceIdentifier and begins_with(SK, :SK)")
+                .withKeyConditionExpression("PK = :PK and begins_with(SK, :SK)")
                 .withFilterExpression("itemStatus = :itemStatus")
                 .withProjectionExpression("PK, SK, title")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
