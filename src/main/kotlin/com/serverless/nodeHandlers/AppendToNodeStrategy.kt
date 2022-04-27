@@ -9,18 +9,9 @@ class AppendToNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val errorMessage = "Error appending to node!"
 
-        val nodeID = input.pathParameters?.id
-
-        val elementListRequest = input.payload
-
-        //TODO(create an ElementResponse object. And , make NodeResponse.data of the type List<ElementResponse>)
-        return if (nodeID != null && elementListRequest!= null) {
-
-            val map: Map<String, Any>? = nodeService.append(nodeID, input.headers.workspaceID, input.tokenBody.userID,elementListRequest)
-
-            ApiResponseHelper.generateStandardResponse(map as Any?, errorMessage)
-        } else {
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
-        }
+        return input.payload?.let{
+            nodeService.append(input.pathParameters?.id!!, input.headers.workspaceID, input.tokenBody.userID, it)
+            ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
+        } ?: ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
     }
 }

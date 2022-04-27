@@ -13,7 +13,6 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
-import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.BatchWriteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
@@ -55,10 +54,6 @@ class NodeRepository(
     private val tableName: String,
     private val nodeService: NodeService
 )  {
-
-    fun append(sourceNodeID: String, nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
-    override fun get(identifier: Identifier): Entity? =
-        mapper.load(Node::class.java, identifier.id, identifier.id, dynamoDBMapperConfig)?.let { node -> orderBlocks(node) }
 
     fun getPaginatedNodeDataAndEndCursor(nodeID: String, relationships: List<Relationship>, blockID: String?, blockSize: Int, blocksProcessed : MutableList<Int> = mutableListOf(0)): Pair<String?, MutableList<AdvancedElement>> {
 
@@ -556,7 +551,7 @@ class NodeRepository(
     }
 
 
-    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {
+    fun toggleNodePublicAccess(nodeID: String, accessValue: Long) {}
 
     fun getBlock(nodeID: String, blockID: String, workspaceID: String) : Node? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()

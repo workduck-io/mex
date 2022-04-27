@@ -47,18 +47,14 @@ class GetNodeStrategy : NodeStrategy {
 
         /* if blockSize is not provided, get all the node's data */
         return when(blockSize == null){
-
             true -> {
-                val node : Entity? = nodeService.getNode(nodeID, bookmarkInfo, userID)
-                val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
+                val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(nodeService.getNode(nodeID,input.headers.workspaceID, input.tokenBody.userID, bookmarkInfo))
                 ApiResponseHelper.generateStandardResponse(nodeResponse, 200, errorMessage)
             }
-
             false -> {
                 return when(getMetaDataOfNode){
                     true -> {
-                        val node: Entity? = nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, bookmarkInfo, userID)
-                        val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
+                        val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(nodeService.getNodeData(nodeID, startCursor, blockSize, getReverseOrder, bookmarkInfo, userID))
                         ApiResponseHelper.generateStandardResponse(nodeResponse, 200, errorMessage)
                     }
                     false -> {
