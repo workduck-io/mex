@@ -334,7 +334,7 @@ Tag:
   events:
     #get all tags of a workspace
     - httpApi:
-        path: /tag/{workspaceID}
+        path: /tag/all
         method: get
         authorizer: mexAuthorizer
 

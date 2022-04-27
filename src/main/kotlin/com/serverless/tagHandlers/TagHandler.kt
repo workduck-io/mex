@@ -16,9 +16,8 @@ class TagHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val tagService = TagService()
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
-        LOG.info(input)
-        val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
 
+        val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
 
         if (isWarmup) {
             LOG.info("WarmUp - Lambda is warm!")

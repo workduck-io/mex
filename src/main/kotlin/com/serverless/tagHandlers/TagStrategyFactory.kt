@@ -4,7 +4,7 @@ class TagStrategyFactory {
 
     companion object {
 
-        private const val getAllTagsOfWorkspace = "GET /tag/{workspaceID}"
+        private const val getAllTagsOfWorkspace = "GET /tag/all"
 
         private const val getAllNodesByTag = "GET /tag/{tagName}"
 
