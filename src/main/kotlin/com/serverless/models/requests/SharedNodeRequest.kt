@@ -1,31 +1,24 @@
 package com.serverless.models.requests
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.workduck.converters.AccessTypeDeserializer
 import com.workduck.models.AccessType
+import com.workduck.models.ItemType
 
+data class SharedNodeRequest(
 
-class SharedNodeRequest(
+    val nodeID: String,
 
-        val nodeID : String,
+    val userIDs: List<String> = listOf(),
 
-        val userIDs : List<String> = listOf(),
-
-        val accessType : String = "MANAGE"
-
+    @JsonDeserialize(converter = AccessTypeDeserializer::class)
+    val accessType: AccessType = AccessType.MANAGE
 
 ) : WDRequest {
 
     init {
         require(userIDs.isNotEmpty()) { "Need to provide userIDs" }
 
-        require(nodeID.isNotEmpty()) { "NodeID can't be empty" }
-
-        require(validateAccessTypeString(accessType)) { "Invalid AccessType" }
+        require(nodeID.isNotEmpty() && nodeID.startsWith(ItemType.Node.name.uppercase())) { "Invalid NodeID" }
     }
-
-    private fun validateAccessTypeString(accessType: String) : Boolean{
-        return AccessType.values().map {
-            it.name
-        }.contains(accessType.uppercase())
-    }
-
 }

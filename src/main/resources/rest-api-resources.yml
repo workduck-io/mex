@@ -91,32 +91,32 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/shared/{nodeID}
+        path: /shared/node/{nodeID}
         method: get
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/shared
+        path: /shared/node
         method: post
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/shared
+        path: /shared/node
         method: put
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/shared
+        path: /shared/node
         method: delete
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/shared/update
+        path: /shared/node/update
         method: post
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/{id}/shared/users
+        path: /shared/node/{id}/users
         method: get
         authorizer: mexAuthorizer
 

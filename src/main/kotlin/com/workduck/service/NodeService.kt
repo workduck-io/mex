@@ -835,7 +835,7 @@ class NodeService( // Todo: Inject them from handlers
     fun shareNode(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
         if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, AccessType.valueOf(sharedNodeRequest.accessType.uppercase()))
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -848,7 +848,7 @@ class NodeService( // Todo: Inject them from handlers
     fun changeAccessType(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
         if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, AccessType.valueOf(sharedNodeRequest.accessType.uppercase()))
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -874,7 +874,7 @@ class NodeService( // Todo: Inject them from handlers
     fun revokeSharedAccess(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
         if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, AccessType.valueOf(sharedNodeRequest.accessType.uppercase()))
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
         nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
     }
 

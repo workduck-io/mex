@@ -5,13 +5,13 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.responses.Response
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.Messages
 import com.serverless.utils.NodeHelper
 import com.workduck.models.Entity
 import com.workduck.service.NodeService
 
 class CreateNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val errorMessage = "Error creating node"
 
         val nodeRequest : WDRequest? = input.payload
         val versionEnabled : Boolean? = input.queryStringParameters?.let{
@@ -23,6 +23,6 @@ class CreateNodeStrategy : NodeStrategy {
         else nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID)
 
         val nodeResponse: Response? = NodeHelper.convertNodeToNodeResponse(node)
-        return ApiResponseHelper.generateStandardResponse(nodeResponse, errorMessage)
+        return ApiResponseHelper.generateStandardResponse(nodeResponse, Messages.ERROR_CREATING_NODE)
     }
 }

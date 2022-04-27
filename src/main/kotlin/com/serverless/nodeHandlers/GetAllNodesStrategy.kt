@@ -5,12 +5,11 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Helper.EMAIL_ADDRESS_PATTERN
+import com.serverless.utils.Messages
 import com.workduck.service.NodeService
 
 class GetAllNodesStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val errorMessage = "Error getting nodes!"
-
         /*
             if by namespace : id = namespaceID-workspaceID
             if by workspace : id = workspaceID
@@ -23,12 +22,12 @@ class GetAllNodesStrategy : NodeStrategy {
                 1 -> when {
                         idList[0].startsWith("WORKSPACE") ->
                             nodeService.getAllNodesWithWorkspaceID(idList[0]).let {
-                                ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
+                                ApiResponseHelper.generateStandardResponse(it as Any?, Messages.ERROR_GETTING_NODES)
                             }
 
                         else ->
                             nodeService.getAllNodesWithUserID(idList[0]).let {
-                                ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
+                                ApiResponseHelper.generateStandardResponse(it as Any?, Messages.ERROR_GETTING_NODES)
                             }
 
                     }
@@ -36,15 +35,15 @@ class GetAllNodesStrategy : NodeStrategy {
                 2 -> when {
                     isValidNamespaceAndWorkspaceID(idList[0], idList[1]) ->
                         nodeService.getAllNodesWithNamespaceID(idList[0], idList[1]).let {
-                            ApiResponseHelper.generateStandardResponse(it as Any?, errorMessage)
+                            ApiResponseHelper.generateStandardResponse(it as Any?, Messages.ERROR_GETTING_NODES)
                         }
-                    else -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
+                    else -> ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
                 }
                 else -> throw IllegalArgumentException("Invalid ID")
             }
         } else {
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_GETTING_NODES)
         }
 
     }
