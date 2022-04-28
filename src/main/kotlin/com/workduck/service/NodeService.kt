@@ -27,6 +27,7 @@ import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
 import com.serverless.utils.toNode
+import com.workduck.models.AccessType
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
@@ -835,7 +836,7 @@ class NodeService( // Todo: Inject them from handlers
 
 
     fun getSharedNode(nodeID: String, userID: String): Entity {
-        require(nodeRepository.getUserIDsWithNodeAccess(nodeID).contains(userID)) { "Error Accessing Node" }
+        require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { "Error Accessing Node" }
         return nodeRepository.getNodeByNodeID(nodeID)
     }
 
@@ -848,18 +849,18 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun checkIfOwnerCanManage(ownerID: String, workspaceID: String, nodeID: String) : Boolean{
         return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
-                nodeRepository.getUserIDsWithNodeAccess(nodeID, filterManageAccess = true).contains(ownerID)
+                nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(ownerID)
 
     }
 
     private fun checkIfUserHasAccess(ownerID: String, workspaceID: String, nodeID: String) : Boolean{
         return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
-                nodeRepository.getUserIDsWithNodeAccess(nodeID).contains(ownerID)
+                nodeRepository.getUserIDsWithNodeAccess(nodeID, AccessType.values().toList()).contains(ownerID)
     }
 
     fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
         val nodeRequest = wdRequest as NodeRequest
-        require(nodeRepository.getUserIDsWithNodeAccess(nodeRequest.id, filterWriteAccess = true, filterManageAccess = true).contains(userID)) { "Error Accessing Node" }
+        require(nodeRepository.getUserIDsWithNodeAccess(nodeRequest.id, listOf(AccessType.MANAGE, AccessType.WRITE)).contains(userID)) { "Error Accessing Node" }
         val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id)
         val node = createNodeObjectFromNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, userID)
         return updateNode(node, storedNode, false)

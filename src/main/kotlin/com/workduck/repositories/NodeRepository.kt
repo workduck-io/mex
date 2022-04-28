@@ -277,15 +277,13 @@ class NodeRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        val nodeList: List<Node> = DynamoDBQueryExpression<Node>()
+        return  DynamoDBQueryExpression<Node>()
             .withKeyConditionExpression("PK = :pk and SK = :sk")
             .withProjectionExpression("nodeData.$blockID, dataOrder")
             .withExpressionAttributeValues(expressionAttributeValues).let {
                 mapper.query(Node::class.java, it)
-            }
+            }.firstOrNull()
 
-        return if (nodeList.isNotEmpty()) nodeList[0]
-        else null
     }
 
     fun moveBlock(block: AdvancedElement?, workspaceID: String, sourceNodeID: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
@@ -419,33 +417,26 @@ class NodeRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
-//
-//    fun createNodeAccessItem(nodeAccessItem: NodeAccess){
-//        mapper.save(nodeAccessItem, dynamoDBMapperConfig)
-//    }
 
-    fun getUserIDsWithNodeAccess(nodeID: String, filterWriteAccess : Boolean = false, filterManageAccess: Boolean = false) : List<String> {
+    fun checkIfAccessRecordExists(nodeID: String, userID: String) : Boolean{
+        return mapper.load(NodeAccess::class.java, getAccessItemPK(nodeID), userID) != null
+    }
+
+
+    fun getUserIDsWithNodeAccess(nodeID: String, accessTypeList : List<AccessType>) : List<String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
-        val accessItemList = DynamoDBQueryExpression<NodeAccess>()
+        return DynamoDBQueryExpression<NodeAccess>()
                 .withKeyConditionExpression("PK = :PK")
                 .withFilterExpression("itemType = :itemType")
                 .withProjectionExpression("SK, accessType")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
                     mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
-                }
+                }.filter {
+                    it.accessType in  accessTypeList}.map { accessItem -> accessItem.userID  }
 
-        return when (filterManageAccess) {
-            true -> accessItemList.filter { it.accessType == AccessType.MANAGE }.map { manageAccess -> manageAccess.userID }
-            false -> {
-                when (filterWriteAccess) {
-                    true -> accessItemList.filter { it.accessType == AccessType.WRITE }.map { manageAccess -> manageAccess.userID }
-                    false -> accessItemList.map { it.userID }
-                }
-            }
-        }
     }
 
     fun getSharedUserInformation(nodeID: String) : Map<String, String> {
@@ -465,32 +456,6 @@ class NodeRepository(
     }
 
 
-//    fun updateNodeAccess(nodeID: String, userID: String, accessType : AccessType){
-//
-//        val table = dynamoDB.getTable(tableName)
-//
-//        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-//        expressionAttributeValues[":PK"] = getAccessItemPK(nodeID)
-//        expressionAttributeValues[":accessType"] = accessType.name
-//        expressionAttributeValues[":itemType"] = ItemType.NodeAccess.name
-//        expressionAttributeValues[":updatedAt"] = getCurrentTime()
-//
-//        val updateExpression = "set accessType = :accessType, updatedAt = :updatedAt"
-//
-//        try {
-//            UpdateItemSpec().withPrimaryKey("PK", getAccessItemPK(nodeID), "SK", userID)
-//                    .withUpdateExpression(updateExpression)
-//                    .withValueMap(expressionAttributeValues)
-//                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK) and ")
-//                    .let {
-//                        table.updateItem(it)
-//                    }
-//        }catch (e: ConditionalCheckFailedException){
-//            throw ConditionalCheckFailedException("User does not have any type of access")
-//        }
-//    }
-
-
     fun getNodeByNodeID(nodeID: String) : Node {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
@@ -502,9 +467,8 @@ class NodeRepository(
                 .withIndexName("SK-PK-Index").withConsistentRead(false)
                 .withFilterExpression("itemStatus = :itemStatus")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { list ->
-                        if(list.isNotEmpty()) list[0]
-                        else throw NoSuchElementException("Requested Resource Not Found")
+                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
+                        nodeList.firstOrNull() ?: throw NoSuchElementException("Requested Resource Not Found")
                     }
                 }
     }
@@ -521,20 +485,12 @@ class NodeRepository(
                 .withFilterExpression("itemStatus = :itemStatus")
                 .withProjectionExpression("PK")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { list ->
-                        if(list.isNotEmpty()) list[0].workspaceIdentifier.id
-                        else throw NoSuchElementException("Requested Resource Not Found")
+                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
+                        nodeList.firstOrNull()?.workspaceIdentifier?.id ?: throw NoSuchElementException("Requested Resource Not Found")
                     }
                 }
 
     }
-
-//    fun deleteNodeAccess(nodeID: String, userID: String){
-//        val table = dynamoDB.getTable(tableName)
-//        DeleteItemSpec().withPrimaryKey("PK", getAccessItemPK(nodeID), "SK", userID).let {
-//                    table.deleteItem(it) }
-//
-//    }
 
     fun getTags(nodeID: String, workspaceID: String) : MutableList<String>? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
