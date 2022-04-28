@@ -34,6 +34,6 @@ data class NodeBulkRequest(
     override val data: List<AdvancedElement>? = null,
 
     @JsonProperty("tags")
-    override var tags: MutableList<String>? = null,
+    override var tags: MutableList<String> = mutableListOf(),
 
 ) : NodeRequest()

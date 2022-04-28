@@ -32,7 +32,7 @@ open class NodeRequest(
     open val data: List<AdvancedElement>? = null,
 
     @JsonProperty("tags")
-    open var tags: MutableList<String>? = null,
+    open var tags: MutableList<String> = mutableListOf(),
 ) : WDRequest {
 
     init {

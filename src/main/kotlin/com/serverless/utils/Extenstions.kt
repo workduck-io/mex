@@ -1,11 +1,15 @@
 package com.serverless.utils
 
+import com.serverless.ApiGatewayResponse
+import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.SnippetRequest
 import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.PageHelper
+import org.apache.logging.log4j.Logger
 
 fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
     Node(
@@ -14,9 +18,15 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
         namespaceIdentifier = this.namespaceIdentifier,
         workspaceIdentifier = WorkspaceIdentifier(workspaceID),
         lastEditedBy = userID,
-        tags = this.tags ?: mutableListOf(),
+        tags = this.tags ,
         data = this.data
     )
+
+
+fun Node.isNodeAndTagsUnchanged(storedNode: Node) : Boolean {
+    /* also updated block level metadata */
+    return !PageHelper.comparePageWithStoredPage(this, storedNode) && this.tags.sorted() == storedNode.tags.sorted()
+}
 
 
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
@@ -119,6 +129,15 @@ fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String>
 
 fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER) : Boolean {
     return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
+}
+
+
+
+fun Map<String, Any>.handleWarmup(LOG : Logger) : ApiGatewayResponse? {
+    return if(this["source"] as String? == "serverless-plugin-warmup"){
+        LOG.info("WarmUp - Lambda is warm!")
+        ApiResponseHelper.generateStandardResponse("Warming Up",  "")
+    } else null
 }
 
 fun String.createNodePath(nodeID : String) : String{

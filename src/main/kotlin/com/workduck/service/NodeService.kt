@@ -28,6 +28,7 @@ import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNodesAfterIndex
 import com.serverless.utils.isSingleNodePassed
+import com.serverless.utils.isNodeAndTagsUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
@@ -580,10 +581,8 @@ class NodeService( // Todo: Inject them from handlers
 
         node.dataOrder = createDataOrderForPage(node)
 
-        /* to update block level details for accountability */
-        val nodeChanged : Boolean = comparePageWithStoredPage(node, storedNode)
 
-        if (!nodeChanged && (node.tags == storedNode.tags)) {
+        if (node.isNodeAndTagsUnchanged(storedNode)) {
             return@runBlocking storedNode
         }
 

@@ -8,6 +8,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.nodeHandlers.NodeStrategyFactory
 import com.serverless.utils.ExceptionParser
+import com.serverless.utils.handleWarmup
 import com.workduck.service.TagService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -15,14 +16,9 @@ import org.apache.logging.log4j.LogManager
 class TagHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     private val tagService = TagService()
 
-    override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
+    override fun handleRequest(input: Map<String, Any>, context: Context?): ApiGatewayResponse {
 
-        val isWarmup = Helper.isSourceWarmup(input["source"] as String?)
-
-        if (isWarmup) {
-            LOG.info("WarmUp - Lambda is warm!")
-            return ApiResponseHelper.generateStandardResponse("Warming Up",  "")
-        }
+        input.handleWarmup(LOG)?.let{ return it }
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
