@@ -29,6 +29,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
 import com.serverless.utils.Constants.getCurrentTime
 import com.workduck.models.AdvancedElement
+import com.workduck.models.Comment
 import com.workduck.models.Element
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
@@ -37,12 +38,14 @@ import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.NodeVersion
 import com.workduck.models.Relationship
+import com.workduck.models.RelationshipType
 import com.workduck.service.NodeService
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
 import com.workduck.utils.NodeHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import com.workduck.utils.RelationshipHelper.getRelationshipSK
 import java.time.Instant
 
 
@@ -198,7 +201,7 @@ class NodeRepository(
             }
         }
 
-    fun append(sourceNodeID: String, nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
+    fun append(sourceNodeID: String, nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
         LOG.info("Source Node : $sourceNodeID, Node to which we append : $nodeID")
 
         val table = dynamoDB.getTable(tableName)
@@ -310,33 +313,35 @@ class NodeRepository(
         }
     }
 
-    fun getRelationshipsForSourceNode(sourceNodeID: String): List<Relationship> {
-
-        LOG.info("SourceNodeID : $sourceNodeID")
+    fun getContainedRelationshipsForSourceNode(sourceNodeID: String): List<Relationship> {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue("$sourceNodeID#RLSP")
-        // expressionAttributeValues[":itemType"] = AttributeValue("Relationship")
+        expressionAttributeValues[":ak"] = AttributeValue(sourceNodeID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.Relationship.name)
+        expressionAttributeValues[":relationshipType"] = AttributeValue(RelationshipType.CONTAINED.name)
 
         return DynamoDBQueryExpression<Relationship>()
-            .withKeyConditionExpression("PK = :pk")
-            .withProjectionExpression("PK, SK, endNode")
-            .withExpressionAttributeValues(expressionAttributeValues).let { it ->
-                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
-            }
+                .withKeyConditionExpression("AK = :ak  and itemType = :itemType")
+                .withIndexName("itemType-AK-index").withConsistentRead(false)
+                .withFilterExpression("typeOfRelationship = :relationshipType")
+                .withExpressionAttributeValues(expressionAttributeValues).let {
+                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
+                }
     }
 
-    fun getRelationShipEndNode(sourceNodeID: String, startNodeID: String): String {
+    fun getContainedRelationShipEndNode(sourceNodeID: String, startNodeID: String): String {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue("$sourceNodeID#RLSP")
-        expressionAttributeValues[":sk"] = AttributeValue(startNodeID)
+        expressionAttributeValues[":PK"] = AttributeValue("RLSP")
+        expressionAttributeValues[":SK"] = AttributeValue(getRelationshipSK(startNodeID, RelationshipType.CONTAINED))
+        expressionAttributeValues[":AK"] = AttributeValue(sourceNodeID)
 
         return DynamoDBQueryExpression<Relationship>()
-            .withKeyConditionExpression("PK = :pk and SK = :sk")
-            .withProjectionExpression("endNode")
-            .withExpressionAttributeValues(expressionAttributeValues).let { it ->
-                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)[0].endNode.id
+                .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
+                .withIndexName("SK-PK-Index").withConsistentRead(false)
+                .withFilterExpression("AK = :AK")
+                .withExpressionAttributeValues(expressionAttributeValues).let { it ->
+                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig).first().endNode.id
             }
     }
 

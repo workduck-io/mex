@@ -1,6 +1,8 @@
 package com.workduck.utils
 
+import com.serverless.utils.Constants
 import com.workduck.models.Relationship
+import com.workduck.models.RelationshipType
 
 object RelationshipHelper {
 
@@ -11,5 +13,9 @@ object RelationshipHelper {
             }
         }
         return null
+    }
+
+    fun getRelationshipSK(startNodeID: String, relationshipType: RelationshipType) : String{
+        return "$startNodeID${Constants.DELIMITER}${relationshipType.name}"
     }
 }

@@ -59,6 +59,7 @@ import kotlinx.coroutines.runBlocking
 import com.serverless.utils.toNode
 
 import com.workduck.models.ItemType
+import com.workduck.models.RelationshipType
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.removeRedundantPaths
@@ -483,13 +484,13 @@ class NodeService( // Todo: Inject them from handlers
     fun getNode(nodeID: String, workspaceID: String, userID: String, bookmarkInfo: Boolean? = null): Entity? = runBlocking{
         LOG.info("Getting information for $nodeID")
 
-        val jobToGetRelationships = async {  nodeRepository.getRelationshipsForSourceNode(nodeID) }
+        val jobToGetContainedRelationships = async {  nodeRepository.getContainedRelationshipsForSourceNode(nodeID) }
 
         val jobToGetSourceNode = async { (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node? }
 
         val node = jobToGetSourceNode.await()
 
-        val relationships = jobToGetRelationships.await()
+        val relationships = jobToGetContainedRelationships.await()
 
         val nextNodeID = NodeHelper.getNodeNextNodeID(nodeID, relationships)
 
@@ -506,7 +507,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getNodeData(nodeID: String, startCursor: String? = null, blockSize: Int, getReverseOrder: Boolean = false, bookmarkInfo: Boolean? = null, userID: String? = null): Entity?  = runBlocking{
-        val relationships = nodeRepository.getRelationshipsForSourceNode(nodeID)
+        val relationships = nodeRepository.getContainedRelationshipsForSourceNode(nodeID)
 
         val jobToGetNodeMetaData = async { nodeRepository.getNodeMetaData(nodeID) }
         val jobToGetNodeData = async { getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder) }
@@ -527,7 +528,7 @@ class NodeService( // Todo: Inject them from handlers
 
 
     fun getNodeElements(nodeID: String, startCursor: String? = null, blockSize: Int = 50, getReverseOrder: Boolean = false) : Pair<String?, MutableList<AdvancedElement>>{
-        val relationships = nodeRepository.getRelationshipsForSourceNode(nodeID)
+        val relationships = nodeRepository.getContainedRelationshipsForSourceNode(nodeID)
         return getPaginatedNodeData(nodeID, relationships, startCursor, blockSize, getReverseOrder)
     }
 
@@ -594,25 +595,25 @@ class NodeService( // Todo: Inject them from handlers
 
         LOG.info("Source Node ID : $sourceNodeID, Tail Node ID : $nodeID")
         when(nodeID == sourceNodeID){
-            false -> appendToLinkedNode(jobToGetSourceNodeDataSize, sourceNodeID, nodeID, userID, elements, orderList)
+            false -> appendToLinkedNode(jobToGetSourceNodeDataSize, sourceNodeID, nodeID, workspaceID, userID, elements, orderList)
             true -> {
                 when(jobToGetSourceNodeDataSize.await() + getRoughSizeOfDDBItem(elements)  >= Constants.DDB_MAX_ITEM_SIZE){
                     false -> {
                         LOG.info("Current node can handle added elements")
-                        nodeRepository.append(sourceNodeID, sourceNodeID, userID, elements, orderList)
+                        nodeRepository.append(sourceNodeID, sourceNodeID, workspaceID, userID, elements, orderList)
                     }
                     true -> {
                         LOG.info("Current node can't handle added elements")
-                        createRelationship(sourceNodeID, sourceNodeID, userID, elements, orderList)
+                        createRelationship(sourceNodeID, sourceNodeID, workspaceID, userID, elements, orderList)
                     }
                 }
             }
         }
     }
 
-    private fun appendToLinkedNode(jobToGetSourceNodeDataSize : Deferred<Int>, sourceNodeID: String, nodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>){
+    private fun appendToLinkedNode(jobToGetSourceNodeDataSize : Deferred<Int>, sourceNodeID: String, nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>){
         jobToGetSourceNodeDataSize.cancel() /* if the node is linked, no need to check for source node size */
-        nodeRepository.append(sourceNodeID, nodeID, userID, elements, orderList)
+        nodeRepository.append(sourceNodeID, nodeID, workspaceID, userID, elements, orderList)
     }
 
     private fun processElementsAndCreateOrderList(orderList: MutableList<String>, elements: List<AdvancedElement>){
@@ -633,7 +634,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun getNodeIDForAppend(sourceNodeID: String): String {
-        return getTailNodeIDFromRelationships(sourceNodeID, nodeRepository.getRelationshipsForSourceNode(sourceNodeID))
+        return getTailNodeIDFromRelationships(sourceNodeID, nodeRepository.getContainedRelationshipsForSourceNode(sourceNodeID))
     }
 
     private fun getTailNodeIDFromRelationships(sourceNodeID: String, relationships: List<Relationship>): String {
@@ -828,26 +829,27 @@ class NodeService( // Todo: Inject them from handlers
         return deletedNodesList
     }
 
-    fun createRelationship(sourceNodeID: String, lastTailNodeID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
+    fun createRelationship(sourceNodeID: String, lastTailNodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>) {
         LOG.info("Creating Relationship : SourceNode : $sourceNodeID, StartNode : $lastTailNodeID")
 
         val newNode = createNewNodeObjectForRelationship(lastTailNodeID, userID)
         val relationship = Relationship(
                 sourceNode = NodeIdentifier(sourceNodeID),
                 startNode = NodeIdentifier(lastTailNodeID),
-                endNode = NodeIdentifier(newNode.id)
+                endNode = NodeIdentifier(newNode.id),
+                typeOfRelationship = RelationshipType.CONTAINED
         )
 
         LOG.info(relationship)
 
         when(nodeRepository.createRelationshipAndNewNode(newNode, relationship)){
             /* when the relationship was created along with new node */
-            true -> nodeRepository.append(sourceNodeID, newNode.id, userID, elements, orderList)
+            true -> nodeRepository.append(sourceNodeID, newNode.id, workspaceID, userID, elements, orderList)
 
             /* when there already existed a relationship (in case of concurrent append requests when a node is full) */
             false -> {
-                nodeRepository.getRelationShipEndNode(sourceNodeID, lastTailNodeID).let {
-                    nodeRepository.append(sourceNodeID, it, userID, elements, orderList)
+                nodeRepository.getContainedRelationShipEndNode(sourceNodeID, lastTailNodeID).let {
+                    nodeRepository.append(sourceNodeID, it, workspaceID, userID, elements, orderList)
                 }
             }
         }

@@ -25,10 +25,10 @@ data class Relationship(
 
     @JsonProperty("id")
     @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateId("RLSP"),
+    var id: String = Helper.generateNanoID("RLSP"),
 
     @JsonProperty("sourceNode")
-    @DynamoDBAttribute(attributeName = "sourceNode")
+    @DynamoDBAttribute(attributeName = "AK")
     @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
     var sourceNode: NodeIdentifier? = null,
 
