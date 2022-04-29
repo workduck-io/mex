@@ -15,9 +15,6 @@ data class RefactorRequest(
     @JsonProperty("newNodePath")
     val newNodePath: NodePath,
 
-    @JsonProperty("lastEditedBy")
-    val lastEditedBy: String,
-
     /* id of the last node in existingNodePath */
     @JsonProperty("nodeID")
     val nodeID: String

@@ -14,7 +14,6 @@ class RefactorNodePathStrategy : NodeStrategy {
         val workspace = WorkspaceService().getWorkspace(input.headers.workspaceID) as Workspace?
                 ?: throw IllegalArgumentException("Invalid Workspace ID")
 
-
         return input.payload?.let{ request ->
             ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.tokenBody.userID, workspace)
                     , errorMessage)} ?: ApiResponseHelper.generateStandardErrorResponse(errorMessage)
