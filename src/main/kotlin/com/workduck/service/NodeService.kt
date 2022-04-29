@@ -18,8 +18,11 @@ import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.containsExistingNodes
 import com.serverless.utils.convertToPathString
+import com.serverless.utils.createNodePath
+import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNodesAfterIndex
+import com.serverless.utils.isSingleNodePassed
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
@@ -60,6 +63,7 @@ import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.isNodeIDInPath
 import com.workduck.utils.NodeHelper.removeRedundantPaths
 import kotlinx.coroutines.Deferred
+import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
  * contains all node related logic
@@ -197,7 +201,7 @@ class NodeService( // Todo: Inject them from handlers
      * will be used to insert empty nodes in between two existing nodes
      *
      */
-    fun refactor(wdRequest: WDRequest, userID: String, workspace: Workspace) = runBlocking {
+    fun refactor(wdRequest: WDRequest, userID: String, workspace: Workspace): Map<String, List<String>> = runBlocking {
 
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
@@ -222,16 +226,32 @@ class NodeService( // Todo: Inject them from handlers
 
         val unchangedNodes = existingNodes.commonPrefixList(newNodes) as MutableList
 
-        launch { updateHierarchyInRefactor(unchangedNodes, newNodes, workspace, nodesToCreate, lastNodeID, existingNodes) }
+        return@runBlocking updateHierarchyInRefactor(unchangedNodes, newNodes, workspace, nodesToCreate, lastNodeID, existingNodes)
     }
 
     private fun getNodesToCreateInRefactor(existingNodes : List<String>, newNodes : List<String>) : MutableList<String>{
-        val namesOfNodesToCreate = newNodes.minus(existingNodes.toSet()) as MutableList
+        val namesOfNodesToCreate = newNodes.minus(existingNodes.toSet()).toMutableList()
         /* since the last node just needs renaming at max, we don't need to create it again */
         namesOfNodesToCreate.remove(newNodes.last())
         return namesOfNodesToCreate
     }
 
+
+    private fun handleSingleNodeInRefactor(workspace: Workspace, lastNodeID : String, newNodeName: String, existingNodeName: String) : Map<String, List<String>>{
+        val oldHierarchy = workspace.nodeHierarchyInformation?.toMutableList() ?: throw IllegalArgumentException("Nodes supplied are invalid")
+        val newHierarchy = mutableListOf<String>()
+        val existingSingleNodePath = existingNodeName.createNodePath(lastNodeID)
+        for(nodePath in oldHierarchy){
+            if(nodePath.startsWith(existingSingleNodePath)) {
+                val suffixNodePath = nodePath.splitIgnoreEmpty(Constants.DELIMITER).toMutableList().drop(2).convertToPathString()
+                newHierarchy.add(newNodeName.createNodePath(lastNodeID).createNodePath(suffixNodePath))
+            }
+            else newHierarchy.add(nodePath)
+
+        }
+        workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy, HierarchyUpdateSource.RENAME)
+        return newHierarchy.getDifferenceWithOldHierarchy(oldHierarchy)
+    }
 
     private fun updateHierarchyInRefactor(
             unchangedNodes: List<String>,
@@ -240,12 +260,18 @@ class NodeService( // Todo: Inject them from handlers
             nodesToCreate: List<Node>,
             lastNodeID: String,
             existingNodes: List<String>,
-    ) {
+    ) : Map<String, List<String>> {
+
+
 
         val nodeHierarchyInformation =
             workspace.nodeHierarchyInformation ?: throw NullPointerException("No Hierarchy Found")
         var newNodeHierarchy = mutableListOf<String>()
         var nodePathWithIDsOfExistingNodes = ""
+
+        if(newNodes.isSingleNodePassed(existingNodes)) {
+            return handleSingleNodeInRefactor(workspace, lastNodeID, newNodes.first(), existingNodes.first())
+        }
 
         for (nodePath in nodeHierarchyInformation) {
             val namePath = getNamePath(nodePath)
@@ -310,6 +336,7 @@ class NodeService( // Todo: Inject them from handlers
 
         LOG.debug(newNodeHierarchy)
         workspaceService.updateWorkspaceHierarchy(workspace, newNodeHierarchy, HierarchyUpdateSource.NODE)
+        return newNodeHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
 
     }
 
@@ -347,7 +374,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String) = runBlocking {
+    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String) : Map<String, List<String>> = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
         val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
@@ -391,6 +418,7 @@ class NodeService( // Todo: Inject them from handlers
                 HierarchyUpdateSource.NODE
             )
         }
+        return@runBlocking updatedNodeHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
 
     }
 
@@ -813,5 +841,25 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
+
+}
+
+fun main(){
+
+    val json = """
+        {
+                "type" : "RefactorRequest",
+                "existingNodePath": {
+                    "path" : "F"
+                },
+                "newNodePath": {
+                    "path" : "X"
+                },
+                "nodeID": "NODE1"
+            }"""
+
+    val x = Helper.objectMapper.readValue<RefactorRequest>(json)
+    println(NodeService().refactor(x, "vgarg", WorkspaceService().getWorkspace("WORKSPACE1") as Workspace))
+    //println(x)
 
 }

@@ -361,7 +361,7 @@ class NodeRepository(
             UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
                     .withUpdateExpression("SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy")
                     .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK)")
+                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
                     .also {
                         table.updateItem(it)
                     }

@@ -85,6 +85,17 @@ fun List<String>.isRefactorWithPathDivision(removedPath: List<String>) : Boolean
     return this.size > 1 && removedPath.isNotEmpty() && this.size == removedPath.size + 1
 }
 
+
+fun List<String>.getDifferenceWithOldHierarchy(oldHierarchy : List<String>) : Map<String, List<String>>{
+    return mapOf(Constants.REMOVED_PATHS to oldHierarchy.minus(this.toSet())
+                ,Constants.ADDED_PATHS to this.minus(oldHierarchy.toSet()) )
+}
+
+fun List<String>.isSingleNodePassed(existingNodes: List<String>) : Boolean{
+    return this.size == 1 && existingNodes.size == 1
+}
+
+
 fun <T> List<T>.mix(other: List<T>): List<T> {
     val first = iterator()
     val second = other.iterator()
@@ -108,4 +119,8 @@ fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String>
 
 fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER) : Boolean {
     return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
+}
+
+fun String.createNodePath(nodeID : String) : String{
+    return "$this${Constants.DELIMITER}$nodeID"
 }
