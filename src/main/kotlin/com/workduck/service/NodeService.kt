@@ -387,7 +387,7 @@ class NodeService( // Todo: Inject them from handlers
     fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String) : Map<String, List<String>> = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
-        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
+        val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, workspaceID, userID)
 
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
@@ -690,6 +690,9 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userID: String): Node =
         nodeRequest.toNode(workspaceID, userID)
+
+    private fun createNodeObjectFromNodeBulkRequest(nodeBulkRequest: NodeBulkRequest, workspaceID: String, userID: String): Node =
+            nodeBulkRequest.toNode(workspaceID, userID)
 
 
     fun getAllArchivedSnippetIDsOfWorkspace(workspaceID : String) : MutableList<String> {

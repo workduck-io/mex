@@ -1,39 +1,33 @@
 package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.workduck.converters.IdentifierSerializer
-import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement
-import com.workduck.models.NamespaceIdentifier
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeBulkRequest")
 data class NodeBulkRequest(
 
-    @JsonProperty("id")
-    override val id: String = "",
+    val id: String = "",
 
-    @JsonProperty("nodePath") val nodePath: NodePath,
+    val nodePath: NodePath,
 
-    @JsonProperty("referenceID")
-    override val referenceID: String ? = null,
+    val referenceID: String ? = null,
 
-    @JsonProperty("title")
-    override val title: String,
+    val title: String,
 
-    @JsonProperty("namespaceIdentifier")
-    @JsonSerialize(converter = IdentifierSerializer::class)
-    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    override val namespaceIdentifier: NamespaceIdentifier? = null,
+    val data: List<AdvancedElement>? = null,
 
-    @JsonProperty("data")
-    override val data: List<AdvancedElement>? = null,
+    var tags: MutableList<String> = mutableListOf(),
 
-    @JsonProperty("tags")
-    override var tags: MutableList<String> = mutableListOf(),
+) : WDRequest{
 
-) : NodeRequest()
+    init {
+        require(id.isNotEmpty()) { "ID is required" }
+    }
+
+    init {
+        require(title.isNotEmpty()) { "Title is required" }
+    }
+}
+
