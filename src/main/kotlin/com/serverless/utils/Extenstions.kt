@@ -7,6 +7,7 @@ import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.SnippetRequest
 import com.workduck.models.NamespaceIdentifier
+import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
@@ -152,6 +153,10 @@ fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String>
 
 fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER) : Boolean {
     return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
+}
+
+fun String.isMalformed() : Boolean{
+    return this.isEmpty() || !this.startsWith(ItemType.Node.name.uppercase())
 }
 
 
