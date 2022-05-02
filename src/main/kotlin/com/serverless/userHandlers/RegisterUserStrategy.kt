@@ -41,6 +41,8 @@ class RegisterUserStrategy : UserStrategy {
 			}
 		"""
 
+        println("Payload : $payload")
+
         val invokeResult = updateUser(payload)
         when(invokeResult.statusCode){
             200 -> updateCognitoPool(input, workspace.id)
@@ -107,7 +109,7 @@ class RegisterUserStrategy : UserStrategy {
 
         val stage = System.getenv("STAGE")
 
-        val functionName = "workduck-user-service-$stage-updateUser"
+        val functionName = "workduck-user-service-dev-updateUser"
 
         request.withFunctionName(functionName).withPayload(payload)
 

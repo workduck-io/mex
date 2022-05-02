@@ -52,9 +52,10 @@ data class Tag(
     @DynamoDBHashKey(attributeName = "PK")
     var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
+    // cannot be kept as empty string due to DDB constraints.
     @JsonProperty("name")
     @DynamoDBRangeKey(attributeName = "SK")
-    var name: String = "",
+    var name: String = "New Tag",
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")

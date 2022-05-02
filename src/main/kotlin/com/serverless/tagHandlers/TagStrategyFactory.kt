@@ -6,7 +6,7 @@ class TagStrategyFactory {
 
         private const val getAllTagsOfWorkspace = "GET /tag/all"
 
-        private const val getAllNodesByTag = "GET /tag/{tagName}"
+        private const val getAllNodesByTag = "GET /tag/{tagName}/node"
 
 
         private val tagRegistry: Map<String, TagStrategy> = mapOf(

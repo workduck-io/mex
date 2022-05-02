@@ -58,8 +58,8 @@ class TagService(
     }
 
 
-    fun getAllNodesByTag(tagName: String, workspaceID: String) : List<String>? {
-        return getTag(tagName, workspaceID).nodes?.map {  it.id }
+    fun getAllNodesByTag(tagName: String, workspaceID: String) : List<String> {
+        return getTag(tagName, workspaceID)?.nodes?.map {  it.id } ?: emptyList()
     }
 
 
@@ -69,7 +69,7 @@ class TagService(
     }
 
 
-    fun getTag(tagName: String, workspaceID: String) : Tag{
+    fun getTag(tagName: String, workspaceID: String) : Tag?{
         return tagRepository.getTag(tagName, workspaceID)
     }
 

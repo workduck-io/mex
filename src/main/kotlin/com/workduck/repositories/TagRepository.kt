@@ -33,7 +33,7 @@ class TagRepository(
 ) {
 
 
-    fun getTag(tagName: String, workspaceID: String): Tag{
+    fun getTag(tagName: String, workspaceID: String): Tag?{
         return mapper.load(Tag::class.java, WorkspaceIdentifier(workspaceID), tagName, dynamoDBMapperConfig)
     }
 
@@ -43,15 +43,10 @@ class TagRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":tag"] = AttributeValue().withS(ItemType.Tag.name)
 
-        val tagList: List<Tag> = DynamoDBQueryExpression<Tag>()
-                .withKeyConditionExpression("PK = :pk")
-                .withFilterExpression("itemType = :tag")
-                .withProjectionExpression("SK")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Tag::class.java, it, dynamoDBMapperConfig)
-                }
-
-        return tagList.map { it.name }
+        return DynamoDBQueryExpression<Tag>().queryWithProjection(keyConditionExpression = "PK = :pk", filterExpression = "itemType = :tag",
+                projectionExpression = "SK",  expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Tag::class.java, it, dynamoDBMapperConfig)
+        }.map { it.name }
 
     }
 
@@ -84,22 +79,18 @@ class TagRepository(
     fun updateExistingTag(tag: Tag, nodeID: String, workspaceID: String){
         val table = dynamoDB.getTable(tableName)
 
-        val updateExpression = "set updatedAt = :updatedAt, nodes.${nodeID} = :nodeID"
-
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-
-
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
         expressionAttributeValues[":nodeID"] = nodeID
 
+        val updateExpression = "set updatedAt = :updatedAt, nodes.${nodeID} = :nodeID"
+        val conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
 
-        return UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", tag.name)
-                .withUpdateExpression(updateExpression)
-                .withValueMap(expressionAttributeValues)
-                .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-                .let {
+        UpdateItemSpec().update(pk = workspaceID, sk = tag.name,
+                updateExpression = updateExpression, expressionAttributeValues = expressionAttributeValues,
+                conditionExpression = conditionExpression).let {
                     table.updateItem(it)
-                }
+        }
 
     }
 
@@ -107,18 +98,16 @@ class TagRepository(
         val table = dynamoDB.getTable(tableName)
 
         val updateExpression = "SET updatedAt = :updatedAt REMOVE nodes.${nodeID}"
+        val conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
 
-        val newValues =  UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", tagName)
-                .withUpdateExpression(updateExpression)
-                .withValueMap(expressionAttributeValues)
-                .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-                .withReturnValues(ReturnValue.ALL_NEW)
-                .let {
-                    table.updateItem(it)
-                }
+        val newValues = UpdateItemSpec().updateWithReturnValues(pk = workspaceID, sk = tagName, updateExpression = updateExpression, expressionAttributeValues = expressionAttributeValues,
+                                conditionExpression = conditionExpression, returnValue = ReturnValue.ALL_NEW).let {
+            table.updateItem(it)
+        }
+
 
         if(getNodesMapFromOutcomeObject(newValues).isEmpty()){
             DeleteItemSpec().withPrimaryKey("PK", workspaceID, "SK", tagName).let {
