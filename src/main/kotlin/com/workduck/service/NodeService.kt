@@ -4,13 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.lambda.AWSLambdaClient
-import com.amazonaws.services.lambda.model.InvokeRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.Gson
-import com.serverless.internalTagHandlers.TagInput
-import com.serverless.models.Input
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -26,6 +21,7 @@ import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
+import com.serverless.utils.getNewPath
 import com.serverless.utils.getNodesAfterIndex
 import com.serverless.utils.isSingleNodePassed
 import com.serverless.utils.isNodeAndTagsUnchanged
@@ -52,7 +48,6 @@ import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
-import com.workduck.utils.PageHelper.comparePageWithStoredPage
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.PageHelper.orderBlocks
@@ -66,13 +61,10 @@ import com.workduck.models.Entity
 import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
 import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
-import com.workduck.utils.NodeHelper.isNodeIDInPath
 import com.workduck.utils.NodeHelper.removeRedundantPaths
-import kotlinx.coroutines.Deferred
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
-import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
  * contains all node related logic
@@ -387,35 +379,17 @@ class NodeService( // Todo: Inject them from handlers
     fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String) : Map<String, List<String>> = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
+        val nodePath: NodePath = nodeRequest.nodePath
         val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, workspaceID, userID)
-
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
         val nodeHierarchyInformation = workspace.nodeHierarchyInformation as MutableList<String>
 
-        val nodePath: NodePath = nodeRequest.nodePath
-
         val longestExistingPath = NodeHelper.getLongestExistingPath(nodeHierarchyInformation, nodePath.path)
-
-        val longestExistingNamePath = getNamePath(longestExistingPath)
-
-        if (longestExistingNamePath == nodePath.path) {
-            throw Exception("The provided path already exists")
-        }
-
-        val nodesToCreate: List<String> = nodePath.removePrefix(longestExistingNamePath).splitIgnoreEmpty(Constants.DELIMITER)
-
-        setMetadataOfNodeToCreate(node)
-        val listOfNodes = setMetaDataFromNode(node, nodesToCreate)
+        val listOfNodes = getListOfNodesToCreateInBulkCreate(nodePath, longestExistingPath, node)
 
         /* path from new nodes to be created (will either be a suffix or an independent string)*/
-        var suffixNodePath = ""
-        for ((index, nodeToCreate) in listOfNodes.withIndex()) {
-            when (index) {
-                0 -> suffixNodePath = "${nodeToCreate.title}${Constants.DELIMITER}${nodeToCreate.id}"
-                else -> suffixNodePath += "${Constants.DELIMITER}${nodeToCreate.title}${Constants.DELIMITER}${nodeToCreate.id}"
-            }
-        }
+        val suffixNodePath = getSuffixPathInBulkCreate(listOfNodes)
 
         val updatedNodeHierarchy =
             getUpdatedNodeHierarchyInformation(nodeHierarchyInformation, longestExistingPath, suffixNodePath)
@@ -432,15 +406,41 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
+    private fun getSuffixPathInBulkCreate(listOfNodes : List<Node>) : String{
+        var suffixNodePath = ""
+        for ((index, nodeToCreate) in listOfNodes.withIndex()) {
+            when (index) {
+                0 -> suffixNodePath = "${nodeToCreate.title}${Constants.DELIMITER}${nodeToCreate.id}"
+                else -> suffixNodePath += "${Constants.DELIMITER}${nodeToCreate.title}${Constants.DELIMITER}${nodeToCreate.id}"
+            }
+        }
+        return suffixNodePath
+    }
+
+    private fun getListOfNodesToCreateInBulkCreate(nodePath: NodePath, longestExistingPath: String, node: Node) : List<Node>{
+        val longestExistingNamePath = getNamePath(longestExistingPath)
+
+        if (longestExistingNamePath == nodePath.path) {
+            throw Exception("The provided path already exists")
+        }
+
+        val nodesToCreate: List<String> = nodePath.removePrefix(longestExistingNamePath).splitIgnoreEmpty(Constants.DELIMITER)
+
+        setMetadataOfNodeToCreate(node)
+        return setMetaDataFromNode(node, nodesToCreate)
+    }
+
     private fun getUpdatedNodeHierarchyInformation(
-        nodeHierarchyInformation: MutableList<String>,
-        longestExistingPath: String,
-        suffixNodePath: String
+            oldHierarchy: MutableList<String>,
+            longestExistingPath: String,
+            suffixNodePath: String
     ): List<String> {
+
+        val newHierarchy = oldHierarchy.toMutableList()
 
         var nodePathToRemove: String? = null
 
-        for (existingNodePath in nodeHierarchyInformation) {
+        for (existingNodePath in oldHierarchy) {
             if (longestExistingPath == existingNodePath) {
                 nodePathToRemove = existingNodePath
                 break
@@ -449,12 +449,12 @@ class NodeService( // Todo: Inject them from handlers
 
         /* if nodePathToRemove != null , we are adding to a leaf path, so we remove that path*/
         when (nodePathToRemove != null) {
-            true -> nodeHierarchyInformation.remove(nodePathToRemove)
+            true -> newHierarchy.remove(nodePathToRemove)
         }
 
-        nodeHierarchyInformation.add("$longestExistingPath${Constants.DELIMITER}$suffixNodePath")
+        newHierarchy.add(longestExistingPath.getNewPath(suffixNodePath))
 
-        return nodeHierarchyInformation
+        return newHierarchy
     }
 
     fun setMetaDataFromNode(node: Node, nodesToCreate: List<String>?): List<Node> {

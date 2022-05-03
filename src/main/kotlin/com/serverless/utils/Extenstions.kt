@@ -120,6 +120,10 @@ fun List<String>.isSingleNodePassed(existingNodes: List<String>) : Boolean{
     return this.size == 1 && existingNodes.size == 1
 }
 
+fun String.getNewPath(suffix: String) : String {
+    return if(this.isEmpty()) suffix
+    else "$this${Constants.DELIMITER}$suffix"
+}
 
 fun <T> List<T>.mix(other: List<T>): List<T> {
     val first = iterator()
