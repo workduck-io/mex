@@ -9,6 +9,7 @@ enum class IdentifierType(s: String) {
     OWNER("OWN"),
     NAMESPACE("NAMESPACE"),
     NODE("NODE"),
+    NODE_ACCESS("NODE-ACCESS"),
     ASSOCIATED_PROPERTY("AS-PROPERTY"),
     NODE_SCHEMA("NODE-SCHEMA"),
     RELATIONSHIP("RELATIONSHIP"),
@@ -29,6 +30,7 @@ enum class IdentifierType(s: String) {
     JsonSubTypes.Type(value = OwnerIdentifier::class, name = "owner"),
     JsonSubTypes.Type(value = NamespaceIdentifier::class, name = "namespace"),
     JsonSubTypes.Type(value = NodeIdentifier::class, name = "node"),
+    JsonSubTypes.Type(value = NodeAccessIdentifier::class, name = "nodeAccess"),
     JsonSubTypes.Type(value = SnippetIdentifier::class, name = "snippet"),
     JsonSubTypes.Type(value = AssociatedPropertyIdentifier::class, name = "as-property"),
     JsonSubTypes.Type(value = NodeSchemaIdentifier::class, name = "node-schema"),
@@ -46,56 +48,62 @@ sealed class Identifier(
 
 @JsonTypeName("owner")
 data class OwnerIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.OWNER.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.OWNER.name)
 ) : Identifier(IdentifierType.OWNER, id)
 
 @JsonTypeName("namespace")
 data class NamespaceIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.NAMESPACE.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.NAMESPACE.name)
 ) : Identifier(IdentifierType.NAMESPACE, id)
 
 @JsonTypeName("node")
 data class NodeIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.NODE.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.NODE.name)
 ) : Identifier(IdentifierType.NODE, id)
+
+
+@JsonTypeName("nodeAccess")
+data class NodeAccessIdentifier(
+        override var id: String = Helper.generateNanoID(IdentifierType.NODE_ACCESS.name)
+) : Identifier(IdentifierType.NODE_ACCESS, id)
 
 @JsonTypeName("snippet")
 data class SnippetIdentifier(
-        override var id: String = Helper.generateId(IdentifierType.SNIPPET.name)
+        override var id: String = Helper.generateNanoID(IdentifierType.SNIPPET.name)
 ) : Identifier(IdentifierType.SNIPPET, id)
 
 @JsonTypeName("as-property")
 data class AssociatedPropertyIdentifier(
     val associatedPropertyType: AssociatedPropertyType,
-    override var id: String = Helper.generateId(IdentifierType.ASSOCIATED_PROPERTY.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.ASSOCIATED_PROPERTY.name)
 ) : Identifier(IdentifierType.ASSOCIATED_PROPERTY, id)
 
 @JsonTypeName("node-schema")
 data class NodeSchemaIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.NODE_SCHEMA.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.NODE_SCHEMA.name)
 ) : Identifier(IdentifierType.NODE_SCHEMA, id)
 
 @JsonTypeName("relationship")
 data class RelationshipIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.RELATIONSHIP.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.RELATIONSHIP.name)
 ) : Identifier(IdentifierType.RELATIONSHIP, id)
 
 @JsonTypeName("workspace")
 data class WorkspaceIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.WORKSPACE.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
 ) : Identifier(IdentifierType.WORKSPACE, id)
 
 @JsonTypeName("workspace")
 data class BookmarkIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.BOOKMARK.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.BOOKMARK.name)
 ) : Identifier(IdentifierType.BOOKMARK, id)
 
 @JsonTypeName("user")
 data class UserIdentifier(
-    override var id: String = Helper.generateId(IdentifierType.USER.name)
+    override var id: String = Helper.generateNanoID(IdentifierType.USER.name)
 ) : Identifier(IdentifierType.USER, id)
 
 @JsonTypeName("comment")
 data class CommentIdentifier(
-        override var id: String = Helper.generateId(IdentifierType.COMMENT.name)
+        override var id: String = Helper.generateNanoID(IdentifierType.COMMENT.name)
 ) : Identifier(IdentifierType.COMMENT, id)

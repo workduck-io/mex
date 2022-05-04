@@ -7,9 +7,9 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.TokenBody
-import com.serverless.tagHandlers.TagHandler
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
+import com.serverless.utils.Messages
 import com.serverless.utils.handleWarmup
 import com.workduck.service.SnippetService
 import com.workduck.utils.Helper
@@ -23,12 +23,12 @@ class SnippetHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         input.handleWarmup(LOG)?.let{ return it }
 
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         validateTokenAndWorkspace(wdInput)
 
         val strategy = SnippetStrategyFactory.getSnippetStrategy(wdInput.routeKey)
-                ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
+                ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 404)
 
         return try {
             strategy.apply(wdInput, snippetService)

@@ -7,10 +7,12 @@ import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.SnippetRequest
 import com.workduck.models.NamespaceIdentifier
+import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.PageHelper
+import kotlinx.coroutines.Deferred
 import org.apache.logging.log4j.Logger
 
 fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
@@ -154,6 +156,10 @@ fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String 
     return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
 }
 
+fun String.isMalformed() : Boolean{
+    return this.isEmpty() || !this.startsWith(ItemType.Node.name.uppercase())
+}
+
 
 
 fun Map<String, Any>.handleWarmup(LOG : Logger) : ApiGatewayResponse? {
@@ -165,4 +171,8 @@ fun Map<String, Any>.handleWarmup(LOG : Logger) : ApiGatewayResponse? {
 
 fun String.createNodePath(nodeID : String) : String{
     return "$this${Constants.DELIMITER}$nodeID"
+}
+
+suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred<Boolean>, error: String) {
+    if(!(this.await() && booleanJob.await())) throw IllegalArgumentException(error)
 }

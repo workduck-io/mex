@@ -12,5 +12,6 @@ enum class ItemType {
     UserPreferenceRecord,
     Tag,
     NodeSchema,
-    Snippet
+    Snippet,
+    NodeAccess
 }

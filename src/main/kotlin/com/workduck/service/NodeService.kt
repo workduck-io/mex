@@ -13,9 +13,12 @@ import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
- import com.serverless.models.requests.WDRequest
+import com.serverless.models.requests.SharedNodeRequest
+import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 import com.serverless.utils.addIfNotEmpty
+import com.serverless.utils.awaitAndThrowExceptionIfFalse
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -25,6 +28,8 @@ import com.serverless.utils.isNodeAndTagsUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
+import com.serverless.utils.toNode
+import com.workduck.models.AccessType
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
@@ -38,12 +43,14 @@ import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.PageRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
+import com.workduck.utils.AccessItemHelper.getNodeAccessItems
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
+import com.workduck.utils.NodeHelper.removeRedundantPaths
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.PageHelper.orderBlocks
@@ -51,16 +58,14 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
-import com.serverless.utils.toNode
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
 import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
-import com.workduck.utils.NodeHelper.removeRedundantPaths
+
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
-import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
  * contains all node related logic
@@ -474,7 +479,6 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-
     private fun createDataOrderForNode(node: Node): MutableList<String> {
 
         val list = mutableListOf<String>()
@@ -485,13 +489,12 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getNode(nodeID: String, workspaceID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Entity? {
-        val node =  (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) )?.let { node -> orderBlocks(node) } as Node?
+        val node = (pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java))?.let { node -> orderBlocks(node) } as Node?
         if (bookmarkInfo == true && userID != null) {
             node?.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
         }
         return node
     }
-
 
     fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
@@ -723,8 +726,8 @@ class NodeService( // Todo: Inject them from handlers
                                 val activeNodesInPath = nodePath.split(Constants.DELIMITER)
                                 val indexOfParentNode = activeNodesInPath.indexOf(archivedNodeParentID)
                                 /* if for some parent node, there exists a node with name "A" and node to be unarchived has same parent node with same name "A"*/
-                                if (indexOfParentNode != -1 && indexOfParentNode + 1 < activeNodesInPath.size
-                                    && activeNodesInPath[indexOfParentNode + 1] == archivedNodeName
+                                if (indexOfParentNode != -1 && indexOfParentNode + 1 < activeNodesInPath.size &&
+                                    activeNodesInPath[indexOfParentNode + 1] == archivedNodeName
                                 ) {
                                     mapOfNodeIDToNodeName[nodeID] = archivedNodeName
                                 }
@@ -760,7 +763,7 @@ class NodeService( // Todo: Inject them from handlers
         pageRepository.togglePagePublicAccess(nodeID, workspaceID, 0)
     }
 
-    fun getPublicNode(nodeID: String, workspaceID: String) : Node {
+    fun getPublicNode(nodeID: String, workspaceID: String): Node {
         return pageRepository.getPublicPage(nodeID, Node::class.java)
     }
 
@@ -781,17 +784,14 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking {
-            require(destinationNodeID != sourceNodeID) {
-                "Source NodeID can't be equal to Destination NodeID"
-            }
+        require(destinationNodeID != sourceNodeID) {
+            Messages.SOURCE_ID_DESTINATION_ID_SAME
+        }
 
-            val jobToGetSourceNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
-            val jobToGetDestinationNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
+        val jobToGetSourceNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
+        val jobToGetDestinationNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
 
-
-            require(jobToGetSourceNodeWorkspaceID.await() && jobToGetDestinationNodeWorkspaceID.await()) {
-                "NodeIDs don't exist"
-            }
+       jobToGetSourceNodeWorkspaceID.awaitAndThrowExceptionIfFalse(jobToGetDestinationNodeWorkspaceID, Messages.NODE_IDS_DO_NOT_EXIST)
     }
 
     private fun checkIfNodeExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
@@ -815,7 +815,59 @@ class NodeService( // Todo: Inject them from handlers
         // TODO(list remove changes order of the original elements )
         sourceNode?.dataOrder?.let {
             it.remove(blockID)
-            nodeRepository.moveBlock(sourceNode.data?.get(0), workspaceID, sourceNodeID, destinationNodeID, it) }
+            nodeRepository.moveBlock(sourceNode.data?.get(0), workspaceID, sourceNodeID, destinationNodeID, it)
+        }
+    }
+
+    fun shareNode(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
+        val sharedNodeRequest = wdRequest as SharedNodeRequest
+        if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
+    }
+
+
+    fun getSharedNode(nodeID: String, userID: String): Entity {
+        require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { "Error Accessing Node" }
+        return nodeRepository.getNodeByNodeID(nodeID)
+    }
+
+    fun changeAccessType(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
+        val sharedNodeRequest = wdRequest as SharedNodeRequest
+        if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
+    }
+
+    private fun checkIfOwnerCanManage(ownerID: String, workspaceID: String, nodeID: String) : Boolean{
+        return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
+                nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(ownerID)
+
+    }
+
+    private fun checkIfUserHasAccess(ownerID: String, workspaceID: String, nodeID: String) : Boolean{
+        return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
+                nodeRepository.getUserIDsWithNodeAccess(nodeID, AccessType.values().toList()).contains(ownerID)
+    }
+
+    fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
+        val nodeRequest = wdRequest as NodeRequest
+        require(nodeRepository.getUserIDsWithNodeAccess(nodeRequest.id, listOf(AccessType.MANAGE, AccessType.WRITE)).contains(userID)) { "Error Accessing Node" }
+        val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id)
+        val node = createNodeObjectFromNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, userID)
+        return updateNode(node, storedNode, false)
+    }
+
+    fun revokeSharedAccess(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
+        val sharedNodeRequest = wdRequest as SharedNodeRequest
+        if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
+    }
+
+    fun getAllSharedUsersOfNode(nodeID: String, userID: String, workspaceID: String) : Map<String, String>{
+        if(!checkIfUserHasAccess(userID, workspaceID, nodeID)) throw NoSuchElementException("Node you're trying to access does not exist")
+        return nodeRepository.getSharedUserInformation(nodeID)
     }
 
     companion object {
