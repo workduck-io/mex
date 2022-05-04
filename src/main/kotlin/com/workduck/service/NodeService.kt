@@ -16,7 +16,9 @@ import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.SharedNodeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 import com.serverless.utils.addIfNotEmpty
+import com.serverless.utils.awaitAndThrowExceptionIfFalse
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -48,13 +50,10 @@ import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
-import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
 import com.workduck.utils.NodeHelper.removeRedundantPaths
-import com.workduck.utils.PageHelper.comparePageWithStoredPage
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.PageHelper.orderBlocks
-import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -64,14 +63,9 @@ import com.workduck.models.Entity
 import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
 
-import com.workduck.utils.AccessItemHelper.createAccessItem
-import com.workduck.utils.NodeHelper.isExistingPathDividedInRefactor
-import com.workduck.utils.NodeHelper.isNodeIDInPath
-import com.workduck.utils.NodeHelper.removeRedundantPaths
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
-import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
  * contains all node related logic
@@ -791,15 +785,13 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking {
         require(destinationNodeID != sourceNodeID) {
-            "Source NodeID can't be equal to Destination NodeID"
+            Messages.SOURCE_ID_DESTINATION_ID_SAME
         }
 
         val jobToGetSourceNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
         val jobToGetDestinationNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
 
-        require(jobToGetSourceNodeWorkspaceID.await() && jobToGetDestinationNodeWorkspaceID.await()) {
-            "NodeIDs don't exist"
-        }
+       jobToGetSourceNodeWorkspaceID.awaitAndThrowExceptionIfFalse(jobToGetDestinationNodeWorkspaceID, Messages.NODE_IDS_DO_NOT_EXIST)
     }
 
     private fun checkIfNodeExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
@@ -881,6 +873,4 @@ class NodeService( // Todo: Inject them from handlers
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
-}
-
 }

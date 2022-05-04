@@ -12,6 +12,7 @@ import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.PageHelper
+import kotlinx.coroutines.Deferred
 import org.apache.logging.log4j.Logger
 
 fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
@@ -170,4 +171,8 @@ fun Map<String, Any>.handleWarmup(LOG : Logger) : ApiGatewayResponse? {
 
 fun String.createNodePath(nodeID : String) : String{
     return "$this${Constants.DELIMITER}$nodeID"
+}
+
+suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred<Boolean>, error: String) {
+    if(!(this.await() && booleanJob.await())) throw IllegalArgumentException(error)
 }

@@ -39,4 +39,7 @@ object Messages {
     const val MALFORMED_REQUEST = "Malformed Request"
     const val REQUEST_NOT_RECOGNIZED = "Request not recognized"
     const val INVALID_PARAMETERS = "Invalid Parameters"
+
+    const val NODE_IDS_DO_NOT_EXIST = "NodeIDs don't exist"
+    const val SOURCE_ID_DESTINATION_ID_SAME = "Source NodeID can't be equal to Destination NodeID"
 }
