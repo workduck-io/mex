@@ -13,4 +13,5 @@ data class PathParameter(
     val namespaceID: String?,
     val preferenceType: String?,
     val version: String?,
+    val tagName: String?
 )
