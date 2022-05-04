@@ -1,11 +1,13 @@
 package com.workduck.utils
 
 
+import com.serverless.models.requests.NodePath
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.service.WorkspaceService
 import org.apache.logging.log4j.LogManager
+import org.w3c.dom.Node
 
 object NodeHelper {
 
@@ -93,6 +95,10 @@ object NodeHelper {
         return nodeHierarchy.distinct()
     }
 
+
+    fun isRename(existingNodes: NodePath, newNodes: NodePath) : Boolean{
+        return existingNodes.allNodes.last() != newNodes.allNodes.last()
+    }
 
 
 

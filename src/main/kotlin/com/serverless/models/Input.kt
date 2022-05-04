@@ -17,9 +17,8 @@ data class Input(
     val queryStringParameters: Map<String, String>?
 
 ) {
-    // TODO(Figure out a way so that we can assign "body" WDRequest directly instead of using payload field)
-    val payload: WDRequest? = body?.let { Helper.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true).readValue(it) }
 
+    val payload: WDRequest? = body?.let { Helper.objectMapper.readValue(it) }
 
     val tokenBody: TokenBody = TokenBody.fromToken(headers.bearerToken) ?: throw UnauthorizedException("Unauthorized")
 
