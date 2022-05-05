@@ -382,7 +382,7 @@ class NodeRepository(
                 .withKeyConditionExpression("PK = :pk and SK = :sk")
                 .withProjectionExpression("PK")
                 .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it)
+                    mapper.query(Node::class.java, it, dynamoDBMapperConfig)
                 }
 
         return nodeList.isNotEmpty()
