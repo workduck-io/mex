@@ -24,7 +24,7 @@ data class SharedNodeRequest(
     init {
         require(userIDs.isNotEmpty()) { "Need to provide userIDs" }
 
-        require(nodeID.isMalformed()) { "Invalid NodeID" }
+        require(!nodeID.isMalformed()) { "Invalid NodeID" }
 
     }
 }
