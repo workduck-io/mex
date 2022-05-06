@@ -20,7 +20,7 @@ class CommentHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         input.handleWarmup(LOG)?.let{ return it }
 
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         val strategy = CommentStrategyFactory.getCommentStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 404)

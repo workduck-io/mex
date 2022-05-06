@@ -4,13 +4,13 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.transformers.Transformer
+import com.serverless.utils.Messages
 import com.serverless.utils.NamespaceHelper
 import com.workduck.models.Namespace
 import com.workduck.service.NamespaceService
 
 class GetNamespaceDataStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
-        val errorMessage = "Error getting namespaces!"
         val namespaceIDs = input.pathParameters?.ids
 
         return if (namespaceIDs != null) {
@@ -22,9 +22,9 @@ class GetNamespaceDataStrategy : NamespaceStrategy {
                 NamespaceHelper.convertNamespaceToNamespaceResponse(it.value)
             }
 
-            ApiResponseHelper.generateStandardResponse(namespaceResponseMap, errorMessage)
+            ApiResponseHelper.generateStandardResponse(namespaceResponseMap, Messages.ERROR_GETTING_NAMESPACES)
         } else {
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_GETTING_NAMESPACES)
         }
     }
 }

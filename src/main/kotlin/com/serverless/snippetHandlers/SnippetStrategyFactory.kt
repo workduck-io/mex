@@ -11,15 +11,9 @@ class SnippetStrategyFactory {
 
         const val updateSameSnippetVersion = "PUT /snippet"
 
-        const val archiveSnippet = "PUT /snippet/archive"
-
-        const val unarchiveSnippet = "PUT /snippet/unarchive"
-
         const val deleteSnippet = "DELETE /snippet/{id}/{version}"
 
         const val deleteAllVersionsOfSnippet = "DELETE /snippet/{id}/all"
-
-        const val getAllArchivedSnippets = "GET /snippet/archive/{id}"
 
         const val makeSnippetPublic = "PATCH /snippet/makePublic/{id}/{version}"
 
@@ -37,7 +31,6 @@ class SnippetStrategyFactory {
                 createSnippet to CreateSnippetStrategy(),
                 deleteSnippet to DeleteSnippetStrategy(),
                 deleteAllVersionsOfSnippet to DeleteAllVersionsOfSnippetStrategy(),
-                getAllArchivedSnippets to GetAllArchivedSnippetsStrategy(),
                 makeSnippetPublic to MakeSnippetPublicStrategy(),
                 makeSnippetPrivate to MakeSnippetPrivateStrategy(),
                 getPublicSnippet to GetPublicSnippetStrategy(),

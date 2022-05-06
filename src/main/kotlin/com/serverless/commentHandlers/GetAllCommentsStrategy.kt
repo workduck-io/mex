@@ -5,6 +5,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.responses.Response
 import com.serverless.utils.CommentHelper
+import com.serverless.utils.Messages
 import com.workduck.service.CommentService
 
 class GetAllCommentsStrategy : CommentStrategy {
@@ -24,9 +25,9 @@ class GetAllCommentsStrategy : CommentStrategy {
                 commentResponseList.add(CommentHelper.convertCommentToCommentResponse(it))
             }
 
-            ApiResponseHelper.generateStandardResponse(commentResponseList as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(commentResponseList as Any?, Messages.ERROR_GETTING_COMMENTS)
         } else {
-            ApiResponseHelper.generateStandardErrorResponse("Invalid ID", 400)
+            ApiResponseHelper.generateStandardErrorResponse(Messages.INVALID_ID, 400)
         }
 
     }

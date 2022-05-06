@@ -15,6 +15,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.TokenBody
 import com.serverless.models.requests.RegisterUserRequest
+import com.serverless.utils.Messages
 import com.workduck.models.Workspace
 import com.workduck.service.UserService
 import com.workduck.utils.Helper
@@ -22,8 +23,6 @@ import com.workduck.utils.Helper
 
 class RegisterUserStrategy : UserStrategy {
     override fun apply(input: Input, userService: UserService): ApiGatewayResponse {
-        val errorMessage = "Error registering user"
-
         val registerUserRequest = (input.payload as RegisterUserRequest?) ?: throw IllegalArgumentException("Invalid Body")
 
         val userJson = Helper.objectMapper.writeValueAsString(registerUserRequest.user)
@@ -47,15 +46,15 @@ class RegisterUserStrategy : UserStrategy {
         when(invokeResult.statusCode){
             200 -> updateCognitoPool(input, workspace.id)
             else -> {
-                ApiResponseHelper.generateStandardErrorResponse("Error updating user", invokeResult.statusCode)
+                ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_UPDATING_USER, invokeResult.statusCode)
             }
         }
 
-        return ApiResponseHelper.generateStandardResponse(workspace as Any?, errorMessage)
+        return ApiResponseHelper.generateStandardResponse(workspace as Any?, Messages.ERROR_REGISTERING_USER)
     }
 
     private fun updateCognitoPool(input: Input, workspaceID: String){
-        val tokenBody: TokenBody = TokenBody.fromToken(input.headers.bearerToken) ?: throw UnauthorizedException("Unauthorized")
+        val tokenBody: TokenBody = TokenBody.fromToken(input.headers.bearerToken) ?: throw UnauthorizedException(Messages.UNAUTHORIZED)
 
         val client = AWSCognitoIdentityProviderClientBuilder.standard().build()
 
