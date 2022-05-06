@@ -59,11 +59,10 @@ class PageRepository <T : Page> (
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":publicAccess"] = accessValue
 
-        UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", sk)
-                .withUpdateExpression("SET publicAccess = :publicAccess")
-                .withValueMap(expressionAttributeValues).let{
-                    table.updateItem(it)
-                }
+        UpdateItemSpec().update(pk = workspaceID, sk = sk, updateExpression = "SET publicAccess = :publicAccess",
+                expressionAttributeValues = expressionAttributeValues).let{
+            table.updateItem(it)
+        }
     }
 
     fun getPublicPage(sk: String, clazz: Class<T>): T {
@@ -74,19 +73,14 @@ class PageRepository <T : Page> (
         expressionAttributeValues[":true"] = AttributeValue().withN("1")
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
-        return DynamoDBQueryExpression<T>()
-                .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
-                .withIndexName("SK-PK-Index").withConsistentRead(false)
-                .withFilterExpression("publicAccess = :true and itemStatus = :itemStatus")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(clazz, it, dynamoDBMapperConfig).let { list ->
-                        if(list.isNotEmpty()) list[0]
-                        else throw NoSuchElementException("Requested Resource Not Found")
-                    }
-                }
+        return DynamoDBQueryExpression<T>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "publicAccess = :true and itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(clazz, it, dynamoDBMapperConfig).let { list ->
+                if(list.isNotEmpty()) list[0]
+                else throw NoSuchElementException("Requested Resource Not Found")
+            }
+        }
     }
-
-
 
     fun unarchiveOrArchivePages(pageIDList: List<String>, workspaceID: String, itemStatus: ItemStatus): MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
@@ -98,14 +92,11 @@ class PageRepository <T : Page> (
         val pagesProcessedList: MutableList<String> = mutableListOf()
         for (pageID in pageIDList) {
             try {
-                UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", pageID)
-                        .withUpdateExpression("SET itemStatus = :active, updatedAt = :updatedAt")
-                        .withValueMap(expressionAttributeValues)
-                        .withConditionExpression("attribute_exists(PK)")
-                        .also {
-                            table.updateItem(it)
-                            pagesProcessedList += pageID
-                        }
+                UpdateItemSpec().update(pk = workspaceID, sk = pageID, updateExpression = "SET itemStatus = :active, updatedAt = :updatedAt",
+                        conditionExpression = "attribute_exists(PK)", expressionAttributeValues = expressionAttributeValues).also {
+                    table.updateItem(it)
+                    pagesProcessedList += pageID
+                }
             } catch (e: ConditionalCheckFailedException) {
                 LOG.warn("Conditional check failed for $pageID : ${e.message}")
             }
