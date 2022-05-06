@@ -20,10 +20,12 @@ class GetAllNodesStrategy : NodeStrategy {
         return if (idList != null) {
             when (idList.size) {
                 1 -> when {
-                        idList[0].startsWith("WORKSPACE") ->
+                        idList.first().startsWith("WORKSPACE") -> {
+                            require(idList.first() == input.headers.workspaceID) { "Invalid WorkspaceID" }
                             nodeService.getAllNodesWithWorkspaceID(idList[0]).let {
                                 ApiResponseHelper.generateStandardResponse(it as Any?, Messages.ERROR_GETTING_NODES)
                             }
+                        }
 
                         else ->
                             nodeService.getAllNodesWithUserID(idList[0]).let {
