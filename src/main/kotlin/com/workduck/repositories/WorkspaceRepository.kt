@@ -12,6 +12,7 @@ import com.workduck.models.Workspace
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import org.apache.logging.log4j.LogManager
+import kotlin.math.exp
 
 class WorkspaceRepository(
     private val dynamoDB: DynamoDB,
@@ -54,13 +55,11 @@ class WorkspaceRepository(
         val updateExpression = "set nodeHierarchyInformation = list_append(if_not_exists(nodeHierarchyInformation, :empty_list), :nodePath), updatedAt = :updatedAt"
 
         try {
-            UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", workspaceID)
-                    .withUpdateExpression(updateExpression)
-                    .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-                    .let {
-                        table.updateItem(it)
-                    }
+            UpdateItemSpec().update(pk = workspaceID, sk = workspaceID, updateExpression = updateExpression,
+                    conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
+                table.updateItem(it)
+            }
+
         }catch (e: ConditionalCheckFailedException){
             LOG.warn("Invalid WorkspaceID : $workspaceID")
         }
