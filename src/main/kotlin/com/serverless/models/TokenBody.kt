@@ -11,10 +11,12 @@ import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TokenBody(
-    val sub: String,
+
+    @JsonProperty("sub")
+    val userID: String,
     @JsonProperty("cognito:username")
     @JsonAlias("username")
-    val userID: String,
+    val username: String,
     val iss: String,
     @JsonProperty("custom:mex_workspace_ids")
     val workspaceIDs: String?,
