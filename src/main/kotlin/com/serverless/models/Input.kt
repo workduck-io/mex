@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.Messages
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
@@ -20,7 +21,7 @@ data class Input(
 
     val payload: WDRequest? = body?.let { Helper.objectMapper.readValue(it) }
 
-    val tokenBody: TokenBody = TokenBody.fromToken(headers.bearerToken) ?: throw UnauthorizedException("Unauthorized")
+    val tokenBody: TokenBody = TokenBody.fromToken(headers.bearerToken) ?: throw UnauthorizedException(Messages.UNAUTHORIZED)
 
     companion object {
         fun fromMap(rawInput: Map<String, Any>): Input? {

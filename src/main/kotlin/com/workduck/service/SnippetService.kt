@@ -183,11 +183,6 @@ class SnippetService {
         }
     }
 
-    fun getAllArchivedSnippetIDsOfWorkspace(workspaceID: String): List<String> {
-        return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Snippet)
-    }
-
-
     fun clonePublicSnippet(snippetID: String, version: Int, userID: String, workspaceID: String): Entity {
         val publicSnippet = getPublicSnippet(snippetID, version) as Snippet? ?: throw NoSuchElementException("Requested Snippet Not Found")
         val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userID, workspaceID)

@@ -4,6 +4,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.responses.Response
+import com.serverless.utils.Messages
 import com.serverless.utils.UserPreferenceHelper
 import com.workduck.models.UserPreferenceRecord
 import com.workduck.service.UserPreferenceService
@@ -13,8 +14,6 @@ class GetAllUserPreferencesForUserStrategy : UserPreferenceStrategy {
             input: Input,
             userPreferenceService: UserPreferenceService
     ): ApiGatewayResponse {
-        val errorMessage = "Error getting user preferences"
-
         val userID = input.pathParameters?.id
         return if(userID != null) {
             val userPreferenceList: List<UserPreferenceRecord>? = userPreferenceService.getAllUserPreferencesForUser(userID)
@@ -24,10 +23,10 @@ class GetAllUserPreferencesForUserStrategy : UserPreferenceStrategy {
                 userPreferenceResponseList.add(UserPreferenceHelper.convertUserPreferenceRecordToUserPreferenceResponse(it))
             }
 
-            ApiResponseHelper.generateStandardResponse(userPreferenceList as Any?, errorMessage)
+            ApiResponseHelper.generateStandardResponse(userPreferenceList as Any?, Messages.ERROR_GETTING_RECORDS)
         }
         else{
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_GETTING_RECORDS)
         }
     }
 }

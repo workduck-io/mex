@@ -4,13 +4,13 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.transformers.Transformer
+import com.serverless.utils.Messages
 import com.serverless.utils.WorkspaceHelper
 import com.workduck.models.Workspace
 import com.workduck.service.WorkspaceService
 
 class GetWorkspaceDataStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
-        val errorMessage = "Error getting workspaces!"
         val workspaceIDs = input.pathParameters?.ids
 
         return if (workspaceIDs != null) {
@@ -21,9 +21,9 @@ class GetWorkspaceDataStrategy : WorkspaceStrategy {
                 WorkspaceHelper.convertWorkspaceToWorkspaceResponse(it.value)
             }
 
-            ApiResponseHelper.generateStandardResponse(workspaceResponseMap as Any, errorMessage)
+            ApiResponseHelper.generateStandardResponse(workspaceResponseMap as Any, Messages.ERROR_GETTING_WORKSPACES)
         } else {
-            ApiResponseHelper.generateStandardErrorResponse(errorMessage)
+            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_GETTING_WORKSPACES)
         }
     }
 }

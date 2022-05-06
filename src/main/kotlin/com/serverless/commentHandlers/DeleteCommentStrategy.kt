@@ -4,12 +4,11 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.CommentHelper
+import com.serverless.utils.Messages
 import com.workduck.service.CommentService
 
 class DeleteCommentStrategy : CommentStrategy{
     override fun apply(input: Input, commentService: CommentService): ApiGatewayResponse {
-        val errorMessage = "Error deleting comment"
-
         val list = input.pathParameters?.id?.split("$")
 
         val entityID = list?.get(0)
@@ -17,9 +16,9 @@ class DeleteCommentStrategy : CommentStrategy{
 
         return if(entityID != null  && commentID != null && CommentHelper.isBlockOrNodeID(entityID)) {
             commentService.deleteComment(entityID, commentID)
-            ApiResponseHelper.generateStandardResponse(null, 204, errorMessage)
+            ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_DELETING_COMMENT)
         } else{
-            ApiResponseHelper.generateStandardErrorResponse("Invalid ID", 400)
+            ApiResponseHelper.generateStandardErrorResponse(Messages.INVALID_ID, 400)
         }
 
     }
