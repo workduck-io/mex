@@ -8,7 +8,7 @@ import com.workduck.models.Tag
 
 
 fun UpdateItemSpec.update(pk : String, sk: String, updateExpression: String,
-                          expressionAttributeValues : MutableMap<String, Any>, conditionExpression: String) : UpdateItemSpec{
+                          expressionAttributeValues : MutableMap<String, Any>, conditionExpression: String? = null) : UpdateItemSpec{
 
     return this.withPrimaryKey("PK", pk, "SK", sk)
             .withUpdateExpression(updateExpression)
@@ -28,10 +28,22 @@ fun UpdateItemSpec.updateWithReturnValues(pk : String, sk: String, updateExpress
 }
 
 
-fun <T> DynamoDBQueryExpression<T>.queryWithProjection(keyConditionExpression: String, filterExpression: String,
-                                  projectionExpression: String, expressionAttributeValues: MutableMap<String, AttributeValue>):DynamoDBQueryExpression<T> {
+fun <T> DynamoDBQueryExpression<T>.query(keyConditionExpression: String, filterExpression: String? = null,
+                                  projectionExpression: String? = null, expressionAttributeValues: MutableMap<String, AttributeValue>):DynamoDBQueryExpression<T> {
 
     return this.withKeyConditionExpression(keyConditionExpression)
+            .withFilterExpression(filterExpression)
+            .withProjectionExpression(projectionExpression)
+            .withExpressionAttributeValues(expressionAttributeValues)
+
+}
+
+
+fun <T> DynamoDBQueryExpression<T>.queryWithIndex(index: String, keyConditionExpression: String, filterExpression: String? = null,
+                                         projectionExpression: String? = null, expressionAttributeValues: MutableMap<String, AttributeValue>):DynamoDBQueryExpression<T> {
+
+    return this.withKeyConditionExpression(keyConditionExpression)
+            .withIndexName(index).withConsistentRead(false)
             .withFilterExpression(filterExpression)
             .withProjectionExpression(projectionExpression)
             .withExpressionAttributeValues(expressionAttributeValues)

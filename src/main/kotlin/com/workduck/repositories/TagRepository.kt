@@ -43,7 +43,7 @@ class TagRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":tag"] = AttributeValue().withS(ItemType.Tag.name)
 
-        return DynamoDBQueryExpression<Tag>().queryWithProjection(keyConditionExpression = "PK = :pk", filterExpression = "itemType = :tag",
+        return DynamoDBQueryExpression<Tag>().query(keyConditionExpression = "PK = :pk", filterExpression = "itemType = :tag",
                 projectionExpression = "SK",  expressionAttributeValues = expressionAttributeValues).let {
             mapper.query(Tag::class.java, it, dynamoDBMapperConfig)
         }.map { it.name }

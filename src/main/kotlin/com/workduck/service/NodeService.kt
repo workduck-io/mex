@@ -873,4 +873,13 @@ class NodeService( // Todo: Inject them from handlers
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
+
+    fun test(){
+        println(nodeRepository.getTags("NODE1", "WORKSPACEEK0C54W8G0QFS4789CCJP205KTLRDLM71LSTCDF47XN9YRTJM6N5"))
+    }
+}
+
+
+fun main(){
+    NodeService().test()
 }
