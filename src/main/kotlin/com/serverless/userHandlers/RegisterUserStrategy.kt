@@ -61,7 +61,7 @@ class RegisterUserStrategy : UserStrategy {
 
         val adminGetUserRequest = AdminGetUserRequest()
                 .withUserPoolId(tokenBody.userPoolID)
-                .withUsername(tokenBody.userID)
+                .withUsername(tokenBody.username)
 
         val adminGetUserResult : AdminGetUserResult = client.adminGetUser(adminGetUserRequest)
 
@@ -82,7 +82,7 @@ class RegisterUserStrategy : UserStrategy {
 
         val adminUpdateUserAttributesRequest = AdminUpdateUserAttributesRequest()
                 .withUserPoolId(tokenBody.userPoolID)
-                .withUsername(tokenBody.userID)
+                .withUsername(tokenBody.username)
                 .withUserAttributes(newAttribute)
 
         client.adminUpdateUserAttributes(adminUpdateUserAttributesRequest)
