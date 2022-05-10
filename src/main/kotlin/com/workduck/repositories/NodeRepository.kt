@@ -37,6 +37,7 @@ import com.workduck.utils.DDBTransactionHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
 import java.time.Instant
+import kotlin.math.exp
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,
@@ -68,14 +69,11 @@ class NodeRepository(
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
-        return UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
-            .withUpdateExpression(updateExpression)
-            .withValueMap(expressionAttributeValues)
-            .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-            .let {
-                table.updateItem(it)
-                mapOf("nodeID" to nodeID, "appendedElements" to elements)
-            }
+        return UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = updateExpression, expressionAttributeValues = expressionAttributeValues,
+                conditionExpression = "attribute_exists(PK) and attribute_exists(SK)").let {
+            table.updateItem(it)
+            mapOf("nodeID" to nodeID, "appendedElements" to elements)
+        }
     }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
@@ -117,15 +115,12 @@ class NodeRepository(
         expressionAttributeValues[":createdBy"] = AttributeValue(userID)
         expressionAttributeValues[":itemType"] = AttributeValue("Node")
 
-        return DynamoDBQueryExpression<Node>()
-            .withKeyConditionExpression("createdBy = :createdBy  and itemType = :itemType")
-            .withIndexName("createdBy-itemType-index").withConsistentRead(false)
-            .withProjectionExpression("PK")
-            .withExpressionAttributeValues(expressionAttributeValues).let { it ->
-                mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
-                    node.id
-                }
+        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "createdBy-itemType-index", keyConditionExpression = "createdBy = :createdBy  and itemType = :itemType",
+                projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues).let { it ->
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
+                node.id
             }
+        }
     }
 
 
@@ -180,14 +175,11 @@ class NodeRepository(
         expressionAttributeValues[":updatedBlock"] = updatedBlock
         expressionAttributeValues[":userID"] = userID
 
-        return UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
-            .withUpdateExpression("SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ")
-            .withValueMap(expressionAttributeValues)
-            .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-            .let {
-                table.updateItem(it)
-                objectMapper.readValue(updatedBlock)
-            }
+        return UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = "SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ",
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)").let {
+            table.updateItem(it)
+            objectMapper.readValue(updatedBlock)
+        }
     }
 
     fun getMetaDataForActiveVersions(nodeID: String): MutableList<String>? {
@@ -199,11 +191,8 @@ class NodeRepository(
         expressionAttributeValues[":status"] = AttributeValue().withS("ACTIVE")
         expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
 
-        val q = DynamoDBQueryExpression<NodeVersion>()
-            .withKeyConditionExpression("PK = :pk")
-            .withFilterExpression("versionStatus = :status and itemType = :NodeVersion")
-            .withExpressionAttributeValues(expressionAttributeValues)
-            .withProjectionExpression("SK")
+        val q = DynamoDBQueryExpression<NodeVersion>().query(keyConditionExpression = "PK = :pk", filterExpression = "versionStatus = :status and itemType = :NodeVersion",
+                expressionAttributeValues = expressionAttributeValues, projectionExpression = "SK")
 
         return try {
             val nodeVersionList: List<NodeVersion> = mapper.query(NodeVersion::class.java, q, dynamoDBMapperConfig)
@@ -231,14 +220,9 @@ class NodeRepository(
         expressionAttributeValues[":ttl"] = (now + ttl)
         expressionAttributeValues[":status"] = "INACTIVE"
 
-        val u = UpdateItemSpec().withPrimaryKey("PK", "$nodeID${Constants.DELIMITER}VERSION", "SK", oldestUpdatedAt)
-            .withUpdateExpression("SET timeToLive = :ttl, versionStatus = :status ")
-            .withValueMap(expressionAttributeValues)
-
-        try {
-            table.updateItem(u)
-        } catch (e: Exception) {
-            println(e)
+        UpdateItemSpec().update(pk = "$nodeID${Constants.DELIMITER}VERSION", sk = oldestUpdatedAt, updateExpression = "SET timeToLive = :ttl, versionStatus = :status",
+                expressionAttributeValues = expressionAttributeValues).also {
+            table.updateItem(it)
         }
     }
 
@@ -255,15 +239,12 @@ class NodeRepository(
         for ((nodeID,nodeName) in mapOfNodeIDToName) {
             try {
                 expressionAttributeValues[":title"] = "$nodeName(1)"
+                UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = "SET itemStatus = :active, title = :title, updatedAt = :updatedAt",
+                        expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK)").also {
+                    table.updateItem(it)
+                    nodesProcessedList += nodeID
+                }
 
-                UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
-                        .withUpdateExpression("SET itemStatus = :active, title = :title, updatedAt = :updatedAt")
-                        .withValueMap(expressionAttributeValues)
-                        .withConditionExpression("attribute_exists(PK)")
-                        .also {
-                            table.updateItem(it)
-                            nodesProcessedList += nodeID
-                        }
             } catch (e: ConditionalCheckFailedException) {
                 LOG.warn("nodeID : $nodeID not present in the DB")
             }
@@ -277,12 +258,10 @@ class NodeRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        return  DynamoDBQueryExpression<Node>()
-            .withKeyConditionExpression("PK = :pk and SK = :sk")
-            .withProjectionExpression("nodeData.$blockID, dataOrder")
-            .withExpressionAttributeValues(expressionAttributeValues).let {
-                mapper.query(Node::class.java, it)
-            }.firstOrNull()
+        return DynamoDBQueryExpression<Node>().query(keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "nodeData.$blockID, dataOrder",
+                expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Node::class.java, it)
+        }.firstOrNull()
 
     }
 
@@ -361,13 +340,10 @@ class NodeRepository(
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
 
         try {
-            UpdateItemSpec().withPrimaryKey("PK", workspaceID, "SK", nodeID)
-                    .withUpdateExpression("SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy")
-                    .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK) and attribute_exists(SK)")
-                    .also {
-                        table.updateItem(it)
-                    }
+            UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy",
+                    expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)").also {
+                table.updateItem(it)
+            }
         } catch (e: ConditionalCheckFailedException) {
             throw ConditionalCheckFailedException("Cannot Rename node since $nodeID does not exist")
         }
@@ -378,14 +354,10 @@ class NodeRepository(
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        val nodeList: List<Node> = DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("PK = :pk and SK = :sk")
-                .withProjectionExpression("PK")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig)
-                }
-
-        return nodeList.isNotEmpty()
+        return DynamoDBQueryExpression<Node>().query(keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "PK",
+                expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig)
+        }.isNotEmpty()
     }
 
 
@@ -395,16 +367,11 @@ class NodeRepository(
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
 
+        return DynamoDBQueryExpression<Node>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", filterExpression = "itemStatus = :itemStatus",
+                projectionExpression = "PK, SK, title", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig)
+        }.associate { it.id to it.title }
 
-        return DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("PK = :PK and begins_with(SK, :SK)")
-                .withFilterExpression("itemStatus = :itemStatus")
-                .withProjectionExpression("PK, SK, title")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig)
-                }.associate {
-                    it.id to it.title
-                }
     }
 
     fun createBatchNodeAccessItem(nodeAccessItems : List<NodeAccess>){
@@ -428,31 +395,24 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
-        return DynamoDBQueryExpression<NodeAccess>()
-                .withKeyConditionExpression("PK = :PK")
-                .withFilterExpression("itemType = :itemType")
-                .withProjectionExpression("SK, accessType")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
-                }.filter {
-                    it.accessType in  accessTypeList}.map { accessItem -> accessItem.userID  }
-
+        return DynamoDBQueryExpression<NodeAccess>().query(keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
+        }.filter { it.accessType in  accessTypeList }.map { accessItem -> accessItem.userID  }
     }
+
 
     fun getSharedUserInformation(nodeID: String) : Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
-        return DynamoDBQueryExpression<NodeAccess>()
-                .withKeyConditionExpression("PK = :PK")
-                .withFilterExpression("itemType = :itemType")
-                .withProjectionExpression("SK, accessType")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associate { accessItem ->
-                        accessItem.userID to accessItem.accessType.name
-                    }
-                }
+        return DynamoDBQueryExpression<NodeAccess>().query(keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associate { accessItem ->
+                accessItem.userID to accessItem.accessType.name
+            }
+        }
     }
 
 
@@ -462,15 +422,12 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
-        return DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
-                .withIndexName("SK-PK-Index").withConsistentRead(false)
-                .withFilterExpression("itemStatus = :itemStatus")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
-                        nodeList.firstOrNull() ?: throw NoSuchElementException("Requested Resource Not Found")
-                    }
-                }
+        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
+                nodeList.firstOrNull() ?: throw NoSuchElementException("Requested Resource Not Found")
+            }
+        }
     }
 
     fun getNodeWorkspaceID(nodeID: String) : String{
@@ -479,17 +436,12 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
-        return DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("SK = :SK  and begins_with(PK, :PK)")
-                .withIndexName("SK-PK-Index").withConsistentRead(false)
-                .withFilterExpression("itemStatus = :itemStatus")
-                .withProjectionExpression("PK")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
-                        nodeList.firstOrNull()?.workspaceIdentifier?.id ?: throw NoSuchElementException("Requested Resource Not Found")
-                    }
-                }
-
+        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
+                nodeList.firstOrNull()?.workspaceIdentifier?.id ?: throw NoSuchElementException("Requested Resource Not Found")
+            }
+        }
     }
 
     fun getTags(nodeID: String, workspaceID: String) : MutableList<String>? {
@@ -497,15 +449,12 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
 
-
-        return DynamoDBQueryExpression<Node>()
-                .withKeyConditionExpression("PK = :PK and SK=:SK")
-                .withProjectionExpression("tags")
-                .withExpressionAttributeValues(expressionAttributeValues).let { query ->
-                    mapper.query(Node::class.java, query, dynamoDBMapperConfig).getOrNull(0)?.tags
-                    }
+        return DynamoDBQueryExpression<Node>().query(
+                keyConditionExpression = "PK = :PK and SK=:SK", projectionExpression = "tags", expressionAttributeValues = expressionAttributeValues
+        ).let { query ->
+            mapper.query(Node::class.java, query, dynamoDBMapperConfig).getOrNull(0)?.tags
+        }
     }
-
 
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)

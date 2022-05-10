@@ -82,16 +82,13 @@ class SnippetRepository(
         expressionAttributeValues[":itemType"] = AttributeValue().withS(ItemType.Snippet.name)
         expressionAttributeValues[":active"] = AttributeValue().withS(ItemStatus.ACTIVE.name)
 
-        val nodeVersionList: List<Snippet> = DynamoDBQueryExpression<Snippet>()
-                .withKeyConditionExpression("PK = :pk and begins_with(SK, :sk)")
-                .withFilterExpression("itemType = :itemType and itemStatus = :active")
-                .withExpressionAttributeValues(expressionAttributeValues)
-                .withProjectionExpression("version").let{
-                    mapper.query(Snippet::class.java, it, dynamoDBMapperConfig)
-                }
+        val snippetVersionList = DynamoDBQueryExpression<Snippet>().query(keyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
+                filterExpression = "itemType = :itemType and itemStatus = :active", expressionAttributeValues = expressionAttributeValues,
+                projectionExpression = "version").let{
+            mapper.query(Snippet::class.java, it, dynamoDBMapperConfig)
+        }
 
-
-        return nodeVersionList.maxByOrNull { it.version!! }?.version ?: throw NoSuchElementException("Snippet does not exist")
+        return snippetVersionList.maxByOrNull { it.version!! }?.version ?: throw NoSuchElementException("Snippet does not exist")
 
     }
 
@@ -102,16 +99,12 @@ class SnippetRepository(
         expressionAttributeValues[":sk"] = AttributeValue().withS(snippetID)
         expressionAttributeValues[":itemType"] = AttributeValue().withS(ItemType.Snippet.name)
 
-        return DynamoDBQueryExpression<Snippet>()
-                .withKeyConditionExpression("PK = :pk and begins_with(SK, :sk)")
-                .withFilterExpression("itemType = :itemType")
-                .withExpressionAttributeValues(expressionAttributeValues)
-                .let{
-                    mapper.query(Snippet::class.java, it, dynamoDBMapperConfig).map { snippet ->
-                        snippet.version
-                    }
-                }
-
+        return DynamoDBQueryExpression<Snippet>().query(keyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues).let{
+            mapper.query(Snippet::class.java, it, dynamoDBMapperConfig).map { snippet ->
+                snippet.version
+            }
+        }
     }
 
     fun batchDeleteVersions(listOfSnippets : List<Snippet>){

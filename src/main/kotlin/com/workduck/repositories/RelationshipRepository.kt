@@ -14,6 +14,7 @@ import com.workduck.models.Relationship
 import com.workduck.models.RelationshipType
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
+import kotlin.math.exp
 
 class RelationshipRepository(
     private val mapper: DynamoDBMapper,
@@ -34,13 +35,10 @@ class RelationshipRepository(
         expressionAttributeValues[":typeOfRelationship"] = AttributeValue("HIERARCHY")
         expressionAttributeValues[":itemStatus"] = AttributeValue(status.name)
 
-        return DynamoDBQueryExpression<Relationship>()
-            .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
-            .withIndexName("WS-itemType-index").withConsistentRead(false)
-            .withFilterExpression("typeOfRelationship = :typeOfRelationship and itemStatus = :itemStatus")
-            .withExpressionAttributeValues(expressionAttributeValues).let {
-                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
-            }
+        return DynamoDBQueryExpression<Relationship>().queryWithIndex(index = "WS-itemType-index", keyConditionExpression = "workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType",
+                filterExpression = "typeOfRelationship = :typeOfRelationship and itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
+        }
     }
 
     fun getHierarchyRelationshipsWithStartNode(workspaceID: String, startNodeID: String, status: ItemStatus): List<Relationship> {
@@ -52,13 +50,10 @@ class RelationshipRepository(
         expressionAttributeValues[":itemStatus"] = AttributeValue(status.name)
 
         // TODO(If number of relationships per node start increasing drastically, introduce a startNode-itemType GSI)
-        return DynamoDBQueryExpression<Relationship>()
-            .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
-            .withIndexName("WS-itemType-index").withConsistentRead(false)
-            .withFilterExpression("typeOfRelationship = :typeOfRelationship and startNode = :startNode and itemStatus = :itemStatus ")
-            .withExpressionAttributeValues(expressionAttributeValues).let {
-                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
-            }
+        return DynamoDBQueryExpression<Relationship>().queryWithIndex(index = "WS-itemType-index", keyConditionExpression = "workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType",
+                filterExpression = "typeOfRelationship = :typeOfRelationship and startNode = :startNode and itemStatus = :itemStatus ", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
+        }
     }
 
     fun getHierarchyRelationshipsWithEndNode(workspaceID: String, endNodeID: String, status: ItemStatus): List<Relationship> {
@@ -70,13 +65,11 @@ class RelationshipRepository(
         expressionAttributeValues[":itemStatus"] = AttributeValue(status.name)
 
         // TODO(If number of relationships per node start increasing drastically, introduce a endNode-itemType GSI)
-        return DynamoDBQueryExpression<Relationship>()
-            .withKeyConditionExpression("workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType")
-            .withIndexName("WS-itemType-index").withConsistentRead(false)
-            .withFilterExpression("typeOfRelationship = :typeOfRelationship and endNode = :endNode and itemStatus = :itemStatus")
-            .withExpressionAttributeValues(expressionAttributeValues).let {
-                mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
-            }
+
+        return DynamoDBQueryExpression<Relationship>().queryWithIndex(index = "WS-itemType-index", keyConditionExpression = "workspaceIdentifier = :workspaceIdentifier  and itemType = :itemType",
+                filterExpression = "typeOfRelationship = :typeOfRelationship and endNode = :endNode and itemStatus = :itemStatus ", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Relationship::class.java, it, dynamoDBMapperConfig)
+        }
     }
 
     fun changeRelationshipStatus(list: List<Relationship>, status: ItemStatus) {
@@ -89,13 +82,11 @@ class RelationshipRepository(
 
         for (relationship in list) {
             try {
-                UpdateItemSpec().withPrimaryKey("PK", getRelationshipPK(relationship), "SK", getRelationshipSK(relationship))
-                    .withUpdateExpression("SET itemStatus = :itemStatus")
-                    .withValueMap(expressionAttributeValues)
-                    .withConditionExpression("attribute_exists(PK)")
-                    .also {
-                        table.updateItem(it)
-                    }
+                UpdateItemSpec().update(pk = getRelationshipPK(relationship), sk = getRelationshipSK(relationship),
+                        updateExpression = "SET itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues,
+                        conditionExpression = "attribute_exists(PK)").also {
+                    table.updateItem(it)
+                }
             } catch (e: ConditionalCheckFailedException) {
                 LOG.warn("${relationship.id} not present in the DB")
             }
@@ -111,26 +102,16 @@ class RelationshipRepository(
         expressionAttributeValues[":endNode"] = AttributeValue(endNode)
         expressionAttributeValues[":workspaceIdentifier"] = AttributeValue(workspaceID)
 
-        DynamoDBQueryExpression<Relationship>()
-                .withKeyConditionExpression("SK = :workspaceIdentifier  and begins_with(PK, :PK)")
-                .withIndexName("SK-PK-Index").withConsistentRead(false)
-                .withFilterExpression("endNode = :endNode and workspaceIdentifier = :workspaceIdentifier")
-                .withExpressionAttributeValues(expressionAttributeValues).let {
-                    mapper.query(Relationship::class.java, it, dynamoDBMapperConfig).let { list ->
-                        if(list.isNotEmpty()) return list[0]
-                    }
-                }
-
-        return null
-
+        return DynamoDBQueryExpression<Relationship>().queryWithIndex(index = "WS-itemType-index", keyConditionExpression = "SK = :workspaceIdentifier  and begins_with(PK, :PK)",
+                filterExpression = "endNode = :endNode and workspaceIdentifier = :workspaceIdentifier", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Relationship::class.java, it, dynamoDBMapperConfig).firstOrNull()
+        }
     }
 
     fun deleteRelationship(relationship: Relationship){
         mapper.delete(relationship)
     }
-
-
-
+    
     private fun getRelationshipPK(relationship: Relationship): String {
         return relationship.id
     }
