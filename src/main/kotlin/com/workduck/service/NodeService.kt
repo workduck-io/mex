@@ -14,6 +14,7 @@ import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.SharedNodeRequest
+import com.serverless.models.requests.UpdateAccessTypesRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
@@ -62,6 +63,7 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
 import com.workduck.models.ItemType
 import com.workduck.models.NodeVersion
+import com.workduck.utils.AccessItemHelper.getNodeAccessItemsFromAccessMap
 
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
@@ -836,9 +838,9 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun changeAccessType(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
-        val sharedNodeRequest = wdRequest as SharedNodeRequest
-        if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        val updateAccessRequest = wdRequest as UpdateAccessTypesRequest
+        if (!checkIfOwnerCanManage(ownerID, workspaceID, updateAccessRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
+        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, ownerID, updateAccessRequest.userIDToAccessTypeMap)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -877,12 +879,5 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
-    fun test(){
-        println(nodeRepository.getTags("NODE1", "WORKSPACEEK0C54W8G0QFS4789CCJP205KTLRDLM71LSTCDF47XN9YRTJM6N5"))
-    }
 }
 
-
-fun main(){
-    NodeService().test()
-}
