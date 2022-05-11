@@ -369,7 +369,10 @@ class NodeService( // Todo: Inject them from handlers
                 HierarchyUpdateSource.NODE
             )
         }
-        return@runBlocking updatedNodeHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
+        val mapOfNodeAndDifference = mutableMapOf("node" to listOf(Helper.objectMapper.writeValueAsString(node)))
+        mapOfNodeAndDifference.putAll(updatedNodeHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)).let {
+            mapOfNodeAndDifference
+        }
 
     }
 
