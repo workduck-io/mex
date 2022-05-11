@@ -19,6 +19,17 @@ object AccessItemHelper {
         }
     }
 
+    fun getNodeAccessItemsFromAccessMap(nodeID: String, ownerID: String, userIDToAccessMap: Map<String, AccessType>): List<NodeAccess> {
+        return userIDToAccessMap.map {
+            NodeAccess(
+                    node = NodeIdentifier(nodeID),
+                    ownerID = ownerID,
+                    userID = it.key,
+                    accessType = it.value
+            )
+        }
+    }
+
     fun createAccessItem(nodeID: String, mentioningUserID: String, mentionedUserID: String, accessType: AccessType) : NodeAccess{
         return NodeAccess(
                 node = NodeIdentifier(nodeID),
