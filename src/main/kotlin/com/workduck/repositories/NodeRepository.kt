@@ -415,6 +415,20 @@ class NodeRepository(
         }
     }
 
+    fun getAllSharedNodesWithUser(userID: String) : List<String>{
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":PK"] = AttributeValue(IdentifierType.NODE_ACCESS.name)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
+
+        return DynamoDBQueryExpression<NodeAccess>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues, projectionExpression = "nodeID").let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).map { nodeAccess ->
+                nodeAccess.node.id
+            }
+        }
+    }
+
 
     fun getNodeByNodeID(nodeID: String) : Node {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()

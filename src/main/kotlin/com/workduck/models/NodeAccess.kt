@@ -26,7 +26,7 @@ class NodeAccess(
     var node: NodeIdentifier = NodeIdentifier("node"),
 
     @DynamoDBHashKey(attributeName = "PK")
-    var pk: String = "${node.id}${Constants.DELIMITER}${IdentifierType.NODE_ACCESS.name}",
+    var pk: String = "${IdentifierType.NODE_ACCESS.name}${Constants.DELIMITER}${node.id}",
 
     @JsonProperty("userID")
     @DynamoDBRangeKey(attributeName = "SK")

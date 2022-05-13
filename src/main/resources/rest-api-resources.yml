@@ -120,6 +120,11 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /shared/node/all
+        method: get
+        authorizer: mexAuthorizer
+
 
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler

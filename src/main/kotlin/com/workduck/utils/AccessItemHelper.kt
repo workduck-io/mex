@@ -40,6 +40,6 @@ object AccessItemHelper {
     }
 
     fun getAccessItemPK(nodeID: String) : String {
-        return "$nodeID${Constants.DELIMITER}${IdentifierType.NODE_ACCESS.name}"
+        return "${IdentifierType.NODE_ACCESS.name}${Constants.DELIMITER}$nodeID"
     }
 }

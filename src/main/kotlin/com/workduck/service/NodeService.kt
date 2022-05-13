@@ -875,6 +875,10 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getSharedUserInformation(nodeID)
     }
 
+    fun getAllSharedNodesWithUser(userID: String) : List<String> {
+        return nodeRepository.getAllSharedNodesWithUser(userID)
+    }
+
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
