@@ -60,7 +60,7 @@ class TagRepository(
         val keyPairForTable = HashMap<Class<*>, List<KeyPair>>()
         keyPairForTable[Tag::class.java] = keyPairList
 
-        val batchResults: Map<String, List<Any>> = mapper.batchLoad(keyPairForTable, dynamoDBMapperConfig)
+        val batchResults: Map<String, List<Any>> = mapper.batchLoad(keyPairForTable,dynamoDBMapperConfig)
 
         val listOfTags = mutableListOf<Tag>()
         for ((_, tagList) in batchResults) {
