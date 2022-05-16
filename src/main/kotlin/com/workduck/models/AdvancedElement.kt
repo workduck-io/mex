@@ -1,6 +1,7 @@
 package com.workduck.models
 
 import com.fasterxml.jackson.annotation.*
+import javax.swing.text.Highlighter
 
 enum class ElementTypes(val type: String) {
 
@@ -18,12 +19,6 @@ data class AdvancedElement(
 
     @JsonProperty("id")
     var id: String = "defaultValue",
-
-    // 	@JsonProperty("type")
-    // 	private var type: String? = "AdvancedElement",
-
-    @JsonProperty("parentID")
-    var parentID: String? = null,
 
     @JsonProperty("content")
     var content: String? = "",
@@ -60,7 +55,6 @@ data class AdvancedElement(
         other as AdvancedElement
 
         if (id != other.id) return false
-        if (parentID != other.parentID) return false
         if (content != other.content) return false
         if (children != other.children) return false
         if (elementType != other.elementType) return false

@@ -1,6 +1,7 @@
 package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
+import com.workduck.models.SaveableRange
 
 data class NodeResponse(
     val id: String? = null,
@@ -26,6 +27,10 @@ data class NodeResponse(
     var workspaceID: String,
 
     var isBookmarked: Boolean? = null,
+
+    var saveableRange: SaveableRange? = null,
+
+    var sourceUrl: String? = null,
 
     var publicAccess: Boolean
 ) : Response, TimestampAdhereResponse
