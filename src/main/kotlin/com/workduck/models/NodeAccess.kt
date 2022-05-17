@@ -10,6 +10,7 @@ import com.serverless.utils.Constants
 import com.workduck.converters.AccessTypeConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NodeIdentifierConverter
+import com.workduck.converters.WorkspaceIdentifierConverter
 
 enum class AccessType {
     WRITE,
@@ -25,8 +26,13 @@ class NodeAccess(
     @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
     var node: NodeIdentifier = NodeIdentifier("node"),
 
+    @JsonProperty("workspaceID")
+    @DynamoDBAttribute(attributeName = "workspaceID")
+    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    var workspace: WorkspaceIdentifier = WorkspaceIdentifier("workspace"),
+
     @DynamoDBHashKey(attributeName = "PK")
-    var pk: String = "${node.id}${Constants.DELIMITER}${IdentifierType.NODE_ACCESS.name}",
+    var pk: String = "${IdentifierType.NODE_ACCESS.name}${Constants.DELIMITER}${node.id}",
 
     @JsonProperty("userID")
     @DynamoDBRangeKey(attributeName = "SK")
@@ -35,7 +41,6 @@ class NodeAccess(
     @JsonProperty("ownerID")
     @DynamoDBAttribute(attributeName = "ownerID")
     var ownerID: String = "owner",
-
 
     @JsonProperty("accessType")
     @DynamoDBAttribute(attributeName = "accessType")

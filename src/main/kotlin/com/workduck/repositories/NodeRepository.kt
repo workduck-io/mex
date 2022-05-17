@@ -10,6 +10,8 @@ import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
+import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
@@ -414,6 +416,35 @@ class NodeRepository(
             }
         }
     }
+
+    fun getAllSharedNodesWithUser(userID: String) : Map<Pair<String, String>, String>{
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":PK"] = AttributeValue(IdentifierType.NODE_ACCESS.name)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
+
+        return DynamoDBQueryExpression<NodeAccess>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues, projectionExpression = "nodeID, workspaceID, accessType").let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associate { nodeAccess ->
+                Pair(nodeAccess.node.id, nodeAccess.workspace.id) to nodeAccess.accessType.name
+            }
+        }
+    }
+
+    fun batchGetNodeTitle(setOfNodeIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{
+        if(setOfNodeIDWorkspaceID.isEmpty()) return mutableListOf()
+        val keysAndAttributes = TableKeysAndAttributes(tableName)
+        for(nodeToWorkspacePair in setOfNodeIDWorkspaceID){
+            keysAndAttributes.addHashAndRangePrimaryKey("PK", nodeToWorkspacePair.second, "SK", nodeToWorkspacePair.first)
+        }
+
+        keysAndAttributes.withProjectionExpression("PK, SK, title")
+        val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
+        val itemOutcome = dynamoDB.batchGetItem(spec)
+
+        return itemOutcome.batchGetItemResult.responses[tableName]!!
+    }
+
 
 
     fun getNodeByNodeID(nodeID: String) : Node {
