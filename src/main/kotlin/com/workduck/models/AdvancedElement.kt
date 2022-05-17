@@ -1,6 +1,9 @@
 package com.workduck.models
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.*
+import com.workduck.converters.HighlightMetadataConverter
+import com.workduck.converters.SaveableRangeConverter
 import javax.swing.text.Highlighter
 
 enum class ElementTypes(val type: String) {
@@ -15,6 +18,7 @@ enum class ElementTypes(val type: String) {
     }
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AdvancedElement(
 
     @JsonProperty("id")
@@ -31,6 +35,10 @@ data class AdvancedElement(
 
     @JsonProperty("properties")
     var properties: Map<String, Any>? = null,
+
+    @JsonProperty("highlightMetadata")
+    @DynamoDBTypeConverted(converter = HighlightMetadataConverter::class)
+    var highlightMetadata: HighlightMetadata? = null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,

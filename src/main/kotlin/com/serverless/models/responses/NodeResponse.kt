@@ -28,9 +28,9 @@ data class NodeResponse(
 
     var isBookmarked: Boolean? = null,
 
-    var saveableRange: SaveableRange? = null,
-
-    var sourceUrl: String? = null,
+//    var saveableRange: SaveableRange? = null,
+//
+//    var sourceUrl: String? = null,
 
     var publicAccess: Boolean
 ) : Response, TimestampAdhereResponse

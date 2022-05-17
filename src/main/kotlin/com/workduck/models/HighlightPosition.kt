@@ -1,6 +1,6 @@
 package com.workduck.models
 
-data class HighlightMeta(
+class HighlightPosition(
     var parentTagName: String = "",
 
     var parentIndex: Int = 0,

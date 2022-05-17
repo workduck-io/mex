@@ -1,11 +1,11 @@
 package com.workduck.models
 
 data class SaveableRange(
-    var startMeta: HighlightMeta,
+    var startMeta: HighlightPosition ?= null,
 
-    var endMeta: HighlightMeta,
+    var endMeta: HighlightPosition ?= null,
 
-    var text: String,
+    var text: String ?= null,
 
-    var id: String,
+    var id: String ?= null,
 )

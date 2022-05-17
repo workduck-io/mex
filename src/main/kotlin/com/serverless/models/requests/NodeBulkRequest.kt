@@ -20,9 +20,9 @@ data class NodeBulkRequest(
 
     val data: List<AdvancedElement>? = null,
 
-    var saveableRange: SaveableRange? = null,
-
-    var sourceUrl: String? = null,
+//    var saveableRange: SaveableRange? = null,
+//
+//    var sourceUrl: String? = null,
 
     var tags: MutableList<String> = mutableListOf(),
 
