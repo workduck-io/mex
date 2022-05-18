@@ -184,6 +184,12 @@ Snippet:
         method: get
         authorizer: mexAuthorizer
 
+    # get all snippets of a workspace
+    - httpApi:
+        path: /snippet/all
+        method: get
+        authorizer: mexAuthorizer
+
 
 
 Namespace:

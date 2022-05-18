@@ -25,6 +25,8 @@ class SnippetStrategyFactory {
 
         const val getAllSnippetVersions = "GET /snippet/{id}/all"
 
+        const val getAllSnippetsOfWorkspace = "GET /snippet/all"
+
 
         private val snippetRegistry: Map<String, SnippetStrategy> = mapOf(
                 getSnippet to GetSnippetStrategy(),
@@ -35,7 +37,8 @@ class SnippetStrategyFactory {
                 makeSnippetPrivate to MakeSnippetPrivateStrategy(),
                 getPublicSnippet to GetPublicSnippetStrategy(),
                 clonePublicSnippet to ClonePublicSnippetStrategy(),
-                getAllSnippetVersions to GetAllSnippetVersionsStrategy()
+                getAllSnippetVersions to GetAllSnippetVersionsStrategy(),
+                getAllSnippetsOfWorkspace to GetAllSnippetsOfWorkspaceStrategy()
         )
 
         fun getSnippetStrategy(routeKey: String): SnippetStrategy? {
