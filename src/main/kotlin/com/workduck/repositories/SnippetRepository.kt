@@ -14,6 +14,7 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalOperator
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue
 import com.serverless.utils.Constants.getCurrentTime
 import com.workduck.models.Entity
+import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Snippet
@@ -105,6 +106,24 @@ class SnippetRepository(
                 snippet.version
             }
         }
+    }
+
+    fun getAllSnippetsOfWorkspace(workspaceID: String) : List<Map<String, String>> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(IdentifierType.SNIPPET.name)
+        expressionAttributeValues[":itemType"] = AttributeValue().withS(ItemType.Snippet.name)
+
+
+        return DynamoDBQueryExpression<Snippet>().query(keyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues,
+                projectionExpression = "id, title, version").let{
+            mapper.query(Snippet::class.java, it, dynamoDBMapperConfig).map { snippet ->
+                mapOf("snippetID" to snippet.id, "title" to snippet.title, "version" to snippet.version.toString())
+            }
+        }
+
+
     }
 
     fun batchDeleteVersions(listOfSnippets : List<Snippet>){
