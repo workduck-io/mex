@@ -108,12 +108,11 @@ class SnippetRepository(
         }
     }
 
-    fun getAllSnippetsOfWorkspace(workspaceID: String) : List<Map<String, String>> {
+    fun getAllSnippetsMetadataOfWorkspace(workspaceID: String) : List<Map<String, String>> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(IdentifierType.SNIPPET.name)
         expressionAttributeValues[":itemType"] = AttributeValue().withS(ItemType.Snippet.name)
-
 
         return DynamoDBQueryExpression<Snippet>().query(keyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
                 filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues,
@@ -122,8 +121,18 @@ class SnippetRepository(
                 mapOf("snippetID" to snippet.id, "title" to snippet.title, "version" to snippet.version.toString())
             }
         }
+    }
 
+    fun getAllSnippetsDataOfWorkspace(workspaceID: String) : List<Snippet> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(IdentifierType.SNIPPET.name)
+        expressionAttributeValues[":itemType"] = AttributeValue().withS(ItemType.Snippet.name)
 
+        return DynamoDBQueryExpression<Snippet>().query(keyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues).let{
+            mapper.query(Snippet::class.java, it, dynamoDBMapperConfig)
+        }
     }
 
     fun batchDeleteVersions(listOfSnippets : List<Snippet>){
