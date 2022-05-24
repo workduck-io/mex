@@ -388,7 +388,7 @@ class NodeRepository(
 
 
     fun checkIfAccessRecordExists(nodeID: String, userID: String) : Boolean{
-        return mapper.load(NodeAccess::class.java, getAccessItemPK(nodeID), userID) != null
+        return mapper.load(NodeAccess::class.java, getAccessItemPK(nodeID), userID, dynamoDBMapperConfig) != null
     }
 
 
