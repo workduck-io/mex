@@ -81,6 +81,9 @@ object PageHelper {
 
     fun mergePageVersions(page: Page, storedPage: Page) {
 
+        page.version = storedPage.version
+
+        /*
         /* if the same user edited the node the last time, he can overwrite anything */
         if(page.lastEditedBy == storedPage.lastEditedBy){
             page.version = storedPage.version
@@ -117,7 +120,7 @@ object PageHelper {
         }
 
         page.dataOrder = finalDataOrder
-        page.version = storedPage.version
+        page.version = storedPage.version */
 
         // TODO(explore autoMerge cmd line)
     }
