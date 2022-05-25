@@ -913,27 +913,34 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getAllSharedNodesWithUser(userID: String) : List<Map<String, String>> {
-        val mapOfNodeIDAndWorkspaceIDToAccessType = nodeRepository.getAllSharedNodesWithUser(userID)
-        return getNodeTitleWithIDs(mapOfNodeIDAndWorkspaceIDToAccessType)
+        val nodeAccessItemsMap = nodeRepository.getAllSharedNodesWithUser(userID)
+        return getNodeTitleWithIDs(nodeAccessItemsMap)
 
     }
 
-    fun getNodeTitleWithIDs(mapOfNodeIDAndWorkspaceIDToAccessType :  Map<Pair<String, String>, String>): List<Map<String, String>>{
-        val unprocessedData = nodeRepository.batchGetNodeTitle(mapOfNodeIDAndWorkspaceIDToAccessType.keys)
+    fun getNodeTitleWithIDs(nodeAccessItemsMap :  Map<String, NodeAccess>): List<Map<String, String>>{
+        val setOfNodeIDWorkspaceID = createSetFromNodeAccessItems(nodeAccessItemsMap.values.toList())
+        val unprocessedData = nodeRepository.batchGetNodeTitle(setOfNodeIDWorkspaceID)
         val list = mutableListOf<Map<String, String>>()
         for (nodeData in unprocessedData) {
-            list.add(populateMapForSharedNodeData(nodeData, mapOfNodeIDAndWorkspaceIDToAccessType))
+            list.add(populateMapForSharedNodeData(nodeData, nodeAccessItemsMap))
         }
         return list
     }
 
-    private fun populateMapForSharedNodeData(nodeData : MutableMap<String, AttributeValue>, mapOfNodeIDAndWorkspaceIDToAccessType: Map<Pair<String, String>, String> ): Map<String, String> {
+    private fun createSetFromNodeAccessItems(nodeAccessItems: List<NodeAccess>): Set<Pair<String, String>>{
+        return nodeAccessItems.map { Pair(it.node.id, it.workspace.id) }.toSet()
+    }
+
+    private fun populateMapForSharedNodeData(nodeData : MutableMap<String, AttributeValue>, nodeAccessItemsMap: Map<String, NodeAccess> ): Map<String, String> {
         val map = mutableMapOf<String, String>()
 
-        map["nodeID"] = nodeData["SK"]!!.s
-        val pairOfNodeIDToWorkspaceID = Pair(map["nodeID"], nodeData["PK"]!!.s)
+        val nodeID = nodeData["SK"]!!.s
+        map["nodeID"] = nodeID
         map["nodeTitle"] = nodeData["title"]!!.s
-        map["accessType"] = mapOfNodeIDAndWorkspaceIDToAccessType[pairOfNodeIDToWorkspaceID] as String
+        map["accessType"] = nodeAccessItemsMap[nodeID]!!.accessType.name
+        map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
+        map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
 
         return map
     }
