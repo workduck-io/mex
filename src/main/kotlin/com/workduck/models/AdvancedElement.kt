@@ -20,14 +20,6 @@ enum class ElementTypes(val type: String) {
 }
 
 
-@JsonTypeInfo(
- 	use = JsonTypeInfo.Id.DEDUCTION,
-    defaultImpl = AdvancedElement::class
-)
-@JsonSubTypes(
-    Type(HighlightedElement::class)
-)
-@JsonIgnoreProperties(ignoreUnknown = true)
 open class AdvancedElement(
 
     @JsonProperty("id")
