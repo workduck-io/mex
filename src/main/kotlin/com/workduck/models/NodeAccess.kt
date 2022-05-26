@@ -38,6 +38,10 @@ class NodeAccess(
     @DynamoDBRangeKey(attributeName = "SK")
     var userID: String = "user",
 
+    @JsonProperty("granterID")
+    @DynamoDBAttribute(attributeName = "granterID")
+    var granterID: String = "granter",
+
     @JsonProperty("ownerID")
     @DynamoDBAttribute(attributeName = "ownerID")
     var ownerID: String = "owner",

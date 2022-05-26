@@ -828,43 +828,60 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun shareNode(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
+    fun shareNode(wdRequest: WDRequest, granterID: String, workspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
-        val nodeWorkspaceID = checkIfOwnerCanManageAndGetWorkspace(sharedNodeRequest.nodeID,  workspaceID, ownerID)
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        val userIDs = getUserIDsWithoutGranterID(sharedNodeRequest.userIDs, granterID)
+
+        if(userIDs.isEmpty()) return
+
+        val nodeWorkspaceDetails = checkIfOwnerCanManageAndGetWorkspaceDetails(sharedNodeRequest.nodeID,  workspaceID, granterID)
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
-    private fun checkIfOwnerCanManageAndGetWorkspace(nodeID: String,  workspaceID: String, ownerID: String): String {
+    private fun getUserIDsWithoutGranterID(userIDs: List<String>, ownerID: String): List<String>{
+        return userIDs.filter { id -> id != ownerID }
+    }
+
+
+    private fun checkIfOwnerCanManageAndGetWorkspaceDetails(nodeID: String,  workspaceID: String, granterID: String): Map<String, String> {
         var isNodeInCurrentWorkspace = false
 
         if(checkIfNodeExistsForWorkspace(nodeID,  workspaceID)) isNodeInCurrentWorkspace = true
-        else if (!nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(ownerID)) {
+        else if (!nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(granterID)) {
             throw NoSuchElementException("Node you're trying to share does not exist")
         }
 
+        val workspaceDetailsMap = mutableMapOf<String, String>()
+
         return when(isNodeInCurrentWorkspace) {
-            true -> workspaceID
-            false -> nodeRepository.getNodeWorkspaceID(nodeID)
+            true -> {
+                workspaceDetailsMap["workspaceID"] = workspaceID
+                workspaceDetailsMap["workspaceOwner"] = granterID
+                workspaceDetailsMap
+            }
+            false -> {
+                nodeRepository.getNodeWorkspaceIDAndOwner(nodeID)
+            }
         }
     }
 
 
     fun getSharedNode(nodeID: String, userID: String): Entity {
         require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { "Error Accessing Node" }
-        return nodeRepository.getNodeByNodeID(nodeID)
+        return orderBlocks(nodeRepository.getNodeByNodeID(nodeID))
     }
 
-    fun changeAccessType(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
+    fun changeAccessType(wdRequest: WDRequest, granterID: String, workspaceID: String) {
         val updateAccessRequest = wdRequest as UpdateAccessTypesRequest
-        val nodeWorkspaceID = checkIfOwnerCanManageAndGetWorkspace(updateAccessRequest.nodeID,  workspaceID, ownerID)
-        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceID, ownerID, updateAccessRequest.userIDToAccessTypeMap)
+        val nodeWorkspaceDetails = checkIfOwnerCanManageAndGetWorkspaceDetails(updateAccessRequest.nodeID,  workspaceID, granterID)
+        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, updateAccessRequest.userIDToAccessTypeMap)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
-    private fun checkIfOwnerCanManage(ownerID: String, workspaceID: String, nodeID: String) : Boolean{
+    private fun checkIfGranterCanManage(granterID: String, workspaceID: String, nodeID: String) : Boolean{
         return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
-                nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(ownerID)
+                nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(granterID)
 
     }
 
@@ -883,8 +900,10 @@ class NodeService( // Todo: Inject them from handlers
 
     fun revokeSharedAccess(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
-        if (!checkIfOwnerCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, workspaceID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        if (!checkIfGranterCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
+
+        // since PK and SK matter here for deletion, can fill dummy fields.
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, workspaceID, ownerID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
         nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -894,28 +913,34 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getAllSharedNodesWithUser(userID: String) : List<Map<String, String>> {
-        val mapOfNodeIDAndWorkspaceIDToAccessType = nodeRepository.getAllSharedNodesWithUser(userID)
-        return getNodeTitleWithIDs(mapOfNodeIDAndWorkspaceIDToAccessType)
+        val nodeAccessItemsMap = nodeRepository.getAllSharedNodesWithUser(userID)
+        return getNodeTitleWithIDs(nodeAccessItemsMap)
 
     }
 
-    fun getNodeTitleWithIDs(mapOfNodeIDAndWorkspaceIDToAccessType :  Map<Pair<String, String>, String>): List<Map<String, String>>{
-        val unprocessedData = nodeRepository.batchGetNodeTitle(mapOfNodeIDAndWorkspaceIDToAccessType.keys)
+    fun getNodeTitleWithIDs(nodeAccessItemsMap :  Map<String, NodeAccess>): List<Map<String, String>>{
+        val setOfNodeIDWorkspaceID = createSetFromNodeAccessItems(nodeAccessItemsMap.values.toList())
+        val unprocessedData = nodeRepository.batchGetNodeTitle(setOfNodeIDWorkspaceID)
         val list = mutableListOf<Map<String, String>>()
         for (nodeData in unprocessedData) {
-            list.add(populateMapForSharedNodeData(nodeData, mapOfNodeIDAndWorkspaceIDToAccessType))
+            list.add(populateMapForSharedNodeData(nodeData, nodeAccessItemsMap))
         }
         return list
     }
 
-    private fun populateMapForSharedNodeData(nodeData : MutableMap<String, AttributeValue>, mapOfNodeIDAndWorkspaceIDToAccessType: Map<Pair<String, String>, String> ): Map<String, String> {
+    private fun createSetFromNodeAccessItems(nodeAccessItems: List<NodeAccess>): Set<Pair<String, String>>{
+        return nodeAccessItems.map { Pair(it.node.id, it.workspace.id) }.toSet()
+    }
+
+    private fun populateMapForSharedNodeData(nodeData : MutableMap<String, AttributeValue>, nodeAccessItemsMap: Map<String, NodeAccess> ): Map<String, String> {
         val map = mutableMapOf<String, String>()
 
-        map["nodeID"] = nodeData["SK"]!!.s
-        val p = Pair(map["nodeID"], nodeData["PK"]!!.s)
+        val nodeID = nodeData["SK"]!!.s
+        map["nodeID"] = nodeID
         map["nodeTitle"] = nodeData["title"]!!.s
-        map["accessType"] = mapOfNodeIDAndWorkspaceIDToAccessType[p] as String
-        map["nodeID"] = nodeData["SK"]!!.s
+        map["accessType"] = nodeAccessItemsMap[nodeID]!!.accessType.name
+        map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
+        map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
 
         return map
     }
@@ -924,8 +949,4 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
-}
-
-fun main(){
-    NodeService().getAllSharedNodesWithUser("f8d2981f-ea81-4e6c-9cee-2fb09c5891c6")
 }

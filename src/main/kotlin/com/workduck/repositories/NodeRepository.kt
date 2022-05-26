@@ -417,17 +417,15 @@ class NodeRepository(
         }
     }
 
-    fun getAllSharedNodesWithUser(userID: String) : Map<Pair<String, String>, String>{
+    fun getAllSharedNodesWithUser(userID: String) : Map<String, NodeAccess>{
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(userID)
         expressionAttributeValues[":PK"] = AttributeValue(IdentifierType.NODE_ACCESS.name)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
         return DynamoDBQueryExpression<NodeAccess>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues, projectionExpression = "nodeID, workspaceID, accessType").let {
-            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associate { nodeAccess ->
-                Pair(nodeAccess.node.id, nodeAccess.workspace.id) to nodeAccess.accessType.name
-            }
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associateBy { nodeAccess -> nodeAccess.node.id }
         }
     }
 
@@ -461,16 +459,22 @@ class NodeRepository(
         }
     }
 
-    fun getNodeWorkspaceID(nodeID: String) : String{
+    fun getNodeWorkspaceIDAndOwner(nodeID: String) : Map<String, String>{
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
+        val workspaceDetailsMap = mutableMapOf<String, String>()
+
         return DynamoDBQueryExpression<Node>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
                 filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
-                nodeList.firstOrNull()?.workspaceIdentifier?.id ?: throw NoSuchElementException("Requested Resource Not Found")
+                nodeList.firstOrNull()?.let { node ->
+                    workspaceDetailsMap["workspaceID"] = node.workspaceIdentifier.id
+                    workspaceDetailsMap["workspaceOwner"] = node.createdBy!!
+                    workspaceDetailsMap
+                } ?: throw NoSuchElementException("Requested Resource Not Found")
             }
         }
     }
