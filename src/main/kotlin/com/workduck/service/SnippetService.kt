@@ -190,9 +190,15 @@ class SnippetService {
 
     }
 
-    fun getAllSnippetsOfWorkspace(workspaceID: String) : List<Map<String, String>> {
-        return snippetRepository.getAllSnippetsOfWorkspace(workspaceID)
+    fun getAllSnippetsMetadataOfWorkspace(workspaceID: String) : List<Map<String, String>> {
+        return snippetRepository.getAllSnippetsMetadataOfWorkspace(workspaceID)
     }
+
+    fun getAllSnippetsDataOfWorkspace(workspaceID: String) : List<Snippet> {
+        return snippetRepository.getAllSnippetsDataOfWorkspace(workspaceID)
+    }
+
+
 
     private fun createSnippetFromPublicSnippet(publicSnippet: Snippet, userID: String, workspaceID: String): Snippet{
         return Snippet(
