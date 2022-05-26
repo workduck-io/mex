@@ -4,6 +4,8 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.SnippetRequest
+import com.workduck.models.Entity
+import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.Snippet

@@ -116,7 +116,7 @@ class SnippetService {
         return repository.create(snippet)
     }
 
-    fun getSnippet(snippetID: String, workspaceID: String, version: Int? = null) : Entity {
+    fun getSnippet(snippetID: String, workspaceID: String, version: Int? = null) : Entity? {
         return when(version){
             null -> getLatestSnippet(snippetID, workspaceID)
             else -> getSnippetByVersion(snippetID, workspaceID, version)
@@ -127,12 +127,12 @@ class SnippetService {
         return snippetRepository.getAllVersionsOfSnippet(snippetID, workspaceID)
     }
 
-    private fun getLatestSnippet(snippetID: String, workspaceID: String) : Entity {
+    private fun getLatestSnippet(snippetID: String, workspaceID: String) : Entity? {
         return getSnippetByVersion(snippetID, workspaceID, getLatestVersionNumberOfSnippet(snippetID, workspaceID))
     }
 
 
-    fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Int) : Entity {
+    fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Int) : Entity? {
         return snippetRepository.getSnippetByVersion(snippetID, workspaceID, version)
     }
 

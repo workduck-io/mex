@@ -7,9 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
-import com.workduck.utils.Helper
+import com.workduck.models.exceptions.WDNotFoundException
 import org.apache.logging.log4j.LogManager
-import com.workduck.utils.Helper.objectMapper
 
 
 /**
@@ -35,7 +34,6 @@ object ExceptionParser {
 
     //TODO(should be combine all DDB Exceptions together?)
     fun exceptionHandler(e: Exception) : ApiGatewayResponse{
-        println("in the exception parser")
         logStackTrace(e)
         return when(e){
             is IllegalArgumentException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 400)
@@ -46,9 +44,10 @@ object ExceptionParser {
             is ClassCastException -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
             is ConditionalCheckFailedException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
             is AmazonDynamoDBException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
-            is DynamoDBMappingException -> ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 500)
+            is DynamoDBMappingException -> ApiResponseHelper.generateStandardErrorResponse("Bad Input", 400)
+            is WDNotFoundException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Requested resource not found", 404)
             else -> {
-                throw e
+                ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 500)
             }
         }
     }

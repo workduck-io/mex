@@ -41,7 +41,7 @@ object ApiResponseHelper {
     fun generateStandardErrorResponse(errorMessage: String): ApiGatewayResponse {
         val responseBody = StandardResponse(errorMessage)
         return ApiGatewayResponse.build {
-            statusCode = 500
+            statusCode = 400
             objectBody = responseBody
             headers = Collections.singletonMap("X-Powered-By", "AWS Lambda & serverless")
         }
