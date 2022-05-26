@@ -2,6 +2,7 @@ package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.workduck.converters.HighlightMetadataConverter
 import com.workduck.converters.SaveableRangeConverter
 import javax.swing.text.Highlighter
@@ -18,8 +19,16 @@ enum class ElementTypes(val type: String) {
     }
 }
 
+
+@JsonTypeInfo(
+ 	use = JsonTypeInfo.Id.DEDUCTION,
+    defaultImpl = AdvancedElement::class
+)
+@JsonSubTypes(
+    Type(HighlightedElement::class)
+)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AdvancedElement(
+open class AdvancedElement(
 
     @JsonProperty("id")
     var id: String = "defaultValue",
@@ -36,9 +45,8 @@ data class AdvancedElement(
     @JsonProperty("properties")
     var properties: Map<String, Any>? = null,
 
-    @JsonProperty("highlightMetadata")
-    @DynamoDBTypeConverted(converter = HighlightMetadataConverter::class)
-    var highlightMetadata: HighlightMetadata? = null,
+    @JsonProperty("elementMetadata")
+    var metadata : ElementMetadata ?= null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
