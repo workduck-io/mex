@@ -7,7 +7,8 @@ sealed class LinkElement : AdvancedElement()
 class BlockILink(
     var workspaceID: String? = null,
     var nodeID: String? = null,
-    var blockID: String? = null
+    var blockID: String? = null,
+    var blockAlias: String? = null,
 ) : LinkElement()
 
 
