@@ -1,32 +1,22 @@
 package com.workduck.models
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type"
-)
-@JsonSubTypes(
-        JsonSubTypes.Type(value = BlockILink::class, name = "blockILink"),
-        JsonSubTypes.Type(value = NodeILink::class, name = "nodeILink"),
-        JsonSubTypes.Type(value = WebLink::class, name = "webLink"),
-)
 sealed class LinkElement : AdvancedElement()
 
 
 class BlockILink(
-    val blockID: String
+    var workspaceID: String? = null,
+    var nodeID: String? = null,
+    var blockID: String? = null
 ) : LinkElement()
 
 
 class NodeILink(
-    val workspaceID: String? = null,
-    val nodeID: String? = null
+    var workspaceID: String? = null,
+    var nodeID: String? = null
 ) : LinkElement()
 
 
 class WebLink(
-    val url: String? = null
+    var url: String? = null
 )

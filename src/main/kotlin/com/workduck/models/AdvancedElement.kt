@@ -1,11 +1,10 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
-import com.fasterxml.jackson.annotation.*
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import com.workduck.converters.HighlightMetadataConverter
-import com.workduck.converters.SaveableRangeConverter
-import javax.swing.text.Highlighter
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
 
 enum class ElementTypes(val type: String) {
 
@@ -19,7 +18,17 @@ enum class ElementTypes(val type: String) {
     }
 }
 
-
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "elementType",
+        defaultImpl = AdvancedElement::class
+)
+@JsonSubTypes(
+        JsonSubTypes.Type(value = NodeILink::class, name = "nodeILink"),
+        JsonSubTypes.Type(value = BlockILink::class, name = "blockILink"),
+        JsonSubTypes.Type(value = WebLink::class, name = "webLink"),
+)
 open class AdvancedElement(
 
     @JsonProperty("id")
@@ -38,7 +47,7 @@ open class AdvancedElement(
     var properties: Map<String, Any>? = null,
 
     @JsonProperty("elementMetadata")
-    var metadata : ElementMetadata ?= null,
+    var elementMetadata : ElementMetadata ?= null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
