@@ -12,5 +12,5 @@ data class RegisterUserRequest(
     val user: User,
 
     @JsonProperty("workspaceName")
-    val workspaceName: String
+    val workspaceName: String,
 ) : WDRequest

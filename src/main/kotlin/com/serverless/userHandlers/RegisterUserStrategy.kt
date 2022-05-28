@@ -36,6 +36,7 @@ class RegisterUserStrategy : UserStrategy {
             "name" : "${registerUserRequest.user.name}",
 			"group" : "${workspace.id}",
 			"tag" : "MEX",
+            "alias": "${registerUserRequest.user.alias}",
             "properties" : $userJson
 			}
 		"""

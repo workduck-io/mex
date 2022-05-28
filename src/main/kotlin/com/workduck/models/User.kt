@@ -21,6 +21,10 @@ class User(
     @DynamoDBAttribute(attributeName = "userName")
     var name: String? = null,
 
+    @JsonProperty("alias")
+    @DynamoDBAttribute(attributeName = "alias")
+    var alias: String? = null,
+
     @JsonProperty("email")
     @DynamoDBAttribute(attributeName = "userEmail")
     var email: String? = null,
