@@ -603,7 +603,7 @@ class NodeService( // Todo: Inject them from handlers
                 val idList = getIDPath(nodePath).getListOfNodes()
                 val indexOfNodeID = idList.indexOf(node.id)
                 if(indexOfNodeID != -1){
-                    val nameList = getNamePath(nodePath).getListOfNodes() as MutableList
+                    val nameList = getNamePath(nodePath).getListOfNodes().toMutableList()
                     nameList[indexOfNodeID] = node.title
                     newHierarchy.add(nameList.mix(idList).convertToPathString())
                 }
