@@ -20,8 +20,9 @@ enum class ElementTypes(val type: String) {
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
         property = "elementType",
+        visible = true,
         defaultImpl = AdvancedElement::class
 )
 @JsonSubTypes(
@@ -41,7 +42,7 @@ open class AdvancedElement(
     var children: List<AdvancedElement>? = null,
 
     @JsonProperty("elementType")
-    var elementType: String = "paragraph",
+    var elementType: String = "p",
 
     @JsonProperty("properties")
     var properties: Map<String, Any>? = null,
