@@ -20,4 +20,4 @@ class NodeILink(
 
 class WebLink(
     var url: String? = null
-)
+) : LinkElement()
