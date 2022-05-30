@@ -78,6 +78,44 @@ provider:
               - 'us-east-1_Zu7FAh7hj' #userpool id
         audience:
           - '6pvqt64p0l2kqkk2qafgdh13qe'
+  logs:
+    httpApi:
+      # stage : stage
+      # requestTime : time of request
+      # requestId : unique ID given to the request by API Gateway.
+      # httpMethod : GET/POST etc.
+      # path : path with values of parameters
+      # routeKey : routeKey
+      # status : The status code returned by the response
+      # responseLatency : The total time it took from when the request reached API Gateway to when the response was returned.
+      # integrationRequestId : request ID for your Lambda function invocation
+      # functionResponseStatus : status returned by the code in your Lambda function
+      # integrationLatency : Latency of Lambda function
+      # integrationServiceStatus : 200 is lambda is working correctly
+      # authorizeResultStatus : 200 if it was allowed or a 403 if it was denied.
+      # authorizerLatency: time taken by authorizer
+      # ip : userIP
+      # userAgent : userAgent
+      # principalId : can use this to identify the user in your application making a request
+      format: '{ "stage" : "$context.stage",
+      "requestTime":"$context.requestTime",
+      "requestId":"$context.requestId",
+      "httpMethod":"$context.httpMethod",
+      "path":"$context.path",
+      "routeKey":"$context.routeKey",
+      "status":$context.status,
+      "responseLatency":$context.responseLatency,
+      "integrationRequestId":"$context.integration.requestId",
+      "functionResponseStatus":"$context.integration.status",
+      "integrationLatency":"$context.integration.latency",
+      "integrationServiceStatus":"$context.integration.integrationStatus",
+      "authorizeResultStatus":"$context.authorizer.status",
+      "authorizerRequestId":"$context.authorizer.requestId",
+      "authorizerLatency": "$context.authorizer.latency",
+      "ip":"$context.identity.sourceIp",
+      "userAgent":"$context.identity.userAgent",
+      "principalId":"$context.authorizer.principalId"}'
+
 package:
   artifact: target/mex-dev.jar
 
