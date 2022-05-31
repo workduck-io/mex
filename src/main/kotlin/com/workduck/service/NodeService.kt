@@ -32,7 +32,6 @@ import com.serverless.utils.isNodeAndTagsUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
 import com.serverless.utils.splitIgnoreEmpty
-import com.serverless.utils.toNode
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
@@ -59,7 +58,6 @@ import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
-import com.workduck.utils.NodeHelper.removeRedundantPaths
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.PageHelper.orderBlocks
@@ -67,6 +65,8 @@ import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
+import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
+import com.workduck.utils.extensions.toNode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -225,7 +225,6 @@ class NodeService( // Todo: Inject them from handlers
         val paths = mutableListOf<String>()
         val nodeHierarchyInformation = workspace.nodeHierarchyInformation as MutableList<String>
 
-
         if(newNodes.allNodes.size > 1) addPathsAndCreateNodesBeforeLastNode(refactorNodePathRequest, paths, userID, workspace)
 
         when (NodeHelper.isRename(existingNodes, newNodes)) {
@@ -244,14 +243,15 @@ class NodeService( // Todo: Inject them from handlers
         /* get paths from lastNode */
         val lastNodeHierarchy = getHierarchyOfNode(nodeHierarchyInformation, lastNodeID)
 
-        val newHierarchy = createNewHierarchyInRefactor(lastNodeHierarchy, nodeHierarchyInformation, combinedPath, existingNodes)
+        val newHierarchy: List<String> = removeRedundantPaths(createNewHierarchyInRefactor(lastNodeHierarchy, nodeHierarchyInformation, combinedPath, existingNodes))
 
+        //removeRedundantPaths(newHierarchy)
         workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy, HierarchyUpdateSource.NODE)
         return@runBlocking newHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
 
     }
 
-    private fun createNewHierarchyInRefactor(lastNodeHierarchy : List<String>, currentHierarchy : List<String>, newPathTillLastNode: String, existingNodes: NodePath) : List<String> {
+    private fun createNewHierarchyInRefactor(lastNodeHierarchy : List<String>, currentHierarchy : List<String>, newPathTillLastNode: String, existingNodes: NodePath) : MutableList<String> {
 
         val newHierarchy = mutableListOf<String>()
 
@@ -293,7 +293,7 @@ class NodeService( // Todo: Inject them from handlers
         try {
             listOfNodesToCreate = setMetaDataForEmptyNodes(getNodesToCreate(longestExistingPath, newNodesWithoutLast).toMutableList(), userID, workspace.id, refactorNodePathRequest.newNodePath.namespaceID)
         } catch (e: IllegalArgumentException) {
-            // don't do anything. Just a  case where only renaming has been done.
+            // don't do anything. Just a  case where only renaming has been done, or we're appending to an already existing path
         }
 
         nodeRepository.createMultipleNodes(listOfNodesToCreate)

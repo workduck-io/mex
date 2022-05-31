@@ -70,37 +70,9 @@ object NodeHelper {
         return nodePath.split(Constants.DELIMITER).contains(nodeID)
     }
 
-    fun isExistingPathDividedInRefactor(unchangedNodes: List<String>, existingNodes: List<String>): Boolean{
-        return unchangedNodes + existingNodes.last() != existingNodes
-    }
-
-    fun removeRedundantPaths(
-            updatedPaths: List<String>,
-            nodeHierarchy: MutableList<String>
-    ): List<String> {
-
-        val pathsToAdd = mutableListOf<String>()
-        for (newPath in updatedPaths) {
-            var redundantPath = false
-            for (existingNodePath in nodeHierarchy) {
-                if (newPath.commonPrefixWith(existingNodePath) == newPath) {
-                    redundantPath = true
-                    break
-                }
-            }
-            if(!redundantPath) pathsToAdd.add(newPath)
-        }
-        nodeHierarchy += pathsToAdd
-
-        return nodeHierarchy.distinct()
-    }
-
-
     fun isRename(existingNodes: NodePath, newNodes: NodePath) : Boolean{
         return existingNodes.allNodes.last() != newNodes.allNodes.last()
     }
-
-
 
 
 }

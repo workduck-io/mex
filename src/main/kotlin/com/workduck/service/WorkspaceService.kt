@@ -23,7 +23,8 @@ import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
-import com.workduck.utils.NodeHelper.removeRedundantPaths
+import com.workduck.utils.WorkspaceHelper
+import com.workduck.utils.extensions.toWorkspace
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -135,7 +136,7 @@ class WorkspaceService {
                 }
             }
         }
-        return removeRedundantPaths(updatedPaths.distinct(), newNodeHierarchy)
+        return WorkspaceHelper.removeRedundantPaths(updatedPaths.distinct(), newNodeHierarchy)
     }
 
 
@@ -292,12 +293,8 @@ class WorkspaceService {
         return listOfAloneNodes
     }
 
-    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest): Workspace {
-        return Workspace(
-            id = workspaceRequest.id,
-            name = workspaceRequest.name
-        )
-    }
+    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest): Workspace = workspaceRequest.toWorkspace()
+
 
     companion object {
         private val LOG = LogManager.getLogger(WorkspaceService::class.java)
