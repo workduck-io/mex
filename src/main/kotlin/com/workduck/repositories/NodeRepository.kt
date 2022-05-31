@@ -468,7 +468,7 @@ class NodeRepository(
         val workspaceDetailsMap = mutableMapOf<String, String>()
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues).let {
+                filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
                 nodeList.firstOrNull()?.let { node ->
                     workspaceDetailsMap["workspaceID"] = node.workspaceIdentifier.id
