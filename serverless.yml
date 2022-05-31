@@ -80,7 +80,6 @@ provider:
           - '6pvqt64p0l2kqkk2qafgdh13qe'
   logs:
     httpApi:
-      # stage : stage
       # requestTime : time of request
       # requestId : unique ID given to the request by API Gateway.
       # httpMethod : GET/POST etc.
@@ -97,7 +96,7 @@ provider:
       # ip : userIP
       # userAgent : userAgent
       # principalId : can use this to identify the user in your application making a request
-      format: '{ "stage" : "$context.stage",
+      format: '{
       "requestTime":"$context.requestTime",
       "requestId":"$context.requestId",
       "httpMethod":"$context.httpMethod",
