@@ -40,7 +40,7 @@ object Helper {
 
 
     fun validateWorkspace(workspaceID: String, workspaceIDList: List<String>): Boolean {
-        return workspaceID in workspaceIDList
+        return workspaceID in workspaceIDList || Constants.INTERNAL_WORKSPACE in workspaceIDList
     }
 
     fun logFailureForBatchOperation(failedBatches: MutableList<DynamoDBMapper.FailedBatch>) {
