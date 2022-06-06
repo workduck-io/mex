@@ -19,7 +19,9 @@ class NodeTransformer : Transformer<Node> {
             namespaceID = t.namespaceIdentifier?.id,
             workspaceID = t.workspaceIdentifier?.id,
             isBookmarked = t.isBookmarked,
-            publicAccess = t.publicAccess
+            publicAccess = t.publicAccess,
+//            saveableRange = t.saveableRange,
+//            sourceUrl = t.sourceUrl
        )
     }
 }

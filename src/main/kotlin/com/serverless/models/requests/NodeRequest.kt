@@ -9,6 +9,7 @@ import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
+import com.workduck.models.SaveableRange
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
@@ -30,6 +31,12 @@ open class NodeRequest(
 
     @JsonProperty("data")
     val data: List<AdvancedElement>? = null,
+
+//    @JsonProperty("saveableRange")
+//    var saveableRange: SaveableRange? = null,
+//
+//    @JsonProperty("sourceUrl")
+//    var sourceUrl: String? = null,
 
     @JsonProperty("tags")
     var tags: MutableList<String> = mutableListOf(),

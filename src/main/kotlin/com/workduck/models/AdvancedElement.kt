@@ -1,6 +1,10 @@
 package com.workduck.models
 
-import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
 
 enum class ElementTypes(val type: String) {
 
@@ -14,16 +18,22 @@ enum class ElementTypes(val type: String) {
     }
 }
 
-data class AdvancedElement(
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "elementType",
+        visible = true,
+        defaultImpl = AdvancedElement::class
+)
+@JsonSubTypes(
+        JsonSubTypes.Type(value = NodeILink::class, name = "nodeILink"),
+        JsonSubTypes.Type(value = BlockILink::class, name = "blockILink"),
+        JsonSubTypes.Type(value = WebLink::class, name = "webLink"),
+)
+open class AdvancedElement(
 
     @JsonProperty("id")
     var id: String = "defaultValue",
-
-    // 	@JsonProperty("type")
-    // 	private var type: String? = "AdvancedElement",
-
-    @JsonProperty("parentID")
-    var parentID: String? = null,
 
     @JsonProperty("content")
     var content: String? = "",
@@ -32,10 +42,13 @@ data class AdvancedElement(
     var children: List<AdvancedElement>? = null,
 
     @JsonProperty("elementType")
-    var elementType: String = "paragraph",
+    var elementType: String = "p",
 
     @JsonProperty("properties")
     var properties: Map<String, Any>? = null,
+
+    @JsonProperty("elementMetadata")
+    var elementMetadata : ElementMetadata ?= null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
@@ -60,7 +73,6 @@ data class AdvancedElement(
         other as AdvancedElement
 
         if (id != other.id) return false
-        if (parentID != other.parentID) return false
         if (content != other.content) return false
         if (children != other.children) return false
         if (elementType != other.elementType) return false

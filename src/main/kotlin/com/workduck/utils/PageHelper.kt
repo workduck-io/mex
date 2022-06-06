@@ -35,7 +35,7 @@ object PageHelper {
         var pageChanged = false
 
         /* in case a block has been deleted */
-        if(page.data != storedPage.data) pageChanged = true
+        if(page.data != storedPage.data || page.title != storedPage.title) pageChanged = true
 
         if (page.data != null) {
             for (currElement in page.data!!) {
