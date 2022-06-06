@@ -1,5 +1,6 @@
 package com.workduck.service
 
+import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
@@ -885,9 +886,8 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
-    private fun checkIfUserHasAccess(ownerID: String, workspaceID: String, nodeID: String) : Boolean{
-        return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
-                nodeRepository.getUserIDsWithNodeAccess(nodeID, AccessType.values().toList()).contains(ownerID)
+    private fun checkIfUserHasWriteAccessOrOwner(nodeID: String, userID: String, workspaceID: String) : Boolean {
+        return  checkIfNodeExistsForWorkspace(nodeID, workspaceID) || nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE, AccessType.WRITE)).contains(userID)
     }
 
     fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
@@ -908,7 +908,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getAllSharedUsersOfNode(nodeID: String, userID: String, workspaceID: String) : Map<String, String>{
-        if(!checkIfUserHasAccess(userID, workspaceID, nodeID)) throw NoSuchElementException("Node you're trying to access does not exist")
+        if(!checkIfUserHasWriteAccessOrOwner(nodeID, userID, workspaceID)) throw NoSuchElementException("Not Found")
         return nodeRepository.getSharedUserInformation(nodeID)
     }
 
