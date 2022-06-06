@@ -23,9 +23,9 @@ class UserHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
-        val routeKey = wdInput.routeKey
+        LOG.info(wdInput.routeKey)
 
-        val strategy = UserStrategyFactory.getUserStrategy(routeKey)
+        val strategy = UserStrategyFactory.getUserStrategy(wdInput.routeKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse(Messages.REQUEST_NOT_RECOGNIZED)

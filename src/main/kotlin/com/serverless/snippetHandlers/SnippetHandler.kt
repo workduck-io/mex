@@ -7,6 +7,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.TokenBody
+import com.serverless.nodeHandlers.NodeHandler
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.Messages
@@ -27,6 +28,7 @@ class SnippetHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         validateTokenAndWorkspace(wdInput)
 
+        LOG.info(wdInput.routeKey)
         val strategy = SnippetStrategyFactory.getSnippetStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 404)
 

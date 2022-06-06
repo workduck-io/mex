@@ -25,6 +25,7 @@ class TagHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : TagInput = TagInput.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
+        LOG.info(wdInput.routeKey)
         val strategy = InternalTagStrategyFactory.getTagStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
 
