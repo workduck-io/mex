@@ -97,8 +97,6 @@ class NodeService( // Todo: Inject them from handlers
 ) {
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
-        LOG.info("Should be created in the table : $tableName")
-
         setMetadataOfNodeToCreate(node)
 
         launch { createTags(node.tags, node.id, node.workspaceIdentifier.id) }
@@ -230,7 +228,7 @@ class NodeService( // Todo: Inject them from handlers
         }
 
         val renameNodePath = "${newNodes.allNodes.last()}${Constants.DELIMITER}$lastNodeID" /* even if no need to rename, we're good */
-        LOG.info("renameString : $renameNodePath")
+        LOG.debug("renameString : $renameNodePath")
 
         paths.addIfNotEmpty(renameNodePath)
 
@@ -246,7 +244,7 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking newHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
     }
 
-    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodePath): List<String> {
+    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodePath): MutableList<String> {
 
         val newHierarchy = mutableListOf<String>()
 
@@ -511,8 +509,6 @@ class NodeService( // Todo: Inject them from handlers
         for (nodeID in nodeIDList) {
             workspaceService.updateNodeHierarchyOnArchivingNode(workspace, nodeID)
         }
-
-        LOG.info(nodeIDList)
         return@runBlocking jobToChangeNodeStatus.await()
     }
 
@@ -533,8 +529,6 @@ class NodeService( // Todo: Inject them from handlers
 
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val elements = elementsListRequestConverted.elements
-
-        LOG.info(elements)
 
         val orderList = mutableListOf<String>()
         for (e in elements) {
@@ -561,8 +555,6 @@ class NodeService( // Todo: Inject them from handlers
         mergePageVersions(node, storedNode)
 
         launch { updateHierarchyIfRename(node, storedNode) }
-
-        LOG.info("Updating node : $node")
 
         launch { updateTags(node.tags, storedNode.tags, node.id, node.workspaceIdentifier.id) }
         if (versionEnabled) {

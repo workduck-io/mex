@@ -50,12 +50,10 @@ class WorkspaceService {
 
     fun createWorkspace(workspaceRequest: WDRequest): Entity? {
         val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest)
-        LOG.info("Creating workspace : $workspace")
         return repository.create(workspace)
     }
 
     fun getWorkspace(workspaceID: String): Entity? {
-        LOG.info("Getting workspace with id : $workspaceID")
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
@@ -65,15 +63,11 @@ class WorkspaceService {
 
     fun updateWorkspace(workspaceRequest: WDRequest): Entity? {
         val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest)
-
         workspace.createdAt = null
-
-        LOG.info("Updating workspace : $workspace")
         return repository.update(workspace)
     }
 
     fun updateWorkspace(workspace: Workspace) {
-        LOG.info("Updating workspace : $workspace")
         repository.update(workspace)
     }
 
@@ -89,12 +83,10 @@ class WorkspaceService {
     }
 
     fun deleteWorkspace(workspaceID: String): Identifier? {
-        LOG.info("Deleting workspace with id : $workspaceID")
         return repository.delete(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID),)
     }
 
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?> {
-        LOG.info("Getting workspaces with ids : $workspaceIDList")
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
 
@@ -106,7 +98,7 @@ class WorkspaceService {
         val updatedNodeHierarchy =
             getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
 
-        LOG.info("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
+        LOG.debug("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
         updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
     }
 
@@ -150,7 +142,7 @@ class WorkspaceService {
         /* get single nodes with no hierarchy */
         val listOfRelationships = jobToGetListOfRelationships.await()
         val mapOfNodeIDToName = jobToGetMapOfNodeIDToName.await()
-        LOG.info("Node Map : $mapOfNodeIDToName")
+        LOG.debug("Node Map : $mapOfNodeIDToName")
 
         /* can be directly appended to node hierarchy */
         val nodeHierarchy = getNodesWithNoRelationship(listOfRelationships, mapOfNodeIDToName)
@@ -161,7 +153,6 @@ class WorkspaceService {
         nodeHierarchy += jobToGetNodePathsFromRelationships.await()
         val workspace = jobToGetWorkspace.await() as Workspace
 
-        LOG.info(nodeHierarchy)
         updateWorkspaceHierarchy(workspace, nodeHierarchy, HierarchyUpdateSource.REFRESH)
     }
 
@@ -180,7 +171,6 @@ class WorkspaceService {
         val visitedSet = mutableSetOf<String>()
         val nodeHierarchy = mutableListOf<String>()
 
-        LOG.info("Graph : $graph")
         for ((startNode, _) in graph) {
             if (visitedSet.contains(startNode)) continue
             dfsForRelationships(
@@ -191,7 +181,7 @@ class WorkspaceService {
                 nodeHierarchy
             ) /* initial path is same as start node */
         }
-        LOG.info("nodeHierarchy From DFS : $nodeHierarchy")
+        LOG.debug("nodeHierarchy From DFS : $nodeHierarchy")
         return nodeHierarchy
     }
 
@@ -288,7 +278,7 @@ class WorkspaceService {
                 listOfAloneNodes.add("$nodeName${Constants.DELIMITER}$nodeID")
             }
         }
-        LOG.info("List of Alone Nodes: $listOfAloneNodes")
+        LOG.debug("List of Alone Nodes: $listOfAloneNodes")
 
         return listOfAloneNodes
     }

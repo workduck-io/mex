@@ -22,8 +22,8 @@ class WorkspaceUpdateTrigger : RequestHandler<DynamodbEvent, Void> {
             val oldNodeHierarchyInformation =
                 getNodeHierarchyInformationFromImage(record.dynamodb.oldImage["nodeHierarchyInformation"]?.l ?: listOf())
 
-            LOG.info("NEW : $newNodeHierarchyInformation")
-            LOG.info("OLD : $oldNodeHierarchyInformation")
+            LOG.debug("NEW : $newNodeHierarchyInformation")
+            LOG.debug("OLD : $oldNodeHierarchyInformation")
 
             val addedPath = getDifferenceOfList(newNodeHierarchyInformation, oldNodeHierarchyInformation)
             val removedPath = getDifferenceOfList(oldNodeHierarchyInformation, newNodeHierarchyInformation)

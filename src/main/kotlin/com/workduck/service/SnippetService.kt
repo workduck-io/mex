@@ -51,17 +51,11 @@ class SnippetService {
 
     fun createAndUpdateSnippet(wdRequest: WDRequest, userID: String, workspaceID: String, createNextVersion: Boolean = false): Entity {
         val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)
-
-        LOG.info(snippet)
-
         setMetadata(snippet)
-
-        LOG.info(createNextVersion)
         return if(!createNextVersion) { /* either create a new snippet or update the existing version */
             if (isCreatePossible(snippet.version!!)) { /* update and create both allowed */
                 createOrUpdate(snippet)
             } else { /* only update allowed */
-                LOG.info("Updating snippet")
                 updateSnippet(snippet)
             }
         } else{
@@ -90,7 +84,6 @@ class SnippetService {
 
     private fun updateSnippet(snippet: Snippet) : Entity{
         Snippet.setCreatedFieldsNull(snippet)
-        LOG.info("Updating node : $snippet")
         return snippetRepository.updateSnippet(snippet)
     }
 

@@ -45,7 +45,7 @@ class WorkspaceRepository(
 
     fun addNodePathToHierarchy(workspaceID: String, nodePath: String){
 
-        LOG.info("$workspaceID, $nodePath")
+        LOG.debug("$workspaceID, $nodePath")
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
