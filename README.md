@@ -24,7 +24,7 @@ git clone mex repo : https://github.com/workduck-io/mex
 **serverless-offline** : `npm install serverless-offline --save-dev` <br>
 **serverless-dynamodb-local** : `npm install --save serverless-dynamodb-local`
 
-
+**NOTE:** Please use Node.js Version *12.13.0, 10.16.3, and 8.10* to install npm packages
 
 - The `serverless.yml` file has `userDocker` flag set as `true` for serverless-offline, so you'd need to install and run **docker** on your local as well.
 
