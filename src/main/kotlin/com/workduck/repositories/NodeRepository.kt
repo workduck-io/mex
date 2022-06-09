@@ -78,15 +78,9 @@ class NodeRepository(
         }
     }
 
-    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
-
+    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String> {
         val akValue = "$workspaceID${Constants.DELIMITER}$namespaceID"
-        return try {
-            DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
-        } catch (e: Exception) {
-            LOG.info(e)
-            null
-        }
+        return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
@@ -161,10 +155,10 @@ class NodeRepository(
         } catch (e: ConditionalCheckFailedException) {
             /* Will happen only in race condition because we're making the versions same in the service */
             /* What should be the flow from here on? Call NodeService().update()? */
-            LOG.info("Version mismatch!!")
+            LOG.debug("Version mismatch!!")
             null
         } catch (e: java.lang.Exception) {
-            LOG.info(e)
+            LOG.error(e)
             null
         }
     }
@@ -333,7 +327,6 @@ class NodeRepository(
     }
 
     fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String){
-        LOG.info("$nodeID , new name : $newName")
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()

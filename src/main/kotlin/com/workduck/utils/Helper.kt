@@ -46,12 +46,12 @@ object Helper {
     fun logFailureForBatchOperation(failedBatches: MutableList<DynamoDBMapper.FailedBatch>) {
 
         for (batch in failedBatches) {
-            LOG.info("Failed to create some items: " + batch.exception)
+            LOG.debug("Failed to create some items: " + batch.exception)
             val items = batch.unprocessedItems
             for (entry in items) {
                 for (request in entry.value) {
                     val key = request.putRequest.item
-                    LOG.info(key)
+                    LOG.debug(key)
                 }
             }
         }

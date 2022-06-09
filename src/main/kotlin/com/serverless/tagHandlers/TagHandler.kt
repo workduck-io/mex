@@ -21,7 +21,7 @@ class TagHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         LOG.info(wdInput.routeKey)
         val strategy = TagStrategyFactory.getTagStrategy(wdInput.routeKey)
-                ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 404)
+                ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 400)
 
 
         return try {

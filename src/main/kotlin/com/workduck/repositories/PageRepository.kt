@@ -16,9 +16,11 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
+import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
+import com.workduck.models.Node
 import com.workduck.models.Page
 import com.workduck.models.Relationship
 import com.workduck.models.Snippet
@@ -42,6 +44,11 @@ class PageRepository <T : Page> (
         TODO("Not yet implemented")
     }
 
+//    override fun getWithException(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T {
+//        return get( pkIdentifier, skIdentifier, clazz) ?: throw NOTfound
+//    }
+
+    fun T?.withNotFoundException():T = this ?: throw Exception("aaa")
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
         return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig)

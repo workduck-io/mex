@@ -64,9 +64,8 @@ class SnippetRepository(
 
 
 
-    fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Int) : Entity {
-        return mapper.load(Snippet::class.java, WorkspaceIdentifier(workspaceID), getSnippetSK(snippetID, version), dynamoDBMapperConfig) ?:
-            throw NoSuchElementException("Not found")
+    fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Int) : Entity? {
+        return mapper.load(Snippet::class.java, WorkspaceIdentifier(workspaceID), getSnippetSK(snippetID, version), dynamoDBMapperConfig)
     }
 
     fun deleteSnippetByVersion(snippetID: String, workspaceID: String, version: Int) {

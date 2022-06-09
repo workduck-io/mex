@@ -31,7 +31,7 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         if (strategy == null) {
             val responseBody = StandardResponse(Messages.REQUEST_NOT_RECOGNIZED)
             return ApiGatewayResponse.build {
-                statusCode = 500
+                statusCode = 400
                 objectBody = responseBody
             }
         }

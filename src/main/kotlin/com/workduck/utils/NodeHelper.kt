@@ -21,7 +21,7 @@ object NodeHelper {
             for (existingNodePath in nodeHierarchyInformation) {
                 val longestCommonNamePath = getCommonPrefixNodePath(nodeNamePath, getNamePath(existingNodePath))
 
-                LOG.info(longestCommonNamePath)
+                LOG.debug(longestCommonNamePath)
                 if(longestCommonNamePath != ""){
                     val nodeNamesAndIDs = existingNodePath.split(Constants.DELIMITER)
                     val commonNodeNamesAndIDs = nodeNamesAndIDs.subList(0, 2*longestCommonNamePath.splitIgnoreEmpty(Constants.DELIMITER).size)
@@ -39,7 +39,7 @@ object NodeHelper {
 
             }
         }
-        LOG.info(longestExistingPath)
+        LOG.debug(longestExistingPath)
         return longestExistingPath
     }
 

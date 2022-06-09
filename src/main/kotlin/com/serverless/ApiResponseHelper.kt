@@ -1,9 +1,13 @@
 package com.serverless
 
 import com.serverless.models.responses.Response
+import org.apache.logging.log4j.LogManager
+import java.lang.Exception
 import java.util.Collections
 
 object ApiResponseHelper {
+
+    private val LOG = LogManager.getLogger(ApiResponseHelper::class.java)
 
     fun generateStandardResponse(passedObject: Any? = null, errorMessage: String): ApiGatewayResponse {
 
@@ -39,18 +43,50 @@ object ApiResponseHelper {
     }
 
     fun generateStandardErrorResponse(errorMessage: String): ApiGatewayResponse {
+        LOG.warn(errorMessage)
         val responseBody = StandardResponse(errorMessage)
         return ApiGatewayResponse.build {
-            statusCode = 500
+            statusCode = 400
             objectBody = responseBody
             headers = Collections.singletonMap("X-Powered-By", "AWS Lambda & serverless")
         }
     }
 
+    fun generateStandard5xxErrorResponse(
+            exception: Exception,
+            defaultMessage: String,
+            errorCode: Int
+    ): ApiGatewayResponse {
+        LOG.error(exception.stackTraceToString())
+        val responseBody = StandardResponse(exception.message ?: defaultMessage)
+        return ApiGatewayResponse.build {
+            statusCode = errorCode
+            objectBody = responseBody
+            headers = Collections.singletonMap("X-Powered-By", "AWS Lambda & serverless")
+        }
+    }
+
+
+    fun generateStandard4xxErrorResponse(
+            exception: Exception,
+            defaultMessage: String,
+            errorCode: Int
+    ): ApiGatewayResponse {
+        LOG.warn(exception.stackTraceToString())
+        val responseBody = StandardResponse(exception.message ?: defaultMessage)
+        return ApiGatewayResponse.build {
+            statusCode = errorCode
+            objectBody = responseBody
+            headers = Collections.singletonMap("X-Powered-By", "AWS Lambda & serverless")
+        }
+    }
+
+
     fun generateStandardErrorResponse(
         errorMessage: String,
         errorCode: Int
     ): ApiGatewayResponse {
+        LOG.warn(errorMessage)
         val responseBody = StandardResponse(errorMessage)
         return ApiGatewayResponse.build {
             statusCode = errorCode

@@ -41,31 +41,24 @@ class NamespaceService {
 
     fun createNamespace(namespaceRequest: WDRequest?): Entity? {
         val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
-        LOG.info("Creating namespace : $namespace")
         return repository.create(namespace)
     }
 
     fun getNamespace(namespaceID: String): Entity? {
-        LOG.info("Getting namespace with id : $namespaceID")
         return repository.get(NamespaceIdentifier(namespaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
     fun updateNamespace(namespaceRequest: WDRequest?): Entity? {
         val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
-
         namespace.createdAt = null
-
-        LOG.info("Updating namespace : $namespace")
         return repository.update(namespace)
     }
 
     fun deleteNamespace(namespaceID: String): Identifier? {
-        LOG.info("Deleting namespace with id : $namespaceID")
         return repository.delete(NamespaceIdentifier(namespaceID), NamespaceIdentifier(namespaceID))
     }
 
     fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {
-        LOG.info("Getting namespaces with ids : $namespaceIDList")
         return namespaceRepository.getNamespaceData(namespaceIDList)
     }
 

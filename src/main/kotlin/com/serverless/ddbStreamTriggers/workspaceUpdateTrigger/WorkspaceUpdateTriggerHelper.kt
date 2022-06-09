@@ -43,7 +43,7 @@ object WorkspaceUpdateTriggerHelper {
             )
         }
 
-        LOG.info(Helper.objectMapper.writeValueAsString(listOfRelationships))
+        LOG.debug(Helper.objectMapper.writeValueAsString(listOfRelationships))
 
         relationshipService.createRelationshipInBatch(listOfRelationships)
     }

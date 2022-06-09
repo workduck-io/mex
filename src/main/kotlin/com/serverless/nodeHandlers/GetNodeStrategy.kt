@@ -6,6 +6,7 @@ import com.serverless.models.Input
 import com.serverless.models.responses.Response
 import com.serverless.utils.Messages
 import com.serverless.utils.NodeHelper
+import com.serverless.utils.withNotFoundException
 import com.workduck.models.Entity
 import com.workduck.service.NodeService
 
@@ -25,7 +26,7 @@ class GetNodeStrategy : NodeStrategy {
             it["userID"]
         }
 
-        val node: Entity? = nodeService.getNode(nodeID, input.headers.workspaceID, bookmarkInfo, userID)
+        val node: Entity = nodeService.getNode(nodeID, input.headers.workspaceID, bookmarkInfo, userID).withNotFoundException()
 
         val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, Messages.ERROR_GETTING_NODE)

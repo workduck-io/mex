@@ -44,9 +44,9 @@ class TagService(
         val nodeID = wdRequest.nodeID
 
         val existingTags = tagRepository.batchGetTags(tagNameSet, workspaceID)
-        LOG.info(existingTags)
+        LOG.debug(existingTags)
         val tagsToBeCreated = getTagObjectsFromNameList(getTagNamesToBeCreated(tagNameSet, existingTags.map{ it.name }), nodeID, workspaceID)
-        LOG.info(tagsToBeCreated)
+        LOG.debug(tagsToBeCreated)
         launch { tagRepository.batchCreateTags(tagsToBeCreated) }
         updateExistingTags(existingTags, nodeID, workspaceID)
     }

@@ -46,22 +46,16 @@ class UserPreferenceRepository(
         else null
     }
 
-    fun getAllUserPreferencesForUser(userID: String) : List<UserPreferenceRecord>?{
+    fun getAllUserPreferencesForUser(userID: String): List<UserPreferenceRecord>? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(userID)
         expressionAttributeValues[":userPreferenceRecord"] = AttributeValue().withS("UserPreferenceRecord")
 
-        val userPreferenceList: List<UserPreferenceRecord> = DynamoDBQueryExpression<UserPreferenceRecord>()
+        return DynamoDBQueryExpression<UserPreferenceRecord>()
                 .withKeyConditionExpression("PK = :pk")
                 .withFilterExpression("itemType = :userPreferenceRecord")
                 .withExpressionAttributeValues(expressionAttributeValues)
                 .let { mapper.query(UserPreferenceRecord::class.java, it, dynamoDBMapperConfig) }
-
-        for(r in userPreferenceList){
-            LOG.info("record : $r")
-        }
-
-        return userPreferenceList
     }
 
 

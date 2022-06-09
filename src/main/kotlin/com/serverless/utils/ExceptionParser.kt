@@ -7,9 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
-import com.workduck.utils.Helper
+import com.workduck.models.exceptions.WDNotFoundException
 import org.apache.logging.log4j.LogManager
-import com.workduck.utils.Helper.objectMapper
 
 
 /**
@@ -31,35 +30,23 @@ import com.workduck.utils.Helper.objectMapper
  */
 object ExceptionParser {
 
-    private val LOG = LogManager.getLogger(ExceptionParser::class.java)
-
     //TODO(should be combine all DDB Exceptions together?)
     fun exceptionHandler(e: Exception) : ApiGatewayResponse{
-        println("in the exception parser")
-        logStackTrace(e)
         return when(e){
-            is IllegalArgumentException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 400)
-            is NoSuchElementException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Not Found", 404)
-            is NullPointerException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Getting NPE", 400)
-            is UnauthorizedException -> ApiResponseHelper.generateStandardErrorResponse(e.message ?: "Unauthorized", 401)
-            is ResourceNotFoundException -> ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 404)
-            is ClassCastException -> ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
-            is ConditionalCheckFailedException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
-            is AmazonDynamoDBException -> ApiResponseHelper.generateStandardErrorResponse(e.message?: "Error performing action", 500)
-            is DynamoDBMappingException -> ApiResponseHelper.generateStandardErrorResponse("Internal Server Error", 500)
+            is IllegalArgumentException -> ApiResponseHelper.generateStandard4xxErrorResponse(e,"Error performing action", 400)
+            is NoSuchElementException -> ApiResponseHelper.generateStandard4xxErrorResponse(e,"Not Found", 404)
+            is NullPointerException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Getting NPE", 400)
+            is UnauthorizedException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Unauthorized", 401)
+            is ResourceNotFoundException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Internal Server Error", 404)
+            is ClassCastException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Malformed Request", 400)
+            is ConditionalCheckFailedException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Bad Request", 400)
+            is DynamoDBMappingException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Bad Request", 400)
+            is WDNotFoundException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, "Requested resource not found", 404)
             else -> {
-                throw e
+                ApiResponseHelper.generateStandard5xxErrorResponse(e,"Internal Server Error", 500)
             }
         }
     }
-
-    private fun logStackTrace(exception : Exception){
-        LOG.error(exception.stackTraceToString())
-    }
-
-
-
-
 
 }
 

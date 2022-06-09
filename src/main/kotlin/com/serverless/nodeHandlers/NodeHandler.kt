@@ -25,7 +25,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         LOG.info(wdInput.routeKey)
         val strategy = NodeStrategyFactory.getNodeStrategy(wdInput.routeKey)
-                ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 404)
+                ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
         return try {
             validateTokenAndWorkspace(wdInput)

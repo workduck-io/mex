@@ -32,7 +32,7 @@ data class TokenBody(
                 val decodedString = String(Base64.getDecoder().decode(encodedToken.split(".")[1]))
                 Helper.objectMapper.readValue<TokenBody>(decodedString)
             }catch (e : Exception){
-                LOG.info(e)
+                LOG.error(e)
                 null
             }
         }

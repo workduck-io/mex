@@ -6,6 +6,8 @@ import com.serverless.models.Input
 import com.serverless.models.responses.Response
 import com.serverless.utils.CommentHelper
 import com.serverless.utils.Messages
+import com.serverless.utils.withNotFoundException
+import com.workduck.models.Comment
 import com.workduck.service.CommentService
 
 class GetCommentStrategy : CommentStrategy {
@@ -17,7 +19,7 @@ class GetCommentStrategy : CommentStrategy {
         val commentID = list?.get(1)
 
         return if(entityID != null  && commentID != null && CommentHelper.isBlockOrNodeID(entityID)) {
-            val comment = commentService.getComment(entityID, commentID)
+            val comment = commentService.getComment(entityID, commentID).withNotFoundException() as Comment
 
             val commentResponse: Response? = CommentHelper.convertCommentToCommentResponse(comment)
 

@@ -30,7 +30,7 @@ class UserPreferenceHandler : RequestHandler<Map<String, Any>, ApiGatewayRespons
         if (strategy == null) {
             val responseBody = StandardResponse(Messages.REQUEST_NOT_RECOGNIZED)
             return ApiGatewayResponse.build {
-                statusCode = 500
+                statusCode = 400
                 objectBody = responseBody
             }
         }

@@ -32,7 +32,6 @@ class RepositoryImpl<T : Entity>(
     }
 
     override fun create(t: T): T {
-        LOG.info("creating ${t.javaClass} : $t")
         mapper.save(t, dynamoDBMapperConfig)
         return t
     }
@@ -45,7 +44,6 @@ class RepositoryImpl<T : Entity>(
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
             .build()
 
-        LOG.info("updating ${t.javaClass} : $t")
         mapper.save(t, dynamoDBMapperConfig)
         return t
 

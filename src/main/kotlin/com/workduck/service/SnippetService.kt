@@ -51,17 +51,11 @@ class SnippetService {
 
     fun createAndUpdateSnippet(wdRequest: WDRequest, userID: String, workspaceID: String, createNextVersion: Boolean = false): Entity {
         val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)
-
-        LOG.info(snippet)
-
         setMetadata(snippet)
-
-        LOG.info(createNextVersion)
         return if(!createNextVersion) { /* either create a new snippet or update the existing version */
             if (isCreatePossible(snippet.version!!)) { /* update and create both allowed */
                 createOrUpdate(snippet)
             } else { /* only update allowed */
-                LOG.info("Updating snippet")
                 updateSnippet(snippet)
             }
         } else{
@@ -90,7 +84,6 @@ class SnippetService {
 
     private fun updateSnippet(snippet: Snippet) : Entity{
         Snippet.setCreatedFieldsNull(snippet)
-        LOG.info("Updating node : $snippet")
         return snippetRepository.updateSnippet(snippet)
     }
 
@@ -116,7 +109,7 @@ class SnippetService {
         return repository.create(snippet)
     }
 
-    fun getSnippet(snippetID: String, workspaceID: String, version: Int? = null) : Entity {
+    fun getSnippet(snippetID: String, workspaceID: String, version: Int? = null) : Entity? {
         return when(version){
             null -> getLatestSnippet(snippetID, workspaceID)
             else -> getSnippetByVersion(snippetID, workspaceID, version)
@@ -127,12 +120,12 @@ class SnippetService {
         return snippetRepository.getAllVersionsOfSnippet(snippetID, workspaceID)
     }
 
-    private fun getLatestSnippet(snippetID: String, workspaceID: String) : Entity {
+    private fun getLatestSnippet(snippetID: String, workspaceID: String) : Entity? {
         return getSnippetByVersion(snippetID, workspaceID, getLatestVersionNumberOfSnippet(snippetID, workspaceID))
     }
 
 
-    fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Int) : Entity {
+    fun getSnippetByVersion(snippetID: String, workspaceID: String,  version: Int) : Entity? {
         return snippetRepository.getSnippetByVersion(snippetID, workspaceID, version)
     }
 

@@ -74,7 +74,6 @@ class RelationshipRepository(
 
     fun changeRelationshipStatus(list: List<Relationship>, status: ItemStatus) {
 
-        LOG.info(list)
         val table: Table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()

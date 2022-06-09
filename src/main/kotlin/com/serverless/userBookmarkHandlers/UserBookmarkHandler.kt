@@ -26,7 +26,7 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
         LOG.info(wdInput.routeKey)
 
         val strategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy(wdInput.routeKey)
-                ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 404)
+                ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
         return try {
             validateTokenAndWorkspace(wdInput)
