@@ -30,7 +30,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         """.trimIndent()
         val payload: WDRequest? = Helper.objectMapper.readValue(json)
 
-        private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]", "body" to ""))
+        private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]"))
 
         private val dummyStrategy = NodeStrategyFactory.getNodeStrategy("")
 

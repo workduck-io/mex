@@ -28,7 +28,7 @@ data class Input(
             return try {
                 Helper.objectMapper.convertValue(rawInput, Input::class.java)
             } catch (e : Exception){
-                LOG.error(e)
+                LOG.debug(e)
                 null
             }
         }
