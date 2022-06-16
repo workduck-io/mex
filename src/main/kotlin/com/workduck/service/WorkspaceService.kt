@@ -11,6 +11,7 @@ import com.serverless.utils.Constants
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
+import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
@@ -49,7 +50,8 @@ class WorkspaceService {
         RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
 
     fun createWorkspace(workspaceRequest: WDRequest): Entity? {
-        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest)
+        val workspaceID = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
+        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest, workspaceID)
         return repository.create(workspace)
     }
 
@@ -61,10 +63,9 @@ class WorkspaceService {
         return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
     }
 
-    fun updateWorkspace(workspaceRequest: WDRequest): Entity? {
-        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest)
-        workspace.createdAt = null
-        return repository.update(workspace)
+    fun updateWorkspace(workspaceID: String, request: WDRequest) {
+        val workspaceRequest: WorkspaceRequest = request as WorkspaceRequest
+        workspaceRepository.updateWorkspaceName(workspaceID, workspaceRequest.name)
     }
 
     fun updateWorkspace(workspace: Workspace) {
@@ -283,7 +284,7 @@ class WorkspaceService {
         return listOfAloneNodes
     }
 
-    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest): Workspace = workspaceRequest.toWorkspace()
+    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest, workspaceID: String): Workspace = workspaceRequest.toWorkspace(workspaceID)
 
 
     companion object {

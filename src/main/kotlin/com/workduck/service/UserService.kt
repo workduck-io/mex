@@ -12,11 +12,8 @@ class UserService {
 
 	fun registerUser(workspaceName: String?): Entity?{
 
-		val workspaceID = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
-
 		val jsonForWorkspaceCreation = """{
 			"type": "WorkspaceRequest",
-			"id": "$workspaceID",
 			"name": "$workspaceName"
 		}"""
 

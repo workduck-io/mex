@@ -225,20 +225,21 @@ Namespace:
 Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
   events:
-#    - httpApi:
-#        path: /workspace
-#        method: get
-#        authorizer: mexAuthorizer
+    - httpApi:
+        path: /workspace
+        method: get
+        authorizer: mexAuthorizer
 #
 #    - httpApi:
 #        path: /workspace
 #        method: post
 #        authorizer: mexAuthorizer
-#
-#    - httpApi:
-#        path: /workspace/update
-#        method: post
-#        authorizer: mexAuthorizer
+
+    # used to rename workspace
+    - httpApi:
+        path: /workspace
+        method: patch
+        authorizer: mexAuthorizer
 #
 #    - httpApi:
 #        path: /workspace

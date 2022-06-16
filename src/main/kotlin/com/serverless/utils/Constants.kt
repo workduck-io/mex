@@ -11,6 +11,7 @@ object Constants {
     const val INTERNAL_WORKSPACE = "WORKSPACE_INTERNAL"
     const val NODE_ID_PREFIX = "NODE_"
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
+    const val WORKSPACE_ID_PREFIX = "WORKSPACE_"
     const val NANO_ID_SIZE = 21
 
 }

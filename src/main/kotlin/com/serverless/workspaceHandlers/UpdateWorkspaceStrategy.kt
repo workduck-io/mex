@@ -10,10 +10,9 @@ import com.workduck.service.WorkspaceService
 class UpdateWorkspaceStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
         return input.payload?.let { workspaceRequestObject ->
-            workspaceService.updateWorkspace(workspaceRequestObject).let { workspace ->
-                ApiResponseHelper.generateStandardResponse(WorkspaceHelper.convertWorkspaceToWorkspaceResponse(workspace), Messages.ERROR_UPDATING_WORKSPACE)
+            workspaceService.updateWorkspace(input.headers.workspaceID, workspaceRequestObject).let {
+                ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_UPDATING_WORKSPACE)
             }
         } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_UPDATING_WORKSPACE)
-
     }
 }
