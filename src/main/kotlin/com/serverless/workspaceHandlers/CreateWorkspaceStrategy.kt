@@ -15,6 +15,5 @@ class CreateWorkspaceStrategy : WorkspaceStrategy {
                 ApiResponseHelper.generateStandardResponse(WorkspaceHelper.convertWorkspaceToWorkspaceResponse(workspace), Messages.ERROR_CREATING_WORKSPACE)
             }
         } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_CREATING_WORKSPACE)
-
     }
 }

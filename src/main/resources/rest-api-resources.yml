@@ -229,21 +229,22 @@ Workspace:
         path: /workspace
         method: get
         authorizer: mexAuthorizer
+#
+#    - httpApi:
+#        path: /workspace
+#        method: post
+#        authorizer: mexAuthorizer
 
+    # used to rename workspace
     - httpApi:
         path: /workspace
-        method: post
+        method: patch
         authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /workspace/update
-        method: post
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /workspace
-        method: delete
-        authorizer: mexAuthorizer
+#
+#    - httpApi:
+#        path: /workspace
+#        method: delete
+#        authorizer: mexAuthorizer
 
     - httpApi:
         path: /workspace/data/{ids}

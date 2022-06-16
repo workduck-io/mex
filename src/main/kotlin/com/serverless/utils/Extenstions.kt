@@ -4,8 +4,6 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.SnippetRequest
-import com.workduck.models.Entity
-import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.Snippet
@@ -14,25 +12,22 @@ import com.workduck.utils.PageHelper
 import kotlinx.coroutines.Deferred
 import org.apache.logging.log4j.Logger
 
-
-fun Node.isNodeAndTagsUnchanged(storedNode: Node) : Boolean {
+fun Node.isNodeAndTagsUnchanged(storedNode: Node): Boolean {
     /* also updated block level metadata */
     return !PageHelper.comparePageWithStoredPage(this, storedNode) && this.tags.sorted() == storedNode.tags.sorted()
 }
 
-
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
     Snippet(
-            id = this.id,
-            workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-            lastEditedBy = userID,
-            data = this.data,
-            title = this.title,
-            version = this.version
+        id = this.id,
+        workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+        lastEditedBy = userID,
+        data = this.data,
+        title = this.title,
+        version = this.version
     )
 
-
-fun Snippet.setVersion(version: Int){
+fun Snippet.setVersion(version: Int) {
     this.version = version
     this.sk = "${this.id}${Constants.DELIMITER}$version"
 }
@@ -40,7 +35,6 @@ fun Snippet.setVersion(version: Int){
 fun NodePath.removePrefix(prefix: String): String {
     return this.path.removePrefix(prefix)
 }
-
 
 fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
     return this.split(*delimiters).filter {
@@ -75,35 +69,45 @@ fun List<String>.getNodesAfterIndex(index: Int): List<String> {
     }
 }
 
-fun List<String>.isNewPathCreated(removedPath: List<String>) : Boolean {
+fun List<String>.isNewPathCreated(removedPath: List<String>): Boolean {
     return this.size == 1 && removedPath.isEmpty()
 }
 
-fun List<String>.isRefactorWithNodeAddition(removedPath: List<String>) : Boolean {
+fun List<String>.isRefactorWithNodeAddition(removedPath: List<String>): Boolean {
     return this.size > 1 && removedPath.size > 1 && this.size == removedPath.size
 }
 
-fun List<String>.isRefactorWithPathDivision(removedPath: List<String>) : Boolean {
+fun List<String>.isRefactorWithPathDivision(removedPath: List<String>): Boolean {
     return this.size > 1 && removedPath.isNotEmpty() && this.size == removedPath.size + 1
 }
 
-
-fun List<String>.getDifferenceWithOldHierarchy(oldHierarchy : List<String>) : Map<String, List<String>>{
-    return mapOf(Constants.REMOVED_PATHS to oldHierarchy.minus(this.toSet())
-                ,Constants.ADDED_PATHS to this.minus(oldHierarchy.toSet()) )
+fun List<String>.getDifferenceWithOldHierarchy(oldHierarchy: List<String>): Map<String, List<String>> {
+    return mapOf(Constants.REMOVED_PATHS to oldHierarchy.minus(this.toSet()), Constants.ADDED_PATHS to this.minus(oldHierarchy.toSet()))
 }
 
-fun List<String>.isSingleNodePassed(existingNodes: List<String>) : Boolean{
+fun List<String>.isSingleNodePassed(existingNodes: List<String>): Boolean {
     return this.size == 1 && existingNodes.size == 1
 }
 
-fun MutableList<String>.addIfNotEmpty(value : String) {
-    if(value.isNotEmpty()) this.add(value)
+fun MutableList<String>.addIfNotEmpty(value: String) {
+    if (value.isNotEmpty()) this.add(value)
 }
 
-fun String.getNewPath(suffix: String) : String {
-    return if(this.isEmpty()) suffix
+fun String.getNewPath(suffix: String): String {
+    return if (this.isEmpty()) suffix
     else "$this${Constants.DELIMITER}$suffix"
+}
+
+fun String.isValidID(prefix: String): Boolean {
+    return this.startsWith(prefix) &&
+        this.length == prefix.length + Constants.NANO_ID_SIZE &&
+        this.takeLast(Constants.NANO_ID_SIZE).isValidNanoID()
+}
+
+fun String.isValidNanoID(): Boolean {
+    return this.filter {
+        Constants.NANO_ID_RANGE.contains(it)
+    }.length == Constants.NANO_ID_SIZE
 }
 
 fun <T> List<T>.mix(other: List<T>): List<T> {
@@ -117,37 +121,29 @@ fun <T> List<T>.mix(other: List<T>): List<T> {
     return list
 }
 
-
-fun String.isLastNodeSame(path: String, delimiter: String = Constants.DELIMITER) : Boolean {
+fun String.isLastNodeSame(path: String, delimiter: String = Constants.DELIMITER): Boolean {
     return this.split(delimiter).last() == path.split(delimiter).last()
 }
-
 
 fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String> {
     return this.split(delimiter)
 }
 
-fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER) : Boolean {
+fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER): Boolean {
     return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
 }
 
-fun String.isMalformed() : Boolean{
-    return this.isEmpty() || !this.startsWith(ItemType.Node.name.uppercase())
-}
-
-
-
-fun Map<String, Any>.handleWarmup(LOG : Logger) : ApiGatewayResponse? {
-    return if(this["source"] as String? == "serverless-plugin-warmup"){
+fun Map<String, Any>.handleWarmup(LOG: Logger): ApiGatewayResponse? {
+    return if (this["source"] as String? == "serverless-plugin-warmup") {
         LOG.info("WarmUp - Lambda is warm!")
-        ApiResponseHelper.generateStandardResponse("Warming Up",  "")
+        ApiResponseHelper.generateStandardResponse("Warming Up", "")
     } else null
 }
 
-fun String.createNodePath(nodeID : String) : String{
+fun String.createNodePath(nodeID: String): String {
     return "$this${Constants.DELIMITER}$nodeID"
 }
 
 suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred<Boolean>, error: String) {
-    if(!(this.await() && booleanJob.await())) throw IllegalArgumentException(error)
+    if (!(this.await() && booleanJob.await())) throw IllegalArgumentException(error)
 }

@@ -33,9 +33,9 @@ fun NodeBulkRequest.toNode(workspaceID: String, userID: String): Node {
     return node
 }
 
-fun WorkspaceRequest.toWorkspace() : Workspace {
+fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
     return Workspace(
-            id = this.id,
+            id = workspaceID,
             name = this.name
     )
 }

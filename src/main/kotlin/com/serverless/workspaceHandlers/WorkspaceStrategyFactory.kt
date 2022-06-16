@@ -14,7 +14,7 @@ class WorkspaceStrategyFactory {
 
         const val createWorkspaceObject = "POST /workspace"
 
-        const val updateWorkspaceObject = "POST /workspace/update"
+        const val updateWorkspaceObject = "PATCH /workspace"
 
         const val deleteWorkspaceObject = "DELETE /workspace/{id}"
 

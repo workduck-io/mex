@@ -3,6 +3,8 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
+import com.serverless.utils.Constants
+import com.serverless.utils.isValidID
 import com.workduck.models.AdvancedElement
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -11,11 +13,6 @@ data class SnippetRequest(
 
     @JsonProperty("id")
     val id: String,
-
-//    @JsonProperty("namespaceIdentifier")
-//    @JsonSerialize(converter = IdentifierSerializer::class)
-//    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-//    override val namespaceIdentifier: NamespaceIdentifier? = null,
 
     @JsonProperty("data")
     val data: List<AdvancedElement>? = null,
@@ -29,6 +26,10 @@ data class SnippetRequest(
 ) : WDRequest {
 
     init {
+        require(id.isValidID(Constants.SNIPPET_ID_PREFIX)) {
+            "Invalid SnippetID"
+        }
+
         require(title.isNotEmpty()) {
             "Title is required"
         }

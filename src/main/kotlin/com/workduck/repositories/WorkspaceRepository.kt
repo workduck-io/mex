@@ -43,6 +43,29 @@ class WorkspaceRepository(
         TODO("Not yet implemented")
     }
 
+    fun updateWorkspaceName(workspaceID: String, name: String){
+
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":workspaceName"] = name
+
+
+        val updateExpression = "set workspaceName = :workspaceName, updatedAt = :updatedAt"
+
+        try {
+            UpdateItemSpec().update(pk = workspaceID, sk = workspaceID, updateExpression = updateExpression,
+                    conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
+                table.updateItem(it)
+            }
+
+        }catch (e: ConditionalCheckFailedException){
+            LOG.warn("Invalid WorkspaceID : $workspaceID")
+        }
+
+
+    }
+
     fun addNodePathToHierarchy(workspaceID: String, nodePath: String){
 
         LOG.debug("$workspaceID, $nodePath")
