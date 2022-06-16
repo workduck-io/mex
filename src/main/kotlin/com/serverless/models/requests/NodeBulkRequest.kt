@@ -1,10 +1,10 @@
 package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
+import com.serverless.utils.Constants
+import com.serverless.utils.isValidID
 import com.workduck.models.AdvancedElement
-import com.workduck.models.SaveableRange
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeBulkRequest")
@@ -20,19 +20,14 @@ data class NodeBulkRequest(
 
     val data: List<AdvancedElement>? = null,
 
-//    var saveableRange: SaveableRange? = null,
-//
-//    var sourceUrl: String? = null,
-
     var tags: MutableList<String> = mutableListOf(),
 
 ) : WDRequest {
 
     init {
-        require(id.isNotEmpty()) { "ID is required" }
-    }
+        require(id.isValidID(Constants.NODE_ID_PREFIX) && referenceID?.isValidID(Constants.NODE_ID_PREFIX) ?: true) { "Invalid ID(s)" }
 
-    init {
         require(title.isNotEmpty()) { "Title is required" }
     }
+
 }

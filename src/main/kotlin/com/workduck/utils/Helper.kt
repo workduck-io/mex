@@ -32,7 +32,7 @@ object Helper {
 
 
     fun generateNanoID(prefix: String, separator: String = Constants.ID_SEPARATOR): String =
-        "${prefix}$separator${NanoIdUtils.randomNanoId(SecureRandom(), Constants.NANO_ID_RANGE, 21)}"
+        "${prefix}$separator${NanoIdUtils.randomNanoId(SecureRandom(), Constants.NANO_ID_RANGE, Constants.NANO_ID_SIZE)}"
 
     fun isSourceWarmup(source: String?): Boolean {
         return "serverless-plugin-warmup" == source

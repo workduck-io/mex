@@ -3,6 +3,7 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
+import com.serverless.utils.isValidNodeID
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,6 +30,10 @@ data class RefactorRequest(
 
         require(existingNodePath.namespaceID == newNodePath.namespaceID) {
             "Movement across namespace is not supported yet"
+        }
+
+        require(nodeID.isValidNodeID()) {
+            "Invalid NodeID"
         }
     }
 

@@ -3,8 +3,8 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.serverless.utils.isMalformed
-import com.workduck.converters.AccessTypeDeserializer
+import com.serverless.utils.Constants
+import com.serverless.utils.isValidID
 import com.workduck.converters.AccessTypeMapDeserializer
 import com.workduck.models.AccessType
 
@@ -23,7 +23,6 @@ data class UpdateAccessTypesRequest(
     init {
         require(userIDToAccessTypeMap.isNotEmpty()) { "Need to provide accessMap" }
 
-        require(!nodeID.isMalformed()) { "Invalid NodeID" }
-
+        require(nodeID.isValidID(Constants.NODE_ID_PREFIX)) { "Invalid NodeID" }
     }
 }

@@ -9,5 +9,8 @@ object Constants {
     const val ADDED_PATHS = "addedPaths"
     const val REMOVED_PATHS = "removedPaths"
     const val INTERNAL_WORKSPACE = "WORKSPACE_INTERNAL"
+    const val NODE_ID_PREFIX = "NODE_"
+    const val SNIPPET_ID_PREFIX = "SNIPPET_"
+    const val NANO_ID_SIZE = 21
 
 }
