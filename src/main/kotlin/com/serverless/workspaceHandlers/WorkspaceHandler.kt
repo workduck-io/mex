@@ -2,11 +2,12 @@ package com.serverless.workspaceHandlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.StandardResponse
 import com.serverless.models.Input
-import com.serverless.tagHandlers.TagHandler
+import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.Messages
@@ -17,7 +18,22 @@ import org.apache.logging.log4j.LogManager
 
 class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-    private val workspaceService = WorkspaceService()
+    companion object {
+        private val workspaceService = WorkspaceService()
+
+        private val LOG = LogManager.getLogger(WorkspaceHandler::class.java)
+
+        val json = """
+            {
+                "ids" : []
+            }
+        """.trimIndent()
+        val payload: WDRequest? = Helper.objectMapper.readValue(json)
+
+        private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]"))
+
+        private val dummyStrategy = WorkspaceStrategyFactory.getWorkspaceStrategy("")
+    }
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
@@ -43,9 +59,5 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             ExceptionParser.exceptionHandler(e)
         }
 
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(WorkspaceHandler::class.java)
     }
 }

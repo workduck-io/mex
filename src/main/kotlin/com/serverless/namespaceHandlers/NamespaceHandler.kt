@@ -2,10 +2,12 @@ package com.serverless.namespaceHandlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.StandardResponse
 import com.serverless.models.Input
+import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.handleWarmup
@@ -16,7 +18,22 @@ import org.apache.logging.log4j.LogManager
 
 class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-    private val namespaceService = NamespaceService()
+    companion object {
+        private val namespaceService = NamespaceService()
+
+        private val LOG = LogManager.getLogger(NamespaceHandler::class.java)
+
+        val json = """
+            {
+                "ids" : []
+            }
+        """.trimIndent()
+        val payload: WDRequest? = Helper.objectMapper.readValue(json)
+
+        private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]"))
+
+        private val dummyStrategy = NamespaceStrategyFactory.getNamespaceStrategy("")
+    }
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
@@ -43,9 +60,5 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
             ExceptionParser.exceptionHandler(e)
         }
 
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(NamespaceHandler::class.java)
     }
 }

@@ -2,9 +2,11 @@ package com.serverless.userBookmarkHandlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
+import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.Messages
@@ -15,7 +17,22 @@ import org.apache.logging.log4j.LogManager
 
 class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-    private val userBookmarkService = UserBookmarkService()
+    companion object {
+        private val userBookmarkService = UserBookmarkService()
+
+        private val LOG = LogManager.getLogger(UserBookmarkHandler::class.java)
+
+        val json = """
+            {
+                "ids" : []
+            }
+        """.trimIndent()
+        val payload: WDRequest? = Helper.objectMapper.readValue(json)
+
+        private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]"))
+
+        private val dummyStrategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy("")
+    }
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
@@ -34,9 +51,5 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
         } catch (e: Exception) {
             ExceptionParser.exceptionHandler(e)
         }
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(UserBookmarkHandler::class.java)
     }
 }

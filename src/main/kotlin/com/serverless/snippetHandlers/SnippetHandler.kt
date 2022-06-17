@@ -1,13 +1,12 @@
 package com.serverless.snippetHandlers
 
-import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.models.TokenBody
-import com.serverless.nodeHandlers.NodeHandler
+import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.Messages
@@ -18,7 +17,25 @@ import org.apache.logging.log4j.LogManager
 
 class SnippetHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
-    private val snippetService = SnippetService()
+    companion object {
+
+        private val snippetService = SnippetService()
+
+        private val LOG = LogManager.getLogger(SnippetHandler::class.java)
+
+        val json = """
+            {
+                "ids" : []
+            }
+        """.trimIndent()
+        val payload: WDRequest? = Helper.objectMapper.readValue(json)
+
+        private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]"))
+
+        private val dummyStrategy = SnippetStrategyFactory.getSnippetStrategy("")
+    }
+
+
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
@@ -38,9 +55,5 @@ class SnippetHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         catch(e : Exception){
             ExceptionParser.exceptionHandler(e)
         }
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(SnippetHandler::class.java)
     }
 }
