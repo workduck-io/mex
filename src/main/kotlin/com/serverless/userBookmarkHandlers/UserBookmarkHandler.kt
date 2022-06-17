@@ -41,6 +41,7 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
         val wdInput: Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         LOG.info(wdInput.routeKey)
+        LOG.info(wdInput.tokenBody.username)
 
         val strategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
