@@ -43,13 +43,12 @@ class SnippetHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
-        validateTokenAndWorkspace(wdInput)
-
         LOG.info(wdInput.routeKey)
         val strategy = SnippetStrategyFactory.getSnippetStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
         return try {
+            validateTokenAndWorkspace(wdInput)
             strategy.apply(wdInput, snippetService)
         }
         catch(e : Exception){

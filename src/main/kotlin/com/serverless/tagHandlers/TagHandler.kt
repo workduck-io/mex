@@ -8,6 +8,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
+import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.handleWarmup
 import com.workduck.service.TagService
 import com.workduck.utils.Helper
@@ -45,6 +46,7 @@ class TagHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
 
         return try {
+            validateTokenAndWorkspace(wdInput)
             strategy.apply(wdInput, tagService)
         }
         catch(e : Exception){
