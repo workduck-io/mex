@@ -26,6 +26,7 @@ import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNewPath
+import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeAndTagsUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
@@ -45,6 +46,7 @@ import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.exceptions.WDNodeSizeLargeException
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.PageRepository
 import com.workduck.repositories.Repository
@@ -649,7 +651,9 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userID: String): Node =
-        nodeRequest.toNode(workspaceID, userID)
+        nodeRequest.toNode(workspaceID, userID).also {
+            if(it.getRoughSizeOfEntity() > Constants.DDB_MAX_ITEM_SIZE)  throw WDNodeSizeLargeException("Node size is too large")
+        }
 
     private fun createNodeObjectFromNodeBulkRequest(nodeBulkRequest: NodeBulkRequest, workspaceID: String, userID: String): Node =
         nodeBulkRequest.toNode(workspaceID, userID)

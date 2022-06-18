@@ -4,13 +4,14 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.SnippetRequest
-import com.workduck.models.ItemType
+import com.workduck.models.Entity
 import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.PageHelper
 import kotlinx.coroutines.Deferred
 import org.apache.logging.log4j.Logger
+import com.workduck.utils.Helper.objectMapper
 
 fun Node.isNodeAndTagsUnchanged(storedNode: Node): Boolean {
     /* also updated block level metadata */
@@ -146,4 +147,8 @@ fun String.createNodePath(nodeID: String): String {
 
 suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred<Boolean>, error: String) {
     if (!(this.await() && booleanJob.await())) throw IllegalArgumentException(error)
+}
+
+fun Entity.getRoughSizeOfEntity() : Int{
+    return objectMapper.writeValueAsString(this).length
 }
