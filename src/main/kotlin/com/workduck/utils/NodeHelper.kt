@@ -74,5 +74,13 @@ object NodeHelper {
         return existingNodes.allNodes.last() != newNodes.allNodes.last()
     }
 
+    fun isPathClashing(editedNodeTitle: String, passedNodeTitle:String) : Boolean {
+        return editedNodeTitle != passedNodeTitle
+    }
+
+    fun checkForDuplicateNodeID(nodeHierarchyInformation: List<String>, nodeID: String) {
+        if(nodeHierarchyInformation.any { it.contains(nodeID) }) throw IllegalArgumentException("NodeID already exists")
+    }
+
 
 }

@@ -13,5 +13,6 @@ object Constants {
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
     const val NANO_ID_SIZE = 21
     const val DDB_MAX_ITEM_SIZE = 350000
+    const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
 
 }
