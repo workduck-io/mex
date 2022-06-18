@@ -73,7 +73,7 @@ object ApiResponseHelper {
             errorCode: Int
     ): ApiGatewayResponse {
         LOG.warn(exception.stackTraceToString())
-        val responseBody = StandardResponse(exception.message ?: defaultMessage)
+        val responseBody = StandardResponse(defaultMessage)
         return ApiGatewayResponse.build {
             statusCode = errorCode
             objectBody = responseBody

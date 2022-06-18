@@ -87,7 +87,7 @@ object Messages {
 
     const val UNAUTHORIZED = "Unauthorized"
     const val INTERNAL_SERVER_ERROR = "Internal Server Error"
-    const val ITEM_SIZE_LARGE = "Item Size Too Large"
+    const val ITEM_SIZE_LARGE = "Item size has exceeded the maximum allowed size"
     const val RESOURCE_NOT_FOUND = "Requested resource not found"
     const val BAD_REQUEST = "Bad Request"
     const val NPE = "Getting NPE"

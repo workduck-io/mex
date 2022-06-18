@@ -2,6 +2,7 @@ package com.serverless.utils
 
 import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMappingException
+import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.amazonaws.services.dynamodbv2.model.ItemCollectionSizeLimitExceededException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
@@ -43,10 +44,13 @@ object ExceptionParser {
             is NullPointerException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, Messages.NPE, 400)
             is UnauthorizedException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, Messages.UNAUTHORIZED, 401)
             is WDNodeSizeLargeException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, Messages.ITEM_SIZE_LARGE, 400)
-            is ItemCollectionSizeLimitExceededException -> ApiResponseHelper.generateStandard4xxErrorResponse(e, Messages.ITEM_SIZE_LARGE, 400)
-            else -> {
-                ApiResponseHelper.generateStandard5xxErrorResponse(e,Messages.INTERNAL_SERVER_ERROR, 500)
+            is AmazonDynamoDBException ->  {
+                when(e.errorMessage){
+                    Messages.ITEM_SIZE_LARGE -> ApiResponseHelper.generateStandard4xxErrorResponse(e, Messages.ITEM_SIZE_LARGE, 400)
+                    else -> ApiResponseHelper.generateStandard5xxErrorResponse(e,Messages.INTERNAL_SERVER_ERROR, 500)
+                }
             }
+            else -> ApiResponseHelper.generateStandard5xxErrorResponse(e,Messages.INTERNAL_SERVER_ERROR, 500)
         }
     }
 
