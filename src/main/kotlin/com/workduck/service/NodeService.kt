@@ -395,7 +395,7 @@ class NodeService( // Todo: Inject them from handlers
                 HierarchyUpdateSource.NODE
             )
         }
-        val mapOfNodeAndDifference = mutableMapOf("node" to listOf(Helper.objectMapper.writeValueAsString(node)))
+        val mapOfNodeAndDifference = mutableMapOf("node" to listOf(Helper.objectMapper.writeValueAsString(node))) /* requirement of middleware */
         mapOfNodeAndDifference.putAll(updatedNodeHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)).let {
             mapOfNodeAndDifference
         }
