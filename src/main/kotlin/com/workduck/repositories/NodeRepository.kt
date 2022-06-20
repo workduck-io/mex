@@ -429,7 +429,7 @@ class NodeRepository(
             keysAndAttributes.addHashAndRangePrimaryKey("PK", nodeToWorkspacePair.second, "SK", nodeToWorkspacePair.first)
         }
 
-        keysAndAttributes.withProjectionExpression("PK, SK, title")
+        keysAndAttributes.withProjectionExpression("PK, SK, title, itemStatus")
         val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
         val itemOutcome = dynamoDB.batchGetItem(spec)
 
