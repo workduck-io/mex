@@ -306,6 +306,8 @@ class NodeService( // Todo: Inject them from handlers
         )
 
         val longestExistingPath = NodeHelper.getLongestExistingPath(workspace.nodeHierarchyInformation, newNodesWithoutLast.path)
+//
+//        if(longestExistingPath == newNodesWithoutLast.path) return /* refactoring last node on an existing path without new nodes in between */
 
         paths.addIfNotEmpty(longestExistingPath)
 
@@ -412,6 +414,7 @@ class NodeService( // Todo: Inject them from handlers
         return suffixNodePath
     }
 
+    /* if the same path already exists, rename the last node in new path */
     private fun checkForSamePath(longestExistingNamePath: String, nodePath: NodePath, node: Node) : String{
         return if (getNamePath(longestExistingNamePath) == nodePath.path) {
             node.title = nodePath.allNodes.last().addAlphanumericStringToTitle()
@@ -432,13 +435,6 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun getNodesToCreate(longestExistingPath: String, nodePath: NodePath): List<String> {
         val longestExistingNamePath = getNamePath(longestExistingPath)
-
-        if (longestExistingNamePath == nodePath.path) { // rename last node
-            val newTitle = nodePath.allNodes.last().addAlphanumericStringToTitle()
-            nodePath.allNodes[nodePath.allNodes.lastIndex] = newTitle
-            nodePath.path = nodePath.allNodes.convertToPathString()
-            return listOf(newTitle)
-        }
 
         return nodePath.removePrefix(longestExistingNamePath).splitIgnoreEmpty(Constants.DELIMITER)
     }
