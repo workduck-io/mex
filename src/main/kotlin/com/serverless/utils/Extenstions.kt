@@ -8,6 +8,7 @@ import com.workduck.models.Entity
 import com.workduck.models.Node
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.Helper
 import com.workduck.utils.PageHelper
 import kotlinx.coroutines.Deferred
 import org.apache.logging.log4j.Logger
@@ -134,6 +135,10 @@ fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String 
     return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
 }
 
+fun String.addAlphanumericStringToTitle() : String {
+    return Helper.generateNanoIDCustomLength(this, Constants.TITLE_ALPHANUMERIC_SUFFIX_SIZE)
+}
+
 fun Map<String, Any>.handleWarmup(LOG: Logger): ApiGatewayResponse? {
     return if (this["source"] as String? == "serverless-plugin-warmup") {
         LOG.info("WarmUp - Lambda is warm!")
@@ -141,8 +146,9 @@ fun Map<String, Any>.handleWarmup(LOG: Logger): ApiGatewayResponse? {
     } else null
 }
 
-fun String.createNodePath(nodeID: String): String {
-    return "$this${Constants.DELIMITER}$nodeID"
+fun String.createNodePath(nodeIDOrName: String): String {
+    if(this.isEmpty()) return nodeIDOrName
+    return "$this${Constants.DELIMITER}$nodeIDOrName"
 }
 
 suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred<Boolean>, error: String) {

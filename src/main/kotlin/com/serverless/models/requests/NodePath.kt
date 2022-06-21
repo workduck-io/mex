@@ -8,11 +8,11 @@ import com.serverless.utils.Constants
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class NodePath(
-        val path: String,
+        var path: String,
         val namespaceID: String? = null
 ) {
     val allNodes = path
-            .split(Constants.DELIMITER)
+            .split(Constants.DELIMITER).toMutableList()
 
     init {
         require(path.isNotBlank()) {
