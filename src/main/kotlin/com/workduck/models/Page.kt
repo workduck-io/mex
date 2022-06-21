@@ -16,7 +16,7 @@ interface Page : Entity {
 
     val workspaceIdentifier: WorkspaceIdentifier
 
-    val publicAccess: Boolean
+    var publicAccess: Boolean
 
     var createdAt: Long?
 
@@ -25,9 +25,10 @@ interface Page : Entity {
     var version: Int?
 
     companion object {
-        fun populatePageWithCreatedFields(page: Page, storedPage: Page) {
+        fun populatePageWithCreatedAndPublicFields(page: Page, storedPage: Page) {
             page.createdAt = storedPage.createdAt
             page.createdBy = storedPage.createdBy
+            page.publicAccess = storedPage.publicAccess
         }
     }
 }

@@ -588,7 +588,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? = runBlocking {
 
-        Page.populatePageWithCreatedFields(node, storedNode)
+        Page.populatePageWithCreatedAndPublicFields(node, storedNode)
 
         node.dataOrder = createDataOrderForPage(node)
 
