@@ -949,7 +949,9 @@ class NodeService( // Todo: Inject them from handlers
         val unprocessedData = nodeRepository.batchGetNodeTitle(setOfNodeIDWorkspaceID)
         val list = mutableListOf<Map<String, String>>()
         for (nodeData in unprocessedData) {
-            list.add(populateMapForSharedNodeData(nodeData, nodeAccessItemsMap))
+            populateMapForSharedNodeData(nodeData, nodeAccessItemsMap).let {
+                if(it.isNotEmpty()) list.add(it)
+            }
         }
         return list
     }
@@ -959,6 +961,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun populateMapForSharedNodeData(nodeData: MutableMap<String, AttributeValue>, nodeAccessItemsMap: Map<String, NodeAccess>): Map<String, String> {
+        if( nodeData["itemStatus"]!!.s == ItemStatus.ARCHIVED.name ) return mapOf()
         val map = mutableMapOf<String, String>()
 
         val nodeID = nodeData["SK"]!!.s
