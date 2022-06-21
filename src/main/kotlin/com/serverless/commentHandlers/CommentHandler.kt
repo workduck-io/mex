@@ -42,7 +42,7 @@ class CommentHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         LOG.info(wdInput.routeKey)
-        LOG.info(wdInput.tokenBody.username)
+        LOG.info("Username: ${wdInput.tokenBody.username}")
         val strategy = CommentStrategyFactory.getCommentStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 404)
 
