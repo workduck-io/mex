@@ -5,21 +5,15 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
 import com.serverless.utils.NodeHelper
-import com.workduck.models.Node
+import com.serverless.utils.withNotFoundException
 import com.workduck.service.NodeService
 
 class GetPublicNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val nodeID = input.pathParameters?.id
-
-        return if(nodeID != null) {
-            val node: Node? = nodeService.getPublicNode(nodeID, input.headers.workspaceID)
-
-            val nodeResponse = NodeHelper.convertNodeToNodeResponse(node)
-            ApiResponseHelper.generateStandardResponse(nodeResponse, Messages.NODE_NOT_AVAILABLE)
-        }
-        else{
-            ApiResponseHelper.generateStandardErrorResponse(Messages.NODE_NOT_AVAILABLE)
-        }
+        return input.pathParameters?.id?.let { nodeID ->
+            return nodeService.getPublicNode(nodeID).withNotFoundException().let {
+                ApiResponseHelper.generateStandardResponse(NodeHelper.convertNodeToNodeResponse(it), Messages.ERROR_GETTING_SNIPPET)
+            }
+        }!! /* id cannot be empty since path has been matched */
     }
 }

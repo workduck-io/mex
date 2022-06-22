@@ -794,8 +794,8 @@ class NodeService( // Todo: Inject them from handlers
         pageRepository.togglePagePublicAccess(nodeID, workspaceID, 0)
     }
 
-    fun getPublicNode(nodeID: String, workspaceID: String): Node {
-        return pageRepository.getPublicPage(nodeID, Node::class.java)
+    fun getPublicNode(nodeID: String): Node {
+        return orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {

@@ -64,7 +64,7 @@ class SnippetRepository(
 
 
 
-    fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Int) : Entity? {
+    fun getSnippetByVersion(snippetID: String, workspaceID: String, version: Int) : Snippet? {
         return mapper.load(Snippet::class.java, WorkspaceIdentifier(workspaceID), getSnippetSK(snippetID, version), dynamoDBMapperConfig)
     }
 
