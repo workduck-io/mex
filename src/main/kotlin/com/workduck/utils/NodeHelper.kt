@@ -1,6 +1,7 @@
 package com.workduck.utils
 
 
+import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
 import com.serverless.utils.Constants
 import com.serverless.utils.commonPrefixList
@@ -14,7 +15,7 @@ object NodeHelper {
     private val LOG = LogManager.getLogger(NodeHelper::class.java)
 
     /* returns path of the format nodeName#nodeID#nodeName#nodeID ... */
-    fun getLongestExistingPath(nodeHierarchyInformation: List<String>?, nodeNamePath: String): String {
+    fun getLongestExistingPathFromNamePath(nodeHierarchyInformation: List<String>?, nodeNamePath: String): String {
 
         var longestExistingPath = ""
         nodeHierarchyInformation?.let {
@@ -41,6 +42,11 @@ object NodeHelper {
         }
         LOG.debug(longestExistingPath)
         return longestExistingPath
+    }
+
+    fun getLongestExistingPathFromNodePath(nodeHierarchyInformation: List<String>?, nodePath: String): String {
+
+
     }
 
     fun getCommonPrefixNodePath(path1: String, path2: String): String{
@@ -70,7 +76,7 @@ object NodeHelper {
         return nodePath.split(Constants.DELIMITER).contains(nodeID)
     }
 
-    fun isRename(existingNodes: NodePath, newNodes: NodePath) : Boolean{
+    fun isRename(existingNodes: NodeNamePath, newNodes: NodeNamePath) : Boolean{
         return existingNodes.allNodes.last() != newNodes.allNodes.last()
     }
 

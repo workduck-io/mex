@@ -12,6 +12,7 @@ import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NodeBulkRequest
+import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
@@ -273,7 +274,7 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking newHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
     }
 
-    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodePath): MutableList<String> {
+    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodeNamePath): MutableList<String> {
 
         val newHierarchy = mutableListOf<String>()
 
@@ -305,7 +306,7 @@ class NodeService( // Todo: Inject them from handlers
             namespaceID = refactorNodePathRequest.newNodePath.namespaceID
         )
 
-        val longestExistingPath = NodeHelper.getLongestExistingPath(workspace.nodeHierarchyInformation, newNodesWithoutLast.path)
+        val longestExistingPath = NodeHelper.getLongestExistingPathFromNamePath(workspace.nodeHierarchyInformation, newNodesWithoutLast.path)
 //
 //        if(longestExistingPath == newNodesWithoutLast.path) return /* refactoring last node on an existing path without new nodes in between */
 
@@ -379,7 +380,7 @@ class NodeService( // Todo: Inject them from handlers
 
         NodeHelper.checkForDuplicateNodeID(nodeHierarchyInformation, node.id)
 
-        val longestExistingPath = checkForSamePath(NodeHelper.getLongestExistingPath(nodeHierarchyInformation, nodePath.path), nodePath, node)
+        val longestExistingPath = checkForSamePathInBulkCreate(NodeHelper.getLongestExistingPathFromNamePath(nodeHierarchyInformation, nodePath.path), nodePath, node)
 
         val listOfNodes = getListOfNodesToCreateInBulkCreate(nodePath, longestExistingPath, node)
 
@@ -415,11 +416,11 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if the same path already exists, rename the last node in new path */
-    private fun checkForSamePath(longestExistingNamePath: String, nodePath: NodePath, node: Node) : String{
+    private fun checkForSamePathInBulkCreate(longestExistingNamePath: String, nodePath: NodePath, node: Node) : String{
         return if (getNamePath(longestExistingNamePath) == nodePath.path) {
-            node.title = nodePath.allNodes.last().addAlphanumericStringToTitle()
-            nodePath.allNodes[nodePath.allNodes.lastIndex] = node.title
-            nodePath.path = nodePath.allNodes.convertToPathString()
+            node.title = nodePath.allNodesNames.last().addAlphanumericStringToTitle()
+            nodePath.allNodesNames[nodePath.allNodesNames.lastIndex] = node.title
+            nodePath.path = nodePath.allNodesNames.convertToPathString()
             longestExistingNamePath.getListOfNodes().dropLast(2).convertToPathString()
         } else longestExistingNamePath
 

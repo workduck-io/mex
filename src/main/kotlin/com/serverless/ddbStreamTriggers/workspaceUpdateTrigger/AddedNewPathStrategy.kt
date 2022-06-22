@@ -4,13 +4,13 @@ import com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTr
 import com.serverless.utils.Constants
 import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.service.RelationshipService
-import com.workduck.utils.NodeHelper.getLongestExistingPath
+import com.workduck.utils.NodeHelper.getLongestExistingPathFromNamePath
 import com.workduck.utils.NodeHelper.getNamePath
 
 class AddedNewPathStrategy: OperationPerformedStrategy {
     override fun createRelationships(relationshipService: RelationshipService, workspaceID: String, newNodeHierarchy: List<String>, oldNodeHierarchy: List<String>, addedPath: List<String>, removedPath: List<String>) {
         val addedPathString = addedPath.firstOrNull() ?: throw Exception("Added path is null")
-        val longestExistingPath = getLongestExistingPath(oldNodeHierarchy, getNamePath(addedPathString))
+        val longestExistingPath = getLongestExistingPathFromNamePath(oldNodeHierarchy, getNamePath(addedPathString))
         var relationshipPath = addedPathString
 
         when(longestExistingPath.isNotEmpty()){
