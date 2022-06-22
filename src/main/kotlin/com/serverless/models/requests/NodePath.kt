@@ -29,7 +29,7 @@ data class NodePath(
             "One or more node ids passed are invalid"
         }
 
-        require(allNodesIDs.size == allNodesNames.size) {
+        require(allNodesIDs.toSet().size == allNodesNames.size) {
             "Invalid path format"
         }
     }

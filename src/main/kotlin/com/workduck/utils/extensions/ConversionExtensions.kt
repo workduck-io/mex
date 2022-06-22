@@ -20,10 +20,10 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
         )
 
 
-fun NodeBulkRequest.toNode(workspaceID: String, userID: String): Node {
+fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: String, userID: String): Node {
     val node = Node(
-            id = this.id,
-            title = this.title,
+            id = nodeID,
+            title = nodeTitle,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
             lastEditedBy = userID,
             tags = this.tags,
