@@ -45,6 +45,7 @@ fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
 }
 
 fun List<String>.removePrefixList(listToRemove: List<String>): List<String> {
+    if(listToRemove.isEmpty()) return this
     var mismatchIndex = -1
     for (index in listToRemove.indices){
         if (this[index] != listToRemove[index])  {
