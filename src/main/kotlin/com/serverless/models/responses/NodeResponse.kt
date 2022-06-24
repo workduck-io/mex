@@ -6,6 +6,8 @@ import com.workduck.models.SaveableRange
 data class NodeResponse(
     val id: String? = null,
 
+    val title: String,
+
     val data: List<AdvancedElement> ? = null,
 
     val lastEditedBy: String?,
