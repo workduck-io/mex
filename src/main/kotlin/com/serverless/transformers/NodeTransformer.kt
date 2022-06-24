@@ -9,6 +9,7 @@ class NodeTransformer : Transformer<Node> {
     override fun transform(t: Node?): Response? = t?.let {
        NodeResponse(
             id = t.id,
+            title = t.title,
             data = t.data,
             lastEditedBy = t.lastEditedBy,
             createdBy = t.createdBy,
@@ -17,7 +18,7 @@ class NodeTransformer : Transformer<Node> {
             version = t.version,
             tags = t.tags,
             namespaceID = t.namespaceIdentifier?.id,
-            workspaceID = t.workspaceIdentifier?.id,
+            workspaceID = t.workspaceIdentifier.id,
             isBookmarked = t.isBookmarked,
             publicAccess = t.publicAccess,
 //            saveableRange = t.saveableRange,
