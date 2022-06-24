@@ -8,14 +8,9 @@ import com.workduck.service.NodeService
 
 class MakeNodePublicStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val nodeID = input.pathParameters?.id
-
-        return if(nodeID != null) {
-            nodeService.makeNodePublic(nodeID, input.headers.workspaceID)
-            ApiResponseHelper.generateStandardResponse(nodeID, Messages.ERROR_MAKING_NODE_PUBLIC)
-        }
-        else{
-            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_MAKING_NODE_PUBLIC)
-        }
+        return input.pathParameters?.id?.let {
+            nodeService.makeNodePublic(it, input.headers.workspaceID)
+            ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_MAKING_NODE_PUBLIC)
+        }!!
     }
 }
