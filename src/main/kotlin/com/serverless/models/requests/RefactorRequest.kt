@@ -12,10 +12,10 @@ import com.serverless.utils.isValidID
 data class RefactorRequest(
 
     @JsonProperty("existingNodePath")
-    val existingNodePath: NodePath,
+    val existingNodePath: NodeNamePath,
 
     @JsonProperty("newNodePath")
-    val newNodePath: NodePath,
+    val newNodePath: NodeNamePath,
 
     /* id of the last node in existingNodePath */
     @JsonProperty("nodeID")

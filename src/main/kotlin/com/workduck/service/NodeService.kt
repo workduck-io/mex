@@ -12,6 +12,7 @@ import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NodeBulkRequest
+import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
@@ -23,6 +24,7 @@ import com.serverless.utils.Messages
 import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.awaitAndThrowExceptionIfFalse
+import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -32,6 +34,7 @@ import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeAndTagsUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefix
+import com.serverless.utils.removePrefixList
 import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
@@ -60,6 +63,7 @@ import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
+import com.workduck.utils.NodeHelper.updateNodePath
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.PageHelper.orderBlocks
@@ -273,7 +277,7 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking newHierarchy.getDifferenceWithOldHierarchy(nodeHierarchyInformation)
     }
 
-    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodePath): MutableList<String> {
+    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodeNamePath): MutableList<String> {
 
         val newHierarchy = mutableListOf<String>()
 
@@ -305,7 +309,7 @@ class NodeService( // Todo: Inject them from handlers
             namespaceID = refactorNodePathRequest.newNodePath.namespaceID
         )
 
-        val longestExistingPath = NodeHelper.getLongestExistingPath(workspace.nodeHierarchyInformation, newNodesWithoutLast.path)
+        val longestExistingPath = NodeHelper.getLongestExistingPathFromNamePath(workspace.nodeHierarchyInformation, newNodesWithoutLast.path)
 //
 //        if(longestExistingPath == newNodesWithoutLast.path) return /* refactoring last node on an existing path without new nodes in between */
 
@@ -313,7 +317,7 @@ class NodeService( // Todo: Inject them from handlers
 
         var listOfNodesToCreate = mutableListOf<Node>()
         try {
-            listOfNodesToCreate = setMetaDataForEmptyNodes(getNodesToCreate(longestExistingPath, newNodesWithoutLast).toMutableList(), userID, workspace.id, refactorNodePathRequest.newNodePath.namespaceID)
+            listOfNodesToCreate = setMetaDataForEmptyNodes(getNodesToCreate(longestExistingPath, newNodesWithoutLast.path).toMutableList(), userID, workspace.id, refactorNodePathRequest.newNodePath.namespaceID)
         } catch (e: IllegalArgumentException) {
             // don't do anything. Just a  case where only renaming has been done, or we're appending to an already existing path
         }
@@ -372,14 +376,14 @@ class NodeService( // Todo: Inject them from handlers
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
         val nodePath: NodePath = nodeRequest.nodePath
-        val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, workspaceID, userID)
+        val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, nodePath.allNodesNames.last(), nodePath.allNodesIDs.last(), workspaceID, userID)
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
         val nodeHierarchyInformation = (workspace.nodeHierarchyInformation as MutableList<String>)
 
         NodeHelper.checkForDuplicateNodeID(nodeHierarchyInformation, node.id)
 
-        val longestExistingPath = checkForSamePath(NodeHelper.getLongestExistingPath(nodeHierarchyInformation, nodePath.path), nodePath, node)
+        val longestExistingPath = updateNodePath(NodeHelper.getLongestExistingPathFromNamePath(nodeHierarchyInformation, getNamePath(nodePath.path)), nodePath, node)
 
         val listOfNodes = getListOfNodesToCreateInBulkCreate(nodePath, longestExistingPath, node)
 
@@ -415,11 +419,11 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if the same path already exists, rename the last node in new path */
-    private fun checkForSamePath(longestExistingNamePath: String, nodePath: NodePath, node: Node) : String{
+    private fun checkForSamePathInBulkCreate(longestExistingNamePath: String, nodePath: NodePath, node: Node) : String{
         return if (getNamePath(longestExistingNamePath) == nodePath.path) {
-            node.title = nodePath.allNodes.last().addAlphanumericStringToTitle()
-            nodePath.allNodes[nodePath.allNodes.lastIndex] = node.title
-            nodePath.path = nodePath.allNodes.convertToPathString()
+            node.title = nodePath.allNodesNames.last().addAlphanumericStringToTitle()
+            nodePath.allNodesNames[nodePath.allNodesNames.lastIndex] = node.title
+            nodePath.path = nodePath.allNodesNames.convertToPathString()
             longestExistingNamePath.getListOfNodes().dropLast(2).convertToPathString()
         } else longestExistingNamePath
 
@@ -427,16 +431,15 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun getListOfNodesToCreateInBulkCreate(nodePath: NodePath, longestExistingPath: String, node: Node): List<Node> {
 
-        val nodesToCreate: List<String> = getNodesToCreate(longestExistingPath, nodePath)
-
-        setMetadataOfNodeToCreate(node)
-        return setMetaDataFromNode(node, nodesToCreate)
+        val nodesToCreate: List<String> = getNodesToCreate(longestExistingPath, getNamePath(nodePath.path))
+        setMetadataOfNodeToCreate(node) /* last node */
+        return setMetaDataFromNode(node, nodesToCreate, nodePath.allNodesIDs.takeLast(nodesToCreate.size))
     }
 
-    private fun getNodesToCreate(longestExistingPath: String, nodePath: NodePath): List<String> {
+    private fun getNodesToCreate(longestExistingPath: String, nodePath: String): List<String> {
         val longestExistingNamePath = getNamePath(longestExistingPath)
 
-        return nodePath.removePrefix(longestExistingNamePath).splitIgnoreEmpty(Constants.DELIMITER)
+        return nodePath.getListOfNodes().removePrefixList(longestExistingNamePath.getListOfNodes())
     }
 
     private fun getUpdatedNodeHierarchyInformation(
@@ -466,12 +469,12 @@ class NodeService( // Todo: Inject them from handlers
         return newHierarchy
     }
 
-    fun setMetaDataFromNode(node: Node, nodesToCreate: List<String>?): List<Node> {
+    fun setMetaDataFromNode(node: Node, nodesToCreate: List<String>?, nodeIDList: List<String>): List<Node> {
 
         val listOfNodes = mutableListOf<Node>()
         nodesToCreate?.let {
             for (index in 0 until nodesToCreate.size - 1) { /* since the last element is the node itself */
-                listOfNodes.add(createEmptyNodeWithMetadata(node, nodesToCreate[index]))
+                listOfNodes.add(createEmptyNodeWithMetadata(node, nodesToCreate[index], nodeIDList[index]))
             }
         }
 
@@ -480,9 +483,9 @@ class NodeService( // Todo: Inject them from handlers
         return listOfNodes
     }
 
-    private fun createEmptyNodeWithMetadata(node: Node, newNodeName: String): Node {
+    private fun createEmptyNodeWithMetadata(node: Node, newNodeName: String, nodeID: String): Node {
         val newNode = Node(
-            id = Helper.generateNanoID(IdentifierType.NODE.name),
+            id = nodeID,
             title = newNodeName,
             workspaceIdentifier = node.workspaceIdentifier,
             namespaceIdentifier = node.namespaceIdentifier,
@@ -694,8 +697,9 @@ class NodeService( // Todo: Inject them from handlers
             if(it.getRoughSizeOfEntity() > Constants.DDB_MAX_ITEM_SIZE)  throw WDNodeSizeLargeException("Node size is too large")
         }
 
-    private fun createNodeObjectFromNodeBulkRequest(nodeBulkRequest: NodeBulkRequest, workspaceID: String, userID: String): Node =
-        nodeBulkRequest.toNode(workspaceID, userID)
+    private fun createNodeObjectFromNodeBulkRequest(nodeBulkRequest: NodeBulkRequest, nodeTitle: String,
+                                                    nodeID: String, workspaceID: String, userID: String): Node =
+        nodeBulkRequest.toNode(nodeID, nodeTitle, workspaceID, userID)
 
     fun getAllArchivedSnippetIDsOfWorkspace(workspaceID: String): MutableList<String> {
         return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Node)

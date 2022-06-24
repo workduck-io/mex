@@ -44,6 +44,18 @@ fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
     }
 }
 
+fun List<String>.removePrefixList(listToRemove: List<String>): List<String> {
+    if(listToRemove.isEmpty()) return this
+    var mismatchIndex = -1
+    for (index in listToRemove.indices){
+        if (this[index] != listToRemove[index])  {
+            mismatchIndex = index
+            break
+        }
+    }
+    return this.subList(mismatchIndex, this.size)
+}
+
 fun List<String>.commonPrefixList(list: List<String>): List<String> {
     val commonPrefixList = mutableListOf<String>()
     for (index in 0 until minOf(this.size, list.size)) {
