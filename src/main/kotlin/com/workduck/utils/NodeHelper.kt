@@ -56,7 +56,7 @@ object NodeHelper {
 
         var indexTillActualCommonNode = -1
         var isNodeIDMismatched = false
-        for ((index, existingNodeName) in getNamePath(nodePath.path).getListOfNodes().withIndex()) {
+        for ((index, existingNodeName) in getNamePath(nodePath.path).getListOfNodes().withIndex()) { /* iterate through nodePath nodes */
             if (index + 1 > nodeNamesFromLongestExistingPath.size) break /* when no. of nodes in passed path size exceeds nodes from the longest path */
 
             if (existingNodeName == nodeNamesFromLongestExistingPath[index]) {
@@ -75,7 +75,7 @@ object NodeHelper {
         updateNodePathFromNamesAndIDs(nodePath)
 
         return if(indexTillActualCommonNode == -1) ""
-        else longestExistingPathBasedOnNames.getListOfNodes().take(indexTillActualCommonNode - 1).convertToPathString()
+        else longestExistingPathBasedOnNames.getListOfNodes().take(indexTillActualCommonNode + 1).convertToPathString()
     }
 
 
@@ -85,44 +85,6 @@ object NodeHelper {
                         .joinToString(Constants.DELIMITER)
     }
 
-//    fun getLongestExistingPathFromNodePath(nodeHierarchyInformation: List<String>?, nodePath: String): String {
-//        val longestExistingPathFromNames = getLongestExistingPathFromNamePath(nodeHierarchyInformation, getNamePath(nodePath))
-//
-//        var longestExistingPath = "" /* this path contains both nodeNames and nodeIDs */
-//        nodeHierarchyInformation?.let {
-//            for (existingNodePath in nodeHierarchyInformation) {
-//                val longestCommonPath = getCommonPrefixNodePath(nodePath, existingNodePath)
-//                if(longestCommonPath.getListOfNodes().size > longestExistingPath.getListOfNodes().size){
-//                    longestExistingPath = longestCommonPath
-//                }
-//            }
-//        }
-//
-//        /* now change nodePath */
-//
-//        val namePathFromLongestExistingPath = getNamePath(longestExistingPath)
-//        if(namePathFromLongestExistingPath == getNamePath(longestExistingPathFromNames)){ /* user is in sync with backend */
-//            return longestExistingPath
-//        }
-//        else{ /* some nodes in hierarchy are already present but not present with the user */
-//
-//            val listOfUserNodeIDs = getIDPath(longestExistingPath).getListOfNodes()
-//            for( (existingNodeID, index) in getIDPath(longestExistingPathFromNames).getListOfNodes().withIndex()){
-//                if(existingNodeID != listOfUserNodeIDs[index])
-//
-//            }
-//        }
-//
-//    }
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
     fun getCommonPrefixNodePath(path1: String, path2: String): String {
         return path1.split(Constants.DELIMITER).commonPrefixList(path2.split(Constants.DELIMITER)).joinToString(Constants.DELIMITER)

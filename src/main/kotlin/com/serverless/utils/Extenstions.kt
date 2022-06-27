@@ -53,6 +53,7 @@ fun List<String>.removePrefixList(listToRemove: List<String>): List<String> {
             break
         }
     }
+    if (mismatchIndex == -1 ) mismatchIndex = listToRemove.size
     return this.subList(mismatchIndex, this.size)
 }
 
