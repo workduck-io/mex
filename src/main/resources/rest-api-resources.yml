@@ -58,7 +58,7 @@ Node:
 
       #get all archived nodes for a given workspaceID
     - httpApi:
-        path: /node/archive/{id}
+        path: /node/archive
         method: get
         authorizer: mexAuthorizer
     - httpApi:

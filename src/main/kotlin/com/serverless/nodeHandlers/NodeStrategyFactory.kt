@@ -22,7 +22,7 @@ class NodeStrategyFactory {
 
         const val deleteArchivedNodeObject = "POST /node/archive/delete"
 
-        const val getAllArchivedNodesObject = "GET /node/archive/{id}"
+        const val getAllArchivedNodesObject = "GET /node/archive"
 
         const val getNodeVersionMetadata = "GET /node/{id}/version/metadata"
 
