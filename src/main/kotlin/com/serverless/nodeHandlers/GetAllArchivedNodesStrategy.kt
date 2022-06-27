@@ -8,14 +8,6 @@ import com.workduck.service.NodeService
 
 class GetAllArchivedNodesStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val workspaceID = input.pathParameters?.id
-
-        return if(workspaceID != null) {
-            val nodeIDList: MutableList<String>? = nodeService.getAllArchivedSnippetIDsOfWorkspace(workspaceID)
-            ApiResponseHelper.generateStandardResponse(nodeIDList as Any?, Messages.ERROR_GETTING_NODES)
-        }
-        else{
-            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_GETTING_NODES)
-        }
+        return ApiResponseHelper.generateStandardResponse(nodeService.getAllArchivedNodeIDsOfWorkspace(input.headers.workspaceID), Messages.ERROR_GETTING_NODES)
     }
 }

@@ -701,7 +701,7 @@ class NodeService( // Todo: Inject them from handlers
                                                     nodeID: String, workspaceID: String, userID: String): Node =
         nodeBulkRequest.toNode(nodeID, nodeTitle, workspaceID, userID)
 
-    fun getAllArchivedSnippetIDsOfWorkspace(workspaceID: String): MutableList<String> {
+    fun getAllArchivedNodeIDsOfWorkspace(workspaceID: String): MutableList<String> {
         return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Node)
     }
 
@@ -778,7 +778,7 @@ class NodeService( // Todo: Inject them from handlers
     fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
-        require(getAllArchivedSnippetIDsOfWorkspace(workspaceID).sorted() == nodeIDList.sorted()) { "The passed IDs should be present and archived" }
+        require(getAllArchivedNodeIDsOfWorkspace(workspaceID).containsAll(nodeIDList)) { "The passed IDs should be present and archived" }
         val deletedNodesList: MutableList<String> = mutableListOf()
         for (nodeID in nodeIDList) {
             val tags = nodeRepository.getTags(nodeID, workspaceID)
