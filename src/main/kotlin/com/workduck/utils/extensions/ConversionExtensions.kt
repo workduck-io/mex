@@ -16,7 +16,8 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
                 workspaceIdentifier = WorkspaceIdentifier(workspaceID),
                 lastEditedBy = userID,
                 tags = this.tags ,
-                data = this.data
+                data = this.data,
+                nodeMetaData = this.nodeMetadata
         )
 
 
@@ -27,7 +28,8 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
             workspaceIdentifier = WorkspaceIdentifier(workspaceID),
             lastEditedBy = userID,
             tags = this.tags,
-            data = this.data
+            data = this.data,
+            nodeMetaData = this.nodeMetadata
     )
     node.namespaceIdentifier = this.nodePath.namespaceID?.let { NamespaceIdentifier(it) }
     return node

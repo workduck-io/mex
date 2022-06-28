@@ -49,6 +49,8 @@ data class Node(
     override var data: List<AdvancedElement>? = null,
 
     @JsonProperty("metadata")
+    @DynamoDBTypeConverted(converter = NodeMetaDataConverter::class)
+    @DynamoDBAttribute(attributeName = "metadata")
     var nodeMetaData : NodeMetadata ?= null,
 
     // TODO(write converter to store as map in DDB. And create Tag class)
