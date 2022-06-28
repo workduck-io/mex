@@ -1,13 +1,11 @@
 package com.workduck.service
 
-import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -33,9 +31,7 @@ import com.serverless.utils.getNewPath
 import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeAndTagsUnchanged
 import com.serverless.utils.mix
-import com.serverless.utils.removePrefix
 import com.serverless.utils.removePrefixList
-import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
@@ -304,7 +300,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun addPathsAndCreateNodesBeforeLastNode(refactorNodePathRequest: RefactorRequest, paths: MutableList<String>, userID: String, workspace: Workspace) {
-        val newNodesWithoutLast = NodePath(
+        val newNodesWithoutLast = NodeNamePath(
             path = refactorNodePathRequest.newNodePath.allNodes.dropLast(1).convertToPathString(),
             namespaceID = refactorNodePathRequest.newNodePath.namespaceID
         )
