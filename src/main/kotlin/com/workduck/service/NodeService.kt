@@ -43,6 +43,7 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeIdentifier
+import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
@@ -82,7 +83,6 @@ class NodeService( // Todo: Inject them from handlers
     val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
     val dynamoDB: DynamoDB = DynamoDB(client),
     val mapper: DynamoDBMapper = DynamoDBMapper(client),
-    val workspaceService: WorkspaceService = WorkspaceService(),
 
     var tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
@@ -99,6 +99,8 @@ class NodeService( // Todo: Inject them from handlers
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
 ) {
+
+    val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
         setMetadataOfNodeToCreate(node)
@@ -968,6 +970,10 @@ class NodeService( // Todo: Inject them from handlers
         map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
 
         return map
+    }
+
+    fun getMetadataForNodesOfWorkspace(workspaceID: String) : Map<String, Map<String, Any?>> {
+       return  nodeRepository.getMetadataForNodesOfWorkspace(workspaceID)
     }
 
     companion object {

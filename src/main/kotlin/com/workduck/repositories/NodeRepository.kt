@@ -32,6 +32,7 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
+import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper.getAccessItemPK
 import com.workduck.utils.DDBHelper
@@ -481,6 +482,20 @@ class NodeRepository(
                 keyConditionExpression = "PK = :PK and SK=:SK", projectionExpression = "tags", expressionAttributeValues = expressionAttributeValues
         ).let { query ->
             mapper.query(Node::class.java, query, dynamoDBMapperConfig).getOrNull(0)?.tags
+        }
+    }
+
+    fun getMetadataForNodesOfWorkspace(workspaceID: String) : Map<String, Map<String, Any?>> {
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.Node.name)
+
+        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "PK-itemType-index", keyConditionExpression = "PK = :PK  and itemType = :itemType",
+                expressionAttributeValues = expressionAttributeValues).let { it ->
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
+                node.id to mapOf("metadata" to node.nodeMetaData, "updatedAt" to node.updatedAt)
+            }
         }
     }
 

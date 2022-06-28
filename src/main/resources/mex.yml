@@ -35,8 +35,7 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          BillingMode: PAY_PER_REQUEST
-        - IndexName: PK-itemType-Index
+        - IndexName: PK-itemType-index
           KeySchema:
             - AttributeName: PK
               KeyType: HASH
@@ -45,8 +44,8 @@ Resources:
           Projection:
             NonKeyAttributes:
               - metadata
+              - updatedAt
             ProjectionType: INCLUDE
-          BillingMode: PAY_PER_REQUEST
         - IndexName: itemType-AK-index
           KeySchema:
             - AttributeName: itemType
@@ -55,7 +54,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          BillingMode: PAY_PER_REQUEST
         - IndexName: WS-itemStatus-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -64,7 +62,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          BillingMode: PAY_PER_REQUEST
         - IndexName: WS-itemType-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -73,7 +70,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          BillingMode: PAY_PER_REQUEST
         - IndexName: createdBy-itemType-index
           KeySchema:
             - AttributeName: createdBy
@@ -82,5 +78,4 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          BillingMode: PAY_PER_REQUEST
 

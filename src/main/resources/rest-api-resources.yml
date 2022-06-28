@@ -45,6 +45,11 @@ Node:
         method: post
 #        authorizer: mexAuthorizer
 
+      # get metadata + updatedAt of all nodes of a workspace
+    - httpApi:
+        path: /node/metadata
+        method: get
+
     - httpApi:
         path: /node/{id}/version/metadata
         method: get
