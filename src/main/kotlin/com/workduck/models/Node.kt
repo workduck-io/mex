@@ -48,6 +48,9 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
 
+    @JsonProperty("metadata")
+    var nodeMetaData : NodeMetadata ?= null,
+
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")
     @DynamoDBAttribute(attributeName = "tags")
@@ -74,15 +77,6 @@ data class Node(
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")
     var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
-//
-//    @JsonProperty("saveableRange")
-//    @DynamoDBTypeConverted(converter = SaveableRangeConverter::class)
-//    @DynamoDBAttribute(attributeName = "saveableRange")
-//    var saveableRange: SaveableRange? = null,
-//
-//    @JsonProperty("sourceUrl")
-//    @DynamoDBAttribute(attributeName = "sourceUrl")
-//    var sourceUrl: String? = null,
 
     // @JsonProperty("status")
     // val status: NodeStatus = NodeStatus.LINKED,
