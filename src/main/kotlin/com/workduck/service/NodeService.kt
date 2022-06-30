@@ -976,20 +976,3 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 }
-
-fun main(){
-    val json = """
-        {
-          "type": "NodeBulkRequest",
-          "nodePath": {
-            "path": "Z#NODE_TC8P8dMxjXWMVXXYe3PYY#four#NODE_Rrmc8nP8pV9DEianQHz4E#five#NODE_7Wapm3eUhLNnKxVc7iT3j#six#NODE_M6CrdNE6UVHCFfpFdtD6J"
-          },
-          "namespaceIdentifier": "NAMESPACE1",
-          "data": [
-          ],
-          "tags": []
-        }
-    """.trimIndent()
-
-    NodeService().bulkCreateNodes(Helper.objectMapper.readValue(json), "WORKSPACE_qh4xcDjxa9qD8YnqwQwYc", "ss")
-}
