@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -375,7 +376,7 @@ class NodeService( // Todo: Inject them from handlers
         val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, nodePath.allNodesNames.last(), nodePath.allNodesIDs.last(), workspaceID, userID)
         val workspace: Workspace = workspaceService.getWorkspace(workspaceID) as Workspace
 
-        val nodeHierarchyInformation = (workspace.nodeHierarchyInformation as MutableList<String>)
+        val nodeHierarchyInformation = workspace.nodeHierarchyInformation?.toMutableList() ?: mutableListOf()
 
         NodeHelper.checkForDuplicateNodeID(nodeHierarchyInformation, node.id)
 
@@ -974,4 +975,21 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
+}
+
+fun main(){
+    val json = """
+        {
+          "type": "NodeBulkRequest",
+          "nodePath": {
+            "path": "Z#NODE_TC8P8dMxjXWMVXXYe3PYY#four#NODE_Rrmc8nP8pV9DEianQHz4E#five#NODE_7Wapm3eUhLNnKxVc7iT3j#six#NODE_M6CrdNE6UVHCFfpFdtD6J"
+          },
+          "namespaceIdentifier": "NAMESPACE1",
+          "data": [
+          ],
+          "tags": []
+        }
+    """.trimIndent()
+
+    NodeService().bulkCreateNodes(Helper.objectMapper.readValue(json), "WORKSPACE_qh4xcDjxa9qD8YnqwQwYc", "ss")
 }
