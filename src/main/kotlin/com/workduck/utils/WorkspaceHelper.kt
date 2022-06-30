@@ -1,10 +1,15 @@
 package com.workduck.utils
 
+import com.serverless.utils.commonPrefixList
+import com.serverless.utils.commonSuffixList
+import com.serverless.utils.getListOfNodes
+import com.workduck.models.MatchType
+
 object WorkspaceHelper {
 
     fun removeRedundantPaths(
-            updatedPaths: List<String>,
-            nodeHierarchy: MutableList<String>
+        updatedPaths: List<String>,
+        nodeHierarchy: MutableList<String>
     ): List<String> {
 
         val pathsToAdd = mutableListOf<String>()
@@ -16,7 +21,7 @@ object WorkspaceHelper {
                     break
                 }
             }
-            if(!redundantPath) pathsToAdd.add(newPath)
+            if (!redundantPath) pathsToAdd.add(newPath)
         }
         nodeHierarchy += pathsToAdd
 
@@ -24,7 +29,8 @@ object WorkspaceHelper {
     }
 
     fun removeRedundantPaths(
-            nodeHierarchy: MutableList<String>
+        nodeHierarchy: MutableList<String>,
+        matchType: MatchType = MatchType.PREFIX
     ): List<String> {
 
         val nonRedundantHierarchy = mutableListOf<String>()
@@ -32,13 +38,23 @@ object WorkspaceHelper {
             var redundantPath = false
             for (pathToCompare in nodeHierarchy) {
                 if (path != pathToCompare) {
-                    if (path.commonPrefixWith(pathToCompare) == path) {
-                        redundantPath = true
-                        break
+                    when (matchType) {
+                        MatchType.PREFIX -> {
+                            if (path.getListOfNodes().commonPrefixList(pathToCompare.getListOfNodes()) == path.getListOfNodes()) {
+                                redundantPath = true
+                                break
+                            }
+                        }
+                        MatchType.SUFFIX -> {
+                            if (path.getListOfNodes().commonSuffixList(pathToCompare.getListOfNodes()) == path.getListOfNodes()) {
+                                redundantPath = true
+                                break
+                            }
+                        }
                     }
                 }
             }
-            if(!redundantPath) nonRedundantHierarchy.add(path)
+            if (!redundantPath) nonRedundantHierarchy.add(path)
         }
 
         return nonRedundantHierarchy.distinct()

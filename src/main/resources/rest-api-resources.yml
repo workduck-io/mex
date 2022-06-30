@@ -262,6 +262,11 @@ Workspace:
         authorizer: mexAuthorizer
 
     - httpApi:
+        path: /workspace/hierarchy/archived
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
         path: /workspace/refreshHierarchy
         method: patch
         authorizer: mexAuthorizer

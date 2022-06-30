@@ -57,7 +57,7 @@ class NodeStrategyFactory {
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
-            archiveNodeObject to DeleteNodeStrategy(),
+            archiveNodeObject to ArchiveNodeStrategy(),
             appendToNodeObject to AppendToNodeStrategy(),
             updateNodeBlock to UpdateNodeBlockStrategy(),
             getNodeVersionMetadata to GetNodeVersionMetaDataStrategy(),

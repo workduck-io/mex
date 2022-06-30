@@ -26,6 +26,8 @@ class WorkspaceStrategyFactory {
 
         const val registerWorkspaceObject = "POST /workspace/register"
 
+        const val getArchivedNodeHierarchyObject = "GET /workspace/hierarchy/archived"
+
         private val workspaceRegistry: Map<String, WorkspaceStrategy> = mapOf(
             getWorkspaceObject to GetWorkspaceStrategy(),
             createWorkspaceObject to CreateWorkspaceStrategy(),
@@ -34,7 +36,8 @@ class WorkspaceStrategyFactory {
             getWorkspaceDataObject to GetWorkspaceDataStrategy(),
             refreshNodeHierarchyObject to RefreshHierarchyStrategy(),
             getNodeHierarchyObject to GetHierarchyStrategy(),
-            registerWorkspaceObject to RegisterWorkspaceStrategy()
+            registerWorkspaceObject to RegisterWorkspaceStrategy(),
+            getArchivedNodeHierarchyObject to GetArchivedHierarchyStrategy()
         )
 
         fun getWorkspaceStrategy(routeKey: String): WorkspaceStrategy? {

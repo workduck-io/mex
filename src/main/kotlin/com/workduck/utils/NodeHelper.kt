@@ -85,6 +85,14 @@ object NodeHelper {
                         .joinToString(Constants.DELIMITER)
     }
 
+    fun getNodeIDsFromHierarchy(hierarchiesToArchive : List<String>?) : List<String> {
+        if(hierarchiesToArchive.isNullOrEmpty()) return listOf()
+        return hierarchiesToArchive.map { nodePath ->
+            getIDPath(nodePath).getListOfNodes()
+        }.flatten()
+
+    }
+
 
     fun getCommonPrefixNodePath(path1: String, path2: String): String {
         return path1.split(Constants.DELIMITER).commonPrefixList(path2.split(Constants.DELIMITER)).joinToString(Constants.DELIMITER)

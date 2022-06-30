@@ -8,6 +8,7 @@ object Constants {
     const val VALID_TITLE_SPECIAL_CHAR = ",:-@ "
     fun getCurrentTime() : Long = System.currentTimeMillis()
     const val ADDED_PATHS = "addedPaths"
+    const val ARCHIVED_HIERARCHY = "archivedHierarchy"
     const val REMOVED_PATHS = "removedPaths"
     const val INTERNAL_WORKSPACE = "WORKSPACE_INTERNAL"
     const val NODE_ID_PREFIX = "NODE_"

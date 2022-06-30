@@ -40,6 +40,7 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
+import com.workduck.models.MatchType
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
@@ -61,6 +62,7 @@ import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
+import com.workduck.utils.NodeHelper.getNodeIDsFromHierarchy
 import com.workduck.utils.NodeHelper.updateNodePath
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
@@ -71,9 +73,16 @@ import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
 import com.workduck.utils.extensions.toNode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -538,7 +547,7 @@ class NodeService( // Todo: Inject them from handlers
                     node.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
             }
 
-    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
+    fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
         val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
 
@@ -553,6 +562,79 @@ class NodeService( // Todo: Inject them from handlers
             workspaceService.updateNodeHierarchyOnArchivingNode(workspace, nodeID)
         }
         return@runBlocking jobToChangeNodeStatus.await()
+    }
+
+    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableMap<String, List<String>?> {
+
+        val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+
+        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace
+
+        val currentActiveHierarchy = workspace.nodeHierarchyInformation ?: listOf()
+
+        updateActiveAndArchivedHierarchies(workspace, passedNodeIDList)
+
+        val nodeIDsToArchive = getNodeIDsFromHierarchy(workspace.archivedNodeHierarchyInformation)
+
+        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID)
+
+        /* mapOfArchivedHierarchyAndActiveHierarchyDiff */
+        return mutableMapOf(Constants.ARCHIVED_HIERARCHY to workspace.archivedNodeHierarchyInformation).also {
+            it.putAll(workspace.nodeHierarchyInformation?.getDifferenceWithOldHierarchy(currentActiveHierarchy) ?: mapOf())
+        }
+
+    }
+
+
+    private fun unarchiveOrArchiveNodesInParallel(nodeIDList: List<String>, workspaceID: String)  = runBlocking{
+
+        val jobToArchive = CoroutineScope(Dispatchers.IO + Job()).async {
+            supervisorScope {
+                val deferredList = ArrayList<Deferred<*>>()
+                for (nodeID in nodeIDList) {
+                    deferredList.add(
+                            async {  pageRepository.unarchiveOrArchivePages(listOf(nodeID), workspaceID, ItemStatus.ARCHIVED) }
+                    )
+                }
+                deferredList.joinAll()
+            }
+        }
+
+        jobToArchive.await()
+    }
+
+    private fun updateActiveAndArchivedHierarchies(workspace: Workspace, passedNodeIDList: List<String>){
+
+        val activeHierarchy = workspace.nodeHierarchyInformation
+        require(!activeHierarchy.isNullOrEmpty()) { "Hierarchy does not exist" }
+
+        val newArchivedHierarchy = workspace.archivedNodeHierarchyInformation?.toMutableList() ?: mutableListOf()
+        val newActiveHierarchy = mutableListOf<String>()
+
+        for(nodePath in activeHierarchy) {
+            var isNodePresentInPath = false
+            val pathsListForSinglePath = mutableListOf<String>() /* more than one node ids from a single path could be passed */
+            for (nodeID in passedNodeIDList) {
+                if (nodePath.contains(nodeID)) {
+                    isNodePresentInPath = true
+                    pathsListForSinglePath.add(nodePath.getListOfNodes().let {
+                        it.subList(it.indexOf(nodeID) - 1, it.size)
+                    }.convertToPathString())
+                }
+            }
+            if(isNodePresentInPath){
+                val finalPathToArchive = removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
+                newArchivedHierarchy.add(finalPathToArchive)
+                /* active hierarchy is nodePath minus the archived path */
+                newActiveHierarchy.add(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
+            }
+            else { /* this path will remain unchanged */
+                newActiveHierarchy.add(nodePath)
+            }
+        }
+
+        Workspace.populateHierarchiesAndUpdatedAt(workspace, newActiveHierarchy, removeRedundantPaths(newArchivedHierarchy, MatchType.SUFFIX))
+        workspaceService.updateWorkspace(workspace)
     }
 
     /* Getting called Internally via trigger. No need to update hierarchy */
