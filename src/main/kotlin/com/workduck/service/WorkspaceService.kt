@@ -65,7 +65,11 @@ class WorkspaceService (
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): Map<String, Any> = runBlocking {
+    fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
+        return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
+    }
+
+    fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String): Map<String, Any> = runBlocking {
         val jobToGetHierarchy =  async { (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf() }
         val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
         return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())

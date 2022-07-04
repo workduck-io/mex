@@ -8,6 +8,15 @@ import com.workduck.service.WorkspaceService
 
 class GetHierarchyStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
-        return ApiResponseHelper.generateStandardResponse(workspaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID), Messages.ERROR_GETTING_HIERARCHY)
+        val getMetadata = input.queryStringParameters?.let {
+            it["getMetadata"]?.toBoolean()
+        } ?: false
+
+        return when (getMetadata) {
+            true -> ApiResponseHelper.generateStandardResponse(workspaceService.getNodeHierarchyOfWorkspaceWithMetaData(input.headers.workspaceID), Messages.ERROR_GETTING_HIERARCHY)
+            false -> ApiResponseHelper.generateStandardResponse(workspaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID), Messages.ERROR_GETTING_HIERARCHY)
+
+        }
+
     }
 }
