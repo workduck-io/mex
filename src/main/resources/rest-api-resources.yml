@@ -231,6 +231,12 @@ Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
   events:
     - httpApi:
+        path: /workspace/register
+        method: post
+        authorizer: mexAuthorizer
+
+
+    - httpApi:
         path: /workspace
         method: get
         authorizer: mexAuthorizer
