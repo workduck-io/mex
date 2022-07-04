@@ -18,6 +18,8 @@ class NodeStrategyFactory {
 
         const val updateNodeBlock = "POST /node/{id}/blockUpdate"
 
+        const val getMetadataOfNodes = "GET /node/metadata"
+
         const val unarchiveNodeObject = "PUT /node/unarchive"
 
         const val deleteArchivedNodeObject = "POST /node/archive/delete"
@@ -59,6 +61,7 @@ class NodeStrategyFactory {
             appendToNodeObject to AppendToNodeStrategy(),
             updateNodeBlock to UpdateNodeBlockStrategy(),
             getNodeVersionMetadata to GetNodeVersionMetaDataStrategy(),
+            getMetadataOfNodes to GetNodesMetadataStrategy(),
             unarchiveNodeObject to UnarchiveNodeStrategy(),
             deleteArchivedNodeObject to DeleteArchivedNodeStrategy(),
             getAllArchivedNodesObject to GetAllArchivedNodesStrategy(),

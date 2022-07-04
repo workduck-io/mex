@@ -8,7 +8,6 @@ import com.workduck.service.WorkspaceService
 
 class GetHierarchyStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
-        val nodeHierarchy: List<String> = workspaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID)
-        return ApiResponseHelper.generateStandardResponse(nodeHierarchy, Messages.ERROR_GETTING_HIERARCHY)
+        return ApiResponseHelper.generateStandardResponse(workspaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID), Messages.ERROR_GETTING_HIERARCHY)
     }
 }

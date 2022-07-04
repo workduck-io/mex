@@ -1,10 +1,10 @@
 package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
 import com.workduck.models.AdvancedElement
+import com.workduck.models.NodeMetadata
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeBulkRequest")
@@ -15,5 +15,8 @@ data class NodeBulkRequest(
     val data: List<AdvancedElement>? = null,
 
     var tags: MutableList<String> = mutableListOf(),
+
+    @JsonProperty("metadata")
+    val nodeMetadata: NodeMetadata? = null,
 
 ) : WDRequest

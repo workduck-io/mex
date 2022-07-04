@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.Gson
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
@@ -13,6 +14,7 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
+import com.workduck.models.NodeMetadata
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -30,24 +32,28 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
-class WorkspaceService {
+class WorkspaceService (
 
-    private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-    private val dynamoDB: DynamoDB = DynamoDB(client)
-    private val mapper = DynamoDBMapper(client)
+    private val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
+    private val dynamoDB: DynamoDB = DynamoDB(client),
+    private val mapper: DynamoDBMapper = DynamoDBMapper(client),
+
+    val nodeService: NodeService= NodeService(),
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
-    }
+    },
 
-    private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+    private val dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-        .build()
+        .build(),
 
-    private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
+    private val workspaceRepository: WorkspaceRepository = WorkspaceRepository(dynamoDB, mapper, dynamoDBMapperConfig),
     private val repository: Repository<Workspace> =
         RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)
+
+) {
 
     fun createWorkspace(workspaceRequest: WDRequest): Entity? {
         val workspaceID = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
@@ -59,8 +65,10 @@ class WorkspaceService {
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
-        return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
+    fun getNodeHierarchyOfWorkspace(workspaceID: String): Map<String, Any> = runBlocking {
+        val jobToGetHierarchy =  async { (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf() }
+        val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
+        return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
     }
 
     fun updateWorkspace(workspaceID: String, request: WDRequest) {

@@ -1,6 +1,7 @@
 package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
+import com.workduck.models.NodeMetadata
 import com.workduck.models.SaveableRange
 
 data class NodeResponse(
@@ -34,5 +35,7 @@ data class NodeResponse(
 //
 //    var sourceUrl: String? = null,
 
-    var publicAccess: Boolean
+    var publicAccess: Boolean,
+
+    var metadata: NodeMetadata?
 ) : Response, TimestampAdhereResponse

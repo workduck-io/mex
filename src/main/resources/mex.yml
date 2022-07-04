@@ -23,9 +23,7 @@ Resources:
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
-      ProvisionedThroughput:
-        ReadCapacityUnits: 15
-        WriteCapacityUnits: 15
+      BillingMode: PAY_PER_REQUEST
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
@@ -37,9 +35,17 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 15
-            WriteCapacityUnits: 15
+        - IndexName: PK-itemType-index
+          KeySchema:
+            - AttributeName: PK
+              KeyType: HASH
+            - AttributeName: itemType
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - metadata
+              - updatedAt
+            ProjectionType: INCLUDE
         - IndexName: itemType-AK-index
           KeySchema:
             - AttributeName: itemType
@@ -48,9 +54,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 15
-            WriteCapacityUnits: 15
         - IndexName: WS-itemStatus-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -59,9 +62,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
         - IndexName: WS-itemType-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -70,9 +70,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
         - IndexName: createdBy-itemType-index
           KeySchema:
             - AttributeName: createdBy
@@ -81,7 +78,4 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 15
-            WriteCapacityUnits: 15
 
