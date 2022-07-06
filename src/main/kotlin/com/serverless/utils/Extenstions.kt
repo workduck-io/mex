@@ -121,7 +121,7 @@ fun String.isValidID(prefix: String): Boolean {
 
 fun String.isValidTitle() : Boolean {
     return this.filter {
-        it.isLetterOrDigit() || it == Constants.DASH
+        it.isLetterOrDigit() || Constants.VALID_TITLE_SPECIAL_CHAR.contains(it)
     }.length == this.length
 }
 fun String.isValidNanoID(): Boolean {
