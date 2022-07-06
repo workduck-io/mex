@@ -119,6 +119,11 @@ fun String.isValidID(prefix: String): Boolean {
         this.takeLast(Constants.NANO_ID_SIZE).isValidNanoID()
 }
 
+fun String.isValidTitle() : Boolean {
+    return this.filter {
+        it.isLetterOrDigit() || it == Constants.DASH
+    }.length == this.length
+}
 fun String.isValidNanoID(): Boolean {
     return this.filter {
         Constants.NANO_ID_RANGE.contains(it)

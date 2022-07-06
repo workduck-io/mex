@@ -5,6 +5,7 @@ import com.serverless.utils.Constants
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNewPath
 import com.serverless.utils.isValidID
+import com.serverless.utils.isValidTitle
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 
@@ -31,6 +32,10 @@ data class NodePath(
 
         require(allNodesIDs.toSet().size == allNodesNames.size) {
             "Invalid path format"
+        }
+
+        require(allNodesNames.none { title -> !title.isValidTitle() }) {
+            "Invalid Title"
         }
     }
 }

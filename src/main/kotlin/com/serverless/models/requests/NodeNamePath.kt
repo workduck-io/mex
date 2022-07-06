@@ -2,6 +2,7 @@ package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.serverless.utils.Constants
+import com.serverless.utils.isValidTitle
 
 /**
  * Node path DTO
@@ -17,6 +18,10 @@ data class NodeNamePath(
     init {
         require(path.isNotBlank()) {
             "Path cannot be empty"
+        }
+
+        require(allNodes.none { title -> !title.isValidTitle() }) {
+            "Invalid Title"
         }
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
+import com.serverless.utils.isValidTitle
 import com.workduck.models.AdvancedElement
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -32,6 +33,10 @@ data class SnippetRequest(
 
         require(title.isNotEmpty()) {
             "Title is required"
+        }
+
+        require(title.isValidTitle()){
+            "Invalid Title"
         }
 
         require(version > 0) {
