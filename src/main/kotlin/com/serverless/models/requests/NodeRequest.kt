@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
+import com.serverless.utils.isValidTitle
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement
@@ -45,5 +46,7 @@ open class NodeRequest(
         require(id.isValidID(Constants.NODE_ID_PREFIX) && referenceID?.isValidID(Constants.NODE_ID_PREFIX) ?: true) { "Invalid ID(s)" }
 
         require(title.isNotEmpty()) { "Title is required" }
+
+        require(title.isValidTitle()) { "Invalid Title" }
     }
 }
