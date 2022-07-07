@@ -26,7 +26,8 @@ fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspa
         lastEditedBy = userID,
         data = this.data,
         title = this.title,
-        version = this.version
+        version = this.version,
+        isTemplate = this.isTemplate
     )
 
 fun Snippet.setVersion(version: Int) {
