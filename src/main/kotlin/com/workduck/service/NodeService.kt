@@ -564,7 +564,25 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking jobToChangeNodeStatus.await()
     }
 
-    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableMap<String, List<String>?> {
+    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): List<String> {
+
+        val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+
+        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace
+
+
+        updateActiveAndArchivedHierarchies(workspace, passedNodeIDList)
+
+        val nodeIDsToArchive = getNodeIDsFromHierarchy(workspace.archivedNodeHierarchyInformation)
+
+        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID)
+
+        return nodeIDsToArchive
+
+
+    }
+
+    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String): MutableMap<String, List<String>?> {
 
         val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
 

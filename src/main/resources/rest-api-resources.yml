@@ -26,6 +26,11 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
+        path: /node/archive/middleware
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
         path: /node/unarchive
         method: put
         authorizer: mexAuthorizer
