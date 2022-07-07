@@ -45,6 +45,7 @@ Resources:
             NonKeyAttributes:
               - metadata
               - updatedAt
+              - createdAt
             ProjectionType: INCLUDE
         - IndexName: itemType-AK-index
           KeySchema:

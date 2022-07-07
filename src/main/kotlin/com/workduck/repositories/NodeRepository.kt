@@ -494,7 +494,7 @@ class NodeRepository(
         return DynamoDBQueryExpression<Node>().queryWithIndex(index = "PK-itemType-index", keyConditionExpression = "PK = :PK  and itemType = :itemType",
                 expressionAttributeValues = expressionAttributeValues).let { it ->
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
-                node.id to mapOf("metadata" to node.nodeMetaData, "updatedAt" to node.updatedAt)
+                node.id to mapOf("metadata" to node.nodeMetaData, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
             }
         }
     }
