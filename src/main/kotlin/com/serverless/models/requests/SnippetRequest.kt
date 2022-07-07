@@ -22,7 +22,10 @@ data class SnippetRequest(
     val title: String,
 
     @JsonProperty("version")
-    val version: Int = 1
+    val version: Int = 1,
+
+    @JsonProperty("isTemplate")
+    val isTemplate: Boolean?
 
 ) : WDRequest {
 
@@ -35,7 +38,7 @@ data class SnippetRequest(
             "Title is required"
         }
 
-        require(title.isValidTitle()){
+        require(title.isValidTitle()) {
             "Invalid Title"
         }
 

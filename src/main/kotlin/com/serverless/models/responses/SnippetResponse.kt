@@ -19,5 +19,7 @@ data class SnippetResponse(
 
     var version: Int?,
 
+    var isTemplate: Boolean?
+
 
 ) : Response, TimestampAdhereResponse

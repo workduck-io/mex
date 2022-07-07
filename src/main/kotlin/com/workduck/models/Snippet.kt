@@ -57,6 +57,9 @@ data class Snippet(
     @DynamoDBAttribute(attributeName = "dataOrder")
     override var dataOrder: MutableList<String>? = null,
 
+    @DynamoDBAttribute(attributeName = "isTemplate")
+    var isTemplate: Boolean? = null,
+
     @JsonProperty("createdBy")
     @DynamoDBAttribute(attributeName = "createdBy")
     override var createdBy: String? = null,
