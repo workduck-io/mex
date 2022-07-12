@@ -12,7 +12,7 @@ class ArchiveNodeMiddlewareStrategy : NodeStrategy {
 
         return if (nodeIDRequest != null) {
 
-            val nodeIDList =nodeService.archiveNodes(nodeIDRequest, input.headers.workspaceID)
+            val nodeIDList =nodeService.archiveNodesMiddleware(nodeIDRequest, input.headers.workspaceID)
 
             ApiResponseHelper.generateStandardResponse(nodeIDList, Messages.ERROR_ARCHIVING_NODE)
         } else {

@@ -644,7 +644,7 @@ class NodeService( // Todo: Inject them from handlers
                 val finalPathToArchive = removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
                 newArchivedHierarchy.add(finalPathToArchive)
                 /* active hierarchy is nodePath minus the archived path */
-                newActiveHierarchy.add(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
+                newActiveHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
             }
             else { /* this path will remain unchanged */
                 newActiveHierarchy.add(nodePath)
