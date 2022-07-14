@@ -47,12 +47,24 @@ class Workspace(
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
     var nodeHierarchyInformation: List<String> ? = null,
 
+    @JsonProperty("archivedNodeHierarchyInformation")
+    @DynamoDBAttribute(attributeName = "archivedNodeHierarchyInformation")
+    var archivedNodeHierarchyInformation: List<String> ? = null,
+
     @JsonProperty("hierarchyUpdateSource")
     @DynamoDBAttribute(attributeName = "hierarchyUpdateSource")
     @DynamoDBTypeConverted(converter = HierarchyUpdateSourceConverter::class)
     var hierarchyUpdateSource: HierarchyUpdateSource = HierarchyUpdateSource.REFRESH
 
 ) : Entity {
+
+    companion object {
+        fun populateHierarchiesAndUpdatedAt(workspace: Workspace, activeHierarchy : List<String>, archivedHierarchy : List<String>?, updatedAt: Long = Constants.getCurrentTime()){
+            workspace.nodeHierarchyInformation = activeHierarchy
+            workspace.archivedNodeHierarchyInformation = archivedHierarchy
+            workspace.updatedAt = updatedAt
+        }
+    }
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")

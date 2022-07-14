@@ -6,7 +6,7 @@ import com.serverless.models.Input
 import com.serverless.utils.Messages
 import com.workduck.service.NodeService
 
-class DeleteNodeStrategy : NodeStrategy {
+class ArchiveNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val nodeIDRequest = input.payload
 

@@ -75,6 +75,9 @@ class WorkspaceService (
         return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
     }
 
+    fun getArchivedNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
+        return (getWorkspace(workspaceID) as Workspace).archivedNodeHierarchyInformation ?: listOf()
+    }
     fun updateWorkspace(workspaceID: String, request: WDRequest) {
         val workspaceRequest: WorkspaceRequest = request as WorkspaceRequest
         workspaceRepository.updateWorkspaceName(workspaceID, workspaceRequest.name)
@@ -89,8 +92,7 @@ class WorkspaceService (
         newNodeHierarchy: List<String>,
         hierarchyUpdateSource: HierarchyUpdateSource
     ) {
-        workspace.nodeHierarchyInformation = newNodeHierarchy
-        workspace.updatedAt = Constants.getCurrentTime()
+        Workspace.populateHierarchiesAndUpdatedAt(workspace, newNodeHierarchy, workspace.archivedNodeHierarchyInformation)
         workspace.hierarchyUpdateSource = hierarchyUpdateSource
         updateWorkspace(workspace)
     }
