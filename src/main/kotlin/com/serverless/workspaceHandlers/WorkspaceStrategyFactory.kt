@@ -1,11 +1,5 @@
 package com.serverless.workspaceHandlers
 
-import com.serverless.transformers.IdentifierTransformer
-import com.serverless.transformers.Transformer
-import com.serverless.transformers.WorkspaceTransformer
-import com.workduck.models.Identifier
-import com.workduck.models.Workspace
-
 class WorkspaceStrategyFactory {
 
     companion object {

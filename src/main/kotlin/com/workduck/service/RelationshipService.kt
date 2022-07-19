@@ -8,7 +8,6 @@ import com.workduck.models.Relationship
 import com.workduck.repositories.RelationshipRepository
 import com.workduck.utils.DDBHelper
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.workduck.models.NodeIdentifier
 import com.workduck.models.RelationshipType
 
 

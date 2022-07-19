@@ -9,18 +9,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemTypeConverter
-import com.workduck.converters.NodeDataConverter
-import com.workduck.converters.NodeIdentifierConverter
 import com.workduck.converters.NodeIdentifierListConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
-import com.workduck.utils.Helper
 
 /**
  * All associated property type

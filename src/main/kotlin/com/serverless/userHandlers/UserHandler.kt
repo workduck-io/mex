@@ -7,10 +7,8 @@ import com.serverless.ApiResponseHelper
 import com.serverless.StandardResponse
 import com.serverless.models.Input
 import com.serverless.utils.Messages
-import com.serverless.tagHandlers.TagHandler
 import com.serverless.utils.handleWarmup
 import com.workduck.service.UserService
-import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class UserHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {

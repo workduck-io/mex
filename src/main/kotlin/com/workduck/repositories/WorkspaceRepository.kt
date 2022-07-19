@@ -3,16 +3,12 @@ package com.workduck.repositories
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
-import com.workduck.models.Element
 import com.workduck.models.Workspace
-import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import org.apache.logging.log4j.LogManager
-import kotlin.math.exp
 
 class WorkspaceRepository(
     private val dynamoDB: DynamoDB,

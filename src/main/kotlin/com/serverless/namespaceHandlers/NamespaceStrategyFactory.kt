@@ -1,11 +1,5 @@
 package com.serverless.namespaceHandlers
 
-import com.serverless.transformers.IdentifierTransformer
-import com.serverless.transformers.NamespaceTransformer
-import com.serverless.transformers.Transformer
-import com.workduck.models.Identifier
-import com.workduck.models.Namespace
-
 class NamespaceStrategyFactory {
 
     companion object {

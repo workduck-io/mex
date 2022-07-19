@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Table
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.TagRequest
 import com.serverless.models.requests.WDRequest
 import com.workduck.models.NodeIdentifier
@@ -13,7 +12,6 @@ import com.workduck.models.Tag
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.repositories.TagRepository
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager

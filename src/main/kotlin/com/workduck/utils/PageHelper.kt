@@ -1,7 +1,6 @@
 package com.workduck.utils
 
 import com.serverless.models.requests.GenericListRequest
-import com.workduck.models.Entity
 import com.workduck.models.Page
 
 object PageHelper {

@@ -23,7 +23,6 @@ import com.serverless.utils.Messages
 import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.awaitAndThrowExceptionIfFalse
-import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -45,7 +44,6 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeIdentifier
-import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
@@ -78,7 +76,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -1080,5 +1077,255 @@ class NodeService( // Todo: Inject them from handlers
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
+
+}
+
+fun main(){
+    val json = """
+        {
+         "type" : "NodeRequest",
+         "title" : "XYZ",
+                "id": "NODE_tDVCrU3EHpezGXiPdkkkM",
+            "data": [
+                {
+                    "elementType": "paragraph",
+                    "id": "TEMP_9c3MJk87iAUpp9m334jKi",
+                    "content": "",
+                    "children": [
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_cKjjqcNmKLftAW7Ew9MmL",
+                            "content": "Hello",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        }
+                    ],
+                    "properties": null,
+                    "elementMetadata": null,
+                    "createdBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "lastEditedBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "createdAt": 1653665344206,
+                    "updatedAt": 1653665344206
+                },
+                {
+                    "elementType": "paragraph",
+                    "id": "TEMP_Mn67JdfLpQHLRepVthh9E",
+                    "content": "",
+                    "children": [
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_zBNAcfEqB9EWqqbC9zje6",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        }
+                    ],
+                    "properties": null,
+                    "elementMetadata": null,
+                    "createdBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "lastEditedBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "createdAt": 1653665371019,
+                    "updatedAt": 1653665371019
+                },
+                {
+                    "elementType": "paragraph",
+                    "id": "TEMP_TUBJUMCNkyaYfFQ9xwqb7",
+                    "content": "",
+                    "children": [
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_cBnQ3W6tYyJEfYwbXVF3k",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        },
+                        {
+                            "elementType": "paragraph",
+                            "id": "defaultValue",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "workspaceID": "WORKSPACEK6ZFYS7ZPXDTD4HGM6QTWSHBGWFFLM5J1XQMD0FZHWCLZ6LNVTDW",
+                            "nodeID": "NODE_tDVCrU3EHpezGXiPdkkkM",
+                            "updatedAt": null
+                        },
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_iacMXHWmYTFtiPdxWbkLN",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        }
+                    ],
+                    "properties": null,
+                    "elementMetadata": null,
+                    "createdBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "lastEditedBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "createdAt": 1653665371019,
+                    "updatedAt": 1653665371019
+                },
+                {
+                    "elementType": "paragraph",
+                    "id": "TEMP_UYfUKnrrUwnDzHAeQXFQJ",
+                    "content": "",
+                    "children": [
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_Mq7XbMFiadc9DGKAGJeaw",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        }
+                    ],
+                    "properties": null,
+                    "elementMetadata": null,
+                    "createdBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "lastEditedBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "createdAt": 1653665371019,
+                    "updatedAt": 1653665371019
+                },
+                {
+                    "id": "TEMP_xKVDF",
+                    "elementType": "action-block",
+                    "properties": {
+                        "actionContext": {
+                            "actionId": "LINEAR_GET_ASSIGNED_ISSUES",
+                            "actionGroupId": "LINEAR",
+                            "selections": {
+                                "LINEAR_GET_USERS": {
+                                    "selection": {
+                                        "label": "Dinesh Singh",
+                                        "value": {
+                                            "data": {
+                                                "user_url": "https://linear.app/dineshsingh/profiles/dinesh",
+                                                "user_email": "dinesh@workduck.io",
+                                                "user_icon": null,
+                                                "user_id": "0494d2d7-24c0-4b41-b2e6-34ff21ecf0c8",
+                                                "user_name": "Dinesh Singh"
+                                            },
+                                            "select": {
+                                                "icon": "ic:baseline-assignment-ind",
+                                                "value": "0494d2d7-24c0-4b41-b2e6-34ff21ecf0c8",
+                                                "label": "Dinesh Singh"
+                                            },
+                                            "body_data": {
+                                                "user_id": "0494d2d7-24c0-4b41-b2e6-34ff21ecf0c8"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "children": [
+                        {
+                            "id": "TEMP_Dgzem",
+                            "content": ""
+                        }
+                    ]
+                },
+                {
+                    "elementType": "paragraph",
+                    "id": "TEMP_ftf7Y7dHUBHQNFC9qeiLw",
+                    "content": "",
+                    "children": [
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_dEAPr68bY3y466CLLNqrW",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        },
+                        {
+                            "elementType": "paragraph",
+                            "id": "defaultValue",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "workspaceID": "WORKSPACEK6ZFYS7ZPXDTD4HGM6QTWSHBGWFFLM5J1XQMD0FZHWCLZ6LNVTDW",
+                            "nodeID": "NODE_tDVCrU3EHpezGXiPdkkkM",
+                            "blockID": "TEMP_PRit9TtUVBVYjD3xtxDHD",
+                            "blockAlias": "What is Mex",
+                            "updatedAt": null
+                        },
+                        
+                        {
+                            "elementType": "paragraph",
+                            "id": "TEMP_jQVCqYbcKtMygJXEx8dJR",
+                            "content": "",
+                            "children": null,
+                            "properties": null,
+                            "elementMetadata": null,
+                            "createdBy": null,
+                            "lastEditedBy": null,
+                            "createdAt": null,
+                            "updatedAt": null
+                        }
+                    ],
+                    "properties": null,
+                    "elementMetadata": null,
+                    "createdBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "lastEditedBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+                    "createdAt": 1653665371019,
+                    "updatedAt": 1653665371019
+                }
+            ],
+            "lastEditedBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+            "createdBy": "ef1d5bce-3942-4622-9ae9-aa14e6385a85",
+            "createdAt": 1653665344206,
+            "updatedAt": 1653665371019,
+            "itemType": "Node",
+            "tags": [],
+            "version": 2,
+            "namespaceID": "NAMESPACE1",
+            "workspaceID": "WORKSPACEK6ZFYS7ZPXDTD4HGM6QTWSHBGWFFLM5J1XQMD0FZHWCLZ6LNVTDW",
+            "publicAccess": false,
+            "bookmarked": null
+        }
+    """.trimIndent()
+
+    val x : NodeRequest = Helper.objectMapper.readValue(json)
+
+    //println(x)
+
+    NodeService().createAndUpdateNode(x, "WORKSPACE_gi6ttCHgeDRJ9Vbtxn3pp", "vg")
 
 }

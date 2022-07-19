@@ -1,7 +1,5 @@
 package com.workduck.models
 
-import com.serverless.utils.Constants
-
 interface Page : Entity {
 
     var data: List<AdvancedElement>?

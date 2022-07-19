@@ -10,13 +10,9 @@ import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ReturnValue
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
-import com.workduck.models.Element
 import com.workduck.models.ItemType
-import com.workduck.models.Node
 import com.workduck.models.Tag
-import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.Helper
 import com.workduck.utils.TagHelper.convertObjectToTag

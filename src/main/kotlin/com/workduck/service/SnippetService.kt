@@ -5,16 +5,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.SnippetHelper
 import com.serverless.utils.createSnippetObjectFromSnippetRequest
 import com.serverless.utils.setVersion
 import com.workduck.models.Entity
-import com.workduck.models.ItemStatus
-import com.workduck.models.ItemType
 import com.workduck.models.Snippet
 import com.workduck.models.SnippetIdentifier
 import com.workduck.models.WorkspaceIdentifier
@@ -24,7 +19,6 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.SnippetRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
-import com.workduck.utils.PageHelper.convertGenericRequestToList
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.orderBlocks
 import com.workduck.utils.SnippetHelper.getSnippetSK

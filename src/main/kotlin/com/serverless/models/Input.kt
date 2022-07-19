@@ -2,7 +2,6 @@ package com.serverless.models
 
 import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Messages

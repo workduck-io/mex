@@ -3,7 +3,6 @@ package com.serverless.namespaceHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.transformers.Transformer
 import com.serverless.utils.Messages
 import com.serverless.utils.NamespaceHelper
 import com.workduck.models.Namespace

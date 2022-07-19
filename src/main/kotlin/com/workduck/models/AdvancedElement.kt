@@ -1,35 +1,31 @@
 package com.workduck.models
 
-import com.fasterxml.jackson.annotation.JsonCreator
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.workduck.converters.AdvancedElementPropertiesConverter
+import com.workduck.converters.AdvancedElementPropertiesDeserializer
+import com.workduck.converters.AdvancedElementPropertiesSerializer
+import com.workduck.converters.ElementTypesConverter
+import com.workduck.converters.ElementTypesDeserializer
+import com.workduck.converters.ElementTypesSerializer
 
-
-enum class ElementTypes(val type: String) {
-
-    PARAGRAPH("paragraph");
-
-    companion object {
-        private val codes = values().associateBy(ElementTypes::type)
-        @JvmStatic
-        @JsonCreator
-        fun from(value: String) = codes[value]
-    }
-}
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "elementType",
-        visible = true,
-        defaultImpl = AdvancedElement::class
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "elementType",
+    visible = true,
+    defaultImpl = AdvancedElement::class
 )
 @JsonSubTypes(
-        JsonSubTypes.Type(value = NodeILink::class, name = "nodeILink"),
-        JsonSubTypes.Type(value = BlockILink::class, name = "blockILink"),
-        JsonSubTypes.Type(value = WebLink::class, name = "webLink"),
+    JsonSubTypes.Type(value = NodeILink::class, name = "nodeILink"),
+    JsonSubTypes.Type(value = BlockILink::class, name = "blockILink"),
+    JsonSubTypes.Type(value = WebLink::class, name = "webLink"),
 )
 open class AdvancedElement(
 
@@ -43,13 +39,19 @@ open class AdvancedElement(
     var children: List<AdvancedElement>? = null,
 
     @JsonProperty("elementType")
-    var elementType: String = "p",
+    @JsonDeserialize(converter = ElementTypesDeserializer::class)
+    @JsonSerialize(converter = ElementTypesSerializer::class)
+    @DynamoDBTypeConverted(converter = ElementTypesConverter::class)
+    var elementType: ElementTypes = ElementTypes.ELEMENT_PARAGRAPH,
 
     @JsonProperty("properties")
-    var properties: Map<String, Any>? = null,
+    @JsonDeserialize(converter = AdvancedElementPropertiesDeserializer::class)
+    @JsonSerialize(converter = AdvancedElementPropertiesSerializer::class)
+    @DynamoDBTypeConverted(converter = AdvancedElementPropertiesConverter::class)
+    var properties: Map<AdvancedElementProperties, Any>? = null,
 
     @JsonProperty("elementMetadata")
-    var elementMetadata : ElementMetadata ?= null,
+    var elementMetadata: ElementMetadata ? = null,
 
     @JsonProperty("createdBy")
     var createdBy: String? = null,
@@ -82,5 +84,5 @@ open class AdvancedElement(
         return true
     }
 
-    //fun getProperties(): Map<String, Any>? = properties
+    // fun getProperties(): Map<String, Any>? = properties
 }

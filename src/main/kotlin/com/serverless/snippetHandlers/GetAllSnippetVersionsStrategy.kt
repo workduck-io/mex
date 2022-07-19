@@ -4,7 +4,6 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
-import com.serverless.utils.SnippetHelper
 import com.workduck.service.SnippetService
 
 class GetAllSnippetVersionsStrategy : SnippetStrategy {

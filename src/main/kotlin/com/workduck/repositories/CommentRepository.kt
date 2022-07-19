@@ -10,10 +10,8 @@ import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.workduck.models.Comment
-import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import com.workduck.utils.Helper
-import org.apache.logging.log4j.LogManager
 
 class CommentRepository(
         private val mapper: DynamoDBMapper,

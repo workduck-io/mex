@@ -12,7 +12,6 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
@@ -32,7 +31,6 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
-import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper.getAccessItemPK
 import com.workduck.utils.DDBHelper
@@ -40,7 +38,6 @@ import com.workduck.utils.DDBTransactionHelper
 import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
 import java.time.Instant
-import kotlin.math.exp
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,

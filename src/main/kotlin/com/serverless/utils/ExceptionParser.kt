@@ -4,7 +4,6 @@ import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMappingException
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.amazonaws.services.dynamodbv2.model.ItemCollectionSizeLimitExceededException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper

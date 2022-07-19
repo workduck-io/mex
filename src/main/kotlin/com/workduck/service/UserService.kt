@@ -5,7 +5,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
 
 import com.workduck.models.Entity
-import com.workduck.models.IdentifierType
 import com.workduck.utils.Helper
 
 class UserService {
