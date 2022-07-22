@@ -18,9 +18,13 @@ class RefactorNodePathStrategy : NodeStrategy {
         val workspace = WorkspaceService().getWorkspace(input.headers.workspaceID) as Workspace?
                 ?: throw IllegalArgumentException(Messages.INVALID_WORKSPACE_ID)
 
-        LOG.info("Request Payload : " + Gson().toJson(input.payload))
+        val stage =  System.getenv("STAGE")
 
-        LOG.info("Workspace : " + Gson().toJson(workspace))
+        if(stage == "local" || stage == "dev" || stage == "test") {
+            LOG.info("Request Payload : " + Gson().toJson(input.payload))
+
+            LOG.info("Workspace : " + Gson().toJson(workspace))
+        }
 
         return input.payload?.let{ request ->
             ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.tokenBody.userID, workspace)
