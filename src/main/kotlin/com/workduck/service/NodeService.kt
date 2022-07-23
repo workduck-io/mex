@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -23,7 +22,6 @@ import com.serverless.utils.Messages
 import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.awaitAndThrowExceptionIfFalse
-import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -45,16 +43,12 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeIdentifier
-import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.models.exceptions.WDNodeSizeLargeException
-import com.workduck.repositories.NodeRepository
-import com.workduck.repositories.PageRepository
-import com.workduck.repositories.Repository
-import com.workduck.repositories.RepositoryImpl
+import com.workduck.repositories.*
 import com.workduck.utils.AccessItemHelper.getNodeAccessItems
 import com.workduck.utils.AccessItemHelper.getNodeAccessItemsFromAccessMap
 import com.workduck.utils.DDBHelper
@@ -78,7 +72,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -107,9 +100,8 @@ class NodeService( // Todo: Inject them from handlers
 
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
-
 ) {
-
+    private val publicNodeCache: Cache = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT"))
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
@@ -898,7 +890,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getPublicNode(nodeID: String): Node {
-        return orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
+        val publicNode = publicNodeCache.get(nodeID)
+
+        return if (publicNode != null) publicNode as Node
+        else orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {

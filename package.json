@@ -6,5 +6,8 @@
     "serverless-dynamodb-local": "~0.2.40",
     "serverless-offline": "~8.2.0",
     "serverless-plugin-warmup": "~6.2.0"
+  },
+  "dependencies": {
+    "serverless": "2.72.0-be446db9"
   }
 }

@@ -6,6 +6,37 @@ Ping:
         cors: true
         method: get
 
+PublicNoteUpdate:
+  handler: com.serverless.ddbStreamTriggers.publicnoteUpdateTrigger.PublicNoteUpdate
+  vpc:
+    subnetIds:
+      - "subnet-ad0a8de0"
+      - "subnet-f37686ac"
+      - "subnet-91d621f7"
+      - "subnet-c07d8fe1"
+      - "subnet-fddce7c3"
+      - "subnet-2054fd2e"
+    securityGroupIds:
+      - "sg-0aeaa35ab3c10796d"
+      - "sg-0fad68a531aa4fea5"
+      - "sg-51d4667f"
+  events:
+    - stream:
+        type: dynamodb
+        arn:
+          Fn::GetAtt:
+            - mexData
+            - StreamArn
+        maximumRetryAttempts: 3
+        batchSize: 1
+        enabled: true
+        filterPatterns:
+          - eventName: [ MODIFY ]
+            dynamodb:
+              NewImage:
+                itemType:
+                  S: [ Node ]
+
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
   events:
