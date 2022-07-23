@@ -22,7 +22,6 @@ import com.serverless.utils.Messages
 import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.awaitAndThrowExceptionIfFalse
-import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -104,6 +103,7 @@ class NodeService( // Todo: Inject them from handlers
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 ) {
+    private val publicNodeCache: Cache = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT"))
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
 
