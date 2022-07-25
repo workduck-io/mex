@@ -23,6 +23,7 @@ object PageHelper {
     fun createDataOrderForPage(page: Page): MutableList<String> {
 
         val list = mutableListOf<String>()
+        if(page.data.isNullOrEmpty()) return mutableListOf()
         for (element in page.data!!) {
             list += element.id
         }

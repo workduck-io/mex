@@ -94,6 +94,7 @@ class SnippetService {
 
         snippet.createdBy = snippet.lastEditedBy /* if an update operation is expected, this field will be set to null */
 
+        if(snippet.data.isNullOrEmpty()) return
         for (e in snippet.data!!) {
             e.createdBy = snippet.lastEditedBy
             e.lastEditedBy = snippet.lastEditedBy
