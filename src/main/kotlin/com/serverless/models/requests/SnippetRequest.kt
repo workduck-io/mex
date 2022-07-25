@@ -24,8 +24,8 @@ data class SnippetRequest(
     @JsonProperty("version")
     val version: Int = 1,
 
-    @JsonProperty("isTemplate")
-    val isTemplate: Boolean?
+    @JsonProperty("template")
+    val template: Boolean?
 
 ) : WDRequest {
 

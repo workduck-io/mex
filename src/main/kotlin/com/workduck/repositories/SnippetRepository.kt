@@ -115,9 +115,10 @@ class SnippetRepository(
 
         return DynamoDBQueryExpression<Snippet>().query(keyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
                 filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues,
-                projectionExpression = "id, title, version").let{
+                projectionExpression = "id, title, version, template").let{
             mapper.query(Snippet::class.java, it, dynamoDBMapperConfig).map { snippet ->
-                mapOf("snippetID" to snippet.id, "title" to snippet.title, "version" to snippet.version.toString())
+                mapOf("snippetID" to snippet.id, "title" to snippet.title, "version" to snippet.version.toString(),
+                        "template" to snippet.template.toString())
             }
         }
     }
