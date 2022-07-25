@@ -1,6 +1,7 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -17,10 +18,12 @@ enum class NodeStatus {
 data class Node(
 
     @JsonProperty("id")
+    @JsonAlias("SK")
     @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
     @JsonProperty("workspaceIdentifier")
+    @JsonAlias("PK")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
@@ -44,7 +47,9 @@ data class Node(
     override var createdBy: String? = null,
 
     @JsonProperty("data")
+    @JsonAlias("nodeData")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
+    @JsonDeserialize(converter = NodeDataDeserializer::class) // for Cache Public Note use case
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
 
@@ -72,6 +77,8 @@ data class Node(
     @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
 
     /* WORKSPACE_ID#NAMESPACE_ID */
+    @JsonProperty("ak")
+    @JsonAlias("AK")
     @DynamoDBAttribute(attributeName = "AK")
     var ak: String = "${workspaceIdentifier.id}${Constants.DELIMITER}${namespaceIdentifier?.id}",
 
@@ -101,6 +108,7 @@ data class Node(
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
+    @JsonDeserialize(converter = PublicAccessDeserializer::class)
     override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")
