@@ -38,8 +38,8 @@ data class Node(
     @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
-    @JsonAlias("PK")
     @JsonProperty("workspaceIdentifier")
+    @JsonAlias("PK")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
@@ -58,8 +58,8 @@ data class Node(
     @DynamoDBAttribute(attributeName = "createdBy")
     override var createdBy: String? = null,
 
-    @JsonAlias("nodeData")
     @JsonProperty("data")
+    @JsonAlias("nodeData")
     @JsonDeserialize(converter = NodeDataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
