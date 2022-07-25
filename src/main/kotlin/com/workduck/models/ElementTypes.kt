@@ -10,7 +10,7 @@ enum class ElementTypes(private val type: String) {
     ELEMENT_H5("h5"),
     ELEMENT_H6("h6"),
     ELEMENT_HR("hr"),
-    ELEMENT_PARAGRAPH("paragraph"),
+    ELEMENT_PARAGRAPH("p"),
     ELEMENT_TAG("tag"),
     ELEMENT_TODO_LI("action_item"),
     ELEMENT_QA_BLOCK("agent-based-question"),
