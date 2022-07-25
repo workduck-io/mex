@@ -9,7 +9,7 @@ class ElementTypesConverter : DynamoDBTypeConverter<String, ElementTypes> {
         return elementType.getType()
     }
 
-    override fun unconvert(accessType: String): ElementTypes {
-        return ElementTypes.fromName(accessType) ?: throw IllegalArgumentException("Invalid Element Type")
+    override fun unconvert(elementType: String): ElementTypes {
+        return ElementTypes.fromName(elementType) ?: throw IllegalArgumentException("Invalid Element Type $elementType")
     }
 }
