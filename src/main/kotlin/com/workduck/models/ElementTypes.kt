@@ -34,6 +34,9 @@ enum class ElementTypes(private val type: String) {
     ELEMENT_LI("li"),
     ELEMENT_LIC("lic"),
     ELEMENT_SYNC_BLOCK("sync_block"), // Probably deprecated
+    NODE_ILINK("nodeILink"),
+    BLOCK_ILINK("blockILink"),
+    WEB_LINK("webLink"),
     MARK_HIGHLIGHT("highlight"),
     MARK_BOLD("bold"),
     MARK_CODE("code"),
