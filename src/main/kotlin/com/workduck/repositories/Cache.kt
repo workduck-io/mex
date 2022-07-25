@@ -8,7 +8,7 @@ import redis.clients.jedis.JedisPool
 
 
 class Cache(private val host: String = "localhost", private val port: Int = 6379) : Cache {
-    private var jedisClient = JedisPool(host, port)
+   private var jedisClient = JedisPool(host, port)
 
     override fun refreshConnection() {
         jedisClient = JedisPool(host, port)
