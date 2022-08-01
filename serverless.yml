@@ -136,7 +136,7 @@ package:
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-#  - serverless-domain-manager
+  - serverless-domain-manager
   - serverless-plugin-warmup
 custom:
   serverless-offline:
@@ -162,19 +162,19 @@ custom:
         - schedule: cron(0/15 * ? * SAT-SUN *)
       concurrency: 2
       role: IamRoleLambdaExecution
-#  customDomain:
-#    rest:
-#      domainName: api-${opt:stage, self:provider.stage}.workduck.io
-#      basePath: 'mex'
-#      stage: ${opt:stage, self:provider.stage}
-#      createRoute53Record: true
-#    http:
-#      domainName: http-${opt:stage, self:provider.stage}.workduck.io
-#      basePath: 'mex'
-#      stage: ${opt:stage, self:provider.stage}
-#      createRoute53Record: true
-#      endpointType: regional
-#      apiType: http
+  customDomain:
+    rest:
+      domainName: api-${opt:stage, self:provider.stage}.workduck.io
+      basePath: 'mex'
+      stage: ${opt:stage, self:provider.stage}
+      createRoute53Record: true
+    http:
+      domainName: http-${opt:stage, self:provider.stage}.workduck.io
+      basePath: 'mex'
+      stage: ${opt:stage, self:provider.stage}
+      createRoute53Record: true
+      endpointType: regional
+      apiType: http
 
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
