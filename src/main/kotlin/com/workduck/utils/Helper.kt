@@ -1,6 +1,7 @@
 package com.workduck.utils
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -58,5 +59,30 @@ object Helper {
                 }
             }
         }
+    }
+
+    fun mapToJson(keyValueMap: Map<String, AttributeValue>): Map<String?, Any?> {
+        val finalKeyValueMap: MutableMap<String?, Any?> = mutableMapOf()
+        for ((key, value) in keyValueMap.entries) {
+            if (value.n != null) {
+                finalKeyValueMap[key] = value.n
+            } else if (value.m != null) {
+                finalKeyValueMap[key] = mapToJson(value.m)
+            } else if (value.s != null) {
+                finalKeyValueMap[key] = value.s
+            } else if (value.l != null) {
+                val mutableList = mutableListOf<Any>()
+                for (listValue in value.l) {
+                    mutableList.add(listValue.s)
+                }
+                finalKeyValueMap[key] = mutableList
+            } else if (value.bool != null) {
+                finalKeyValueMap[key] = value.bool
+            } else {
+                LOG.error("Unhandled value type $key  $value")
+                throw Error("Unhandled value type")
+            }
+        }
+        return finalKeyValueMap
     }
 }

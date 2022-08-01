@@ -892,7 +892,7 @@ class NodeService( // Todo: Inject them from handlers
     fun getPublicNode(nodeID: String): Node {
         val publicNode = publicNodeCache.get(nodeID)
 
-        return if (publicNode != null) publicNode as Node
+        return if (publicNode != null) Helper.objectMapper.convertValue(publicNode, Node::class.java) as Node
         else orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
     }
 
