@@ -64,23 +64,22 @@ object Helper {
     fun mapToJson(keyValueMap: Map<String, AttributeValue>): Map<String?, Any?> {
         val finalKeyValueMap: MutableMap<String?, Any?> = mutableMapOf()
         for ((key, value) in keyValueMap.entries) {
-            if (value.n != null) {
-                finalKeyValueMap[key] = value.n
-            } else if (value.m != null) {
-                finalKeyValueMap[key] = mapToJson(value.m)
-            } else if (value.s != null) {
-                finalKeyValueMap[key] = value.s
-            } else if (value.l != null) {
-                val mutableList = mutableListOf<Any>()
-                for (listValue in value.l) {
-                    mutableList.add(listValue.s)
+            when (true) {
+                value.n != null -> finalKeyValueMap[key] = value.n
+                value.m != null -> finalKeyValueMap[key] = mapToJson(value.m)
+                value.s != null -> finalKeyValueMap[key] = value.s
+                value.bool != null -> finalKeyValueMap[key] = value.bool
+                value.l != null -> {
+                    val mutableList = mutableListOf<Any>()
+                    for (listValue in value.l) {
+                        mutableList.add(listValue.s)
+                    }
+                    finalKeyValueMap[key] = mutableList
                 }
-                finalKeyValueMap[key] = mutableList
-            } else if (value.bool != null) {
-                finalKeyValueMap[key] = value.bool
-            } else {
-                LOG.error("Unhandled value type $key  $value")
-                throw Error("Unhandled value type")
+                else -> {
+                    LOG.error("Unhandled value type $key  $value")
+                    throw Error("Unhandled value type")
+                }
             }
         }
         return finalKeyValueMap
