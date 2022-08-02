@@ -1,14 +1,17 @@
 package com.workduck.repositories
 
-import com.serverless.ddbStreamTriggers.publicnoteUpdateTrigger.PublicNoteUpdate
 import com.workduck.interfaces.Cache
-import org.apache.logging.log4j.LogManager
-import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
-
+import redis.clients.jedis.JedisPoolConfig
 
 class Cache(private val host: String = "localhost", private val port: Int = 6379) : Cache {
-   private var jedisClient = JedisPool(host, port)
+    private var jedisPoolConfig = JedisPoolConfig()
+    private var jedisClient: JedisPool
+    private var maxRetries = 3
+
+    init {
+        jedisClient = JedisPool(jedisPoolConfig, host, port, 1800)
+    }
 
     override fun refreshConnection() {
         jedisClient = JedisPool(host, port)
@@ -19,32 +22,26 @@ class Cache(private val host: String = "localhost", private val port: Int = 6379
     }
 
     override fun get(key: String): String? {
-        return try {
-            jedisClient.resource.get(key)
-        } catch (ex: Exception) {
-            LOG.debug(ex.message.toString())
-            null
+        for (retryIndex in 0 .. maxRetries) {
+            return try {
+                jedisClient.resource.get(key)
+                break
+            } catch (e: Throwable) {
+                if (retryIndex == maxRetries) throw e
+                null
+            }
+        }
+        return null
+    }
+
+    override fun set(key: String, expInSeconds: Long, value: String) {
+        for (retryIndex in 0 .. maxRetries) {
+            try {
+                jedisClient.resource.setex(key, expInSeconds, value)
+                break
+            } catch (e: Throwable) {
+                if (retryIndex == maxRetries) throw e
+            }
         }
     }
-
-    override fun set(key: String, value: String) {
-        try {
-            jedisClient.resource.set(key, value)
-        } catch (ex: Exception) {
-            LOG.debug(ex.message.toString())
-        }
-    }
-
-    override fun setEx(key: String, expInSeconds: Long, value: String) {
-        try {
-            jedisClient.resource.setex(key, expInSeconds, value)
-        } catch (ex: Exception) {
-            LOG.debug(ex.message.toString())
-        }
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(Cache::class.java)
-    }
-
 }

@@ -23,6 +23,7 @@
         <mock.version>1.9.3</mock.version>
         <cognitoidp.version>1.12.172</cognitoidp.version>
         <jnanoid.version>2.0.0</jnanoid.version>
+        <jedis.version>4.2.0</jedis.version>
     </properties>
 
     <dependencyManagement>
@@ -134,7 +135,7 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>4.2.0</version>
+            <version>${jedis.version}</version>
         </dependency>
 
         <dependency>
