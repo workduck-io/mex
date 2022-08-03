@@ -6,19 +6,41 @@ import redis.clients.jedis.JedisPoolConfig
 
 class Cache(private val host: String = "localhost", private val port: Int = 6379) : Cache {
     private var jedisPoolConfig = JedisPoolConfig()
-    private var jedisClient: JedisPool
-    private var maxRetries = 3
+    private lateinit var jedisClient: JedisPool
+    private val maxRetries = 3
+    private val connectionTimeout = 1800
 
     init {
-        jedisClient = JedisPool(jedisPoolConfig, host, port, 1800)
+        for (retryIndex in 0 .. maxRetries) {
+            try {
+                jedisClient = JedisPool(jedisPoolConfig, host, port, connectionTimeout)
+                break
+            } catch (e: Throwable) {
+                if (retryIndex == maxRetries) throw e
+            }
+        }
     }
 
     override fun refreshConnection() {
-        jedisClient = JedisPool(host, port)
+        for (retryIndex in 0 .. maxRetries) {
+            try {
+                jedisClient = JedisPool(jedisPoolConfig, host, port, connectionTimeout)
+                break
+            } catch (e: Throwable) {
+                if (retryIndex == maxRetries) throw e
+            }
+        }
     }
 
     override fun closeConnection() {
-        jedisClient.close()
+        for (retryIndex in 0 .. maxRetries) {
+            try {
+                jedisClient.close()
+                break
+            } catch (e: Throwable) {
+                if (retryIndex == maxRetries) throw e
+            }
+        }
     }
 
     override fun get(key: String): String? {
