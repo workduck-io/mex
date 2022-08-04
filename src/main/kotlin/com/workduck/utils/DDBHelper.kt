@@ -1,6 +1,5 @@
 package com.workduck.utils
 
-import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
@@ -11,12 +10,31 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import java.net.URI
+
 
 object DDBHelper {
 
 //    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
 //        AwsClientBuilder.EndpointConfiguration("http://host.docker.internal:8000", "us-east-1"))
 //        .build()
+
+
+    var ddbClient: DynamoDbClient = DynamoDbClient.builder()
+            .region(Region.US_EAST_1)
+            .endpointOverride(URI.create("http://localhost:8000"))
+            .build()
+
+    fun createDDBConnectionEnhanced(): DynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
+            .dynamoDbClient(ddbClient)
+            .build()
+
+//    fun createDDBConnectionEnhanced(): DynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
+//            .dynamoDbClient(ddbClient)
+//            .build()
 
     fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder
         .standard()

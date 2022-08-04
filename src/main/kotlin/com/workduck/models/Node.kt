@@ -1,127 +1,117 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
 import com.workduck.converters.*
+import com.workduck.convertersv2.ItemStatusConverterV2
+import com.workduck.convertersv2.ItemTypeConverterV2
+import com.workduck.convertersv2.NamespaceIdentifierConverterV2
+import com.workduck.convertersv2.NodeDataConverterV2
+import com.workduck.convertersv2.NodeMetaDataConverterV2
+import com.workduck.convertersv2.NodeSchemaIdentifierConverterV2
+import com.workduck.convertersv2.WorkspaceIdentifierConverterV2
 import com.workduck.utils.Helper
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+
 
 enum class NodeStatus {
     LINKED,
     UNLINKED
 }
 
-@DynamoDBTable(tableName = "local-mex")
+@DynamoDbBean
 data class Node(
 
-    @JsonProperty("id")
-    @DynamoDBRangeKey(attributeName = "SK")
+    @get:DynamoDbSortKey
+    @get:DynamoDbAttribute("SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
-    @JsonProperty("workspaceIdentifier")
+
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBHashKey(attributeName = "PK")
+    @get:DynamoDbConvertedBy(WorkspaceIdentifierConverterV2::class)
+    @get:DynamoDbAttribute("PK")
+    @get:DynamoDbPartitionKey
     override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
-//    @JsonProperty("parentNodeID")
-//    @DynamoDBAttribute(attributeName = "parentNodeID")
-//    var parentNodeID: String = id,
-
-    @JsonProperty("title")
-    @DynamoDBAttribute(attributeName = "title")
     override var title: String = "New Node",
 
-    @JsonProperty("lastEditedBy")
-    @DynamoDBAttribute(attributeName = "lastEditedBy")
     override var lastEditedBy: String? = null,
 
-    @JsonProperty("createdBy")
-    @DynamoDBAttribute(attributeName = "createdBy")
     override var createdBy: String? = null,
 
-    @JsonProperty("data")
-    @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @DynamoDBAttribute(attributeName = "nodeData")
+
+    @get:DynamoDbConvertedBy(NodeDataConverterV2::class)
+    @get:DynamoDbAttribute("nodeData")
     override var data: List<AdvancedElement>? = null,
 
     @JsonProperty("metadata")
-    @DynamoDBTypeConverted(converter = NodeMetaDataConverter::class)
-    @DynamoDBAttribute(attributeName = "metadata")
+    @get:DynamoDbConvertedBy(NodeMetaDataConverterV2::class)
+    @get:DynamoDbAttribute("metadata")
     var nodeMetaData : NodeMetadata ?= null,
 
     // TODO(write converter to store as map in DDB. And create Tag class)
-    @JsonProperty("tags")
-    @DynamoDBAttribute(attributeName = "tags")
     var tags: MutableList<String> = mutableListOf(),
 
-    @DynamoDBAttribute(attributeName = "dataOrder")
     override var dataOrder: MutableList<String>? = null,
 
-    @JsonProperty("version")
-    @DynamoDBVersionAttribute(attributeName = "version")
+    @get:DynamoDbVersionAttribute
     override var version: Int? = null,
 
-    @JsonProperty("namespaceIdentifier")
+
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
+    @get:DynamoDbConvertedBy(NamespaceIdentifierConverterV2::class)
+    var namespaceIdentifier: NamespaceIdentifier? = null,
 
     /* WORKSPACE_ID#NAMESPACE_ID */
-    @DynamoDBAttribute(attributeName = "AK")
+    @get:DynamoDbAttribute("AK")
     var ak: String = "${workspaceIdentifier.id}${Constants.DELIMITER}${namespaceIdentifier?.id}",
 
-    @JsonProperty("nodeSchemaIdentifier")
-    @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")
+
+    @get:DynamoDbConvertedBy(NodeSchemaIdentifierConverterV2::class)
     var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
 
     // @JsonProperty("status")
     // val status: NodeStatus = NodeStatus.LINKED,
     // val associatedProperties: Set<AssociatedProperty>,
 
-    @JsonProperty("itemType")
-    @DynamoDBAttribute(attributeName = "itemType")
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @get:DynamoDbConvertedBy(ItemTypeConverterV2::class)
     override var itemType: ItemType = ItemType.Node,
 
-    @JsonProperty("itemStatus")
-    @DynamoDBAttribute(attributeName = "itemStatus")
-    @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
+
+    @get:DynamoDbConvertedBy(ItemStatusConverterV2::class)
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
-    @JsonProperty("isBookmarked")
-    @DynamoDBAttribute(attributeName = "isBookmarked")
-// TODO(make it part of NodeResponse object in code cleanup)
     var isBookmarked: Boolean? = null,
 
-    @JsonProperty("publicAccess")
-    @DynamoDBAttribute(attributeName = "publicAccess")
     override var publicAccess: Boolean = false,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
     override var createdAt: Long? = Constants.getCurrentTime()
 
 ) : Entity, Page, ItemStatusAdherence {
 
-    @JsonProperty("updatedAt")
-    @DynamoDBAttribute(attributeName = "updatedAt")
+
     override var updatedAt: Long = Constants.getCurrentTime()
 
-    @JsonProperty("lastVersionCreatedAt")
-    @DynamoDBAttribute(attributeName = "lastVersionCreatedAt")
     var lastVersionCreatedAt: Long? = null
 
-    @JsonProperty("nodeVersionCount")
-    @DynamoDBAttribute(attributeName = "nodeVersionCount")
+
     var nodeVersionCount: Long = 0
 
     companion object {
+
+
+        val NODE_TABLE_SCHEMA: TableSchema<Node> = TableSchema.fromClass(Node::class.java)
+
         fun populateNodeWithSkAkAndCreatedAt(node: Node, storedNode: Node) {
             node.createdAt = storedNode.createdAt
             node.createdBy = storedNode.createdBy

@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.Gson
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -23,7 +24,6 @@ import com.serverless.utils.Messages
 import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.awaitAndThrowExceptionIfFalse
-import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
@@ -45,7 +45,6 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeIdentifier
-import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
@@ -78,12 +77,14 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.apache.logging.log4j.LogManager
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity
+
 
 /**
  * contains all node related logic
@@ -1080,5 +1081,60 @@ class NodeService( // Todo: Inject them from handlers
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
+
+    fun testV2(request: NodeRequest, workspaceID: String, userID: String ){
+        val node: Node = createNodeObjectFromNodeRequest(request, workspaceID, userID)
+        val nodeTable = DDBHelper.createDDBConnectionEnhanced().table("local-mex", Node.NODE_TABLE_SCHEMA)
+        val x = nodeTable.putItemWithResponse(PutItemEnhancedRequest.builder(Node::class.java)
+                .item(node).returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .build())
+
+        println(Gson().toJson(x))
+
+    }
+
+}
+
+
+fun main(){
+
+    val json = """
+        {
+             "type" : "NodeRequest",
+             "title" : "F",
+             "id": "NODE_FFnGbBFEbhkJzXpEdTMCJ",
+             "data": [
+             {
+                 "id": "sampleParentID",
+                 "elementType": "paragraph",
+                 "children": [
+                 {
+                     "id" : "sampleChildID",
+                     "content" : "sample child content 1",
+                     "elementType": "paragraph",
+                     "properties" :  { "bold" : true, "italic" : true  }
+                 }
+                 ]
+             },
+             {
+                 "id": "1234",
+                 "elementType": "paragraph",
+                 "children": [
+                 {
+                     "id" : "sampleChildID",
+                     "content" : "sample child content",
+                     "elementType": "paragraph",
+                     "properties" :  { "bold" : true, "italic" : true  }
+                 }
+                 ]
+             }
+             ]
+         }
+    """.trimIndent()
+
+    val nodeRequest : NodeRequest = Helper.objectMapper.readValue(json)
+    //println(nodeRequest)
+
+    NodeService().testV2(nodeRequest, "WORKSPACE_gi6ttCHgeDRJ9Vbtxn3pp", "vg")
 
 }
