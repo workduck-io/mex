@@ -2,7 +2,6 @@ package com.workduck.models
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 
@@ -33,37 +32,27 @@ enum class ElementTypes(val type: String) {
 )
 open class AdvancedElement(
 
-    @JsonProperty("id")
     var id: String = "defaultValue",
 
-    @JsonProperty("content")
     var content: String? = "",
 
-    @JsonProperty("children")
     var children: List<AdvancedElement>? = null,
 
-    @JsonProperty("elementType")
     var elementType: String = "p",
 
-    @JsonProperty("properties")
     var properties: Map<String, Any>? = null,
 
-    @JsonProperty("elementMetadata")
     var elementMetadata : ElementMetadata ?= null,
 
-    @JsonProperty("createdBy")
     var createdBy: String? = null,
 
-    @JsonProperty("lastEditedBy")
     var lastEditedBy: String? = null,
 
-    @JsonProperty("createdAt")
     var createdAt: Long? = null
 
 ) : Element {
 
     /* a certain block may not always be updated  */
-    @JsonProperty("updatedAt")
     var updatedAt: Long? = null
 
     /* Generated equals() and hashcode() functions */

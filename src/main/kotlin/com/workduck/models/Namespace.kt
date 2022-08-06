@@ -1,16 +1,19 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*
-import com.fasterxml.jackson.annotation.JsonProperty
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
 import com.workduck.converters.IdentifierSerializer
-import com.workduck.converters.ItemTypeConverter
-import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
+import com.workduck.convertersv2.ItemTypeConverterV2
+import com.workduck.convertersv2.WorkspaceIdentifierConverterV2
 import com.workduck.utils.Helper
-import javax.naming.Name
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 /**
  * namespace status
@@ -24,47 +27,40 @@ enum class NamespaceStatus {
  * class for namespace
  */
 
-@DynamoDBTable(tableName = "sampleData")
+
 class Namespace(
     // val authorizations : Set<Auth>,
 
-    @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
+    @get:DynamoDbPartitionKey
+    @get:DynamoDbAttribute("PK")
     var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
 
     /* For convenient deletion */
-    @JsonProperty("idCopy")
-    @DynamoDBRangeKey(attributeName = "SK")
+    @get:DynamoDbSortKey
+    @get:DynamoDbAttribute("SK")
     var idCopy: String = id,
 
-    @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
+    @get:DynamoDbConvertedBy(WorkspaceIdentifierConverterV2::class)
     var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-    @JsonProperty("name")
-    @DynamoDBAttribute(attributeName = "namespaceName")
     var name: String = "DEFAULT_NAMESPACE",
 
     // val owner: OwnerIdentifier,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = Constants.getCurrentTime(),
 
-    @JsonProperty("itemType")
-    @DynamoDBAttribute(attributeName = "itemType")
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @get:DynamoDbConvertedBy(ItemTypeConverterV2::class)
     override var itemType: ItemType = ItemType.Namespace
 
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 
 ) : Entity {
 
-    @JsonProperty("updatedAt")
-    @DynamoDBAttribute(attributeName = "updatedAt")
-    var updatedAt = Constants.getCurrentTime()
+    companion object {
+        val NAMESPACE_TABLE_SCHEMA: TableSchema<Namespace> = TableSchema.fromClass(Namespace::class.java)
+    }
 
+    var updatedAt = Constants.getCurrentTime()
 }

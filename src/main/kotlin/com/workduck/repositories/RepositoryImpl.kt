@@ -8,12 +8,18 @@ import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
 import org.apache.logging.log4j.LogManager
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest
+import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue
 
 class RepositoryImpl<T : Entity>(
     private val dynamoDB: DynamoDB,
     private val mapper: DynamoDBMapper,
     private val repository: Repository<T>,
-    private val dynamoDBMapperConfig: DynamoDBMapperConfig
+    private val dynamoDBMapperConfig: DynamoDBMapperConfig,
+    //private val table: DynamoDbTable<T>
 ) : Repository<T> {
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
@@ -32,11 +38,22 @@ class RepositoryImpl<T : Entity>(
     }
 
     override fun create(t: T): T {
+//        val putItem = table.putItemWithResponse(PutItemEnhancedRequest.builder(clazz)
+//                .item(t).returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+//                .build())
+//
+//        LOG.info(putItem.consumedCapacity().readCapacityUnits() + putItem.consumedCapacity().writeCapacityUnits())
         mapper.save(t, dynamoDBMapperConfig)
         return t
     }
 
     override fun update(t: T): T {
+
+//        val putItem = table.updateItemWithResponse(UpdateItemEnhancedRequest.builder(clazz)
+//                .item(t).returnConsumedCapacity(ReturnConsumedCapacity.TOTAL).ignoreNulls(true)
+//                .build())
+//
+//        LOG.info(putItem.consumedCapacity().readCapacityUnits() + putItem.consumedCapacity().writeCapacityUnits())
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)

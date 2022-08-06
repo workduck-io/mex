@@ -1,16 +1,17 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
+
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.serverless.utils.Constants
-import com.workduck.converters.AccessTypeConverter
-import com.workduck.converters.ItemTypeConverter
-import com.workduck.converters.NodeIdentifierConverter
-import com.workduck.converters.WorkspaceIdentifierConverter
+import com.workduck.convertersv2.AccessTypeConverterV2
+import com.workduck.convertersv2.ItemTypeConverterV2
+import com.workduck.convertersv2.NodeIdentifierConverterV2
+import com.workduck.convertersv2.WorkspaceIdentifierConverterV2
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 enum class AccessType {
     WRITE,
@@ -18,51 +19,44 @@ enum class AccessType {
     MANAGE
 }
 
-@DynamoDBTable(tableName = "local-mex")
 class NodeAccess(
 
     @JsonProperty("nodeID")
-    @DynamoDBAttribute(attributeName = "nodeID")
-    @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
+    @get:DynamoDbConvertedBy(NodeIdentifierConverterV2::class)
+    @get:DynamoDbAttribute("nodeID")
     var node: NodeIdentifier = NodeIdentifier("node"),
 
     @JsonProperty("workspaceID")
-    @DynamoDBAttribute(attributeName = "workspaceID")
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
+    @get:DynamoDbConvertedBy(WorkspaceIdentifierConverterV2::class)
+    @get:DynamoDbAttribute("workspaceID")
     var workspace: WorkspaceIdentifier = WorkspaceIdentifier("workspace"),
 
-    @DynamoDBHashKey(attributeName = "PK")
+    @get:DynamoDbAttribute("PK")
+    @get:DynamoDbPartitionKey
     var pk: String = "${IdentifierType.NODE_ACCESS.name}${Constants.DELIMITER}${node.id}",
 
-    @JsonProperty("userID")
-    @DynamoDBRangeKey(attributeName = "SK")
+
+    @get:DynamoDbSortKey
+    @get:DynamoDbAttribute("SK")
     var userID: String = "user",
 
-    @JsonProperty("granterID")
-    @DynamoDBAttribute(attributeName = "granterID")
     var granterID: String = "granter",
 
-    @JsonProperty("ownerID")
-    @DynamoDBAttribute(attributeName = "ownerID")
     var ownerID: String = "owner",
 
-    @JsonProperty("accessType")
-    @DynamoDBAttribute(attributeName = "accessType")
-    @DynamoDBTypeConverted(converter = AccessTypeConverter::class)
+    @get:DynamoDbConvertedBy(AccessTypeConverterV2::class)
     var accessType: AccessType = AccessType.WRITE,
 
-    @JsonProperty("itemType")
-    @DynamoDBAttribute(attributeName = "itemType")
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @get:DynamoDbConvertedBy(ItemTypeConverterV2::class)
     var itemType: ItemType = ItemType.NodeAccess,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = Constants.getCurrentTime()
 
 ) {
 
-    @JsonProperty("updatedAt")
-    @DynamoDBAttribute(attributeName = "updatedAt")
+    companion object {
+        val NODE_ACCESS_TABLE_SCHEMA: TableSchema<NodeAccess> = TableSchema.fromClass(NodeAccess::class.java)
+    }
+
     var updatedAt: Long = Constants.getCurrentTime()
 }

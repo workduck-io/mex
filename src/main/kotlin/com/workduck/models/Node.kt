@@ -15,11 +15,13 @@ import com.workduck.convertersv2.WorkspaceIdentifierConverterV2
 import com.workduck.utils.Helper
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.UpdateBehavior
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbUpdateBehavior
 
 
 enum class NodeStatus {
@@ -46,6 +48,7 @@ data class Node(
 
     override var lastEditedBy: String? = null,
 
+    @get:DynamoDbUpdateBehavior(UpdateBehavior.WRITE_IF_NOT_EXISTS)
     override var createdBy: String? = null,
 
 
@@ -93,8 +96,10 @@ data class Node(
 
     var isBookmarked: Boolean? = null,
 
+    @get:DynamoDbUpdateBehavior(UpdateBehavior.WRITE_IF_NOT_EXISTS)
     override var publicAccess: Boolean = false,
 
+    @get:DynamoDbUpdateBehavior(UpdateBehavior.WRITE_IF_NOT_EXISTS)
     override var createdAt: Long? = Constants.getCurrentTime()
 
 ) : Entity, Page, ItemStatusAdherence {

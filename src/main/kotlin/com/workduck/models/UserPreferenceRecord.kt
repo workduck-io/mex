@@ -1,38 +1,37 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
-import com.amazonaws.services.dynamodbv2.document.Item
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.serverless.utils.Constants
-import com.workduck.converters.ItemTypeConverter
+import com.workduck.convertersv2.ItemTypeConverterV2
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 @DynamoDBTable(tableName = "local-mex")
 data class UserPreferenceRecord(
 
-    @JsonProperty("userID")
-    @DynamoDBHashKey(attributeName = "PK")
+    @get:DynamoDbAttribute("PK")
+    @get:DynamoDbPartitionKey
     var userID: String = "",
 
-    @JsonProperty("preferenceType")
-    @DynamoDBRangeKey(attributeName = "SK")
+    @get:DynamoDbSortKey
+    @get:DynamoDbAttribute("SK")
     var preferenceType: String = "",
 
-    @JsonProperty("preferenceValue")
-    @DynamoDBAttribute(attributeName = "userPreference")
+    @get:DynamoDbAttribute("userPreference")
     var preferenceValue: String = "",
 
-    @JsonProperty("itemType")
-    @DynamoDBAttribute(attributeName = "itemType")
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @get:DynamoDbConvertedBy(ItemTypeConverterV2::class)
     var itemType: ItemType = ItemType.UserPreferenceRecord,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = Constants.getCurrentTime()
 ) {
 
+    var updatedAt: Long = Constants.getCurrentTime()
+
+    companion object {
+        val USER_PREFERENCE_RECORD_TABLE_SCHEMA: TableSchema<UserPreferenceRecord> = TableSchema.fromClass(UserPreferenceRecord::class.java)
+    }
 }

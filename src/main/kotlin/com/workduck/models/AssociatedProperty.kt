@@ -1,26 +1,22 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
-import com.fasterxml.jackson.annotation.JsonProperty
+
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
 import com.workduck.converters.IdentifierSerializer
-import com.workduck.converters.ItemTypeConverter
-import com.workduck.converters.NodeDataConverter
-import com.workduck.converters.NodeIdentifierConverter
-import com.workduck.converters.NodeIdentifierListConverter
-import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
-import com.workduck.utils.Helper
+import com.workduck.convertersv2.ItemTypeConverterV2
+import com.workduck.convertersv2.NodeIdentifierListConverterV2
+import com.workduck.convertersv2.WorkspaceIdentifierConverterV2
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 /**
  * All associated property type
@@ -42,40 +38,36 @@ sealed class AssociatedProperty(
 )
 
 @JsonTypeName("tag")
-@DynamoDBTable(tableName = "local-mex")
 data class Tag(
 
-    @JsonProperty("workspaceIdentifier")
+
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBHashKey(attributeName = "PK")
+    @get:DynamoDbConvertedBy(WorkspaceIdentifierConverterV2::class)
+    @get:DynamoDbAttribute("PK")
+    @get:DynamoDbPartitionKey
     var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     // cannot be kept as empty string due to DDB constraints.
-    @JsonProperty("name")
-    @DynamoDBRangeKey(attributeName = "SK")
+    @get:DynamoDbSortKey
+    @get:DynamoDbAttribute("SK")
     var name: String = "New Tag",
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = Constants.getCurrentTime(),
 
-    @JsonProperty("nodes")
-    @DynamoDBTypeConverted(converter = NodeIdentifierListConverter::class)
-    @DynamoDBAttribute(attributeName = "nodes")
+    @get:DynamoDbConvertedBy(NodeIdentifierListConverterV2::class)
     var nodes: List<NodeIdentifier>? = null,
 
-    @JsonProperty("itemType")
-    @DynamoDBAttribute(attributeName = "itemType")
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @get:DynamoDbConvertedBy(ItemTypeConverterV2::class)
     override var itemType: ItemType = ItemType.Tag
 
 ) : AssociatedProperty(AssociatedPropertyType.TAG), Entity {
 
-    @JsonProperty("updatedAt")
-    @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt: Long = Constants.getCurrentTime()
+
+    companion object {
+        val TAG_TABLE_SCHEMA: TableSchema<Tag> = TableSchema.fromClass(Tag::class.java)
+    }
 
     init {
         require(name.isNotEmpty()) { "Tag name cannot be empty" }

@@ -82,7 +82,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.apache.logging.log4j.LogManager
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest
+import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity
 
 
@@ -99,6 +101,8 @@ class NodeService( // Todo: Inject them from handlers
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
     },
+
+    //val nodeTable: DynamoDbTable<Node> = DDBHelper.createDDBConnectionEnhanced().table(tableName, Node.NODE_TABLE_SCHEMA),
 
     var dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
@@ -1084,14 +1088,37 @@ class NodeService( // Todo: Inject them from handlers
 
     fun testV2(request: NodeRequest, workspaceID: String, userID: String ){
         val node: Node = createNodeObjectFromNodeRequest(request, workspaceID, userID)
+        node.createdBy = "vg"
+        node.publicAccess = true
         val nodeTable = DDBHelper.createDDBConnectionEnhanced().table("local-mex", Node.NODE_TABLE_SCHEMA)
         val x = nodeTable.putItemWithResponse(PutItemEnhancedRequest.builder(Node::class.java)
                 .item(node).returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
                 .build())
 
+        //println("r" + x.consumedCapacity().readCapacityUnits() + "w" + x.consumedCapacity().writeCapacityUnits() + "t" + x.consumedCapacity().capacityUnits())
         println(Gson().toJson(x))
 
     }
+
+    fun testUpdate(request: NodeRequest, workspaceID: String, userID: String ){
+        val node: Node = createNodeObjectFromNodeRequest(request, workspaceID, userID)
+        node.createdBy = "Evg"
+        node.publicAccess = false
+        node.version = 2
+        val table = DDBHelper.createDDBConnectionEnhanced().table("local-mex", Node.NODE_TABLE_SCHEMA)
+        val putItem = table.updateItemWithResponse(UpdateItemEnhancedRequest.builder(Node::class.java)
+                .item(node).returnConsumedCapacity(ReturnConsumedCapacity.TOTAL).ignoreNulls(true)
+                .build())
+
+       // println(Gson().toJson(putItem))
+    }
+
+
+    fun updateField(){
+
+    }
+
+
 
 }
 
@@ -1135,6 +1162,7 @@ fun main(){
     val nodeRequest : NodeRequest = Helper.objectMapper.readValue(json)
     //println(nodeRequest)
 
-    NodeService().testV2(nodeRequest, "WORKSPACE_gi6ttCHgeDRJ9Vbtxn3pp", "vg")
+    //NodeService().testV2(nodeRequest, "WORKSPACE_gi6ttCHgeDRJ9Vbtxn3pp", "vg")
+    NodeService().testUpdate(nodeRequest, "WORKSPACE_gi6ttCHgeDRJ9Vbtxn3pp", "vg")
 
 }

@@ -1,18 +1,18 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.serverless.utils.Constants
-import com.workduck.converters.ItemStatusConverter
-import com.workduck.converters.ItemTypeConverter
-import com.workduck.converters.NodeIdentifierConverter
-import com.workduck.converters.RelationshipTypeConverter
-import com.workduck.converters.WorkspaceIdentifierConverter
+import com.workduck.convertersv2.ItemStatusConverterV2
+import com.workduck.convertersv2.ItemTypeConverterV2
+import com.workduck.convertersv2.NodeIdentifierConverterV2
+import com.workduck.convertersv2.RelationshipTypeConverterV2
+import com.workduck.convertersv2.WorkspaceIdentifierConverterV2
 import com.workduck.utils.Helper
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 enum class RelationshipType {
     CONTAINED, /* when node size exceeds threshold */
@@ -23,61 +23,46 @@ enum class RelationshipType {
 @DynamoDBTable(tableName = "local-mex")
 data class Relationship(
 
-    @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
+    @get:DynamoDbAttribute("PK")
+    @get:DynamoDbPartitionKey
     var id: String = Helper.generateId("RLSP"),
 
-    @JsonProperty("sourceNode")
-    @DynamoDBAttribute(attributeName = "sourceNode")
-    @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
+    @get:DynamoDbConvertedBy(NodeIdentifierConverterV2::class)
     var sourceNode: NodeIdentifier? = null,
 
-    @JsonProperty("itemType")
-    @DynamoDBAttribute(attributeName = "itemType")
-    @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @get:DynamoDbConvertedBy(ItemTypeConverterV2::class)
     override var itemType: ItemType = ItemType.Relationship,
 
-    @JsonProperty("startNode")
-    @DynamoDBAttribute(attributeName = "startNode")
-    @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
+    @get:DynamoDbConvertedBy(NodeIdentifierConverterV2::class)
     var startNode: NodeIdentifier = NodeIdentifier(""),
 
-    @JsonProperty("endNode")
-    @DynamoDBAttribute(attributeName = "endNode")
-    @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
+    @get:DynamoDbConvertedBy(NodeIdentifierConverterV2::class)
     var endNode: NodeIdentifier = NodeIdentifier(""),
 
-    @JsonProperty("itemStatus")
-    @DynamoDBAttribute(attributeName = "itemStatus")
-    @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
+    @get:DynamoDbConvertedBy(ItemStatusConverterV2::class)
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
-    @JsonProperty("typeOfRelationship")
-    @DynamoDBAttribute(attributeName = "typeOfRelationship")
-    @DynamoDBTypeConverted(converter = RelationshipTypeConverter::class)
+    @get:DynamoDbConvertedBy(RelationshipTypeConverterV2::class)
     var typeOfRelationship: RelationshipType = RelationshipType.HIERARCHY,
 
-    @DynamoDBRangeKey(attributeName = "SK")
+    @get:DynamoDbSortKey
+    @get:DynamoDbAttribute("SK")
     var sk: String = "${startNode.id}${Constants.DELIMITER}${typeOfRelationship.name}",
 
-    @JsonProperty("workspaceIdentifier")
-    @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
+    @get:DynamoDbConvertedBy(WorkspaceIdentifierConverterV2::class)
     var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-    @JsonProperty("authorizations")
-    @DynamoDBAttribute(attributeName = "authorizations")
     var authorizations: Set<Auth>? = null,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long = Constants.getCurrentTime()
 
 ) : Entity, ItemStatusAdherence {
 
-    @JsonProperty("updatedAt")
-    @DynamoDBAttribute(attributeName = "updatedAt")
     var updatedAt = Constants.getCurrentTime()
+
+    companion object {
+        val RELATIONSHIP_TABLE_SCHEMA: TableSchema<Relationship> = TableSchema.fromClass(Relationship::class.java)
+    }
 
 //    init {
 //        Preconditions.checkArgument(startNode.id != endNode.id)
