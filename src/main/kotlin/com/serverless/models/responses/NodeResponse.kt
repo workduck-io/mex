@@ -2,7 +2,6 @@ package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
 import com.workduck.models.NodeMetadata
-import com.workduck.models.SaveableRange
 
 data class NodeResponse(
     val id: String? = null,
