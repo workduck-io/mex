@@ -6,6 +6,7 @@ import com.serverless.utils.isValidID
 data class NodeMetadata(
     var iconUrl: String? = null,
 
+    // TODO(Add validation to check if the id exists)
     var templateID: String? = null // snippet id
 
 ) {
