@@ -231,7 +231,7 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /namespace/data/{ids}
+        path: /namespace/all
         method: get
         authorizer: mexAuthorizer
 

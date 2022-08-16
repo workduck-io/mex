@@ -28,21 +28,18 @@ enum class NamespaceStatus {
 class Namespace(
     // val authorizations : Set<Auth>,
 
-    @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
-
-    /* For convenient deletion */
-    @JsonProperty("idCopy")
-    @DynamoDBRangeKey(attributeName = "SK")
-    var idCopy: String = id,
-
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    var workspaceIdentifier: WorkspaceIdentifier? = null,
+    @DynamoDBHashKey(attributeName = "PK")
+    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+
+    /* For convenient deletion */
+    @JsonProperty("id")
+    @DynamoDBRangeKey(attributeName = "SK")
+    var id: String = Helper.generateNanoID(IdentifierType.NAMESPACE.name),
+
 
     @JsonProperty("name")
     @DynamoDBAttribute(attributeName = "namespaceName")
@@ -54,10 +51,22 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = Constants.getCurrentTime(),
 
+    @JsonProperty("createdBy")
+    @DynamoDBAttribute(attributeName = "createdBy")
+    var createdBy: String? = null,
+
+    @JsonProperty("lastEditedBy")
+    @DynamoDBAttribute(attributeName = "lastEditedBy")
+    var lastEditedBy: String? = null,
+
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: ItemType = ItemType.Namespace
+    override var itemType: ItemType = ItemType.Namespace,
+
+    @JsonProperty("nodeHierarchyInformation")
+    @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
+    var nodeHierarchyInformation: List<String> ? = null,
 
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 

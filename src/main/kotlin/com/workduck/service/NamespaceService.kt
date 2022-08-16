@@ -39,35 +39,41 @@ class NamespaceService {
     private val namespaceRepository: NamespaceRepository = NamespaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
     private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)
 
-    fun createNamespace(namespaceRequest: WDRequest?): Entity? {
-        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
+    fun createNamespace(namespaceRequest: WDRequest, workspaceID: String, createdBy: String): Entity {
+        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID, createdBy, createdBy)
+        require(!checkIfNamespaceNameExists(workspaceID, namespace.name)) { "Cannot use an existing Namespace Name"}
         return repository.create(namespace)
     }
 
-    fun getNamespace(namespaceID: String): Entity? {
-        return repository.get(NamespaceIdentifier(namespaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
+    fun getNamespace(namespaceID: String, workspaceID: String): Entity? {
+        return repository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
-    fun updateNamespace(namespaceRequest: WDRequest?): Entity? {
-        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest?) ?: return null
+    fun updateNamespace(namespaceRequest: WDRequest, workspaceID: String, lastEditedBy: String) {
+        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID, null, lastEditedBy)
         namespace.createdAt = null
-        return repository.update(namespace)
+        repository.update(namespace)
     }
 
-    fun deleteNamespace(namespaceID: String): Identifier? {
-        return repository.delete(NamespaceIdentifier(namespaceID), NamespaceIdentifier(namespaceID))
+    fun deleteNamespace(namespaceID: String, workspaceID: String): Identifier {
+        return repository.delete(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID))
     }
 
-    fun getNamespaceData(namespaceIDList: List<String>): MutableMap<String, Namespace?>? {
-        return namespaceRepository.getNamespaceData(namespaceIDList)
+    fun getAllNamespaceData(workspaceID: String): List<Namespace> {
+        return namespaceRepository.getAllNamespaceData(workspaceID)
     }
 
-    private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest?) : Namespace? {
-        return namespaceRequest?.let {
-            Namespace(id = it.id,
-                    name = it.name,
-                    workspaceIdentifier = WorkspaceIdentifier(it.workspaceID))
-        }
+    private fun checkIfNamespaceNameExists(workspaceID: String, namespaceName: String) : Boolean {
+        return namespaceRepository.checkIfNamespaceNameExists(workspaceID, namespaceName)
+    }
+
+    private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest, workspaceID: String, createdBy: String?, lastEditedBy: String) : Namespace {
+        return Namespace(id = namespaceRequest.id,
+                    name = namespaceRequest.name,
+                    createdBy = createdBy,
+                    lastEditedBy = lastEditedBy,
+                    workspaceIdentifier = WorkspaceIdentifier(workspaceID))
+
     }
 
     companion object {

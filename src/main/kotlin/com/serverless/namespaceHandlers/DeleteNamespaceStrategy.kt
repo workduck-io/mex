@@ -6,21 +6,18 @@ import com.serverless.models.Input
 import com.serverless.models.responses.Response
 import com.serverless.utils.IdentifierHelper
 import com.serverless.utils.Messages
+import com.serverless.utils.NamespaceHelper
+import com.serverless.utils.withNotFoundException
 import com.workduck.models.Identifier
 import com.workduck.service.NamespaceService
 
 class DeleteNamespaceStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
-        val namespaceID = input.pathParameters?.id
+        return input.pathParameters?.id?.let { namespaceID ->
+            namespaceService.deleteNamespace(namespaceID, input.headers.workspaceID).let {
+                ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_DELETING_NAMESPACE)
+            }
+        }!!
 
-        return if (namespaceID != null) {
-            val identifier: Identifier? = namespaceService.deleteNamespace(namespaceID)
-
-            val identifierResponse: Response?  = IdentifierHelper.convertIdentifierToIdentifierResponse(identifier)
-
-            ApiResponseHelper.generateStandardResponse(identifierResponse, Messages.ERROR_DELETING_NAMESPACE)
-        } else {
-            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_DELETING_NAMESPACE)
-        }
     }
 }
