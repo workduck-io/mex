@@ -1067,10 +1067,11 @@ class NodeService( // Todo: Inject them from handlers
         val nodeID = nodeData["SK"]!!.s
         map["nodeID"] = nodeID
         map["nodeTitle"] = nodeData["title"]!!.s
-        map["nodeMetadata"] = nodeData["metadata"]!!.s
         map["accessType"] = nodeAccessItemsMap[nodeID]!!.accessType.name
         map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
         map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
+
+        if(nodeData.containsKey("metadata")) map["nodeMetadata"] = nodeData["metadata"]!!.s
 
         return map
     }
