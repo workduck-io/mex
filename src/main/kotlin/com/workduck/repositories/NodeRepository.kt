@@ -585,7 +585,6 @@ class NodeRepository(
         return itemOutcome.batchGetItemResult.responses[tableName]!!
 
     }
-
     fun getNodeDataOrderByNodeID(nodeID: String, workspaceID: String): MutableList<String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
