@@ -423,20 +423,21 @@ class NodeRepository(
         }
     }
 
-    fun batchGetNodeTitle(setOfNodeIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{
+
+    fun batchGetNodeMetadataAndTitle(setOfNodeIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{
         if(setOfNodeIDWorkspaceID.isEmpty()) return mutableListOf()
         val keysAndAttributes = TableKeysAndAttributes(tableName)
         for(nodeToWorkspacePair in setOfNodeIDWorkspaceID){
             keysAndAttributes.addHashAndRangePrimaryKey("PK", nodeToWorkspacePair.second, "SK", nodeToWorkspacePair.first)
         }
 
-        keysAndAttributes.withProjectionExpression("PK, SK, title, itemStatus")
+        keysAndAttributes.withProjectionExpression("PK, SK, title, itemStatus, metadata")
         val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
         val itemOutcome = dynamoDB.batchGetItem(spec)
 
         return itemOutcome.batchGetItemResult.responses[tableName]!!
-    }
 
+    }
 
 
     fun getNodeByNodeID(nodeID: String) : Node {
