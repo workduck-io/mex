@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.Gson
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -953,13 +954,13 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun shareNode(wdRequest: WDRequest, granterID: String, workspaceID: String) {
+    fun shareNode(wdRequest: WDRequest, granterID: String, granterWorkspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
-        val userIDs = getUserIDsWithoutGranterID(sharedNodeRequest.userIDs, granterID)
+        val userIDs = getUserIDsWithoutGranterID(sharedNodeRequest.userIDs, granterID) // remove granterID from userIDs if applicable.
 
         if (userIDs.isEmpty()) return
 
-        val nodeWorkspaceDetails = checkIfOwnerCanManageAndGetWorkspaceDetails(sharedNodeRequest.nodeID, workspaceID, granterID)
+        val nodeWorkspaceDetails = checkIfOwnerCanManageAndGetWorkspaceDetails(sharedNodeRequest.nodeID, granterWorkspaceID, granterID)
         val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
@@ -1045,7 +1046,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getNodeTitleWithIDs(nodeAccessItemsMap: Map<String, NodeAccess>): List<Map<String, String>> {
         val setOfNodeIDWorkspaceID = createSetFromNodeAccessItems(nodeAccessItemsMap.values.toList())
-        val unprocessedData = nodeRepository.batchGetNodeTitle(setOfNodeIDWorkspaceID)
+        val unprocessedData = nodeRepository.batchGetNodeMetadataAndTitle(setOfNodeIDWorkspaceID)
         val list = mutableListOf<Map<String, String>>()
         for (nodeData in unprocessedData) {
             populateMapForSharedNodeData(nodeData, nodeAccessItemsMap).let {
@@ -1060,12 +1061,13 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun populateMapForSharedNodeData(nodeData: MutableMap<String, AttributeValue>, nodeAccessItemsMap: Map<String, NodeAccess>): Map<String, String> {
-        if( nodeData["itemStatus"]!!.s == ItemStatus.ARCHIVED.name ) return mapOf()
+        if( nodeData["itemStatus"]!!.s == ItemStatus.ARCHIVED.name ) return mapOf() // if the shared node has been archived, don't return data.
         val map = mutableMapOf<String, String>()
 
         val nodeID = nodeData["SK"]!!.s
         map["nodeID"] = nodeID
         map["nodeTitle"] = nodeData["title"]!!.s
+        map["nodeMetadata"] = nodeData["metadata"]!!.s
         map["accessType"] = nodeAccessItemsMap[nodeID]!!.accessType.name
         map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
         map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
