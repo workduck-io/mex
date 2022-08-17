@@ -60,7 +60,7 @@ class PageRepository <T : Page> (
     }
 
 
-    fun togglePagePublicAccess(sk: String, workspaceID: String, accessValue: Long) {
+    fun togglePagePublicAccess(sk: String, workspaceID: String, accessValue: Int) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()

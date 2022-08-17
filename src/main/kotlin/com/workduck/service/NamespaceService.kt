@@ -17,27 +17,27 @@ import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
-class NamespaceService {
+class NamespaceService (
 
-    private val objectMapper = Helper.objectMapper
-    private val client: AmazonDynamoDB = DDBHelper.createDDBConnection()
-    private val dynamoDB: DynamoDB = DynamoDB(client)
-    private val mapper = DynamoDBMapper(client)
+
+    private val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
+    private val dynamoDB: DynamoDB = DynamoDB(client),
+    private val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
-    }
+    },
 
-    private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
+    private val dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-        .build()
+        .build(),
 
-    private val namespaceRepository: NamespaceRepository = NamespaceRepository(dynamoDB, mapper, dynamoDBMapperConfig)
+    private val namespaceRepository: NamespaceRepository = NamespaceRepository(dynamoDB, mapper, dynamoDBMapperConfig),
     private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)
+) {
 
     fun createNamespace(namespaceRequest: WDRequest, workspaceID: String, createdBy: String): Entity {
         val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID, createdBy, createdBy)
@@ -57,6 +57,23 @@ class NamespaceService {
 
     fun deleteNamespace(namespaceID: String, workspaceID: String): Identifier {
         return repository.delete(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID))
+    }
+
+
+    fun makeNamespacePublic(namespaceID: String, workspaceID: String) {
+        require( !namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already public"}
+        val nodeService = NodeService()
+        val nodeIDList = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
+        nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 1)
+
+    }
+
+    fun makeNamespacePrivate(namespaceID: String, workspaceID: String) {
+        require( namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already private"}
+        val nodeService = NodeService()
+        val nodeIDList = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
+        nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 0)
+
     }
 
     fun getAllNamespaceData(workspaceID: String): List<Namespace> {

@@ -11,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.workduck.models.Identifier
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
+import com.workduck.models.Node
 
 
 class NamespaceRepository(
@@ -72,18 +73,22 @@ class NamespaceRepository(
     }
 
 
-    fun getNamespaceData(namespaceIDList: List<String>, workspaceID: String): MutableList<MutableMap<String, AttributeValue>> {
-        val namespaceMap: MutableMap<String, Namespace?> = mutableMapOf()
+    fun isNamespacePublic(namespaceID: String, workspaceID: String) : Boolean{
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue().withS(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue().withS(namespaceID)
 
-        val keysAndAttributes = TableKeysAndAttributes(tableName)
-        for(namespaceID in namespaceIDList){
-            keysAndAttributes.addHashAndRangePrimaryKey("PK", workspaceID, "SK", namespaceID)
+        return DynamoDBQueryExpression<Namespace>().query(
+                keyConditionExpression = "PK = :PK and SK = :SK", projectionExpression = "publicAccess",
+                expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
+                when(list.size){
+                     0 -> throw IllegalArgumentException("Invalid NamespaceID")
+                    else -> list.first().publicAccess
+                }
+            }
         }
-
-        val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
-        val itemOutcome = dynamoDB.batchGetItem(spec)
-
-        return itemOutcome.batchGetItemResult.responses[tableName]!!
 
     }
 

@@ -68,6 +68,10 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
     var nodeHierarchyInformation: List<String> ? = null,
 
+    @JsonProperty("publicAccess")
+    @DynamoDBAttribute(attributeName = "publicAccess")
+    var publicAccess: Boolean = false,
+
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 
 ) : Entity {

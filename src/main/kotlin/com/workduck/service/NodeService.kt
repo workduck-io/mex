@@ -623,6 +623,22 @@ class NodeService( // Todo: Inject them from handlers
         jobToArchive.await()
     }
 
+    fun makeNodesPublicOrPrivateInParallel(nodeIDList: List<String>, workspaceID: String, accessValueToSet : Int) = runBlocking {
+        val jobToArchive = CoroutineScope(Dispatchers.IO + Job()).async {
+            supervisorScope {
+                val deferredList = ArrayList<Deferred<*>>()
+                for (nodeID in nodeIDList) {
+                    deferredList.add(
+                            async {  pageRepository.togglePagePublicAccess(nodeID, workspaceID, accessValueToSet) }
+                    )
+                }
+                deferredList.joinAll()
+            }
+        }
+        jobToArchive.await()
+    }
+
+
     private fun updateActiveAndArchivedHierarchies(workspace: Workspace, passedNodeIDList: List<String>){
 
         val activeHierarchy = workspace.nodeHierarchyInformation
@@ -775,10 +791,11 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithUserID(userID)
     }
 
-    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String>? {
 
+    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String) : List<String> {
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
+
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
 

@@ -14,7 +14,7 @@ class GetNamespaceStrategy : NamespaceStrategy {
 
         return input.pathParameters?.id?.let { namespaceID ->
             namespaceService.getNamespace(namespaceID, input.headers.workspaceID).withNotFoundException().let {
-                ApiResponseHelper.generateStandardResponse(NamespaceHelper.convertNamespaceToNamespaceResponse(it), Messages.ERROR_GETTING_SNIPPET)
+                ApiResponseHelper.generateStandardResponse(NamespaceHelper.convertNamespaceToNamespaceResponse(it), Messages.ERROR_GETTING_NAMESPACE)
             }
         }!! // id cannot be null since path was matched.
 

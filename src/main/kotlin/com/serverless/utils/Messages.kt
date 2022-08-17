@@ -43,6 +43,7 @@ object Messages {
     const val ERROR_REFRESHING_HIERARCHY = "Error refreshing node hierarchy for workspace"
     const val ERROR_DELETING_WORKSPACE = "Error deleting workspace"
 
+    const val ERROR_MAKING_NAMESPACE_PUBLIC = "Error making namespace public"
     const val ERROR_GETTING_NAMESPACE = "Error getting namespace"
     const val ERROR_GETTING_NAMESPACES = "Error getting namespaces"
     const val ERROR_UPDATING_NAMESPACE = "Error updating namespace"
