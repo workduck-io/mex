@@ -131,6 +131,11 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
+        path: /shared/node/{id}/access
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
         path: /shared/node/all
         method: get
         authorizer: mexAuthorizer

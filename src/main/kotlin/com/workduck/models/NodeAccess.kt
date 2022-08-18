@@ -15,7 +15,8 @@ import com.workduck.converters.WorkspaceIdentifierConverter
 enum class AccessType {
     WRITE,
     READ,
-    MANAGE
+    MANAGE,
+    NO_ACCESS
 }
 
 @DynamoDBTable(tableName = "local-mex")

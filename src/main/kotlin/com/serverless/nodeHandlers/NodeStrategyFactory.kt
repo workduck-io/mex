@@ -54,6 +54,8 @@ class NodeStrategyFactory {
 
         const val getAllSharedUsers = "GET /shared/node/{id}/users"
 
+        const val getAccessDataForUser = "GET /shared/node/{id}/access"
+
         const val getAllSharedNodes = "GET /shared/node/all"
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
@@ -83,6 +85,7 @@ class NodeStrategyFactory {
             updateSharedNodeAccess to UpdateSharedNodeAccessStrategy(),
             updateSharedNode to UpdateSharedNodeStrategy(),
             getAllSharedUsers to GetAllSharedUsersStrategy(),
+            getAccessDataForUser to GetAccessDataForUserStrategy(),
             getAllSharedNodes to GetAllSharedNodesStrategy()
         )
 
