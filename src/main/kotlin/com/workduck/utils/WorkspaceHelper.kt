@@ -7,6 +7,7 @@ import com.workduck.models.MatchType
 
 object WorkspaceHelper {
 
+    /* add updatedPaths to nodeHierarchy if it's non-redundant */
     fun removeRedundantPaths(
         updatedPaths: List<String>,
         nodeHierarchy: MutableList<String>
