@@ -42,6 +42,7 @@ import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.MatchType
+import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
@@ -112,6 +113,7 @@ class NodeService( // Todo: Inject them from handlers
 ) {
 
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
+    val namespaceService: NamespaceService = NamespaceService(nodeService = this)
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
         setMetadataOfNodeToCreate(node)
@@ -154,27 +156,35 @@ class NodeService( // Todo: Inject them from handlers
             val jobToGetStoredNode = async { getNode(node.id, workspaceID) }
             val jobToGetWorkspace =
                 async { node.workspaceIdentifier.id.let { (workspaceService.getWorkspace(it) as Workspace) } }
+            val jobToGetNamespace =
+                    async { node.namespaceIdentifier?.id?.let { namespaceService.getNamespace(it, node.workspaceIdentifier.id) as Namespace }}
 
             return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
                 null -> {
-                    node.title =
-                        updateNodeHierarchyInSingleCreateAndReturnTitle(
-                                nodeRequest.referenceID,
-                                node.id,
-                                node.title,
-                                jobToGetWorkspace.await()
-                        )
-
-
+                    updateNodeAttributesInSingleCreate(node, nodeRequest, jobToGetWorkspace.await(), jobToGetNamespace)
                     val jobToCreateNode = async { createNode(node, versionEnabled) }
                     jobToCreateNode.await()
                 }
                 else -> {
                     jobToGetWorkspace.cancel()
+                    jobToGetNamespace.cancel()
                     updateNode(node, storedNode, versionEnabled)
                 }
             }
         }
+
+
+    suspend fun updateNodeAttributesInSingleCreate(node: Node, nodeRequest: NodeRequest, workspace: Workspace, jobToGetNamespace: Deferred<Namespace?>){
+        node.title =
+                updateNodeHierarchyInSingleCreateAndReturnTitle(
+                        nodeRequest.referenceID,
+                        node.id,
+                        node.title,
+                        workspace
+                )
+        val namespace = jobToGetNamespace.await()
+        if(namespace?.publicAccess == true) node.publicAccess = true
+    }
 
     private fun checkForPathClashAndResolveWithNewTitle(nodeHierarchy : List<String>?, prefixNodePath :String, passedNodeTitle: String) : String {
 
@@ -794,6 +804,10 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String) : List<String> {
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
+    }
+
+    fun getAllNodesWithNamespaceIDAndAccess(namespaceID: String, workspaceID: String, publicAccess: Int) : List<String> {
+        return nodeRepository.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, publicAccess)
     }
 
 

@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.WDRequest
 
@@ -17,6 +18,7 @@ import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService (
@@ -36,7 +38,9 @@ class NamespaceService (
         .build(),
 
     private val namespaceRepository: NamespaceRepository = NamespaceRepository(dynamoDB, mapper, dynamoDBMapperConfig),
-    private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig)
+    private val repository: Repository<Namespace> = RepositoryImpl(dynamoDB, mapper, namespaceRepository, dynamoDBMapperConfig),
+
+    private val nodeService : NodeService = NodeService()
 ) {
 
     fun createNamespace(namespaceRequest: WDRequest, workspaceID: String, createdBy: String): Entity {
@@ -46,7 +50,7 @@ class NamespaceService (
     }
 
     fun getNamespace(namespaceID: String, workspaceID: String): Entity? {
-        return repository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
+        return namespaceRepository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
     fun updateNamespace(namespaceRequest: WDRequest, workspaceID: String, lastEditedBy: String) {
@@ -62,17 +66,17 @@ class NamespaceService (
 
     fun makeNamespacePublic(namespaceID: String, workspaceID: String) {
         require( !namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already public"}
-        val nodeService = NodeService()
-        val nodeIDList = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
+        val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 0) /* get all private nodes */
         nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 1)
+        namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 1)
 
     }
 
     fun makeNamespacePrivate(namespaceID: String, workspaceID: String) {
         require( namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already private"}
-        val nodeService = NodeService()
-        val nodeIDList = nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceID)
+        val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 1) /* get all public nodes */
         nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 0)
+        namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 1)
 
     }
 
@@ -85,7 +89,7 @@ class NamespaceService (
     }
 
     private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest, workspaceID: String, createdBy: String?, lastEditedBy: String) : Namespace {
-        return Namespace(id = namespaceRequest.id,
+        return Namespace(
                     name = namespaceRequest.name,
                     createdBy = createdBy,
                     lastEditedBy = lastEditedBy,
@@ -97,5 +101,4 @@ class NamespaceService (
         private val LOG = LogManager.getLogger(NamespaceService::class.java)
     }
 }
-
 

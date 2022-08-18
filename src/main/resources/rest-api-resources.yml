@@ -235,6 +235,16 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /namespace/makePublic/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /namespace/makePrivate/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
 
 
 Workspace:

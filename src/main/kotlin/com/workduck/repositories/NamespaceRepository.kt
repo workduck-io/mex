@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.workduck.models.Identifier
 import com.workduck.models.ItemType
@@ -28,7 +29,7 @@ class NamespaceRepository(
 
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Namespace>): Namespace? {
-        TODO("Not yet implemented")
+        return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig)
     }
 
     override fun create(t: Namespace): Namespace {
@@ -90,6 +91,19 @@ class NamespaceRepository(
             }
         }
 
+    }
+
+    fun setPublicAccessValue(namespaceID: String, workspaceID: String, publicAccess: Int) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":publicAccess"] = publicAccess
+
+        return UpdateItemSpec().update(
+                pk = workspaceID, sk = namespaceID, updateExpression = "SET publicAccess = :publicAccess",
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).let {
+            table.updateItem(it)
+        }
     }
 
 }
