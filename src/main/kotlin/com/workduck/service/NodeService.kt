@@ -1071,7 +1071,17 @@ class NodeService( // Todo: Inject them from handlers
         map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
         map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
 
-        if(nodeData.containsKey("metadata")) map["nodeMetadata"] = nodeData["metadata"]!!.s
+
+        val metadata  = if(nodeData.containsKey("metadata")) nodeData["metadata"]!!.s else null
+        val nodeMetadataJson = """
+            {
+                "createdAt" : ${nodeData["createdAt"]!!.n} ,
+                "updatedAt" : ${nodeData["updatedAt"]!!.n} ,
+                "metadata" : $metadata
+                
+            }
+        """.trimIndent()
+        map["nodeMetadata"] = nodeMetadataJson
 
         return map
     }
