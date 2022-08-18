@@ -300,7 +300,8 @@ class NodeService( // Todo: Inject them from handlers
         /* collect paths which need to be updated */
         val updatedPaths = mutableListOf<String>()
         for (path in currentHierarchy) {
-            if (getNamePath(path).startsWith(existingNodes.path)) {
+            /* check if the name path in current hierarchy matches passed existing nodes */
+            if (getNamePath(path).getListOfNodes().commonPrefixList(existingNodes.allNodes) == existingNodes.allNodes) {
                 /* break the connection from last node */
                 updatedPaths.add(path.getListOfNodes().subList(0, path.getListOfNodes().indexOf(existingNodes.allNodes.last())).convertToPathString())
             } else {
