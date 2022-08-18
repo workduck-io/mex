@@ -1040,6 +1040,11 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getSharedUserInformation(nodeID)
     }
 
+    fun getAccessDataForUser(nodeID: String, userID: String, workspaceID: String): String{
+        if(checkIfNodeExistsForWorkspace(nodeID, workspaceID)) return AccessType.MANAGE.name
+        return nodeRepository.getUserNodeAccessRecord(nodeID, userID)
+    }
+
     fun getAllSharedNodesWithUser(userID: String): List<Map<String, String>> {
         val nodeAccessItemsMap = nodeRepository.getAllSharedNodesWithUser(userID)
         return getNodeTitleWithIDs(nodeAccessItemsMap)

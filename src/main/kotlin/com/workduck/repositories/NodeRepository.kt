@@ -397,6 +397,19 @@ class NodeRepository(
         }.filter { it.accessType in  accessTypeList }.map { accessItem -> accessItem.userID  }
     }
 
+    fun getUserNodeAccessRecord(nodeID: String, userID: String) : String {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
+
+        return DynamoDBQueryExpression<NodeAccess>().query(keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
+        }.firstOrNull()?.accessType?.name ?: AccessType.NO_ACCESS.name
+    }
+
+
 
     fun getSharedUserInformation(nodeID: String) : Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
