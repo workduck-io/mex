@@ -19,6 +19,8 @@ class NamespaceStrategyFactory {
 
         const val makeNamespacePrivateObject = "PATCH /namespace/makePrivate/{id}"
 
+        const val getPublicNamespaceObject = "GET /namespace/public/{id}"
+
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),

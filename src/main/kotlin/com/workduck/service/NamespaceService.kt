@@ -5,8 +5,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.Gson
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.WDRequest
+import com.serverless.transformers.NamespaceTransformer
+import com.serverless.transformers.Transformer
 
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
@@ -87,6 +90,11 @@ class NamespaceService (
     private fun checkIfNamespaceNameExists(workspaceID: String, namespaceName: String) : Boolean {
         return namespaceRepository.checkIfNamespaceNameExists(workspaceID, namespaceName)
     }
+
+    fun getPublicNamespace(namespaceID: String): Namespace {
+        return namespaceRepository.getPublicNamespace(namespaceID)
+    }
+
 
     private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest, workspaceID: String, createdBy: String?, lastEditedBy: String) : Namespace {
         return Namespace(

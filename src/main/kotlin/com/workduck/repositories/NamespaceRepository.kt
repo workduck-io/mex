@@ -5,14 +5,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
-import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.workduck.models.Identifier
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
-import com.workduck.models.Node
 
 
 class NamespaceRepository(
@@ -103,6 +100,22 @@ class NamespaceRepository(
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
         ).let {
             table.updateItem(it)
+        }
+    }
+
+    fun getPublicNamespace(namespaceID: String) : Namespace {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":PK"] = AttributeValue("WORKSPACE")
+        expressionAttributeValues[":true"] = AttributeValue().withN("1")
+        //expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
+
+        return DynamoDBQueryExpression<Namespace>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "publicAccess = :true", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
+                if(list.isNotEmpty()) list[0]
+                else throw NoSuchElementException("Requested Resource Not Found")
+            }
         }
     }
 

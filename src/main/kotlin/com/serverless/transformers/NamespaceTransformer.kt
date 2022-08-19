@@ -10,9 +10,10 @@ class NamespaceTransformer : Transformer<Namespace> {
        NamespaceResponse(
             id = t.id,
             name = t.name,
-            workspaceID = t.workspaceIdentifier?.id,
+            nodeHierarchy = t.nodeHierarchyInformation,
             createdAt = t.createdAt,
-            updatedAt = t.updatedAt
+            updatedAt = t.updatedAt,
+            publicAccess= t.publicAccess
        )
     }
 }

@@ -1,6 +1,7 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -24,7 +25,8 @@ enum class NamespaceStatus {
  * class for namespace
  */
 
-@DynamoDBTable(tableName = "sampleData")
+@DynamoDBTable(tableName = "local-mex")
+@JsonIgnoreProperties(ignoreUnknown = true)
 class Namespace(
     // val authorizations : Set<Auth>,
 

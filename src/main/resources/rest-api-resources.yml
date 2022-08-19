@@ -245,6 +245,11 @@ Namespace:
         method: patch
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /namespace/public/{id}
+        method: get
+        authorizer: mexAuthorizer
+
 
 
 Workspace:
