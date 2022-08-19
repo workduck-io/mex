@@ -1,5 +1,7 @@
 package com.serverless.models.responses
 
+import com.workduck.models.ItemType
+
 data class NamespaceResponse(
     val id: String,
 
@@ -9,8 +11,10 @@ data class NamespaceResponse(
 
     val updatedAt: Long,
 
-    val workspaceID: String?,
+    val itemType: String = ItemType.Namespace.name,
 
-    val itemType: String = "Namespace",
+    val nodeHierarchy: List<String>?,
+
+    val publicAccess: Boolean
 
 ) : Response

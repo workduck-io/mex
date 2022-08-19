@@ -1,6 +1,7 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -24,25 +25,23 @@ enum class NamespaceStatus {
  * class for namespace
  */
 
-@DynamoDBTable(tableName = "sampleData")
+@DynamoDBTable(tableName = "local-mex")
+@JsonIgnoreProperties(ignoreUnknown = true)
 class Namespace(
     // val authorizations : Set<Auth>,
-
-    @JsonProperty("id")
-    @DynamoDBHashKey(attributeName = "PK")
-    var id: String = Helper.generateId(IdentifierType.NAMESPACE.name),
-
-    /* For convenient deletion */
-    @JsonProperty("idCopy")
-    @DynamoDBRangeKey(attributeName = "SK")
-    var idCopy: String = id,
 
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "workspaceIdentifier")
-    var workspaceIdentifier: WorkspaceIdentifier? = null,
+    @DynamoDBHashKey(attributeName = "PK")
+    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+
+    /* For convenient deletion */
+    @JsonProperty("id")
+    @DynamoDBRangeKey(attributeName = "SK")
+    var id: String = Helper.generateNanoID(IdentifierType.NAMESPACE.name),
+
 
     @JsonProperty("name")
     @DynamoDBAttribute(attributeName = "namespaceName")
@@ -54,10 +53,26 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = Constants.getCurrentTime(),
 
+    @JsonProperty("createdBy")
+    @DynamoDBAttribute(attributeName = "createdBy")
+    var createdBy: String? = null,
+
+    @JsonProperty("lastEditedBy")
+    @DynamoDBAttribute(attributeName = "lastEditedBy")
+    var lastEditedBy: String? = null,
+
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: ItemType = ItemType.Namespace
+    override var itemType: ItemType = ItemType.Namespace,
+
+    @JsonProperty("nodeHierarchyInformation")
+    @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
+    var nodeHierarchyInformation: List<String> ? = null,
+
+    @JsonProperty("publicAccess")
+    @DynamoDBAttribute(attributeName = "publicAccess")
+    var publicAccess: Boolean = false,
 
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 

@@ -75,7 +75,6 @@ class NodeStrategyFactory {
             makeNodePrivateObject to MakeNodePrivateStrategy(),
             getPublicNodeObject to GetPublicNodeStrategy(),
             getAllNodesObject to GetAllNodesStrategy(),
-            getPublicNodeObject to GetPublicNodeStrategy(),
             copyOrMoveBlockObject to CopyOrMoveBlockStrategy(),
             refactorNodePathObject to RefactorNodePathStrategy(),
             bulkCreateNodesObject to BulkCreateNodesStrategy(),

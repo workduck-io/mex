@@ -231,7 +231,22 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /namespace/data/{ids}
+        path: /namespace/all
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /namespace/makePublic/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /namespace/makePrivate/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /namespace/public/{id}
         method: get
         authorizer: mexAuthorizer
 

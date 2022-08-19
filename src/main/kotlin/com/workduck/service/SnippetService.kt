@@ -146,7 +146,7 @@ class SnippetService {
         togglePublicAccess(snippetID, workspaceID, version, 0)
     }
 
-    private fun togglePublicAccess(snippetID: String, workspaceID: String, version: Int, accessValue: Long){
+    private fun togglePublicAccess(snippetID: String, workspaceID: String, version: Int, accessValue: Int){
         when(version == -1 ){
             true -> {
                 val latestVersion = snippetRepository.getLatestVersionNumberOfSnippet(snippetID, workspaceID)

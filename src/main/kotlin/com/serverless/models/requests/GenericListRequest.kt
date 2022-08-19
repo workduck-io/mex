@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class GenericListRequest(
-        @JsonProperty("ids")
-        val ids: List<String>
-) : WDRequest
+    @JsonProperty("ids")
+    val ids: List<String>
+) : WDRequest {
+    init {
+        require(ids.isNotEmpty()) { "Provide IDs" }
+    }
+}

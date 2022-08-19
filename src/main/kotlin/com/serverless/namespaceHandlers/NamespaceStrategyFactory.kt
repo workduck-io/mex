@@ -1,10 +1,5 @@
 package com.serverless.namespaceHandlers
 
-import com.serverless.transformers.IdentifierTransformer
-import com.serverless.transformers.NamespaceTransformer
-import com.serverless.transformers.Transformer
-import com.workduck.models.Identifier
-import com.workduck.models.Namespace
 
 class NamespaceStrategyFactory {
 
@@ -18,14 +13,22 @@ class NamespaceStrategyFactory {
 
         const val deleteNamespaceObject = "DELETE /namespace/{id}"
 
-        const val getNamespaceDataObject = "GET /namespace/data/{ids}"
+        const val getNamespaceDataObject = "GET /namespace/all"
+
+        const val makeNamespacePublicObject = "PATCH /namespace/makePublic/{id}"
+
+        const val makeNamespacePrivateObject = "PATCH /namespace/makePrivate/{id}"
+
+        const val getPublicNamespaceObject = "GET /namespace/public/{id}"
 
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),
             updateNamespaceObject to UpdateNamespaceStrategy(),
             deleteNamespaceObject to DeleteNamespaceStrategy(),
-            getNamespaceDataObject to GetNamespaceDataStrategy()
+            getNamespaceDataObject to GetAllNamespaceDataStrategy(),
+            makeNamespacePublicObject to MakeNamespacePublicStrategy(),
+            makeNamespacePrivateObject to MakeNamespacePrivateStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {

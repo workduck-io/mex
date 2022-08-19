@@ -12,7 +12,6 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
@@ -32,15 +31,12 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
-import com.workduck.models.NodeMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper.getAccessItemPK
-import com.workduck.utils.DDBHelper
 import com.workduck.utils.DDBTransactionHelper
-import org.apache.logging.log4j.LogManager
 import com.workduck.utils.Helper
+import org.apache.logging.log4j.LogManager
 import java.time.Instant
-import kotlin.math.exp
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,
@@ -48,7 +44,7 @@ class NodeRepository(
     private val dynamoDBMapperConfig: DynamoDBMapperConfig,
     private val client: AmazonDynamoDB,
     private var tableName: String
-)  {
+) {
 
     fun append(nodeID: String, workspaceID: String, userID: String, elements: List<AdvancedElement>, orderList: MutableList<String>): Map<String, Any>? {
         val table = dynamoDB.getTable(tableName)
@@ -72,16 +68,46 @@ class NodeRepository(
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
 
-        return UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = updateExpression, expressionAttributeValues = expressionAttributeValues,
-                conditionExpression = "attribute_exists(PK) and attribute_exists(SK)").let {
+        return UpdateItemSpec().update(
+            pk = workspaceID, sk = nodeID, updateExpression = updateExpression, expressionAttributeValues = expressionAttributeValues,
+            conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).let {
             table.updateItem(it)
             mapOf("nodeID" to nodeID, "appendedElements" to elements)
         }
     }
 
-    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): MutableList<String> {
-        val akValue = "$workspaceID${Constants.DELIMITER}$namespaceID"
-        return DDBHelper.getAllEntitiesWithIdentifierIDAndPrefix(akValue, "itemType-AK-index", dynamoDB, "Node")
+    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): List<String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
+        expressionAttributeValues[":AK"] = AttributeValue("${workspaceID}${Constants.DELIMITER}$namespaceID")
+
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
+            filterExpression = "AK = :AK", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it).map { node ->
+                node.id
+            }
+        }
+    }
+
+    fun getAllNodesWithNamespaceIDAndAccess(namespaceID: String, workspaceID: String, publicAccess: Int): List<String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
+        expressionAttributeValues[":AK"] = AttributeValue("${workspaceID}${Constants.DELIMITER}$namespaceID")
+        expressionAttributeValues[":publicAccess"] = AttributeValue().withN(publicAccess.toString())
+
+        return DynamoDBQueryExpression<Node>().query(
+                keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
+                filterExpression = "AK = :AK and publicAccess = :publicAccess", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it).map { node ->
+                node.id
+            }
+        }
     }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
@@ -89,12 +115,12 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = workspaceID
         expressionAttributeValues[":SK"] = ItemType.Node.name.uppercase()
 
-        val items: ItemCollection<QueryOutcome?>? =  QuerySpec().withKeyConditionExpression("PK = :PK and begins_with(SK, :SK)")
-                .withValueMap(expressionAttributeValues)
-                .withProjectionExpression("SK")
-                .let {
-                    dynamoDB.getTable(tableName).query(it)
-                }
+        val items: ItemCollection<QueryOutcome?>? = QuerySpec().withKeyConditionExpression("PK = :PK and begins_with(SK, :SK)")
+            .withValueMap(expressionAttributeValues)
+            .withProjectionExpression("SK")
+            .let {
+                dynamoDB.getTable(tableName).query(it)
+            }
 
         val iterator: Iterator<Item> = items!!.iterator()
 
@@ -112,16 +138,17 @@ class NodeRepository(
         expressionAttributeValues[":createdBy"] = AttributeValue(userID)
         expressionAttributeValues[":itemType"] = AttributeValue("Node")
 
-        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "createdBy-itemType-index", keyConditionExpression = "createdBy = :createdBy  and itemType = :itemType",
-                projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues).let { it ->
+        return DynamoDBQueryExpression<Node>().queryWithIndex(
+            index = "createdBy-itemType-index", keyConditionExpression = "createdBy = :createdBy  and itemType = :itemType",
+            projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues
+        ).let { it ->
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
             }
         }
     }
 
-
-    fun createMultipleNodes(listOfNodes : List<Node>){
+    fun createMultipleNodes(listOfNodes: List<Node>) {
         val failedBatches = mapper.batchWrite(listOfNodes, emptyList<Any>(), dynamoDBMapperConfig)
         Helper.logFailureForBatchOperation(failedBatches)
     }
@@ -138,7 +165,6 @@ class NodeRepository(
             null
         }
     }
-
 
     fun updateNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
         val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()
@@ -172,8 +198,10 @@ class NodeRepository(
         expressionAttributeValues[":updatedBlock"] = updatedBlock
         expressionAttributeValues[":userID"] = userID
 
-        return UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = "SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ",
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)").let {
+        return UpdateItemSpec().update(
+            pk = workspaceID, sk = nodeID, updateExpression = "SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ",
+            expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).let {
             table.updateItem(it)
             objectMapper.readValue(updatedBlock)
         }
@@ -188,8 +216,10 @@ class NodeRepository(
         expressionAttributeValues[":status"] = AttributeValue().withS("ACTIVE")
         expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
 
-        val q = DynamoDBQueryExpression<NodeVersion>().query(keyConditionExpression = "PK = :pk", filterExpression = "versionStatus = :status and itemType = :NodeVersion",
-                expressionAttributeValues = expressionAttributeValues, projectionExpression = "SK")
+        val q = DynamoDBQueryExpression<NodeVersion>().query(
+            keyConditionExpression = "PK = :pk", filterExpression = "versionStatus = :status and itemType = :NodeVersion",
+            expressionAttributeValues = expressionAttributeValues, projectionExpression = "SK"
+        )
 
         return try {
             val nodeVersionList: List<NodeVersion> = mapper.query(NodeVersion::class.java, q, dynamoDBMapperConfig)
@@ -217,14 +247,16 @@ class NodeRepository(
         expressionAttributeValues[":ttl"] = (now + ttl)
         expressionAttributeValues[":status"] = "INACTIVE"
 
-        UpdateItemSpec().update(pk = "$nodeID${Constants.DELIMITER}VERSION", sk = oldestUpdatedAt, updateExpression = "SET timeToLive = :ttl, versionStatus = :status",
-                expressionAttributeValues = expressionAttributeValues).also {
+        UpdateItemSpec().update(
+            pk = "$nodeID${Constants.DELIMITER}VERSION", sk = oldestUpdatedAt, updateExpression = "SET timeToLive = :ttl, versionStatus = :status",
+            expressionAttributeValues = expressionAttributeValues
+        ).also {
             table.updateItem(it)
         }
     }
 
-    fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>, workspaceID: String) : MutableList<String>{
-        if(mapOfNodeIDToName.isEmpty()) return mutableListOf()
+    fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>, workspaceID: String): MutableList<String> {
+        if (mapOfNodeIDToName.isEmpty()) return mutableListOf()
 
         val table: Table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -233,15 +265,16 @@ class NodeRepository(
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
 
-        for ((nodeID,nodeName) in mapOfNodeIDToName) {
+        for ((nodeID, nodeName) in mapOfNodeIDToName) {
             try {
                 expressionAttributeValues[":title"] = "$nodeName(1)"
-                UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = "SET itemStatus = :active, title = :title, updatedAt = :updatedAt",
-                        expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK)").also {
+                UpdateItemSpec().update(
+                    pk = workspaceID, sk = nodeID, updateExpression = "SET itemStatus = :active, title = :title, updatedAt = :updatedAt",
+                    expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK)"
+                ).also {
                     table.updateItem(it)
                     nodesProcessedList += nodeID
                 }
-
             } catch (e: ConditionalCheckFailedException) {
                 LOG.warn("nodeID : $nodeID not present in the DB")
             }
@@ -249,17 +282,17 @@ class NodeRepository(
         return nodesProcessedList
     }
 
-
-    fun getBlock(nodeID: String, blockID: String, workspaceID: String) : Node? {
+    fun getBlock(nodeID: String, blockID: String, workspaceID: String): Node? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        return DynamoDBQueryExpression<Node>().query(keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "nodeData.$blockID, dataOrder",
-                expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "nodeData.$blockID, dataOrder",
+            expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(Node::class.java, it)
         }.firstOrNull()
-
     }
 
     fun moveBlock(block: AdvancedElement?, workspaceID: String, sourceNodeID: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
@@ -306,8 +339,7 @@ class NodeRepository(
             .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-
-    private fun getUpdateToAddBlockToNode(block: AdvancedElement?, workspaceID: String, nodeID: String, currentTime: Long): Update{
+    private fun getUpdateToAddBlockToNode(block: AdvancedElement?, workspaceID: String, nodeID: String, currentTime: Long): Update {
 
         val nodeKey = HashMap<String, AttributeValue>()
         nodeKey["PK"] = AttributeValue(workspaceID)
@@ -319,15 +351,15 @@ class NodeRepository(
         expressionAttributeValues[":block"] = AttributeValue(Helper.objectMapper.writeValueAsString(block))
 
         val updateExpression = "set dataOrder = list_append(dataOrder, :orderList), " +
-                "nodeData.${block?.id} = :block, updatedAt = :updatedAt"
+            "nodeData.${block?.id} = :block, updatedAt = :updatedAt"
 
         return Update().withTableName(tableName)
-                        .withKey(nodeKey)
-                        .withUpdateExpression(updateExpression)
-                        .withExpressionAttributeValues(expressionAttributeValues)
+            .withKey(nodeKey)
+            .withUpdateExpression(updateExpression)
+            .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-    fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String){
+    fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -336,8 +368,10 @@ class NodeRepository(
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
 
         try {
-            UpdateItemSpec().update(pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy",
-                    expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)").also {
+            UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy",
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+            ).also {
                 table.updateItem(it)
             }
         } catch (e: ConditionalCheckFailedException) {
@@ -345,56 +379,58 @@ class NodeRepository(
         }
     }
 
-    fun checkIfNodeExistsForWorkspace(nodeID: String, workspaceID: String) : Boolean {
+    fun checkIfNodeExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
-        return DynamoDBQueryExpression<Node>().query(keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "PK",
-                expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "PK",
+            expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
         }.isNotEmpty()
     }
 
-
-    fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus) : Map<String, String>{
+    fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus): Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
 
-        return DynamoDBQueryExpression<Node>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", filterExpression = "itemStatus = :itemStatus",
-                projectionExpression = "PK, SK, title", expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", filterExpression = "itemStatus = :itemStatus",
+            projectionExpression = "PK, SK, title", expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
         }.associate { it.id to it.title }
-
     }
 
-    fun createBatchNodeAccessItem(nodeAccessItems : List<NodeAccess>){
+    fun createBatchNodeAccessItem(nodeAccessItems: List<NodeAccess>) {
         val failedBatches = mapper.batchWrite(nodeAccessItems, emptyList<Any>(), dynamoDBMapperConfig)
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
-    fun deleteBatchNodeAccessItem(nodeAccessItems : List<NodeAccess>){
+    fun deleteBatchNodeAccessItem(nodeAccessItems: List<NodeAccess>) {
         val failedBatches = mapper.batchWrite(emptyList<Any>(), nodeAccessItems, dynamoDBMapperConfig)
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
-
-    fun checkIfAccessRecordExists(nodeID: String, userID: String) : Boolean{
+    fun checkIfAccessRecordExists(nodeID: String, userID: String): Boolean {
         return mapper.load(NodeAccess::class.java, getAccessItemPK(nodeID), userID, dynamoDBMapperConfig) != null
     }
 
-
-    fun getUserIDsWithNodeAccess(nodeID: String, accessTypeList : List<AccessType>) : List<String> {
+    fun getUserIDsWithNodeAccess(nodeID: String, accessTypeList: List<AccessType>): List<String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
-        return DynamoDBQueryExpression<NodeAccess>().query(keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
-                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<NodeAccess>().query(
+            keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
+            projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
-        }.filter { it.accessType in  accessTypeList }.map { accessItem -> accessItem.userID  }
+        }.filter { it.accessType in accessTypeList }.map { accessItem -> accessItem.userID }
     }
 
     fun getUserNodeAccessRecord(nodeID: String, userID: String) : String {
@@ -416,22 +452,26 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
-        return DynamoDBQueryExpression<NodeAccess>().query(keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
-                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<NodeAccess>().query(
+            keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
+            projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associate { accessItem ->
                 accessItem.userID to accessItem.accessType.name
             }
         }
     }
 
-    fun getAllSharedNodesWithUser(userID: String) : Map<String, NodeAccess>{
+    fun getAllSharedNodesWithUser(userID: String): Map<String, NodeAccess> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(userID)
         expressionAttributeValues[":PK"] = AttributeValue(IdentifierType.NODE_ACCESS.name)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
-        return DynamoDBQueryExpression<NodeAccess>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<NodeAccess>().queryWithIndex(
+            index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+            filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).associateBy { nodeAccess -> nodeAccess.node.id }
         }
     }
@@ -440,7 +480,7 @@ class NodeRepository(
     fun batchGetNodeMetadataAndTitle(setOfNodeIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{
         if(setOfNodeIDWorkspaceID.isEmpty()) return mutableListOf()
         val keysAndAttributes = TableKeysAndAttributes(tableName)
-        for(nodeToWorkspacePair in setOfNodeIDWorkspaceID){
+        for (nodeToWorkspacePair in setOfNodeIDWorkspaceID) {
             keysAndAttributes.addHashAndRangePrimaryKey("PK", nodeToWorkspacePair.second, "SK", nodeToWorkspacePair.first)
         }
 
@@ -453,21 +493,23 @@ class NodeRepository(
     }
 
 
-    fun getNodeByNodeID(nodeID: String) : Node {
+    fun getNodeByNodeID(nodeID: String): Node {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
-        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                filterExpression = "itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<Node>().queryWithIndex(
+            index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+            filterExpression = "itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
                 nodeList.firstOrNull() ?: throw NoSuchElementException("Requested Resource Not Found")
             }
         }
     }
 
-    fun getNodeWorkspaceIDAndOwner(nodeID: String) : Map<String, String>{
+    fun getNodeWorkspaceIDAndOwner(nodeID: String): Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
@@ -475,8 +517,10 @@ class NodeRepository(
 
         val workspaceDetailsMap = mutableMapOf<String, String>()
 
-        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues).let {
+        return DynamoDBQueryExpression<Node>().queryWithIndex(
+            index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+            filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues
+        ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
                 nodeList.firstOrNull()?.let { node ->
                     workspaceDetailsMap["workspaceID"] = node.workspaceIdentifier.id
@@ -487,26 +531,28 @@ class NodeRepository(
         }
     }
 
-    fun getTags(nodeID: String, workspaceID: String) : MutableList<String>? {
+    fun getTags(nodeID: String, workspaceID: String): MutableList<String>? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
 
         return DynamoDBQueryExpression<Node>().query(
-                keyConditionExpression = "PK = :PK and SK=:SK", projectionExpression = "tags", expressionAttributeValues = expressionAttributeValues
+            keyConditionExpression = "PK = :PK and SK=:SK", projectionExpression = "tags", expressionAttributeValues = expressionAttributeValues
         ).let { query ->
             mapper.query(Node::class.java, query, dynamoDBMapperConfig).getOrNull(0)?.tags
         }
     }
 
-    fun getMetadataForNodesOfWorkspace(workspaceID: String) : Map<String, Map<String, Any?>> {
+    fun getMetadataForNodesOfWorkspace(workspaceID: String): Map<String, Map<String, Any?>> {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.Node.name)
 
-        return DynamoDBQueryExpression<Node>().queryWithIndex(index = "PK-itemType-index", keyConditionExpression = "PK = :PK  and itemType = :itemType",
-                expressionAttributeValues = expressionAttributeValues).let { it ->
+        return DynamoDBQueryExpression<Node>().queryWithIndex(
+            index = "PK-itemType-index", keyConditionExpression = "PK = :PK  and itemType = :itemType",
+            expressionAttributeValues = expressionAttributeValues
+        ).let { it ->
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
                 node.id to mapOf("metadata" to node.nodeMetaData, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
             }
@@ -516,7 +562,6 @@ class NodeRepository(
     companion object {
         private val LOG = LogManager.getLogger(NodeRepository::class.java)
     }
-
 }
 
 // TODO(separate out table in code cleanup)
