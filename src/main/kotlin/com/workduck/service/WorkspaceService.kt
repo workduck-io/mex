@@ -12,6 +12,7 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
+import com.workduck.models.Namespace
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -67,17 +68,15 @@ class WorkspaceService (
         val jobToGetNamespaces = async { nodeService.namespaceService.getAllNamespaceData(workspaceID) }
 
         val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
-        hierarchyMap[Constants.WORKSPACE_HIERARCHY] = jobToGetWorkspace.await().nodeHierarchyInformation ?: listOf<String>()
 
+        val workspaceHierarchyJson : MutableMap<String, Any> = mutableMapOf()
         val namespaceHierarchyJson : MutableMap<String, Any> = mutableMapOf()
-        for (namespace in jobToGetNamespaces.await()) {
-            val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
-            mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
-            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation ?: listOf<String>()
-            namespaceHierarchyJson[namespace.id] = mapOfNamespaceNameAndHierarchy
-        }
 
-        hierarchyMap[Constants.NAMESPACE_HIERARCHY] = namespaceHierarchyJson
+        constructWorkspaceInfo(jobToGetWorkspace.await(), workspaceHierarchyJson)
+        constructNamespaceInfo(jobToGetNamespaces.await(), namespaceHierarchyJson)
+
+        hierarchyMap[Constants.WORKSPACE_INFO] = workspaceHierarchyJson
+        hierarchyMap[Constants.NAMESPACE_INFO] = namespaceHierarchyJson
 
         return@runBlocking hierarchyMap
     }
@@ -128,6 +127,24 @@ class WorkspaceService (
 
         LOG.debug("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
         updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
+    }
+
+    // TODO(create a common interface for only Workspace and Namespace and combine these functions)
+    private fun constructWorkspaceInfo(workspace: Workspace, workspaceHierarchyJson: MutableMap<String, Any>){
+        val mapOfWorkspaceNameAndHierarchy = mutableMapOf<String, Any>()
+        mapOfWorkspaceNameAndHierarchy[Constants.NAME] = workspace.name
+        mapOfWorkspaceNameAndHierarchy[Constants.HIERARCHY] = workspace.nodeHierarchyInformation ?: listOf<String>()
+        workspaceHierarchyJson[workspace.id] = mapOfWorkspaceNameAndHierarchy
+    }
+
+    private fun constructNamespaceInfo(namespaceList: List<Namespace>, namespaceHierarchyJson: MutableMap<String, Any>){
+        for (namespace in namespaceList) {
+            val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
+            mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
+            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation ?: listOf<String>()
+            namespaceHierarchyJson[namespace.id] = mapOfNamespaceNameAndHierarchy
+        }
+
     }
 
     private fun getUpdatedNodeHierarchyOnDeletingNode(

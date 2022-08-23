@@ -18,8 +18,8 @@ object Constants {
     const val DDB_MAX_ITEM_SIZE = 350000
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
     const val HIERARCHY_LEVEL = "HIERARCHY LEVEL"
-    const val WORKSPACE_HIERARCHY = "WorkspaceHierarchy"
-    const val NAMESPACE_HIERARCHY = "NamespaceHierarchy"
+    const val WORKSPACE_INFO = "WorkspaceInfo"
+    const val NAMESPACE_INFO = "NamespaceInfo"
     const val NAME = "Name"
     const val HIERARCHY = "Hierarchy"
 
