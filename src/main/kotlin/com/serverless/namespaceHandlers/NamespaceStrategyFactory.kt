@@ -9,7 +9,7 @@ class NamespaceStrategyFactory {
 
         const val createNamespaceObject = "POST /namespace"
 
-        const val updateNamespaceObject = "POST /namespace/update"
+        const val updateNamespaceObject = "PATCH /namespace"
 
         const val deleteNamespaceObject = "DELETE /namespace/{id}"
 

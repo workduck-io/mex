@@ -8,8 +8,7 @@ import com.serverless.utils.isValidTitle
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NamespaceRequest")
 data class NamespaceRequest(
-    @JsonProperty("name")
-    val name: String = "",
+    val name: String,
 ) : WDRequest {
 
     init {

@@ -4,8 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.Gson
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
@@ -14,7 +12,6 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
-import com.workduck.models.NodeMetadata
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -65,12 +62,28 @@ class WorkspaceService (
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
-        return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
+    fun getNodeHierarchyOfWorkspace(workspaceID: String): Map<String, Any>  = runBlocking {
+        val jobToGetWorkspace = async { getWorkspace(workspaceID) as Workspace }
+        val jobToGetNamespaces = async { nodeService.namespaceService.getAllNamespaceData(workspaceID) }
+
+        val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
+        hierarchyMap[Constants.WORKSPACE_HIERARCHY] = jobToGetWorkspace.await().nodeHierarchyInformation ?: listOf<String>()
+
+        val namespaceHierarchyJson : MutableMap<String, Any> = mutableMapOf()
+        for (namespace in jobToGetNamespaces.await()) {
+            val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
+            mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
+            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation ?: listOf<String>()
+            namespaceHierarchyJson[namespace.id] = mapOfNamespaceNameAndHierarchy
+        }
+
+        hierarchyMap[Constants.NAMESPACE_HIERARCHY] = namespaceHierarchyJson
+
+        return@runBlocking hierarchyMap
     }
 
     fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String): Map<String, Any> = runBlocking {
-        val jobToGetHierarchy =  async { (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf() }
+        val jobToGetHierarchy =  async { getNodeHierarchyOfWorkspace(workspaceID) }
         val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
         return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
     }
@@ -105,8 +118,8 @@ class WorkspaceService (
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
 
-    fun addNodePathToHierarchy(workspaceID: String, nodePath: String) {
-        workspaceRepository.addNodePathToHierarchy(workspaceID, nodePath)
+    fun addPathToHierarchy(workspaceID: String, path: String) {
+        workspaceRepository.addNodePathToHierarchy(workspaceID, path)
     }
 
     fun updateNodeHierarchyOnArchivingNode(workspace: Workspace, nodeID: String) {
