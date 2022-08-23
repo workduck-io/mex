@@ -11,7 +11,6 @@ object Constants {
     const val ARCHIVED_HIERARCHY = "archivedHierarchy"
     const val REMOVED_PATHS = "removedPaths"
     const val INTERNAL_WORKSPACE = "WORKSPACE_INTERNAL"
-    const val INTERNAL_NAMESPACE_ID = "NAMESPACE_DEFAULT"
     const val NODE_ID_PREFIX = "NODE_"
     const val NAMESPACE_ID_PREFIX = "NAMESPACE_"
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
