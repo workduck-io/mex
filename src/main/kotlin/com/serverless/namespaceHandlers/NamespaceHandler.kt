@@ -25,7 +25,7 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val json = """
             {
-                "ids" : ["xyz"]
+                "ids" : []
             }
         """.trimIndent()
         val payload: WDRequest? = Helper.objectMapper.readValue(json)
@@ -54,7 +54,7 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         }
 
         return try {
-            //validateTokenAndWorkspace(wdInput)
+            validateTokenAndWorkspace(wdInput)
             strategy.apply(wdInput, namespaceService)
         }
         catch(e : Exception){
