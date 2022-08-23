@@ -66,6 +66,29 @@ class WorkspaceRepository(
 
     }
 
+    fun addNodePathToHierarchy(workspaceID: String, path: String){
+
+        LOG.debug("$workspaceID, $path")
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":path"] = mutableListOf(path)
+        expressionAttributeValues[":empty_list"] = mutableListOf<String>()
+
+        val updateExpression = "set nodeHierarchyInformation = list_append(if_not_exists(nodeHierarchyInformation, :empty_list), :path), updatedAt = :updatedAt"
+
+        try {
+            UpdateItemSpec().update(pk = workspaceID, sk = workspaceID, updateExpression = updateExpression,
+                    conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
+                table.updateItem(it)
+            }
+
+        }catch (e: ConditionalCheckFailedException){
+            LOG.warn("Invalid WorkspaceID : $workspaceID")
+        }
+
+    }
+
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?> {
         val workspaceMap: MutableMap<String, Workspace?> = mutableMapOf()
 
