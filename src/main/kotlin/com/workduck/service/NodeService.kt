@@ -157,7 +157,7 @@ class NodeService( // Todo: Inject them from handlers
             val jobToGetWorkspace =
                 async { node.workspaceIdentifier.id.let { (workspaceService.getWorkspace(it) as Workspace) } }
             val jobToGetNamespace =
-                    async { node.namespaceIdentifier?.id?.let { namespaceService.getNamespace(it, node.workspaceIdentifier.id) as Namespace }}
+                    async { node.namespaceIdentifier?.id?.let { namespaceService.getNamespace(it, node.workspaceIdentifier.id) as Namespace? }}
 
             return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
                 null -> {
