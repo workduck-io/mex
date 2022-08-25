@@ -32,7 +32,7 @@ object PageHelper {
 
     /* If a block has been changed, change its metadata as well */
     /* If the page has changed, return true else false */
-    fun comparePageWithStoredPage(page: Page, storedPage: Page) : Boolean{
+    fun comparePageDataWithStoredPage(page: Page, storedPage: Page) : Boolean{
         var pageChanged = false
 
         /* in case a block has been deleted */
