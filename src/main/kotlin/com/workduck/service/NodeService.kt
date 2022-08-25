@@ -31,7 +31,7 @@ import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getNewPath
 import com.serverless.utils.getRoughSizeOfEntity
-import com.serverless.utils.isNodeAndTagsUnchanged
+import com.serverless.utils.isNodeUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.workduck.models.AccessType
@@ -718,7 +718,7 @@ class NodeService( // Todo: Inject them from handlers
 
         node.dataOrder = createDataOrderForPage(node)
 
-        if (node.isNodeAndTagsUnchanged(storedNode)) {
+        if (node.isNodeUnchanged(storedNode)) {
             return@runBlocking storedNode
         }
 

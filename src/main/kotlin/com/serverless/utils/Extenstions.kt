@@ -14,9 +14,10 @@ import kotlinx.coroutines.Deferred
 import org.apache.logging.log4j.Logger
 import com.workduck.utils.Helper.objectMapper
 
-fun Node.isNodeAndTagsUnchanged(storedNode: Node): Boolean {
+fun Node.isNodeUnchanged(storedNode: Node): Boolean {
     /* also updated block level metadata */
-    return !PageHelper.comparePageWithStoredPage(this, storedNode) && this.tags.sorted() == storedNode.tags.sorted()
+    return !PageHelper.comparePageDataWithStoredPage(this, storedNode)
+            && this.tags.sorted() == storedNode.tags.sorted() && this.nodeMetaData == storedNode.nodeMetaData
 }
 
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
