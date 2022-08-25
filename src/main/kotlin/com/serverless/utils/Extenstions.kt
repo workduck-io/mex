@@ -110,6 +110,10 @@ fun MutableList<String>.addIfNotEmpty(value: String) {
     if (value.isNotEmpty()) this.add(value)
 }
 
+fun List<String>.listsEqual(list: List<String>): Boolean{
+    return this.size == list.size && this.containsAll(list)
+}
+
 fun String.isValidID(prefix: String): Boolean {
     return this.startsWith(prefix) &&
         this.length == prefix.length + Constants.NANO_ID_SIZE &&

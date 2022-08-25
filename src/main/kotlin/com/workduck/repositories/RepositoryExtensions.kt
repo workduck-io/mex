@@ -16,6 +16,15 @@ fun UpdateItemSpec.update(pk : String, sk: String, updateExpression: String,
             .withConditionExpression(conditionExpression)
 }
 
+fun UpdateItemSpec.updateWithNullAttributes(pk : String, sk: String, updateExpression: String,
+                          expressionAttributeValues : MutableMap<String, Any?>, conditionExpression: String? = null) : UpdateItemSpec{
+
+    return this.withPrimaryKey("PK", pk, "SK", sk)
+            .withUpdateExpression(updateExpression)
+            .withValueMap(expressionAttributeValues)
+            .withConditionExpression(conditionExpression)
+}
+
 
 fun UpdateItemSpec.updateWithReturnValues(pk : String, sk: String, updateExpression: String,
                           expressionAttributeValues : MutableMap<String, Any>, conditionExpression: String, returnValue: ReturnValue) : UpdateItemSpec{
