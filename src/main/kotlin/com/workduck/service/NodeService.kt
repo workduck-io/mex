@@ -389,7 +389,7 @@ class NodeService( // Todo: Inject them from handlers
         return listOfNodes
     }
 
-    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String): Map<String, List<String>> = runBlocking {
+    fun bulkCreateNodes(request: WDRequest, workspaceID: String, userID: String): Map<String, Any> = runBlocking {
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
         val nodePath: NodePath = nodeRequest.nodePath
@@ -422,22 +422,26 @@ class NodeService( // Todo: Inject them from handlers
 
         launch { updateNamespaceOrWorkspaceHierarchy(workspace, namespace, updatedNodeHierarchy, HierarchyUpdateSource.NODE) }
 
-        val mapOfNodeAndDifference = mutableMapOf("node" to listOf(Helper.objectMapper.writeValueAsString(node))) /* requirement of middleware */
-        addDifferenceOfHierarchy(mapOfNodeAndDifference, updatedNodeHierarchy, workspaceHierarchy, namespace)
+        val mapOfNodeAndDifference = mutableMapOf(Constants.NODE to (node as Any)) /* requirement of middleware */
+        mapOfNodeAndDifference[Constants.CHANGED_PATHS] = getMapOfDifferenceOfPaths(updatedNodeHierarchy, workspace, namespace)
         return@runBlocking mapOfNodeAndDifference
     }
 
-    private fun addDifferenceOfHierarchy(mapOfNodeAndDifference: MutableMap<String, List<String>>, updatedNodeHierarchy: List<String>, workspaceHierarchy: MutableList<String>, namespace: Namespace?){
-        when(namespace) {
+    private fun getMapOfDifferenceOfPaths(updatedNodeHierarchy: List<String>, workspace: Workspace, namespace: Namespace?) : MutableMap<String, Any>{
+        val mapOfChangedPaths = mutableMapOf<String, Any>()
+        when(namespace) { /* if the namespace is not null, then the path changes were at namespace level, otherwise at workspace level */
             null -> {
-                mapOfNodeAndDifference.putAll(updatedNodeHierarchy.getDifferenceWithOldHierarchy(workspaceHierarchy))
-                mapOfNodeAndDifference[Constants.HIERARCHY_LEVEL] = listOf(ItemType.Workspace.name)
+                mapOfChangedPaths[workspace.id] = updatedNodeHierarchy.getDifferenceWithOldHierarchy(workspace.nodeHierarchyInformation ?: listOf())
+                mapOfChangedPaths[Constants.HIERARCHY_LEVEL] = ItemType.Workspace.name
             }
             else -> {
-                mapOfNodeAndDifference.putAll(updatedNodeHierarchy.getDifferenceWithOldHierarchy(namespace.nodeHierarchyInformation ?: listOf()))
-                mapOfNodeAndDifference[Constants.HIERARCHY_LEVEL] = listOf(ItemType.Namespace.name)
+                mapOfChangedPaths[namespace.id] = updatedNodeHierarchy.getDifferenceWithOldHierarchy(namespace.nodeHierarchyInformation ?: listOf())
+                mapOfChangedPaths[Constants.HIERARCHY_LEVEL] = ItemType.Namespace.name
             }
         }
+        return mapOfChangedPaths
+
+
 
     }
 
@@ -489,9 +493,10 @@ class NodeService( // Todo: Inject them from handlers
         suffixNodePath: String /* path to be added to longestExistingPath */
     ): List<String> {
 
+        /* if the namespace is not null, hierarchy of the namespace should be referred and updated */
         val oldHierarchy : List<String> = when(namespace){
             null -> workspaceHierarchy
-            else -> namespace.nodeHierarchyInformation ?: listOf()
+            else -> namespace.nodeHierarchyInformation
         }
 
 

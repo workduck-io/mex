@@ -19,6 +19,7 @@ object NodeHelper {
     /* returns path of the format nodeName#nodeID#nodeName#nodeID ... */
     fun getLongestExistingPathFromNamePath(workspaceHierarchy : List<String>?, nodeNamePath: String, namespace: Namespace? = null): String {
 
+        /* if namespace is not null, get the longest path from namespace hierarchy, otherwise use workspace hierarchy */
         val nodeHierarchyToRefer = when(namespace){
             null -> workspaceHierarchy
             else -> namespace.nodeHierarchyInformation
@@ -143,11 +144,10 @@ object NodeHelper {
     }
 
     fun checkForDuplicateNodeIDInNamespaceAndWorkspace(workspaceHierarchy: List<String>, namespaceHierarchy: List<String>?, nodeID: String) {
-        if (workspaceHierarchy.any { it == nodeID } ||
-                namespaceHierarchy?.any { it == nodeID } == true) throw IllegalArgumentException("NodeID already exists")
+        require(workspaceHierarchy.none { it == nodeID } && (namespaceHierarchy?.none { it == nodeID } ?: true)) { "NodeID already exists" }
     }
 
     fun checkForDuplicateNodeID(nodeHierarchyInformation: List<String>, nodeID: String) {
-        if (nodeHierarchyInformation.any { it == nodeID }) throw IllegalArgumentException("NodeID already exists")
+        require (nodeHierarchyInformation.none { it == nodeID }) { "NodeID already exists" }
     }
 }

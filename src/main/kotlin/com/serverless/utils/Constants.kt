@@ -17,10 +17,12 @@ object Constants {
     const val NANO_ID_SIZE = 21
     const val DDB_MAX_ITEM_SIZE = 350000
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
+    const val NODE = "node"
+    const val CHANGED_PATHS = "changedPaths"
     const val HIERARCHY_LEVEL = "hierarchyLevel"
-    const val WORKSPACE_INFO = "WorkspaceInfo"
-    const val NAMESPACE_INFO = "NamespaceInfo"
-    const val NAME = "Name"
-    const val HIERARCHY = "Hierarchy"
+    const val WORKSPACE_INFO = "workspaceInfo"
+    const val NAMESPACE_INFO = "namespaceInfo"
+    const val NAME = "name"
+    const val HIERARCHY = "hierarchy"
 
 }

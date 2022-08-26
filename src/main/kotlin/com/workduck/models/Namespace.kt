@@ -69,7 +69,7 @@ class Namespace(
 
     @JsonProperty("nodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
-    var nodeHierarchyInformation: List<String> ? = null,
+    var nodeHierarchyInformation: List<String> = listOf(),
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
@@ -79,7 +79,7 @@ class Namespace(
 
     @JsonProperty("archivedNodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "archivedNodeHierarchyInformation")
-    var archivedNodeHierarchyInformation: List<String> ? = null,
+    var archivedNodeHierarchyInformation: List<String> = listOf(),
 
     @JsonProperty("hierarchyUpdateSource")
     @DynamoDBAttribute(attributeName = "hierarchyUpdateSource")
@@ -89,7 +89,7 @@ class Namespace(
 ) : Entity {
 
     companion object {
-        fun populateHierarchiesAndUpdatedAt(namespace: Namespace, activeHierarchy : List<String>, archivedHierarchy : List<String>?, updatedAt: Long = Constants.getCurrentTime()){
+        fun populateHierarchiesAndUpdatedAt(namespace: Namespace, activeHierarchy : List<String>, archivedHierarchy : List<String>, updatedAt: Long = Constants.getCurrentTime()){
             namespace.nodeHierarchyInformation = activeHierarchy
             namespace.archivedNodeHierarchyInformation = archivedHierarchy
             namespace.updatedAt = updatedAt

@@ -69,14 +69,14 @@ class WorkspaceService (
 
         val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
 
-        val workspaceHierarchyJson : MutableMap<String, Any> = mutableMapOf()
-        val namespaceHierarchyJson : MutableMap<String, Any> = mutableMapOf()
+        val workspaceHierarchy : MutableMap<String, Any> = mutableMapOf()
+        val namespaceHierarchy : MutableMap<String, Any> = mutableMapOf()
 
-        constructWorkspaceInfo(jobToGetWorkspace.await(), workspaceHierarchyJson)
-        constructNamespaceInfo(jobToGetNamespaces.await(), namespaceHierarchyJson)
+        constructWorkspaceInfo(jobToGetWorkspace.await(), workspaceHierarchy)
+        constructNamespaceInfo(jobToGetNamespaces.await(), namespaceHierarchy)
 
-        hierarchyMap[Constants.WORKSPACE_INFO] = workspaceHierarchyJson
-        hierarchyMap[Constants.NAMESPACE_INFO] = namespaceHierarchyJson
+        hierarchyMap[Constants.WORKSPACE_INFO] = workspaceHierarchy
+        hierarchyMap[Constants.NAMESPACE_INFO] = namespaceHierarchy
 
         return@runBlocking hierarchyMap
     }
@@ -134,15 +134,15 @@ class WorkspaceService (
         val mapOfWorkspaceNameAndHierarchy = mutableMapOf<String, Any>()
         mapOfWorkspaceNameAndHierarchy[Constants.NAME] = workspace.name
         mapOfWorkspaceNameAndHierarchy[Constants.HIERARCHY] = workspace.nodeHierarchyInformation ?: listOf<String>()
-        workspaceHierarchyJson[workspace.id] = mapOfWorkspaceNameAndHierarchy
+        workspaceHierarchyJson.putIfAbsent(workspace.id, mapOfWorkspaceNameAndHierarchy)
     }
 
     private fun constructNamespaceInfo(namespaceList: List<Namespace>, namespaceHierarchyJson: MutableMap<String, Any>){
         for (namespace in namespaceList) {
             val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
             mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
-            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation ?: listOf<String>()
-            namespaceHierarchyJson[namespace.id] = mapOfNamespaceNameAndHierarchy
+            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation
+            namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceNameAndHierarchy)
         }
 
     }
