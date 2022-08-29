@@ -261,7 +261,7 @@ class NodeService( // Todo: Inject them from handlers
         4. Unchanged Suffix Path ( if any )
     */
 
-    fun refactor(wdRequest: WDRequest, userID: String, workspace: Workspace): Map<String, List<String>> = runBlocking {
+    fun refactor(wdRequest: WDRequest, userID: String, workspace: Workspace): Map<String, Any> = runBlocking {
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
         /* existingNodePath is path from root till last node in the path and not necessarily path till a leaf node */
@@ -270,6 +270,7 @@ class NodeService( // Todo: Inject them from handlers
         val existingNodes = refactorNodePathRequest.existingNodePath
         val newNodes = refactorNodePathRequest.newNodePath
 
+        // TODO(crosscheck if the last node name in the path is for the passed nodeID)
 
         val jobToGetExistingNamespace = async {
             existingNodes.namespaceID?.let{
@@ -277,6 +278,7 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
 
+        // if the namespace id is same ( or null ), we are dealing with a single namespace ( or workspace )
         val jobToGetTargetNamespace = when(existingNodes.namespaceID == newNodes.namespaceID) {
             false -> async {
                 newNodes.namespaceID?.let{
@@ -301,14 +303,10 @@ class NodeService( // Todo: Inject them from handlers
 
         val combinedPath = paths.joinToString(Constants.DELIMITER)
 
-        /* get paths from lastNode */
+        /* get paths emanating from lastNode */
         val lastNodeHierarchy = getHierarchyOfNode(workspaceHierarchy, jobToGetExistingNamespace.await(), lastNodeID)
 
-        updateHierarchyInRefactorAndReturnDifference(jobToGetExistingNamespace.await(), jobToGetTargetNamespace.await(), workspace, lastNodeHierarchy, combinedPath, existingNodes)
-
-//        val newHierarchy: List<String> = removeRedundantPaths(createNewHierarchyInRefactor(lastNodeHierarchy, workspaceHierarchy, combinedPath, existingNodes))
-//        workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy, HierarchyUpdateSource.NODE)
-        return@runBlocking lastNodeHierarchy.getDifferenceWithOldHierarchy(workspaceHierarchy)
+        return@runBlocking updateHierarchyInRefactorAndReturnDifference(jobToGetExistingNamespace.await(), jobToGetTargetNamespace.await(), workspace, lastNodeHierarchy, combinedPath, existingNodes)
     }
 
 
@@ -332,24 +330,33 @@ class NodeService( // Todo: Inject them from handlers
         val mapOfDifferenceOfPaths = mutableMapOf<String, Any>()
         val existingHierarchy = when(existingNamespace){
             null -> workspace.nodeHierarchyInformation ?: listOf()
-            else -> existingNamespace.nodeHierarchyInformation ?: listOf()
+            else -> existingNamespace.nodeHierarchyInformation
         }.toMutableList()
 
         val targetHierarchy = when(targetNamespace){
             null -> workspace.nodeHierarchyInformation ?: listOf()
-            else -> targetNamespace.nodeHierarchyInformation ?: listOf()
+            else -> targetNamespace.nodeHierarchyInformation
         }.toMutableList()
 
+        val listOfChangedPaths = mutableListOf<Map<String, Any>>()
+
+        /* when existing and target hierarchy are same, we have the following case :
+           - Refactor within a workspace
+           - Refactor within a namespace
+
+           Otherwise :
+           - Refactor from Namespace to Workspace or vice-versa
+           - Refactor from One Namespace to Another Namespace
+         */
         when(existingHierarchy.listsEqual(targetHierarchy)){
-            true -> { /* need to update one hierarchy */
+            true -> { /* need to update only one hierarchy */
                 val newHierarchy = createNewHierarchyInRefactor(lastNodeHierarchy, existingHierarchy, newPathTillLastNode, existingNodes)
                 launch { updateNamespaceOrWorkspaceHierarchy(workspace, targetNamespace, newHierarchy, HierarchyUpdateSource.NODE) }
-                mapOfDifferenceOfPaths[Constants.CHANGED_PATHS] = getMapOfDifferenceOfPaths(newHierarchy, workspace, existingNamespace)
+                listOfChangedPaths.add(getMapOfDifferenceOfPaths(newHierarchy, workspace, existingNamespace))
+
 
             }
-            false -> {
-                val listOfChangedPaths = mutableListOf<Map<String, Any>>()
-
+            false -> { /* two hierarchies gets affected in this case */
                 val updatedExistingHierarchy = getUpdatedExistingHierarchy(existingHierarchy, existingNodes)
                 launch { updateNamespaceOrWorkspaceHierarchy(workspace, existingNamespace, updatedExistingHierarchy, HierarchyUpdateSource.NODE) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedExistingHierarchy, workspace, existingNamespace))
@@ -359,16 +366,17 @@ class NodeService( // Todo: Inject them from handlers
                 launch { updateNamespaceOrWorkspaceHierarchy(workspace, targetNamespace, updatedTargetHierarchy, HierarchyUpdateSource.NODE) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedTargetHierarchy, workspace, targetNamespace))
 
-                mapOfDifferenceOfPaths[Constants.CHANGED_PATHS] = listOfChangedPaths
             }
         }
+
+        mapOfDifferenceOfPaths[Constants.CHANGED_PATHS] = listOfChangedPaths
 
         return@runBlocking mapOfDifferenceOfPaths
 
 
     }
 
-    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodeNamePath): MutableList<String> {
+    private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodeNamePath): List<String> {
 
         /* remove partial paths from current hierarchy */
         val newHierarchy = getNewHierarchyByRemovingPassedNamePath(currentHierarchy, existingNodes)
@@ -382,7 +390,7 @@ class NodeService( // Todo: Inject them from handlers
         return getNewHierarchyByRemovingPassedNamePath(currentHierarchy, existingNodes)
     }
 
-    private fun getNewHierarchyByAddingRefactoredPath(targetHierarchy: MutableList<String>, lastNodeHierarchy: List<String>, newPathTillLastNode: String) : MutableList<String> {
+    private fun getNewHierarchyByAddingRefactoredPath(targetHierarchy: MutableList<String>, lastNodeHierarchy: List<String>, newPathTillLastNode: String) : List<String> {
         if (lastNodeHierarchy.isEmpty()) targetHierarchy.add(newPathTillLastNode)
         else {
             for (lastNodeHierarchyPath in lastNodeHierarchy) {
@@ -390,9 +398,7 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
 
-        removeRedundantPaths(targetHierarchy)
-        return targetHierarchy
-
+        return removeRedundantPaths(targetHierarchy)
     }
 
 
@@ -414,7 +420,7 @@ class NodeService( // Todo: Inject them from handlers
         return newHierarchy
     }
 
-
+    /* used for refactor */
     private fun addPathsAndCreateNodesBeforeLastNode(refactorNodePathRequest: RefactorRequest, paths: MutableList<String>, userID: String, workspace: Workspace, targetNamespace: Namespace?) {
         val newNodesWithoutLast = NodeNamePath(
             path = refactorNodePathRequest.newNodePath.allNodes.dropLast(1).convertToPathString(),
