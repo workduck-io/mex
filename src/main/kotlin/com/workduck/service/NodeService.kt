@@ -532,7 +532,9 @@ class NodeService( // Todo: Inject them from handlers
         launch { updateNamespaceOrWorkspaceHierarchy(namespace, updatedNodeHierarchy, HierarchyUpdateSource.NODE) }
 
         val mapOfNodeAndDifference = mutableMapOf(Constants.NODE to (node as Any)) /* requirement of middleware */
-        mapOfNodeAndDifference[Constants.CHANGED_PATHS] = getMapOfDifferenceOfPaths(updatedNodeHierarchy, namespaceHierarchy, namespace.id)
+
+        /* converting map on RHS to List so that response looks in line with refactor */
+        mapOfNodeAndDifference[Constants.CHANGED_PATHS] = listOf(getMapOfDifferenceOfPaths(updatedNodeHierarchy, namespaceHierarchy, namespace.id))
         return@runBlocking mapOfNodeAndDifference
     }
 
