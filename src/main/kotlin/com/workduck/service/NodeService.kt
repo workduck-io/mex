@@ -29,6 +29,7 @@ import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeUnchanged
+import com.serverless.utils.listsEqual
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.workduck.models.AccessType
