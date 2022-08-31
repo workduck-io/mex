@@ -20,7 +20,15 @@ const functions = [
     }
   },
   {
-    "name": "mex-backend-staging-PublicNoteUpdate",
+    "name": "mex-backend-staging-PublicNoteSQSWorker",
+    "config": {
+      "enabled": true,
+      "payload": "{\"source\":\"serverless-plugin-warmup\"}",
+      "concurrency": 2
+    }
+  },
+  {
+    "name": "mex-backend-staging-PublicNoteWorker",
     "config": {
       "enabled": true,
       "payload": "{\"source\":\"serverless-plugin-warmup\"}",
