@@ -1160,6 +1160,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getPublicNode(nodeID: String): Node {
         val publicNodeCache: Cache = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
+        LOG.debug("existing note ${publicNodeCache.get(nodeID)}")
         val node = publicNodeCache.get(nodeID)?.let{ publicNode ->
             Helper.objectMapper.convertValue(publicNode, Node::class.java)
         } ?: orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node

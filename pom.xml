@@ -24,6 +24,7 @@
         <cognitoidp.version>1.12.172</cognitoidp.version>
         <jnanoid.version>2.0.0</jnanoid.version>
         <jedis.version>4.2.0</jedis.version>
+        <awsjavasdk.version>1.12.197</awsjavasdk.version>
     </properties>
 
     <dependencyManagement>
@@ -84,6 +85,11 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-dynamodb</artifactId>
             <version>${dynamo.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>${awsjavasdk.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

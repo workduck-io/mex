@@ -6,8 +6,17 @@ Ping:
         cors: true
         method: get
 
-PublicNoteUpdate:
-  handler: com.serverless.ddbStreamTriggers.publicnoteUpdateTrigger.PublicNoteUpdate
+PublicNoteSQSWorker:
+  handler: com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger.PublicNoteSQSWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - PublicNoteDLQ
+            - Arn
+
+PublicNoteWorker:
+  handler: com.serverless.ddbStreamTriggers.publicnoteWorkerTrigger.PublicNoteWorker
   vpc:
     subnetIds:
       - "subnet-ad0a8de0"

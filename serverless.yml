@@ -34,9 +34,15 @@ provider:
     JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     STAGE: ${opt:stage, 'local'}
     PUBLIC_NOTE_CACHE_ENDPOINT: "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
+    SQS_QUEUE_URL: { Ref: PublicNoteDLQ }
   iam:
     role:
       statements:
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            Fn::GetAtt: [PublicNoteDLQ, Arn]
         - Effect: Allow
           Action:
             - dynamodb:Scan
@@ -136,7 +142,7 @@ package:
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
-  - serverless-domain-manager
+#  - serverless-domain-manager
   - serverless-plugin-warmup
 custom:
   serverless-offline:
@@ -162,19 +168,19 @@ custom:
         - schedule: cron(0/15 * ? * SAT-SUN *)
       concurrency: 2
       role: IamRoleLambdaExecution
-  customDomain:
-    rest:
-      domainName: api-${opt:stage, self:provider.stage}.workduck.io
-      basePath: 'mex'
-      stage: ${opt:stage, self:provider.stage}
-      createRoute53Record: true
-    http:
-      domainName: http-${opt:stage, self:provider.stage}.workduck.io
-      basePath: 'mex'
-      stage: ${opt:stage, self:provider.stage}
-      createRoute53Record: true
-      endpointType: regional
-      apiType: http
+#  customDomain:
+#    rest:
+#      domainName: api-${opt:stage, self:provider.stage}.workduck.io
+#      basePath: 'mex'
+#      stage: ${opt:stage, self:provider.stage}
+#      createRoute53Record: true
+#    http:
+#      domainName: http-${opt:stage, self:provider.stage}.workduck.io
+#      basePath: 'mex'
+#      stage: ${opt:stage, self:provider.stage}
+#      createRoute53Record: true
+#      endpointType: regional
+#      apiType: http
 
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
@@ -185,3 +191,4 @@ useDotenv: true
 resources:
   - ${file(src/main/resources/api-gateway-errors.yml)}
   - ${file(src/main/resources/mex.yml)}
+  - ${file(src/main/resources/queue-resources.yml)}

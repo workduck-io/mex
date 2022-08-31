@@ -1,0 +1,6 @@
+Resources:
+  PublicNoteDLQ:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: public-note-dlq-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true

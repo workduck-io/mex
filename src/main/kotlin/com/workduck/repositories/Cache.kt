@@ -1,6 +1,7 @@
 package com.workduck.repositories
 
 import com.workduck.interfaces.Cache
+import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 
@@ -8,7 +9,7 @@ class Cache(private val host: String = "localhost", private val port: Int = 6379
     private var jedisPoolConfig = JedisPoolConfig()
     private lateinit var jedisClient: JedisPool
     private val maxRetries = 3
-    private val connectionTimeout = 1800
+    private val connectionTimeout = 3600
 
     init {
         for (retryIndex in 0 .. maxRetries) {
