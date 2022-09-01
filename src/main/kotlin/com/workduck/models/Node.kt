@@ -29,10 +29,6 @@ data class Node(
     @DynamoDBHashKey(attributeName = "PK")
     override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
-//    @JsonProperty("parentNodeID")
-//    @DynamoDBAttribute(attributeName = "parentNodeID")
-//    var parentNodeID: String = id,
-
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")
     override var title: String = "New Node",
@@ -71,20 +67,15 @@ data class Node(
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
-
-    /* WORKSPACE_ID#NAMESPACE_ID */
     @DynamoDBAttribute(attributeName = "AK")
-    var ak: String = "${workspaceIdentifier.id}${Constants.DELIMITER}${namespaceIdentifier?.id}",
+    var namespaceIdentifier: NamespaceIdentifier = NamespaceIdentifier("DefaultNamespace"),
+
 
     @JsonProperty("nodeSchemaIdentifier")
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
     @DynamoDBAttribute(attributeName = "nodeSchemaIdentifier")
     var nodeSchemaIdentifier: NodeSchemaIdentifier? = null,
 
-    // @JsonProperty("status")
-    // val status: NodeStatus = NodeStatus.LINKED,
-    // val associatedProperties: Set<AssociatedProperty>,
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
@@ -123,13 +114,6 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeVersionCount")
     var nodeVersionCount: Long = 0
 
-    companion object {
-        fun populateNodeWithSkAkAndCreatedAt(node: Node, storedNode: Node) {
-            node.createdAt = storedNode.createdAt
-            node.createdBy = storedNode.createdBy
-            node.ak = "${node.workspaceIdentifier.id}${Constants.DELIMITER}${node.namespaceIdentifier?.id}"
-        }
-    }
 
     init {
         require(title.isNotBlank()) {

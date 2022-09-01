@@ -10,7 +10,7 @@ import com.workduck.utils.NodeHelper.getNamePath
 class AddedNewPathStrategy: OperationPerformedStrategy {
     override fun createRelationships(relationshipService: RelationshipService, workspaceID: String, newNodeHierarchy: List<String>, oldNodeHierarchy: List<String>, addedPath: List<String>, removedPath: List<String>) {
         val addedPathString = addedPath.firstOrNull() ?: throw Exception("Added path is null")
-        val longestExistingPath = getLongestExistingPathFromNamePath(oldNodeHierarchy, getNamePath(addedPathString))
+        val longestExistingPath = getLongestExistingPathFromNamePath(getNamePath(addedPathString), oldNodeHierarchy)
         var relationshipPath = addedPathString
 
         when(longestExistingPath.isNotEmpty()){

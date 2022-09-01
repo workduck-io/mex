@@ -110,11 +110,6 @@ fun MutableList<String>.addIfNotEmpty(value: String) {
     if (value.isNotEmpty()) this.add(value)
 }
 
-fun String.getNewPath(suffix: String): String {
-    return if (this.isEmpty()) suffix
-    else "$this${Constants.DELIMITER}$suffix"
-}
-
 fun String.isValidID(prefix: String): Boolean {
     return this.startsWith(prefix) &&
         this.length == prefix.length + Constants.NANO_ID_SIZE &&
@@ -166,9 +161,9 @@ fun Map<String, Any>.handleWarmup(LOG: Logger): ApiGatewayResponse? {
     } else null
 }
 
-fun String.createNodePath(nodeIDOrName: String): String {
-    if(this.isEmpty()) return nodeIDOrName
-    return "$this${Constants.DELIMITER}$nodeIDOrName"
+fun String.createNodePath(suffix: String): String {
+    if(this.isEmpty()) return suffix
+    return "$this${Constants.DELIMITER}$suffix"
 }
 
 suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred<Boolean>, error: String) {

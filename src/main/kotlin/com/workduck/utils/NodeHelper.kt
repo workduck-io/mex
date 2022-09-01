@@ -17,15 +17,9 @@ object NodeHelper {
     private val LOG = LogManager.getLogger(NodeHelper::class.java)
 
     /* returns path of the format nodeName#nodeID#nodeName#nodeID ... */
-    fun getLongestExistingPathFromNamePath(workspaceHierarchy : List<String>?, nodeNamePath: String, namespace: Namespace? = null): String {
+    fun getLongestExistingPathFromNamePath(nodeNamePath: String, hierarchy: List<String>?): String {
 
-        /* if namespace is not null, get the longest path from namespace hierarchy, otherwise use workspace hierarchy */
-        val nodeHierarchyToRefer = when(namespace){
-            null -> workspaceHierarchy
-            else -> namespace.nodeHierarchyInformation
-        }
-
-        return getLongestExistingPath(nodeHierarchyToRefer, nodeNamePath)
+        return getLongestExistingPath(hierarchy, nodeNamePath)
 
 
     }

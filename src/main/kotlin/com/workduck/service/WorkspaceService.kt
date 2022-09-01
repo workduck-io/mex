@@ -117,9 +117,6 @@ class WorkspaceService (
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
 
-    fun addPathToHierarchy(workspaceID: String, path: String) {
-        workspaceRepository.addNodePathToHierarchy(workspaceID, path)
-    }
 
     fun updateNodeHierarchyOnArchivingNode(workspace: Workspace, nodeID: String) {
         val updatedNodeHierarchy =

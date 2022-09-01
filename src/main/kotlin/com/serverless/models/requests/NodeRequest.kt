@@ -30,7 +30,7 @@ open class NodeRequest(
     @JsonProperty("namespaceIdentifier")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-    var namespaceIdentifier: NamespaceIdentifier? = null,
+    var namespaceIdentifier: NamespaceIdentifier,
 
     @JsonProperty("data")
     val data: List<AdvancedElement>? = null,

@@ -96,6 +96,10 @@ class NamespaceService (
         return namespaceRepository.getPublicNamespace(namespaceID)
     }
 
+    fun addPathToHierarchy(workspaceID: String, namespaceID: String, path: String) {
+        namespaceRepository.addNodePathToHierarchy(workspaceID, namespaceID, path)
+    }
+
     fun updateNamespaceHierarchy(
             namespace: Namespace,
             newNodeHierarchy: List<String>,

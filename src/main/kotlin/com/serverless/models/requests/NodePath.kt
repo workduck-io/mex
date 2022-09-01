@@ -3,7 +3,6 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.serverless.utils.Constants
 import com.serverless.utils.getListOfNodes
-import com.serverless.utils.getNewPath
 import com.serverless.utils.isValidID
 import com.serverless.utils.isValidTitle
 import com.workduck.utils.NodeHelper.getIDPath
@@ -15,7 +14,7 @@ import com.workduck.utils.NodeHelper.getNamePath
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class NodePath(
         var path: String,
-        val namespaceID: String? = null
+        val namespaceID: String
 ) {
     val allNodesNames = getNamePath(path).getListOfNodes().toMutableList()
 

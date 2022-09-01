@@ -10,7 +10,7 @@ import com.serverless.utils.isValidTitle
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class NodeNamePath(
         var path: String,
-        val namespaceID: String? = null
+        val namespaceID: String
 ) {
     val allNodes = path
             .split(Constants.DELIMITER).toMutableList()
