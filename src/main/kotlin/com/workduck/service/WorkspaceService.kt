@@ -63,29 +63,6 @@ class WorkspaceService (
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): Map<String, Any>  = runBlocking {
-        val jobToGetWorkspace = async { getWorkspace(workspaceID) as Workspace }
-        val jobToGetNamespaces = async { nodeService.namespaceService.getAllNamespaceData(workspaceID) }
-
-        val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
-
-        val workspaceHierarchy : MutableMap<String, Any> = mutableMapOf()
-        val namespaceHierarchy : MutableMap<String, Any> = mutableMapOf()
-
-        constructWorkspaceInfo(jobToGetWorkspace.await(), workspaceHierarchy)
-        constructNamespaceInfo(jobToGetNamespaces.await(), namespaceHierarchy)
-
-        hierarchyMap[Constants.WORKSPACE_INFO] = workspaceHierarchy
-        hierarchyMap[Constants.NAMESPACE_INFO] = namespaceHierarchy
-
-        return@runBlocking hierarchyMap
-    }
-
-    fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String): Map<String, Any> = runBlocking {
-        val jobToGetHierarchy =  async { getNodeHierarchyOfWorkspace(workspaceID) }
-        val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
-        return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
-    }
 
     fun getArchivedNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
         return (getWorkspace(workspaceID) as Workspace).archivedNodeHierarchyInformation ?: listOf()
@@ -117,31 +94,12 @@ class WorkspaceService (
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
 
-
     fun updateNodeHierarchyOnArchivingNode(workspace: Workspace, nodeID: String) {
         val updatedNodeHierarchy =
             getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
 
         LOG.debug("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
         updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
-    }
-
-    // TODO(create a common interface for only Workspace and Namespace and combine these functions)
-    private fun constructWorkspaceInfo(workspace: Workspace, workspaceHierarchyJson: MutableMap<String, Any>){
-        val mapOfWorkspaceNameAndHierarchy = mutableMapOf<String, Any>()
-        mapOfWorkspaceNameAndHierarchy[Constants.NAME] = workspace.name
-        mapOfWorkspaceNameAndHierarchy[Constants.HIERARCHY] = workspace.nodeHierarchyInformation ?: listOf<String>()
-        workspaceHierarchyJson.putIfAbsent(workspace.id, mapOfWorkspaceNameAndHierarchy)
-    }
-
-    private fun constructNamespaceInfo(namespaceList: List<Namespace>, namespaceHierarchyJson: MutableMap<String, Any>){
-        for (namespace in namespaceList) {
-            val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
-            mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
-            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation
-            namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceNameAndHierarchy)
-        }
-
     }
 
     private fun getUpdatedNodeHierarchyOnDeletingNode(

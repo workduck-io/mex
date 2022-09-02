@@ -21,6 +21,8 @@ class NamespaceStrategyFactory {
 
         const val getPublicNamespaceObject = "GET /namespace/public/{id}"
 
+        const val getNodeHierarchyObject = "GET /namespace/hierarchy"
+
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),
@@ -28,7 +30,9 @@ class NamespaceStrategyFactory {
             deleteNamespaceObject to DeleteNamespaceStrategy(),
             getNamespaceDataObject to GetAllNamespaceDataStrategy(),
             makeNamespacePublicObject to MakeNamespacePublicStrategy(),
-            makeNamespacePrivateObject to MakeNamespacePrivateStrategy()
+            makeNamespacePrivateObject to MakeNamespacePrivateStrategy(),
+            getPublicNamespaceObject to GetPublicNamespaceStrategy(),
+            getNodeHierarchyObject to GetPublicNamespaceStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {

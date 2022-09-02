@@ -250,6 +250,10 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /namespace/hierarchy
+        method: get
+        authorizer: mexAuthorizer
 
 
 Workspace:
@@ -278,11 +282,6 @@ Workspace:
 
     - httpApi:
         path: /workspace/data/{ids}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /workspace/hierarchy
         method: get
         authorizer: mexAuthorizer
 

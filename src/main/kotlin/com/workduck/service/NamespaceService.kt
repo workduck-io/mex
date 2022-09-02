@@ -7,18 +7,22 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.Constants
 
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
+import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 
 import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService (
@@ -108,6 +112,37 @@ class NamespaceService (
         Namespace.populateHierarchiesAndUpdatedAt(namespace, newNodeHierarchy, namespace.archivedNodeHierarchyInformation)
         namespace.hierarchyUpdateSource = hierarchyUpdateSource
         updateNamespace(namespace)
+    }
+
+    fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String): Map<String, Any> = runBlocking {
+        val jobToGetHierarchy =  async { getNodeHierarchyOfWorkspace(workspaceID) }
+        val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
+        return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
+    }
+
+
+    fun getNodeHierarchyOfWorkspace(workspaceID: String): Map<String, Any>  = runBlocking {
+        val jobToGetNamespaces = async { getAllNamespaceData(workspaceID) }
+
+        val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
+
+        val namespaceHierarchy : MutableMap<String, Any> = mutableMapOf()
+
+        constructNamespaceInfo(jobToGetNamespaces.await(), namespaceHierarchy)
+
+        hierarchyMap[Constants.NAMESPACE_INFO] = namespaceHierarchy
+
+        return@runBlocking hierarchyMap
+    }
+
+    private fun constructNamespaceInfo(namespaceList: List<Namespace>, namespaceHierarchyJson: MutableMap<String, Any>){
+        for (namespace in namespaceList) {
+            val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
+            mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
+            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation
+            namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceNameAndHierarchy)
+        }
+
     }
 
 

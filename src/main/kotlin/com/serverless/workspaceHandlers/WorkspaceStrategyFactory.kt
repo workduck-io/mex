@@ -22,8 +22,6 @@ class WorkspaceStrategyFactory {
 
         const val refreshNodeHierarchyObject = "PATCH /workspace/refreshHierarchy"
 
-        const val getNodeHierarchyObject = "GET /workspace/hierarchy"
-
         const val registerWorkspaceObject = "POST /workspace/register"
 
         const val getArchivedNodeHierarchyObject = "GET /workspace/hierarchy/archived"
@@ -35,7 +33,6 @@ class WorkspaceStrategyFactory {
             deleteWorkspaceObject to DeleteWorkspaceStrategy(),
             getWorkspaceDataObject to GetWorkspaceDataStrategy(),
             refreshNodeHierarchyObject to RefreshHierarchyStrategy(),
-            getNodeHierarchyObject to GetHierarchyStrategy(),
             registerWorkspaceObject to RegisterWorkspaceStrategy(),
             getArchivedNodeHierarchyObject to GetArchivedHierarchyStrategy()
         )
