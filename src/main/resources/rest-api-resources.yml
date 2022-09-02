@@ -251,7 +251,7 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /namespace/hierarchy
+        path: /namespace/all/hierarchy
         method: get
         authorizer: mexAuthorizer
 

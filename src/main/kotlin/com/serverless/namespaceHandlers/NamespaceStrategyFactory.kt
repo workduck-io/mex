@@ -21,7 +21,7 @@ class NamespaceStrategyFactory {
 
         const val getPublicNamespaceObject = "GET /namespace/public/{id}"
 
-        const val getNodeHierarchyObject = "GET /namespace/hierarchy"
+        const val getNodeHierarchyObject = "GET /namespace/all/hierarchy"
 
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
