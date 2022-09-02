@@ -8,7 +8,7 @@ class GenericListRequest(
     @JsonProperty("ids")
     val ids: List<String>
 ) : WDRequest {
-//    init {
-//        require(ids.isNotEmpty()) { "Provide IDs" }
-//    }
+    init {
+        require(ids.isNotEmpty()) { "Provide IDs" }
+    }
 }

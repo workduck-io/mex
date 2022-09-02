@@ -25,7 +25,7 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val json = """
             {
-                "ids" : []
+                "ids" : ["xyz"]
             }
         """.trimIndent()
         val payload: WDRequest? = Helper.objectMapper.readValue(json)
