@@ -16,8 +16,8 @@ object NodeHelper {
 
     private val LOG = LogManager.getLogger(NodeHelper::class.java)
 
-    /* returns path of the format nodeName#nodeID#nodeName#nodeID ... */
-    fun getLongestExistingPathFromNamePath(nodeNamePath: String, hierarchy: List<String>?): String {
+    /* matches the longest path from hierarchy with nodeNamePath and returns path of the format nodeName#nodeID#nodeName#nodeID ... */
+    fun getLongestExistingPathFromNamePath(nodeNamePath: String, hierarchy: List<String>): String {
 
         return getLongestExistingPath(hierarchy, nodeNamePath)
 

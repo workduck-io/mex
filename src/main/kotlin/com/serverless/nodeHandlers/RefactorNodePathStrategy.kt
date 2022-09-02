@@ -15,19 +15,14 @@ class RefactorNodePathStrategy : NodeStrategy {
 
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
 
-        val workspace = WorkspaceService().getWorkspace(input.headers.workspaceID) as Workspace?
-                ?: throw IllegalArgumentException(Messages.INVALID_WORKSPACE_ID)
-
         val stage =  System.getenv("STAGE")
 
         if(stage == "local" || stage == "dev" || stage == "test") {
             LOG.info("Request Payload : " + Gson().toJson(input.payload))
-
-            LOG.info("Workspace : " + Gson().toJson(workspace))
         }
 
         return input.payload?.let{ request ->
-            ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.tokenBody.userID, workspace)
+            ApiResponseHelper.generateStandardResponse(nodeService.refactor(request, input.tokenBody.userID, input.headers.workspaceID)
                     , Messages.ERROR_UPDATING_NODE_PATH)} ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_UPDATING_NODE_PATH)
 
     }
