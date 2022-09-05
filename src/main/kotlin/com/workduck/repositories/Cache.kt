@@ -5,7 +5,9 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 
-class Cache(private val host: String = "localhost", private val port: Int = 6379) : Cache {
+class Cache(
+    private val host: String = "localhost", private val port: Int = 6379
+) : Cache {
     private var jedisPoolConfig = JedisPoolConfig()
     private lateinit var jedisClient: JedisPool
     private val maxRetries = 3
