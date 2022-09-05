@@ -2,6 +2,7 @@ package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -144,4 +145,9 @@ data class Node(
             "Node title needs to be provided by the user"
         }
     }
+
+    @JsonIgnore
+    fun hasPublicAccess(): Boolean = this.publicAccess
+
+    fun isOlderVariant(otherNode: Node):Boolean = this.updatedAt < otherNode.updatedAt
 }
