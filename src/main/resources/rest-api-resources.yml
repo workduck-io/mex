@@ -21,12 +21,12 @@ Node:
 
       #deleteNodes( archive them )
     - httpApi:
-        path: /node/archive
+        path: /node/archive/{id}
         method: put
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/archive/middleware
+        path: /node/archive/middleware/{id}
         method: put
         authorizer: mexAuthorizer
 

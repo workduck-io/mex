@@ -11,7 +11,7 @@ class CreateNamespaceStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
 
         return input.payload?.let { namespaceRequest ->
-            namespaceService.createNamespace(namespaceRequest, input.headers.workspaceID, input.tokenBody.userID).let {
+            namespaceService.createNamespace(namespaceRequest, input.headers.workspaceID).let {
                 ApiResponseHelper.generateStandardResponse(NamespaceHelper.convertNamespaceToNamespaceResponse(it), Messages.ERROR_CREATING_NAMESPACE)
             }
         } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)

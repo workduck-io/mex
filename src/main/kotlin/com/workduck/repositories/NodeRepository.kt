@@ -110,6 +110,23 @@ class NodeRepository(
         }
     }
 
+    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus): List<String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
+        expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
+
+        return DynamoDBQueryExpression<Node>().query(
+                keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
+                filterExpression = "AK = :AK and itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it).map { node ->
+                node.id
+            }
+        }
+    }
+
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":PK"] = workspaceID

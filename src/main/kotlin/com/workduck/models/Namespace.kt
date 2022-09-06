@@ -12,7 +12,6 @@ import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
-import javax.naming.Name
 
 /**
  * namespace status
@@ -54,13 +53,13 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = Constants.getCurrentTime(),
 
-    @JsonProperty("createdBy")
-    @DynamoDBAttribute(attributeName = "createdBy")
-    var createdBy: String? = null,
-
-    @JsonProperty("lastEditedBy")
-    @DynamoDBAttribute(attributeName = "lastEditedBy")
-    var lastEditedBy: String? = null,
+//    @JsonProperty("createdBy")
+//    @DynamoDBAttribute(attributeName = "createdBy")
+//    var createdBy: String? = null,
+//
+//    @JsonProperty("lastEditedBy")
+//    @DynamoDBAttribute(attributeName = "lastEditedBy")
+//    var lastEditedBy: String? = null,
 
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")

@@ -7,10 +7,12 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
+import com.workduck.models.ItemStatus
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Workspace
@@ -23,6 +25,8 @@ import com.workduck.utils.DDBHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.Helper
+import com.workduck.utils.NodeHelper
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService (
@@ -47,8 +51,8 @@ class NamespaceService (
     private val nodeService : NodeService = NodeService()
 ) {
 
-    fun createNamespace(namespaceRequest: WDRequest, workspaceID: String, createdBy: String): Entity {
-        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID, createdBy, createdBy)
+    fun createNamespace(namespaceRequest: WDRequest, workspaceID: String): Entity {
+        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID)
         require(!checkIfNamespaceNameExists(workspaceID, namespace.name)) { "Cannot use an existing Namespace Name" }
         return repository.create(namespace)
     }
@@ -57,8 +61,8 @@ class NamespaceService (
         return namespaceRepository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
-    fun updateNamespace(namespaceRequest: WDRequest, workspaceID: String, lastEditedBy: String) {
-        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID, null, lastEditedBy)
+    fun updateNamespace(namespaceRequest: WDRequest, workspaceID: String) {
+        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID)
         namespace.createdAt = null
         repository.update(namespace)
     }
@@ -95,6 +99,7 @@ class NamespaceService (
     private fun checkIfNamespaceNameExists(workspaceID: String, namespaceName: String) : Boolean {
         return namespaceRepository.checkIfNamespaceNameExists(workspaceID, namespaceName)
     }
+
 
     fun getPublicNamespace(namespaceID: String): Namespace {
         return namespaceRepository.getPublicNamespace(namespaceID)
@@ -146,14 +151,67 @@ class NamespaceService (
     }
 
 
-    private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest, workspaceID: String, createdBy: String?, lastEditedBy: String) : Namespace {
+    private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest, workspaceID: String) : Namespace {
         return Namespace(
                     name = namespaceRequest.name,
-                    createdBy = createdBy,
-                    lastEditedBy = lastEditedBy,
                     workspaceIdentifier = WorkspaceIdentifier(workspaceID))
 
     }
+
+
+//    fun archiveNamespace(workspaceID: String, namespaceID: String) {
+//        val namespace = getNamespace(namespaceID, workspaceID).let { namespace ->
+//            require(namespace != null && namespace.publicAccess) { Messages.ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ARCHIVED }
+//            namespace
+//        }
+//        archiveOrUnarchiveNamespace(namespace, ItemStatus.ACTIVE, ItemStatus.ARCHIVED)
+//    }
+//
+//
+//    fun unarchiveNamespace(workspaceID: String, namespaceID: String) {
+//        val namespace = getNamespace(namespaceID, workspaceID).let { namespace ->
+//            require(namespace != null && !namespace.publicAccess) { Messages.ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ACTIVE }
+//            namespace
+//        }
+//        archiveOrUnarchiveNamespace(namespace, ItemStatus.ARCHIVED, ItemStatus.ACTIVE)
+//    }
+//
+//    fun archiveOrUnarchiveNamespace(namespace: Namespace, nodeStatus: ItemStatus, targetStatus: ItemStatus) = runBlocking{
+//
+//        val nodeIDList = getAllNodesWithStatus(namespace, nodeStatus) /* get all nodes with nodeStatus ( opposite of targetStatus ) */
+//        launch { nodeService.unarchiveOrArchiveNodesInParallel(nodeIDList, namespace.id, targetStatus) }
+//        launch { setNamespaceStatusAndHierarchy(namespace, targetStatus) }
+//
+//    }
+//
+//    private fun getAllNodesWithStatus(namespace: Namespace, nodeStatus: ItemStatus) : List<String>{
+//        return when(nodeStatus){
+//            ItemStatus.ACTIVE -> {
+//                NodeHelper.getNodeIDsFromHierarchy(namespace.nodeHierarchyInformation)
+//            }
+//            ItemStatus.ARCHIVED -> {
+//                NodeHelper.getNodeIDsFromHierarchy(namespace.archivedNodeHierarchyInformation)
+//            }
+//        }
+//    }
+//
+//    private fun setNamespaceStatusAndHierarchy(namespace: Namespace, targetStatus: ItemStatus){
+//        when(targetStatus){
+//            ItemStatus.ARCHIVED -> {
+//                val newArchivedHierarchy = namespace.archivedNodeHierarchyInformation.toMutableList() + namespace.nodeHierarchyInformation
+//                namespace.archivedNodeHierarchyInformation = newArchivedHierarchy
+//                namespace.nodeHierarchyInformation = listOf()
+//            }
+//            ItemStatus.ACTIVE -> {
+//                val newActiveHierarchy = namespace.archivedNodeHierarchyInformation
+//            }
+//        }
+//    }
+//
+//    fun isNamespaceActive(workspaceID: String, namespaceID: String) : Boolean {
+//        return namespaceRepository.isNamespaceActive(workspaceID, namespaceID)
+//    }
+//
 
     companion object {
         private val LOG = LogManager.getLogger(NamespaceService::class.java)

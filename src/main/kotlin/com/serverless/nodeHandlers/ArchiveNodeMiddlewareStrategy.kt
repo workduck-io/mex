@@ -8,15 +8,15 @@ import com.workduck.service.NodeService
 
 class ArchiveNodeMiddlewareStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val nodeIDRequest = input.payload
 
-        return if (nodeIDRequest != null) {
+       /* since the path has been matched already, id cannot be null */
+       return  input.pathParameters!!.id!!.let { namespaceID ->
+            input.payload?.let { nodeIDsRequest ->
+                val nodeIDList =nodeService.archiveNodesMiddleware(nodeIDsRequest, input.headers.workspaceID, namespaceID)
 
-            val nodeIDList =nodeService.archiveNodesMiddleware(nodeIDRequest, input.headers.workspaceID)
-
-            ApiResponseHelper.generateStandardResponse(nodeIDList, Messages.ERROR_ARCHIVING_NODE)
-        } else {
-            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_ARCHIVING_NODE)
+                ApiResponseHelper.generateStandardResponse(nodeIDList, Messages.ERROR_ARCHIVING_NODE)
+            } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_ARCHIVING_NODE)
         }
+
     }
 }
