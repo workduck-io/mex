@@ -25,7 +25,7 @@ class UserPreferenceHandler : RequestHandler<Map<String, Any>, ApiGatewayRespons
 
         val json = """
             {
-                "ids" : []
+                "ids" : ["xyz"]
             }
         """.trimIndent()
         val payload: WDRequest? = Helper.objectMapper.readValue(json)

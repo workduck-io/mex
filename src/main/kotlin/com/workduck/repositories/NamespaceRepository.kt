@@ -7,9 +7,12 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.serverless.utils.Constants
 import com.workduck.models.Identifier
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
+import org.apache.logging.log4j.LogManager
 
 
 class NamespaceRepository(
@@ -117,6 +120,33 @@ class NamespaceRepository(
                 else throw NoSuchElementException("Requested Resource Not Found")
             }
         }
+    }
+
+
+    fun addNodePathToHierarchy(workspaceID: String, namespaceID: String, path: String){
+
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":path"] = mutableListOf(path)
+        expressionAttributeValues[":empty_list"] = mutableListOf<String>()
+
+        val updateExpression = "set nodeHierarchyInformation = list_append(if_not_exists(nodeHierarchyInformation, :empty_list), :path), updatedAt = :updatedAt"
+
+        try {
+            UpdateItemSpec().update(pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
+                    conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
+                table.updateItem(it)
+            }
+
+        }catch (e: ConditionalCheckFailedException){
+            LOG.warn("Invalid WorkspaceID : $workspaceID or NamespaceID : $namespaceID")
+        }
+
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(NamespaceRepository::class.java)
     }
 
 }

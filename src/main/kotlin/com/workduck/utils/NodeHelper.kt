@@ -8,6 +8,7 @@ import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.splitIgnoreEmpty
+import com.workduck.models.Namespace
 import com.workduck.models.Node
 import org.apache.logging.log4j.LogManager
 
@@ -16,8 +17,14 @@ object NodeHelper {
     private val LOG = LogManager.getLogger(NodeHelper::class.java)
 
     /* returns path of the format nodeName#nodeID#nodeName#nodeID ... */
-    fun getLongestExistingPathFromNamePath(nodeHierarchyInformation: List<String>?, nodeNamePath: String): String {
+    fun getLongestExistingPathFromNamePath(nodeNamePath: String, hierarchy: List<String>?): String {
 
+        return getLongestExistingPath(hierarchy, nodeNamePath)
+
+
+    }
+
+    fun getLongestExistingPath(nodeHierarchyInformation: List<String>?, nodeNamePath: String) : String{
         var longestExistingPath = ""
         nodeHierarchyInformation?.let {
             for (existingNodePath in nodeHierarchyInformation) {
@@ -44,6 +51,7 @@ object NodeHelper {
         return longestExistingPath
     }
 
+
     fun updateNodePath(longestExistingPathBasedOnNames: String, nodePath: NodePath, node: Node): String {
         require(longestExistingPathBasedOnNames != nodePath.path
                 && longestExistingPathBasedOnNames.commonPrefixWith(nodePath.path) != nodePath.path) { "Same hierarchy with same nodeIDs exists" } /* user is in sync with backend */
@@ -61,7 +69,7 @@ object NodeHelper {
 
             if (existingNodeName == nodeNamesFromLongestExistingPath[index]) {
                 if (nodePath.allNodesIDs[index] == nodeIDsFromLongestExistingPath[index]) { /* node name & node id is same */
-                    if(isNodeIDMismatched) throw IllegalArgumentException("Path Invalid")
+                    if(isNodeIDMismatched) throw IllegalArgumentException("Path Invalid") /* valid once isNodeIDMismatched is set to true */
                     indexTillActualCommonNode = 2*index + 1
                     continue
                 }
@@ -129,7 +137,11 @@ object NodeHelper {
         return editedNodeTitle != passedNodeTitle
     }
 
+    fun checkForDuplicateNodeIDInNamespaceAndWorkspace(workspaceHierarchy: List<String>, namespaceHierarchy: List<String>?, nodeID: String) {
+        require(workspaceHierarchy.none { it == nodeID } && (namespaceHierarchy?.none { it == nodeID } ?: true)) { "NodeID already exists" }
+    }
+
     fun checkForDuplicateNodeID(nodeHierarchyInformation: List<String>, nodeID: String) {
-        if (nodeHierarchyInformation.any { it.contains(nodeID) }) throw IllegalArgumentException("NodeID already exists")
+        require (nodeHierarchyInformation.none { it == nodeID }) { "NodeID already exists" }
     }
 }

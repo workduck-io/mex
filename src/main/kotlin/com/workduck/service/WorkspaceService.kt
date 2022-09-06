@@ -4,8 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.Gson
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
@@ -14,7 +12,7 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
-import com.workduck.models.NodeMetadata
+import com.workduck.models.Namespace
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -65,15 +63,6 @@ class WorkspaceService (
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
-        return (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf()
-    }
-
-    fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String): Map<String, Any> = runBlocking {
-        val jobToGetHierarchy =  async { (getWorkspace(workspaceID) as Workspace).nodeHierarchyInformation ?: listOf() }
-        val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
-        return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
-    }
 
     fun getArchivedNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
         return (getWorkspace(workspaceID) as Workspace).archivedNodeHierarchyInformation ?: listOf()
@@ -103,10 +92,6 @@ class WorkspaceService (
 
     fun getWorkspaceData(workspaceIDList: List<String>): MutableMap<String, Workspace?> {
         return workspaceRepository.getWorkspaceData(workspaceIDList)
-    }
-
-    fun addNodePathToHierarchy(workspaceID: String, nodePath: String) {
-        workspaceRepository.addNodePathToHierarchy(workspaceID, nodePath)
     }
 
     fun updateNodeHierarchyOnArchivingNode(workspace: Workspace, nodeID: String) {

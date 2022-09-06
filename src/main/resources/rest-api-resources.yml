@@ -221,8 +221,8 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /namespace/update
-        method: post
+        path: /namespace
+        method: patch
         authorizer: mexAuthorizer
 
     - httpApi:
@@ -250,6 +250,10 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /namespace/all/hierarchy
+        method: get
+        authorizer: mexAuthorizer
 
 
 Workspace:
@@ -278,11 +282,6 @@ Workspace:
 
     - httpApi:
         path: /workspace/data/{ids}
-        method: get
-        authorizer: mexAuthorizer
-
-    - httpApi:
-        path: /workspace/hierarchy
         method: get
         authorizer: mexAuthorizer
 

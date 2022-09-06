@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
+import com.workduck.converters.HierarchyUpdateSourceConverter
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
@@ -68,7 +69,7 @@ class Namespace(
 
     @JsonProperty("nodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
-    var nodeHierarchyInformation: List<String> ? = null,
+    var nodeHierarchyInformation: List<String> = listOf(),
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
@@ -76,7 +77,24 @@ class Namespace(
 
     // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 
+    @JsonProperty("archivedNodeHierarchyInformation")
+    @DynamoDBAttribute(attributeName = "archivedNodeHierarchyInformation")
+    var archivedNodeHierarchyInformation: List<String> = listOf(),
+
+    @JsonProperty("hierarchyUpdateSource")
+    @DynamoDBAttribute(attributeName = "hierarchyUpdateSource")
+    @DynamoDBTypeConverted(converter = HierarchyUpdateSourceConverter::class)
+    var hierarchyUpdateSource: HierarchyUpdateSource = HierarchyUpdateSource.REFRESH
+
 ) : Entity {
+
+    companion object {
+        fun populateHierarchiesAndUpdatedAt(namespace: Namespace, activeHierarchy : List<String>, archivedHierarchy : List<String>, updatedAt: Long = Constants.getCurrentTime()){
+            namespace.nodeHierarchyInformation = activeHierarchy
+            namespace.archivedNodeHierarchyInformation = archivedHierarchy
+            namespace.updatedAt = updatedAt
+        }
+    }
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")

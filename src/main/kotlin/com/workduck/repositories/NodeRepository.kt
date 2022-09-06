@@ -81,7 +81,7 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
-        expressionAttributeValues[":AK"] = AttributeValue("${workspaceID}${Constants.DELIMITER}$namespaceID")
+        expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
@@ -97,7 +97,7 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
-        expressionAttributeValues[":AK"] = AttributeValue("${workspaceID}${Constants.DELIMITER}$namespaceID")
+        expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
         expressionAttributeValues[":publicAccess"] = AttributeValue().withN(publicAccess.toString())
 
         return DynamoDBQueryExpression<Node>().query(

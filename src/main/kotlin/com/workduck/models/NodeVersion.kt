@@ -44,7 +44,7 @@ data class NodeVersion(
         @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
         @JsonSerialize(converter = IdentifierSerializer::class)
         @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-        @DynamoDBAttribute(attributeName = "namespaceIdentifier")
+        @DynamoDBAttribute(attributeName = "AK")
         var namespaceIdentifier: NamespaceIdentifier? = null,
 
         @JsonProperty("workspaceIdentifier")
@@ -54,9 +54,6 @@ data class NodeVersion(
         @DynamoDBAttribute(attributeName = "workspaceIdentifier")
         var workspaceIdentifier: WorkspaceIdentifier? = null,
 
-        /* WORKSPACE_ID#NAMESPACE_ID */
-        @DynamoDBAttribute(attributeName = "AK")
-        var ak: String? = null,
 
         @JsonProperty("nodeSchemaIdentifier")
         @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
