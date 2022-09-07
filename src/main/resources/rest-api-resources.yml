@@ -31,7 +31,7 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/unarchive
+        path: /node/unarchive/{id}
         method: put
         authorizer: mexAuthorizer
 
