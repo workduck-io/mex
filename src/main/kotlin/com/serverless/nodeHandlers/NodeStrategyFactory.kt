@@ -10,9 +10,9 @@ class NodeStrategyFactory {
         const val createNodeObject = "POST /node"
 
         /* since we're not hard deleting, just moving to archive */
-        const val archiveNodeObject = "PUT /node/archive"
+        const val archiveNodeObject = "PUT /node/archive/{id}"
 
-        const val archiveNodeMiddlewareObject = "PUT /node/archive/middleware"
+        const val archiveNodeMiddlewareObject = "PUT /node/archive/middleware/{id}"
 
         const val appendToNodeObject = "POST /node/{id}/append"
 
@@ -22,7 +22,7 @@ class NodeStrategyFactory {
 
         const val getMetadataOfNodes = "GET /node/metadata"
 
-        const val unarchiveNodeObject = "PUT /node/unarchive"
+        const val unarchiveNodeObject = "PUT /node/unarchive/{id}"
 
         const val deleteArchivedNodeObject = "POST /node/archive/delete"
 

@@ -5,11 +5,14 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 import com.workduck.models.Identifier
+import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
 import org.apache.logging.log4j.LogManager
@@ -106,6 +109,19 @@ class NamespaceRepository(
         }
     }
 
+    fun setNamespaceStatus(namespaceID: String, workspaceID: String, targetStatus: ItemStatus) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":itemStatus"] = targetStatus.name
+
+        return UpdateItemSpec().update(
+                pk = workspaceID, sk = namespaceID, updateExpression = "SET itemStatus = :itemStatus",
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).let {
+            table.updateItem(it)
+        }
+    }
+
     fun getPublicNamespace(namespaceID: String) : Namespace {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
@@ -117,10 +133,11 @@ class NamespaceRepository(
                 filterExpression = "publicAccess = :true", expressionAttributeValues = expressionAttributeValues).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
                 if(list.isNotEmpty()) list[0]
-                else throw NoSuchElementException("Requested Resource Not Found")
+                else throw NoSuchElementException(Messages.RESOURCE_NOT_FOUND)
             }
         }
     }
+
 
 
     fun addNodePathToHierarchy(workspaceID: String, namespaceID: String, path: String){
@@ -144,6 +161,42 @@ class NamespaceRepository(
         }
 
     }
+//
+//
+//    fun getActiveNamespace(workspaceID: String, namespaceID: String): Namespace? {
+//        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+//        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+//        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
+//        expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
+//
+//
+//        return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and SK = :SK",
+//                expressionAttributeValues = expressionAttributeValues, filterExpression = "itemStatus = :itemStatus").let {
+//            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).firstOrNull() }
+//    }
+//
+//    fun isNamespaceActive(workspaceID: String, namespaceID: String) : Boolean{
+//        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+//        expressionAttributeValues[":PK"] = AttributeValue().withS(workspaceID)
+//        expressionAttributeValues[":SK"] = AttributeValue().withS(namespaceID)
+//        expressionAttributeValues[":itemStatus"] = AttributeValue().withS(namespaceID)
+//
+//
+//        return DynamoDBQueryExpression<Namespace>().query(
+//                keyConditionExpression = "PK = :PK and SK = :SK", projectionExpression = "publicAccess",
+//                expressionAttributeValues = expressionAttributeValues
+//        ).let {
+//            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
+//                when(list.size){
+//                    0 -> throw NoSuchElementException(Messages.RESOURCE_NOT_FOUND)
+//                    else -> list.first().publicAccess
+//                }
+//            }
+//        }
+//
+//    }
+//
+//
 
     companion object {
         private val LOG = LogManager.getLogger(NamespaceRepository::class.java)

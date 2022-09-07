@@ -43,12 +43,16 @@ object Messages {
     const val ERROR_REFRESHING_HIERARCHY = "Error refreshing node hierarchy for workspace"
     const val ERROR_DELETING_WORKSPACE = "Error deleting workspace"
 
+    const val ERROR_ARCHIVING_NAMESPACE = "Error archiving namespace"
+    const val ERROR_UNARCHIVING_NAMESPACE = "Error unarchiving namespace"
     const val ERROR_MAKING_NAMESPACE_PUBLIC = "Error making namespace public"
     const val ERROR_GETTING_NAMESPACE = "Error getting namespace"
     const val ERROR_GETTING_NAMESPACES = "Error getting namespaces"
     const val ERROR_UPDATING_NAMESPACE = "Error updating namespace"
     const val ERROR_CREATING_NAMESPACE = "Error creating namespace"
     const val ERROR_DELETING_NAMESPACE = "Error deleting namespace"
+    const val ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ARCHIVED = "Either namespace does not exist or it is already archived"
+    const val ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ACTIVE = "Either namespace does not exist or it is already active"
 
 
     const val ERROR_GETTING_COMMENT = "Error getting comment"

@@ -684,54 +684,107 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking jobToChangeNodeStatus.await()
     }
 
-    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String): List<String> {
-
+    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): List<String> {
         val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
+            require(namespace != null) { "Invalid NamespaceID" }
+            namespace
+        }
 
-        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace
+        val currentActiveHierarchy = namespace.nodeHierarchyInformation
 
+        updateHierarchiesInArchive(namespace, passedNodeIDList)
 
-        updateActiveAndArchivedHierarchies(workspace, passedNodeIDList)
-
-        val nodeIDsToArchive = getNodeIDsFromHierarchy(workspace.archivedNodeHierarchyInformation)
-
-        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID)
+        val nodeIDsToArchive = getRemovedNodeIDs(currentActiveHierarchy, namespace.nodeHierarchyInformation)
+        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID, ItemStatus.ARCHIVED)
 
         return nodeIDsToArchive
-
-
     }
 
-    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String): MutableMap<String, List<String>?> {
+    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): MutableMap<String, List<String>> {
 
         val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
+            require(namespace != null) { "Invalid NamespaceID" }
+            namespace
+        }
 
-        val workspace = workspaceService.getWorkspace(workspaceID) as Workspace
+        val currentActiveHierarchy = namespace.nodeHierarchyInformation
 
-        val currentActiveHierarchy = workspace.nodeHierarchyInformation ?: listOf()
+        updateHierarchiesInArchive(namespace, passedNodeIDList)
 
-        updateActiveAndArchivedHierarchies(workspace, passedNodeIDList)
+        val nodeIDsToArchive = getRemovedNodeIDs(currentActiveHierarchy, namespace.nodeHierarchyInformation)
 
-        val nodeIDsToArchive = getNodeIDsFromHierarchy(workspace.archivedNodeHierarchyInformation)
-
-        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID)
+        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID, ItemStatus.ARCHIVED)
 
         /* mapOfArchivedHierarchyAndActiveHierarchyDiff */
-        return mutableMapOf(Constants.ARCHIVED_HIERARCHY to workspace.archivedNodeHierarchyInformation).also {
-            it.putAll(workspace.nodeHierarchyInformation?.getDifferenceWithOldHierarchy(currentActiveHierarchy) ?: mapOf())
+        return mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
+            it.putAll(namespace.nodeHierarchyInformation.getDifferenceWithOldHierarchy(currentActiveHierarchy))
         }
 
     }
 
+    // TODO( implement the behavior for renaming of nodes while un-archiving in case of clashing names at topmost level )
+    fun unarchiveNodesNew(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): MutableMap<String, List<String>>  {
+        val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
+        val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
+            require(namespace != null) { "Invalid NamespaceID" }
+            namespace
+        }
 
-    private fun unarchiveOrArchiveNodesInParallel(nodeIDList: List<String>, workspaceID: String)  = runBlocking{
+
+        val currentActiveHierarchy = namespace.nodeHierarchyInformation
+        val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation
+
+        updateHierarchiesInUnarchive(namespace, passedNodeIDList)
+
+        /* compare old and new archived hierarchies */
+        val nodeIDsToUnarchive = getRemovedNodeIDs(currentArchivedHierarchy, namespace.archivedNodeHierarchyInformation)
+
+        unarchiveOrArchiveNodesInParallel(nodeIDsToUnarchive, workspaceID, ItemStatus.ACTIVE)
+
+        /* mapOfArchivedHierarchyAndActiveHierarchyDiff */
+        return mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
+            it.putAll(namespace.nodeHierarchyInformation.getDifferenceWithOldHierarchy(currentActiveHierarchy))
+        }
+    }
+
+
+    fun getRemovedNodeIDs(oldHierarchy: List<String>, newHierarchy: List<String>) : List<String> {
+        val oldNodeIDs = getNodeIDsFromHierarchy(oldHierarchy)
+        val newNodeIDs = getNodeIDsFromHierarchy(newHierarchy)
+        return oldNodeIDs.filter{ oldNodeID ->
+            newNodeIDs.all{ it != oldNodeID }
+        }
+    }
+
+
+    fun unarchiveNodesOld(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): List<String> = runBlocking {
+        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
+        val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID, namespaceID)
+
+        LOG.debug(mapOfNodeIDToName)
+        for ((nodeID, _) in mapOfNodeIDToName) {
+            nodeIDList.remove(nodeID)
+        }
+
+        val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName, workspaceID) }
+
+        val jobToUnarchiveNodes =
+                async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
+
+        return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
+    }
+
+
+    private fun unarchiveOrArchiveNodesInParallel(nodeIDList: List<String>, workspaceID: String, itemStatus: ItemStatus)  = runBlocking{
 
         val jobToArchive = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
                 val deferredList = ArrayList<Deferred<*>>()
                 for (nodeID in nodeIDList) {
                     deferredList.add(
-                            async {  pageRepository.unarchiveOrArchivePages(listOf(nodeID), workspaceID, ItemStatus.ARCHIVED) }
+                            async {  pageRepository.unarchiveOrArchivePages(listOf(nodeID), workspaceID, itemStatus) }
                     )
                 }
                 deferredList.joinAll()
@@ -756,16 +809,57 @@ class NodeService( // Todo: Inject them from handlers
         jobToArchive.await()
     }
 
+    private fun updateHierarchiesInArchive(namespace: Namespace, passedNodeIDList: List<String>){
 
-    private fun updateActiveAndArchivedHierarchies(workspace: Workspace, passedNodeIDList: List<String>){
+        val activeHierarchy = namespace.nodeHierarchyInformation
+        require(activeHierarchy.isNotEmpty()) { "Hierarchy does not exist" }
 
-        val activeHierarchy = workspace.nodeHierarchyInformation
-        require(!activeHierarchy.isNullOrEmpty()) { "Hierarchy does not exist" }
-
-        val newArchivedHierarchy = workspace.archivedNodeHierarchyInformation?.toMutableList() ?: mutableListOf()
+        val newArchivedHierarchy = namespace.archivedNodeHierarchyInformation.toMutableList()
         val newActiveHierarchy = mutableListOf<String>()
 
-        for(nodePath in activeHierarchy) {
+        updateHierarchiesInArchiveUnarchive(activeHierarchy, newActiveHierarchy, newArchivedHierarchy, passedNodeIDList)
+
+        Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
+        namespaceService.updateNamespace(namespace)
+
+    }
+
+
+    private fun updateHierarchiesInUnarchive(namespace: Namespace, passedNodeIDList: List<String>){
+
+        val archivedHierarchy = namespace.archivedNodeHierarchyInformation
+        require(archivedHierarchy.isNotEmpty()) { "Archived hierarchy does not exist" }
+
+        val newActiveHierarchy = namespace.nodeHierarchyInformation.toMutableList()
+        val newArchivedHierarchy = mutableListOf<String>()
+
+
+        updateHierarchiesInArchiveUnarchive(archivedHierarchy, newArchivedHierarchy, newActiveHierarchy, passedNodeIDList)
+
+        Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
+        namespaceService.updateNamespace(namespace)
+
+    }
+
+
+    /* sourceHierarchy : Hierarchy to move nodes from.
+       In case of archiving, sourceHierarchy will be active hierarchy
+       In case of unarchiving, sourceHierarchy will be archived hierarchy
+
+       newSourceHierarchy : Updated Hierarchy from which nodes were moved.
+       In case of archiving, newSourceHierarchy will be newActiveHierarchy hierarchy
+       In case of unarchiving, newSourceHierarchy will be newArchivedHierarchy hierarchy
+
+
+       newDestinationHierarchy : Updated Hierarchy to which nodes were moved.
+       In case of archiving, newDestinationHierarchy will be newArchivedHierarchy hierarchy
+       In case of unarchiving, newDestinationHierarchy will be newActiveHierarchy hierarchy
+
+     */
+    private fun updateHierarchiesInArchiveUnarchive(sourceHierarchy: List<String>, newSourceHierarchy: MutableList<String>,
+                                                    newDestinationHierarchy: MutableList<String>, passedNodeIDList: List<String>){
+
+        for(nodePath in sourceHierarchy) {
             var isNodePresentInPath = false
             val pathsListForSinglePath = mutableListOf<String>() /* more than one node ids from a single path could be passed */
             for (nodeID in passedNodeIDList) {
@@ -778,18 +872,20 @@ class NodeService( // Todo: Inject them from handlers
             }
             if(isNodePresentInPath){
                 val finalPathToArchive = removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
-                newArchivedHierarchy.add(finalPathToArchive)
+                newDestinationHierarchy.add(finalPathToArchive)
                 /* active hierarchy is nodePath minus the archived path */
-                newActiveHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
+                newSourceHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
             }
             else { /* this path will remain unchanged */
-                newActiveHierarchy.add(nodePath)
+                newSourceHierarchy.add(nodePath)
             }
         }
 
-        Workspace.populateHierarchiesAndUpdatedAt(workspace, newActiveHierarchy, removeRedundantPaths(newArchivedHierarchy, MatchType.SUFFIX))
-        workspaceService.updateWorkspace(workspace)
+        removeRedundantPaths(newDestinationHierarchy)
+        removeRedundantPaths(newSourceHierarchy)
+
     }
+
 
     /* Getting called Internally via trigger. No need to update hierarchy */
     fun archiveNodes(nodeIDList: List<String>, workspaceID: String) = runBlocking {
@@ -918,6 +1014,10 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, publicAccess)
     }
 
+    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus) : List<String> {
+        return nodeRepository.getAllNodesWithNamespaceIDAndStatus(namespaceID, workspaceID, itemStatus)
+    }
+
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
 
@@ -945,39 +1045,22 @@ class NodeService( // Todo: Inject them from handlers
         return pageRepository.getAllArchivedPagesOfWorkspace(workspaceID, ItemType.Node)
     }
 
-    fun unarchiveNodes(nodeIDRequest: WDRequest, workspaceID: String): List<String> = runBlocking {
-        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
-        val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID)
-
-        LOG.debug(mapOfNodeIDToName)
-        for ((nodeID, _) in mapOfNodeIDToName) {
-            nodeIDList.remove(nodeID)
-        }
-
-        val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName, workspaceID) }
-
-        val jobToUnarchiveNodes =
-            async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
-
-        return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
-    }
-
     /* this is called internally via trigger. We don't need to do sanity check for name here */
     fun unarchiveNodes(nodeIDList: List<String>, workspaceID: String): MutableList<String> {
         return pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE)
     }
 
     /* to ensure that nodes at same level don't have same name */
-    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String): Map<String, String> =
+    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String, namespaceID: String): Map<String, String> =
         runBlocking {
 
-            val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
+            val jobToGetWorkspace = async { namespaceService.getNamespace(workspaceID, namespaceID) }
 
             val jobToGetArchivedNodeIDToNameMap = async { getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ARCHIVED) }
             val jobToGetArchivedHierarchyRelationship =
                 async { RelationshipService().getHierarchyRelationshipsOfWorkspace(workspaceID, ItemStatus.ARCHIVED) }
 
-            val nodeHierarchyInformation = jobToGetWorkspace.await().nodeHierarchyInformation ?: listOf()
+            val nodeHierarchyInformation = jobToGetWorkspace.await()?.nodeHierarchyInformation ?: listOf()
             val archivedNodeIDToNameMap = jobToGetArchivedNodeIDToNameMap.await()
             val archivedHierarchyRelationships = jobToGetArchivedHierarchyRelationship.await()
 

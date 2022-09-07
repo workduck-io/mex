@@ -9,14 +9,13 @@ import com.workduck.service.NodeService
 class UnarchiveNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
 
-        val nodeIDRequest = input.payload
+        /* since the path has been matched already, id cannot be null */
+        return  input.pathParameters!!.id!!.let { namespaceID ->
+            input.payload?.let { nodeIDsRequest ->
+                val nodeIDList =nodeService.unarchiveNodesNew(nodeIDsRequest, input.headers.workspaceID, namespaceID)
 
-        return if(nodeIDRequest != null) {
-            val nodeIDList = nodeService.unarchiveNodes(nodeIDRequest, input.headers.workspaceID)
-            return ApiResponseHelper.generateStandardResponse(nodeIDList, Messages.ERROR_UNARCHIVING_NODE)
-        }
-        else{
-            ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_UNARCHIVING_NODE)
+                ApiResponseHelper.generateStandardResponse(nodeIDList, Messages.ERROR_ARCHIVING_NODE)
+            } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_ARCHIVING_NODE)
         }
     }
 }
