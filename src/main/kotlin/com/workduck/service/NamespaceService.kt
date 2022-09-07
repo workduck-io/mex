@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
@@ -23,6 +22,7 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService (

@@ -359,17 +359,19 @@ class NodeRepository(
             .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-    fun renameNode(nodeID: String, newName: String, userID: String, workspaceID: String) {
+    fun renameNodeInNamespace(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String?) {
         val table = dynamoDB.getTable(tableName)
 
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        val expressionAttributeValues: MutableMap<String, Any?> = HashMap()
         expressionAttributeValues[":title"] = newName
         expressionAttributeValues[":lastEditedBy"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":namespaceIdentifier"] = namespaceID
 
         try {
-            UpdateItemSpec().update(
-                pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy",
+            UpdateItemSpec().updateWithNullAttributes(
+                pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, " +
+                    "lastEditedBy = :lastEditedBy, namespaceIdentifier = :namespaceIdentifier",
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
             ).also {
                 table.updateItem(it)

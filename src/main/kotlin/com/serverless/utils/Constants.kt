@@ -5,7 +5,7 @@ object Constants {
     const val PATH_PARAMETER_SEPARATOR = "$"
     const val ID_SEPARATOR = "_"
     val NANO_ID_RANGE = "346789ABCDEFGHJKLMNPQRTUVWXYabcdefghijkmnpqrtwxyz".toCharArray()
-    const val VALID_TITLE_SPECIAL_CHAR = ",:-@ "
+    const val VALID_TITLE_SPECIAL_CHAR = ",:-@ _"
     fun getCurrentTime() : Long = System.currentTimeMillis()
     const val ADDED_PATHS = "addedPaths"
     const val ARCHIVED_HIERARCHY = "archivedHierarchy"
@@ -20,8 +20,6 @@ object Constants {
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
     const val NODE = "node"
     const val CHANGED_PATHS = "changedPaths"
-    const val HIERARCHY_LEVEL = "hierarchyLevel"
-    const val WORKSPACE_INFO = "workspaceInfo"
     const val NAMESPACE_INFO = "namespaceInfo"
     const val NAME = "name"
     const val HIERARCHY = "hierarchy"
