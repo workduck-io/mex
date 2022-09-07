@@ -29,15 +29,10 @@ data class RefactorRequest(
             "Old path and new path can't be same"
         }
 
-//        require(existingNodePath.namespaceID == newNodePath.namespaceID) {
-//            "Movement across namespace is not supported yet"
-//        }
 
         require(nodeID.isValidID(Constants.NODE_ID_PREFIX)) {
             "Invalid NodeID"
         }
     }
-
-    // See the assumption above
-    //val namespaceID = existingNodePath.namespaceID
+    
 }
