@@ -1,5 +1,7 @@
 package com.serverless.namespaceHandlers
 
+import com.serverless.snippetHandlers.GetAllSnippetsOfWorkspaceStrategy
+
 
 class NamespaceStrategyFactory {
 
@@ -9,7 +11,7 @@ class NamespaceStrategyFactory {
 
         const val createNamespaceObject = "POST /namespace"
 
-        const val updateNamespaceObject = "PATCH /namespace"
+        const val renameNamespaceObject = "PATCH /namespace/{id}"
 
         const val deleteNamespaceObject = "DELETE /namespace/{id}"
 
@@ -26,13 +28,13 @@ class NamespaceStrategyFactory {
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),
-            updateNamespaceObject to UpdateNamespaceStrategy(),
+            renameNamespaceObject to RenameNamespaceStrategy(),
             deleteNamespaceObject to DeleteNamespaceStrategy(),
             getNamespaceDataObject to GetAllNamespaceDataStrategy(),
             makeNamespacePublicObject to MakeNamespacePublicStrategy(),
             makeNamespacePrivateObject to MakeNamespacePrivateStrategy(),
             getPublicNamespaceObject to GetPublicNamespaceStrategy(),
-            getNodeHierarchyObject to GetPublicNamespaceStrategy()
+            getNodeHierarchyObject to GetHierarchyStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {

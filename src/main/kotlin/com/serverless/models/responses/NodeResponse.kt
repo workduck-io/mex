@@ -24,15 +24,9 @@ data class NodeResponse(
 
     var version: Int? = null,
 
-    var namespaceID: String? = null,
-
-    var workspaceID: String,
+    var namespaceID: String,
 
     var isBookmarked: Boolean? = null,
-
-//    var saveableRange: SaveableRange? = null,
-//
-//    var sourceUrl: String? = null,
 
     var publicAccess: Boolean,
 

@@ -221,7 +221,7 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /namespace
+        path: /namespace/{id}
         method: patch
         authorizer: mexAuthorizer
 

@@ -61,10 +61,9 @@ class NamespaceService (
         return namespaceRepository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
-    fun updateNamespace(namespaceRequest: WDRequest, workspaceID: String) {
-        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID)
-        namespace.createdAt = null
-        repository.update(namespace)
+    fun renameNamespace(namespaceRequest: WDRequest, workspaceID: String, namespaceID: String) {
+        val name = (namespaceRequest as NamespaceRequest).name
+        namespaceRepository.renameNamespace(workspaceID, namespaceID, name)
     }
 
     fun updateNamespace(namespace: Namespace) {
