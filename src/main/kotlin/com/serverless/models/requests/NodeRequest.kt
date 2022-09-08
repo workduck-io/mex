@@ -27,7 +27,7 @@ open class NodeRequest(
     @JsonProperty("title")
     val title: String = "",
 
-    @JsonProperty("namespaceIdentifier")
+    @JsonProperty("namespaceID")
     @JsonSerialize(converter = IdentifierSerializer::class)
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     var namespaceIdentifier: NamespaceIdentifier,
@@ -43,7 +43,9 @@ open class NodeRequest(
 ) : WDRequest {
 
     init {
-        require(id.isValidID(Constants.NODE_ID_PREFIX) && referenceID?.isValidID(Constants.NODE_ID_PREFIX) ?: true) { "Invalid ID(s)" }
+        require(id.isValidID(Constants.NODE_ID_PREFIX) && referenceID?.isValidID(Constants.NODE_ID_PREFIX) ?: true) { "Invalid Node ID(s)" }
+
+        require(namespaceIdentifier.id.isValidID(Constants.NAMESPACE_ID_PREFIX)) { "Invalid NamespaceID" }
 
         require(title.isNotEmpty()) { "Title is required" }
 

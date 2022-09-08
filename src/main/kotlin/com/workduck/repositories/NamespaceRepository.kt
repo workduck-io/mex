@@ -48,6 +48,22 @@ class NamespaceRepository(
         TODO("Using deleteComment instead")
     }
 
+    fun renameNamespace(workspaceID: String, namespaceID: String, name: String) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":PK"] = workspaceID
+        expressionAttributeValues[":SK"] = namespaceID
+        expressionAttributeValues[":namespaceName"] = name
+
+        return UpdateItemSpec().update(
+                pk = workspaceID, sk = namespaceID, updateExpression = "SET namespaceName = :namespaceName",
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).let {
+            table.updateItem(it)
+        }
+
+    }
+
 
     fun getAllNamespaceData(workspaceID: String): List<Namespace> {
 
