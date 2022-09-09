@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -891,11 +890,8 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getPublicNode(nodeID: String): Node {
-        val publicNodeCache: Cache = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
-        val node = publicNodeCache.get(nodeID)?.let{ publicNode ->
-            Helper.objectMapper.readValue(publicNode)
-        } ?: orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
-
+        val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
+        val node = publicNodeCache.getItem(nodeID) ?: orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
         publicNodeCache.closeConnection()
         return node
     }
