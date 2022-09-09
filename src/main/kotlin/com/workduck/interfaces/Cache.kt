@@ -1,11 +1,11 @@
 package com.workduck.interfaces
 
-interface Cache {
+interface Cache<T> {
     fun refreshConnection()
 
     fun closeConnection()
 
-    fun get(key: String): String?
+    fun getItem(key: String): T?
 
-    fun set(key: String, expInSeconds: Long, value: String)
+    fun setItem(key: String, expInSeconds: Long, value: T)
 }
