@@ -143,7 +143,7 @@ class NamespaceService (
         for (namespace in namespaceList) {
             val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
             mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
-            mapOfNamespaceNameAndHierarchy[Constants.HIERARCHY] = namespace.nodeHierarchyInformation
+            mapOfNamespaceNameAndHierarchy[Constants.NODE_HIERARCHY] = namespace.nodeHierarchyInformation
             namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceNameAndHierarchy)
         }
 
