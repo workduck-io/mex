@@ -10,8 +10,6 @@ import com.workduck.models.Node
 import com.workduck.repositories.Cache
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
-import com.fasterxml.jackson.module.kotlin.readValue
-import javax.print.attribute.Attribute
 
 
 // PublicNoteWorker Lambda is triggered via DDB Streams attached to the node entity.
@@ -21,7 +19,7 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
         private const val defaultPublicNoteCacheEndpoint: String =
             "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
         private const val cacheExpTimeInSeconds: Long = 900
-        private val publicNodeCache: Cache =
+        private val publicNodeCache: Cache<Node> =
             Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
         private val dlqURL = System.getenv("SQS_QUEUE_URL")
         private val sqs = AmazonSQSClientBuilder.defaultClient()
@@ -38,19 +36,19 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
                     try {
                         takeIf { node.hasPublicAccess() }.apply {
                             //checked for value existing in cache
-                            publicNodeCache.get(node.id)?.toNode()
+                            publicNodeCache.getItem(node.id)
                                 ?.also { existingNode ->
                                     if (existingNode.isOlderVariant(node)) {
-                                        publicNodeCache.set(
+                                        publicNodeCache.setItem(
                                             node.id,
                                             cacheExpTimeInSeconds,
-                                            Helper.objectMapper.writeValueAsString(node)
+                                            node
                                         )
                                     }
-                                } ?: publicNodeCache.set(
+                                } ?: publicNodeCache.setItem(
                                 node.id,
                                 cacheExpTimeInSeconds,
-                                Helper.objectMapper.writeValueAsString(node)
+                                node
                             )
 
                         }
@@ -84,4 +82,3 @@ private fun Map<String, AttributeValue>.toNode(): Node = this.also {
         }
 }
 
-private fun String.toNode(): Node = Helper.objectMapper.readValue(this)
