@@ -947,7 +947,6 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun append(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): Map<String, Any>? {
-
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val elements = elementsListRequestConverted.elements
 
