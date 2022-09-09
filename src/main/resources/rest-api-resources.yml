@@ -322,36 +322,36 @@ UserPreference:
         authorizer: mexAuthorizer
 
 
-UserBookmark:
-  handler: com.serverless.userBookmarkHandlers.UserBookmarkHandler
+UserStar:
+  handler: com.serverless.userBookmarkHandlers.UserStarHandler
   events:
     #bookmark the node
     - httpApi:
-        path: /userBookmark/{userID}/{nodeID}
+        path: /userStar/{id}
         method: post
         authorizer: mexAuthorizer
 
     #delete the bookmark on a particular node
     - httpApi:
-        path: /userBookmark/{userID}/{nodeID}
-        method: patch
+        path: /userStar/{id}
+        method: delete
         authorizer: mexAuthorizer
 
     #get all bookmarks by a particular user
     - httpApi:
-        path: /userBookmark/{userID}
+        path: /userStar/all
         method: get
 
     #bookmark in batch
     - httpApi:
-        path: /userBookmark/batch/{userID}/{ids}
+        path: /userStar/batch
         method: post
         authorizer: mexAuthorizer
 
     #delete bookmark in batch
     - httpApi:
-        path: /userBookmark/batch/{userID}/{ids}
-        method: patch
+        path: /userStar/batch
+        method: delete
         authorizer: mexAuthorizer
 
 

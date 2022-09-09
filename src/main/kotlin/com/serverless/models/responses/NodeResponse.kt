@@ -26,7 +26,7 @@ data class NodeResponse(
 
     var namespaceID: String,
 
-    var isBookmarked: Boolean? = null,
+    var starred: Boolean,
 
     var publicAccess: Boolean,
 

@@ -11,16 +11,16 @@ import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.Messages
 import com.serverless.utils.handleWarmup
-import com.workduck.service.UserBookmarkService
+import com.workduck.service.UserStarService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
-class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+class UserStarHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
     companion object {
-        private val userBookmarkService = UserBookmarkService()
+        private val userStarService = UserStarService()
 
-        private val LOG = LogManager.getLogger(UserBookmarkHandler::class.java)
+        private val LOG = LogManager.getLogger(UserStarHandler::class.java)
 
         val json = """
             {
@@ -31,7 +31,7 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
 
         private val sampleInput =  Input.fromMap(mutableMapOf("headers" to "[]"))
 
-        private val dummyStrategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy("")
+        private val dummyStrategy = UserStarStrategyFactory.getUserStarStrategy("")
     }
 
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
@@ -43,12 +43,12 @@ class UserBookmarkHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
         LOG.info(wdInput.routeKey)
         LOG.info("Username: ${wdInput.tokenBody.username}")
 
-        val strategy = UserBookmarkStrategyFactory.getUserBookmarkStrategy(wdInput.routeKey)
+        val strategy = UserStarStrategyFactory.getUserStarStrategy(wdInput.routeKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
         return try {
             validateTokenAndWorkspace(wdInput)
-            strategy.apply(wdInput, userBookmarkService)
+            strategy.apply(wdInput, userStarService)
         } catch (e: Exception) {
             ExceptionParser.exceptionHandler(e)
         }

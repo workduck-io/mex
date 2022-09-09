@@ -81,6 +81,13 @@ object Messages {
     const val ERROR_UPDATING_RECORDS ="Error updating preferences"
 
 
+    const val ERROR_GETTING_STARRED = "Error getting starred nodes of the user"
+    const val ERROR_DELETING_STARRED = "Error removing star(s)"
+    const val ERROR_CREATING_STARRED = "Error creating star(s)"
+
+
+
+
     const val MALFORMED_REQUEST = "Malformed Request"
     const val REQUEST_NOT_RECOGNIZED = "Request not recognized"
     const val INVALID_PARAMETERS = "Invalid Parameters"

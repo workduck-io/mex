@@ -664,7 +664,7 @@ class NodeService( // Todo: Inject them from handlers
             )
             ?.also { node ->
                 if (userID != null && bookmarkInfo == true)
-                    node.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
+                    node.starred = UserStarService().isNodeStarredForUser(nodeID, userID, workspaceID)
             }
 
     fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {

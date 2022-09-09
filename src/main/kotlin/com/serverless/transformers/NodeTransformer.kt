@@ -18,7 +18,7 @@ class NodeTransformer : Transformer<Node> {
             version = t.version,
             tags = t.tags,
             namespaceID = t.namespaceIdentifier.id,
-            isBookmarked = t.isBookmarked,
+            starred = t.starred,
             publicAccess = t.publicAccess,
             metadata = t.nodeMetaData
 //            saveableRange = t.saveableRange,

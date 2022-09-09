@@ -87,10 +87,9 @@ data class Node(
     @DynamoDBTypeConverted(converter = ItemStatusConverter::class)
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
-    @JsonProperty("isBookmarked")
-    @DynamoDBAttribute(attributeName = "isBookmarked")
-// TODO(make it part of NodeResponse object in code cleanup)
-    var isBookmarked: Boolean? = null,
+    @JsonProperty("starred")
+    @DynamoDBAttribute(attributeName = "starred")
+    var starred: Boolean = false,
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
