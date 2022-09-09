@@ -22,6 +22,6 @@ object Constants {
     const val CHANGED_PATHS = "changedPaths"
     const val NAMESPACE_INFO = "namespaceInfo"
     const val NAME = "name"
-    const val HIERARCHY = "hierarchy"
+    const val NODE_HIERARCHY = "nodeHierarchy"
 
 }
