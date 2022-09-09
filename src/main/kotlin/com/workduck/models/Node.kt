@@ -88,8 +88,8 @@ data class Node(
     override var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
     @JsonProperty("starred")
-    @DynamoDBAttribute(attributeName = "starred")
-    var starred: Boolean = false,
+    @DynamoDBIgnore
+    var starred: Boolean? = null, /* sent as null in node response if user didn't ask for this specifically */
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
