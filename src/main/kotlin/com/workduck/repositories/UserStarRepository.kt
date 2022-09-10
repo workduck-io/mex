@@ -83,7 +83,7 @@ class UserStarRepository(
     }
 
 
-    fun getAllBookmarkedNodesByUser(userID: String, workspaceID: String): List<String> {
+    fun getAllStarreddNodesByUser(userID: String, workspaceID: String): List<String> {
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)

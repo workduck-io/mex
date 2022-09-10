@@ -10,6 +10,8 @@ class UserStarStrategyFactory {
 
         const val getStarsObject = "GET /userStar/all"
 
+        const val getStarsOfNamespaceObject = "GET /userStar/namespace/{id}"
+
         const val createMultipleStarsObject = "POST /userStar/batch"
 
         const val deleteMultipleStarsObject = "DELETE /userStar/batch"
@@ -18,6 +20,7 @@ class UserStarStrategyFactory {
             createStarObject to CreateStarStrategy(),
             deleteStarObject to DeleteStarStrategy(),
             getStarsObject to GetStarsStrategy(),
+            getStarsOfNamespaceObject to GetStarsOfNamespaceStrategy(),
             createMultipleStarsObject to CreateMultipleStarsStrategy(),
             deleteMultipleStarsObject to DeleteMultipleStarsStrategy()
         )

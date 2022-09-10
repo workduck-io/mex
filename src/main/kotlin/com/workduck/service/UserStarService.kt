@@ -11,6 +11,8 @@ import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
 import com.workduck.repositories.UserStarRepository
 import com.workduck.utils.DDBHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
 class UserStarService(
@@ -42,8 +44,17 @@ class UserStarService(
         userStarRepository.deleteStar(userID, nodeID, workspaceID)
     }
 
-    fun getAllBookmarkedNodesByUser(userID: String, workspaceID: String): List<String> {
-        return userStarRepository.getAllBookmarkedNodesByUser(userID, workspaceID)
+    fun getAllStarredNodesByUser(userID: String, workspaceID: String): List<String> {
+        return userStarRepository.getAllStarreddNodesByUser(userID, workspaceID)
+    }
+
+    fun getAllStarredNodesInNamespace(userID: String, workspaceID: String, namespaceID: String): List<String> = runBlocking{
+        val jobToGetAllStarredNodes = async {getAllStarredNodesByUser(userID, workspaceID) }
+        val jobToGetNodesOfNamespace = async { NodeService().getAllNodesWithNamespaceID(namespaceID, workspaceID) }
+
+        return@runBlocking jobToGetAllStarredNodes.await().filter { nodeID ->
+            jobToGetNodesOfNamespace.await().contains(nodeID)
+        }
     }
 
     fun isNodeStarredForUser(nodeID: String, userID: String, workspaceID: String): Boolean {

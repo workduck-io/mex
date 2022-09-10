@@ -342,6 +342,10 @@ UserStar:
         path: /userStar/all
         method: get
 
+    - httpApi:
+        path: /userStar/namespace/{id}
+        method: get
+
     #bookmark in batch
     - httpApi:
         path: /userStar/batch

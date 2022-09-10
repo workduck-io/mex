@@ -11,7 +11,7 @@ class GetStarsStrategy : UserStarStrategy {
             input: Input,
             userStarService: UserStarService
     ): ApiGatewayResponse {
-        val nodeIDList: List<String> = userStarService.getAllBookmarkedNodesByUser(input.tokenBody.userID, input.headers.workspaceID)
+        val nodeIDList: List<String> = userStarService.getAllStarredNodesByUser(input.tokenBody.userID, input.headers.workspaceID)
         return ApiResponseHelper.generateStandardResponse(nodeIDList as Any, Messages.ERROR_GETTING_STARRED)
     }
 }
