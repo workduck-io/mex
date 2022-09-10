@@ -1,4 +1,15 @@
 Resources:
+  PublicNote:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: public-note-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "PublicNoteDLQ"
+            - "Arn"
+        maxReceiveCount: 5
   PublicNoteDLQ:
     Type: "AWS::SQS::Queue"
     Properties:

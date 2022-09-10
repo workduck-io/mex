@@ -17,6 +17,12 @@ PublicNoteSQSWorker:
 
 PublicNoteWorker:
   handler: com.serverless.ddbStreamTriggers.publicnoteWorkerTrigger.PublicNoteWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - PublicNote
+            - Arn
   vpc:
     subnetIds:
       - "subnet-ad0a8de0"
@@ -29,22 +35,6 @@ PublicNoteWorker:
       - "sg-0aeaa35ab3c10796d"
       - "sg-0fad68a531aa4fea5"
       - "sg-51d4667f"
-  events:
-    - stream:
-        type: dynamodb
-        arn:
-          Fn::GetAtt:
-            - mexData
-            - StreamArn
-        maximumRetryAttempts: 3
-        batchSize: 1
-        enabled: true
-        filterPatterns:
-          - eventName: [ MODIFY ]
-            dynamodb:
-              NewImage:
-                itemType:
-                  S: [ Node ]
 
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
