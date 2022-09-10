@@ -1317,4 +1317,8 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 
+    fun batchCreateNodes(listOfNodesToCreate : List<Node>, dynamoDBMapperConfig1: DynamoDBMapperConfig){
+        nodeRepository.createMultipleNodes(listOfNodesToCreate, dynamoDBMapperConfig1)
+    }
+
 }

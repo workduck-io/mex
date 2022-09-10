@@ -32,7 +32,10 @@ class RepositoryImpl<T : Entity>(
     }
 
     override fun create(t: T): T {
-        mapper.save(t, dynamoDBMapperConfig)
+        val dbMapperConfig = DynamoDBMapperConfig.Builder()
+                .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement("staging-mex"))
+                .build()
+        mapper.save(t, dbMapperConfig)
         return t
     }
 

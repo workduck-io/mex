@@ -57,6 +57,10 @@ class NamespaceService (
         return repository.create(namespace)
     }
 
+    fun createNamespace(namespace: Namespace) {
+         repository.create(namespace)
+    }
+
     fun getNamespace(namespaceID: String, workspaceID: String): Namespace? {
         return namespaceRepository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }

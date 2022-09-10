@@ -170,6 +170,11 @@ class NodeRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
+    fun createMultipleNodes(listOfNodes: List<Node>, dynamoDBMapperConfig1: DynamoDBMapperConfig) {
+        val failedBatches = mapper.batchWrite(listOfNodes, emptyList<Any>(), dynamoDBMapperConfig1)
+        Helper.logFailureForBatchOperation(failedBatches)
+    }
+
     fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
         return try {
             val transactionWriteRequest = TransactionWriteRequest()

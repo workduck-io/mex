@@ -12,7 +12,6 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
-import com.workduck.models.Namespace
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -30,13 +29,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
-class WorkspaceService (
+class WorkspaceService(
 
     private val client: AmazonDynamoDB = DDBHelper.createDDBConnection(),
     private val dynamoDB: DynamoDB = DynamoDB(client),
     private val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-    val nodeService: NodeService= NodeService(),
+    val nodeService: NodeService = NodeService(),
 
     private val tableName: String = when (System.getenv("TABLE_NAME")) {
         null -> "local-mex" /* for local testing without serverless offline */
@@ -62,7 +61,6 @@ class WorkspaceService (
     fun getWorkspace(workspaceID: String): Entity? {
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
-
 
     fun getArchivedNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
         return (getWorkspace(workspaceID) as Workspace).archivedNodeHierarchyInformation ?: listOf()
@@ -130,7 +128,6 @@ class WorkspaceService (
         }
         return WorkspaceHelper.removeRedundantPaths(updatedPaths.distinct(), newNodeHierarchy)
     }
-
 
     fun refreshNodeHierarchyForWorkspace(workspaceID: String) = runBlocking {
 
@@ -285,8 +282,74 @@ class WorkspaceService (
 
     private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest, workspaceID: String): Workspace = workspaceRequest.toWorkspace(workspaceID)
 
-
     companion object {
         private val LOG = LogManager.getLogger(WorkspaceService::class.java)
     }
+
+    fun getMostPopularWorkspaces() {
+        workspaceRepository.getMostPopularWorkspaces()
+    }
+
+    fun getTop10Workspaces(listOfWorkspaces: List<String>) {
+        workspaceRepository.copyDataFromTop10Workspaces(listOfWorkspaces, nodeService)
+    }
+
+    fun editWorkspaceAndCreateNamespace(listOfWorkspaces: List<String>) {
+        workspaceRepository.editWorkspaceAndCreateNamespace(listOfWorkspaces, nodeService)
+    }
+
+    fun updateAKForNodes(mapOfWorkspaceToNamespace: Map<String, String>) {
+        workspaceRepository.updateAKForNodes(mapOfWorkspaceToNamespace)
+    }
+}
+
+fun main() {
+    // WorkspaceService().getMostPopularWorkspaces()
+
+    /*
+    Doing work for WORKSPACEE59PZXGMHVQ3SZ1P4VCQ3YK991KB1GKE8NN08T3FYFV6ZDFBK6T3........
+    Creating namespace : NAMESPACE_VCYg7qqRfAwkXrqNCtq9m.....
+    Workspace to Namespace Mapping : WORKSPACEE59PZXGMHVQ3SZ1P4VCQ3YK991KB1GKE8NN08T3FYFV6ZDFBK6T3 NAMESPACE_VCYg7qqRfAwkXrqNCtq9m
+
+    */
+
+    val mapOfWorkspaceToNamespace = mapOf(
+
+        "WORKSPACEE59PZXGMHVQ3SZ1P4VCQ3YK991KB1GKE8NN08T3FYFV6ZDFBK6T3" to "NAMESPACE_VCYg7qqRfAwkXrqNCtq9m",
+        "WORKSPACEBBR1Z6DEWP877Z6431TT69ZSXM6917993H6NCMXZRWQLD0CMWL01" to "NAMESPACE_aBwbnrpCJnKe7tMrHMWWC",
+        "WORKSPACE6DVDKYLXNNDXKF1WD2PETT2F2DB0KYKHX7VNCJ4ZVEKRJ5R49ZDJ" to "NAMESPACE_cH8eQqcHy7CgqzeQfceqT",
+        "WORKSPACEXPF18ZQTRVDC1GSMQY6SS5L2PE4VT6D6CXEC8WSGSDKVMDJ463GN" to "NAMESPACE_9xx6HaGGwt3GHhr34bKiF",
+        "WORKSPACEKF3YCMHT7N8CK4NK7N1HRPSYHL63EJ692D70Q2CGFDKVSZMH8GKZ" to "NAMESPACE_qrCUrf9M4yFi3T4p4DTeN",
+        "WORKSPACE_dCgKiFBXVnqQKDAV4QYdj" to "NAMESPACE_3PnkFVNGnXTyEmncWw4mg",
+        "WORKSPACE_zpJeUrXfaXfbDgVpctjxq" to "NAMESPACE_j8UnP7aQLAycDVamxR7jL",
+        "WORKSPACEN7B0WYG96S86DZWSP3PK5DSVFY4K8F459HYQ88ZG286KRLZ05SPM" to "NAMESPACE_pnDwLAVkK4qMNDLnzTnTp",
+        "WORKSPACEKHBY52S91MQF9FNJZYY0P0425Y0KMJVJ8J5PQY6G3V40LHNVWGPR" to "NAMESPACE_cz78UDKkUa3inwLw7gY6g",
+        "WORKSPACE0YLSFT9KVX84VZZ2L3VBXQYBM9Z97ZB31XTJ8TSZB2VVF8RBQVCZ" to "NAMESPACE_TJJgDfcR4cixW3ALKKt4C",
+        "WORKSPACE_GQ9jB4zz7wMrNmnCM6HKX" to "NAMESPACE_9VQHqVdMiCQahjVqyYLLX"
+    )
+
+    val listOfWorkspaces = listOf(
+        "WORKSPACEBBR1Z6DEWP877Z6431TT69ZSXM6917993H6NCMXZRWQLD0CMWL01",
+
+        "WORKSPACE6DVDKYLXNNDXKF1WD2PETT2F2DB0KYKHX7VNCJ4ZVEKRJ5R49ZDJ",
+
+        "WORKSPACEXPF18ZQTRVDC1GSMQY6SS5L2PE4VT6D6CXEC8WSGSDKVMDJ463GN",
+
+        "WORKSPACEKF3YCMHT7N8CK4NK7N1HRPSYHL63EJ692D70Q2CGFDKVSZMH8GKZ",
+
+        "WORKSPACE_dCgKiFBXVnqQKDAV4QYdj",
+
+        "WORKSPACE_zpJeUrXfaXfbDgVpctjxq",
+
+        "WORKSPACEN7B0WYG96S86DZWSP3PK5DSVFY4K8F459HYQ88ZG286KRLZ05SPM",
+
+        "WORKSPACEKHBY52S91MQF9FNJZYY0P0425Y0KMJVJ8J5PQY6G3V40LHNVWGPR",
+
+        "WORKSPACE0YLSFT9KVX84VZZ2L3VBXQYBM9Z97ZB31XTJ8TSZB2VVF8RBQVCZ",
+
+        "WORKSPACE_GQ9jB4zz7wMrNmnCM6HKX"
+    )
+
+    // WorkspaceService().editWorkspaceAndCreateNamespace(listOfWorkspaces)
+    WorkspaceService().updateAKForNodes(mapOfWorkspaceToNamespace)
 }
