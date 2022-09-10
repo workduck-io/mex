@@ -21,7 +21,7 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
         private const val cacheExpTimeInSeconds: Long = 900
         private val publicNodeCache: Cache<Node> =
             Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
-        private val dlqURL = System.getenv("SQS_QUEUE_URL")
+        private val dlqURL = System.getenv("DLQ_SQS_QUEUE_URL")
         private val sqs = AmazonSQSClientBuilder.defaultClient()
         private val LOG = LogManager.getLogger(PublicNoteWorker::class.java)
     }

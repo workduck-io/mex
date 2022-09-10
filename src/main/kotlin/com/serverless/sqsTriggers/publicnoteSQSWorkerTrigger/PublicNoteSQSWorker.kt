@@ -12,28 +12,38 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
     private val defaultPublicNoteCacheEndpoint: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
     private val cacheExpTimeInSeconds: Long = 900
     private val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
-    override fun handleRequest(input: SQSEvent?, context: Context?): Void? {
+    override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
+        sqsEvent?.also { event ->
+            event.records?.let { records ->
+                records.parallelStream().map { record ->
+                    val nodeString = record.body
+                    val node: Node = nodeString.toNode()
 
-        input?.records?.let{
-            for (record in input.records) {
-                val jsonResult = record.body
-                val nodeObject : Node = Helper.objectMapper.convertValue(jsonResult, Node::class.java)
-                val nodeID = nodeObject.id
+                    try {
+                        takeIf { node.hasPublicAccess() }.apply {
+                            //checked for value existing in cache
+                            publicNodeCache.getItem(node.id)
+                                ?.also { existingNode ->
+                                    if (existingNode.isOlderVariant(node)) {
+                                        publicNodeCache.setItem(
+                                            node.id,
+                                            cacheExpTimeInSeconds,
+                                            node
+                                        )
+                                    }
+                                } ?: publicNodeCache.setItem(
+                                node.id,
+                                cacheExpTimeInSeconds,
+                                node
+                            )
 
-                try {
-                    if(nodeObject.publicAccess) {
-                        val existingPublicNote = publicNodeCache.getItem(nodeID)
-                        if(existingPublicNote != null) {
-                            val existingNode : Node = existingPublicNote
-                            if(existingNode.updatedAt < nodeObject.updatedAt)
-                                publicNodeCache.setItem(nodeID, cacheExpTimeInSeconds, nodeObject)
-                        } else {
-                            publicNodeCache.setItem(nodeID, cacheExpTimeInSeconds, nodeObject)
                         }
+
+                    } catch (ex: Exception) {
+                        LOG.error(ex.message.toString())
+                    } finally {
+                        publicNodeCache.closeConnection()
                     }
-                    publicNodeCache.closeConnection()
-                } catch (ex: Exception) {
-                    LOG.error(ex.message.toString())
                 }
             }
         }
@@ -44,3 +54,5 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
         private val LOG = LogManager.getLogger(PublicNoteSQSWorker::class.java)
     }
 }
+
+private fun String.toNode(): Node = Helper.objectMapper.convertValue(this, Node::class.java)
