@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager
 
 class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
     companion object {
-        private val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.defaultPublicNoteCacheEndpoint)
+        private val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
         private val LOG = LogManager.getLogger(PublicNoteSQSWorker::class.java)
     }
     override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
@@ -29,13 +29,13 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
                                     if (existingNode.isOlderVariant(node)) {
                                         publicNodeCache.setItem(
                                             node.id,
-                                            Constants.publicNoteExpTimeInSeconds,
+                                            Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                                             node
                                         )
                                     }
                                 } ?: publicNodeCache.setItem(
                                 node.id,
-                                Constants.publicNoteExpTimeInSeconds,
+                                Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                                 node
                             )
 
