@@ -11,6 +11,8 @@ class NamespaceTransformer : Transformer<Namespace> {
             id = t.id,
             name = t.name,
             nodeHierarchy = t.nodeHierarchyInformation,
+            archiveNodeHierarchy = t.archivedNodeHierarchyInformation,
+            metadata = t.namespaceMetadata,
             createdAt = t.createdAt,
             updatedAt = t.updatedAt,
             publicAccess= t.publicAccess

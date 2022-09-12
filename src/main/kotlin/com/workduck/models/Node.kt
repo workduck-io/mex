@@ -6,7 +6,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
-import com.workduck.converters.*
+import com.workduck.converters.IdentifierSerializer
+import com.workduck.converters.ItemStatusConverter
+import com.workduck.converters.ItemTypeConverter
+import com.workduck.converters.NamespaceIdentifierConverter
+import com.workduck.converters.NamespaceIdentifierDeserializer
+import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.NodeMetadataConverter
+import com.workduck.converters.NodeSchemaIdentifierConverter
+import com.workduck.converters.WorkspaceIdentifierConverter
+import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
 enum class NodeStatus {
@@ -47,7 +56,7 @@ data class Node(
     override var data: List<AdvancedElement>? = null,
 
     @JsonProperty("metadata")
-    @DynamoDBTypeConverted(converter = NodeMetaDataConverter::class)
+    @DynamoDBTypeConverted(converter = NodeMetadataConverter::class)
     @DynamoDBAttribute(attributeName = "metadata")
     var nodeMetaData : NodeMetadata ?= null,
 

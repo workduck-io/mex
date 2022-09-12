@@ -8,11 +8,9 @@ import com.workduck.service.NamespaceService
 
 class GetAllNamespaceDataStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
-        return input.payload?.let {
-            namespaceService.getAllNamespaceData(input.headers.workspaceID).let {
-                ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_GETTING_NAMESPACES)
-            }
-        } ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
+        return namespaceService.getAllNamespaceData(input.headers.workspaceID).let {
+            ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_GETTING_NAMESPACES)
+        }
     }
 }

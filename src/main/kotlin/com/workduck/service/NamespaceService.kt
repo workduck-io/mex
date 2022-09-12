@@ -4,19 +4,15 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
-import com.serverless.utils.Messages
 
 import com.workduck.models.Entity
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
-import com.workduck.models.ItemStatus
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 
 import com.workduck.repositories.NamespaceRepository
@@ -25,9 +21,7 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.DDBHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import com.workduck.utils.Helper
-import com.workduck.utils.NodeHelper
-import kotlinx.coroutines.launch
+import com.workduck.utils.extensions.toNamespace
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService (
@@ -53,7 +47,7 @@ class NamespaceService (
 ) {
 
     fun createNamespace(namespaceRequest: WDRequest, workspaceID: String): Entity {
-        val namespace: Namespace = createNamespaceObjectFromNamespaceRequest(namespaceRequest as NamespaceRequest, workspaceID)
+        val namespace: Namespace = (namespaceRequest as NamespaceRequest).toNamespace(workspaceID)
         require(!checkIfNamespaceNameExists(workspaceID, namespace.name)) { "Cannot use an existing Namespace Name" }
         return repository.create(namespace)
     }
@@ -62,9 +56,9 @@ class NamespaceService (
         return namespaceRepository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
     }
 
-    fun renameNamespace(namespaceRequest: WDRequest, workspaceID: String, namespaceID: String) {
-        val name = (namespaceRequest as NamespaceRequest).name
-        namespaceRepository.renameNamespace(workspaceID, namespaceID, name)
+    fun updateNamespace(namespaceRequest: WDRequest, workspaceID: String) {
+        val namespace = (namespaceRequest as NamespaceRequest).toNamespace(workspaceID)
+        namespaceRepository.updateNamespace(workspaceID, namespace.id, namespace)
     }
 
     fun updateNamespace(namespace: Namespace) {
@@ -147,14 +141,6 @@ class NamespaceService (
             mapOfNamespaceNameAndHierarchy[Constants.NODE_HIERARCHY] = namespace.nodeHierarchyInformation
             namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceNameAndHierarchy)
         }
-
-    }
-
-
-    private fun createNamespaceObjectFromNamespaceRequest(namespaceRequest : NamespaceRequest, workspaceID: String) : Namespace {
-        return Namespace(
-                    name = namespaceRequest.name,
-                    workspaceIdentifier = WorkspaceIdentifier(workspaceID))
 
     }
 
