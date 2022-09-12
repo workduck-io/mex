@@ -3,15 +3,17 @@ package com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import com.serverless.utils.Constants
 import com.workduck.models.Node
 import com.workduck.repositories.Cache
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
-    private val defaultPublicNoteCacheEndpoint: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
-    private val cacheExpTimeInSeconds: Long = 900
-    private val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
+    companion object {
+        private val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.defaultPublicNoteCacheEndpoint)
+        private val LOG = LogManager.getLogger(PublicNoteSQSWorker::class.java)
+    }
     override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
         sqsEvent?.also { event ->
             event.records?.let { records ->
@@ -27,13 +29,13 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
                                     if (existingNode.isOlderVariant(node)) {
                                         publicNodeCache.setItem(
                                             node.id,
-                                            cacheExpTimeInSeconds,
+                                            Constants.publicNoteExpTimeInSeconds,
                                             node
                                         )
                                     }
                                 } ?: publicNodeCache.setItem(
                                 node.id,
-                                cacheExpTimeInSeconds,
+                                Constants.publicNoteExpTimeInSeconds,
                                 node
                             )
 
@@ -48,10 +50,6 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
             }
         }
         return null
-    }
-
-    companion object {
-        private val LOG = LogManager.getLogger(PublicNoteSQSWorker::class.java)
     }
 }
 

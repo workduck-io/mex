@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.sqs.model.SendMessageRequest
+import com.serverless.utils.Constants
 import com.workduck.models.Node
 import com.workduck.repositories.Cache
 import com.workduck.utils.Helper
@@ -16,13 +17,8 @@ import org.apache.logging.log4j.LogManager
 class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
 
     companion object {
-        private const val defaultPublicNoteCacheEndpoint: String =
-            "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
-        private const val cacheExpTimeInSeconds: Long = 900
         private val publicNodeCache: Cache<Node> =
-            Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
-        private val dlqURL = System.getenv("DLQ_SQS_QUEUE_URL")
-        private val sqs = AmazonSQSClientBuilder.defaultClient()
+            Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.defaultPublicNoteCacheEndpoint)
         private val LOG = LogManager.getLogger(PublicNoteWorker::class.java)
     }
 
@@ -41,13 +37,13 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
                                     if (existingNode.isOlderVariant(node)) {
                                         publicNodeCache.setItem(
                                             node.id,
-                                            cacheExpTimeInSeconds,
+                                            Constants.publicNoteExpTimeInSeconds,
                                             node
                                         )
                                     }
                                 } ?: publicNodeCache.setItem(
                                 node.id,
-                                cacheExpTimeInSeconds,
+                                Constants.publicNoteExpTimeInSeconds,
                                 node
                             )
 
@@ -55,11 +51,6 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
 
                     } catch (ex: Exception) {
                         LOG.error(ex.message.toString())
-                        val sendMsgRequest = SendMessageRequest()
-                            .withQueueUrl(dlqURL)
-                            .withMessageBody(node.toString())
-                        sqs.sendMessage(sendMsgRequest)
-
                     } finally {
                         publicNodeCache.closeConnection()
                     }
