@@ -314,7 +314,8 @@ class NodeService( // Todo: Inject them from handlers
         /* get paths emanating from lastNode */
         val lastNodeHierarchy = getHierarchyOfNode(jobToGetExistingNamespace.await().nodeHierarchyInformation, lastNodeID)
 
-        return@runBlocking updateHierarchyInRefactorAndReturnDifference(jobToGetExistingNamespace.await(), jobToGetTargetNamespace.await(), lastNodeHierarchy, combinedPath, existingNodes)
+        return@runBlocking updateHierarchyInRefactorAndReturnDifference(jobToGetExistingNamespace.await(), jobToGetTargetNamespace.await(),
+                lastNodeHierarchy, combinedPath, existingNodes, workspaceID)
     }
 
 
@@ -333,7 +334,7 @@ class NodeService( // Todo: Inject them from handlers
 
 
     private fun updateHierarchyInRefactorAndReturnDifference(existingNamespace: Namespace, targetNamespace: Namespace, lastNodeHierarchy: List<String>,
-                                                             newPathTillLastNode: String, existingNodes: NodeNamePath) : MutableMap<String, Any> = runBlocking{
+                                                             newPathTillLastNode: String, existingNodes: NodeNamePath, workspaceID: String) : MutableMap<String, Any> = runBlocking{
 
         val mapOfDifferenceOfPaths = mutableMapOf<String, Any>()
         val existingHierarchy = existingNamespace.nodeHierarchyInformation
@@ -357,6 +358,10 @@ class NodeService( // Todo: Inject them from handlers
 
             }
             false -> { /* two hierarchies gets affected in this case */
+
+                /* update namespace for the nodes in lastNodeHierarchy */
+                launch { updateNamespaceForSuccessorNodes(targetNamespace.id, workspaceID, lastNodeHierarchy) }
+
                 val updatedExistingHierarchy = getUpdatedExistingHierarchy(existingHierarchy, existingNodes)
                 launch { updateNamespaceHierarchy(existingNamespace, updatedExistingHierarchy, HierarchyUpdateSource.NODE) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedExistingHierarchy, existingHierarchy, existingNamespace.id))
@@ -374,6 +379,11 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking mapOfDifferenceOfPaths
 
 
+    }
+
+    private fun updateNamespaceForSuccessorNodes(namespaceID: String, workspaceID: String, lastNodeHierarchy: List<String>){
+        val listOfNodeIDs = getNodeIDsFromHierarchy(lastNodeHierarchy)
+        updateNamespaceOfNodesInParallel(listOfNodeIDs, workspaceID, namespaceID)
     }
 
     private fun createNewHierarchyInRefactor(lastNodeHierarchy: List<String>, currentHierarchy: List<String>, newPathTillLastNode: String, existingNodes: NodeNamePath): List<String> {
@@ -412,9 +422,9 @@ class NodeService( // Todo: Inject them from handlers
             /* check if the name path in current hierarchy matches passed existing nodes */
             if (getNamePath(path).getListOfNodes().commonPrefixList(existingNodes.allNodes) == existingNodes.allNodes) {
                 /* break the connection from last node */
-                updatedPaths.add(path.getListOfNodes().subList(0, path.getListOfNodes().indexOf(existingNodes.allNodes.last())).convertToPathString())
+                updatedPaths.addIfNotEmpty(path.getListOfNodes().subList(0, path.getListOfNodes().indexOf(existingNodes.allNodes.last())).convertToPathString())
             } else {
-                newHierarchy.add(path)
+                newHierarchy.addIfNotEmpty(path)
             }
         }
         removeRedundantPaths(updatedPaths, newHierarchy)
@@ -816,6 +826,23 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
         jobToArchive.await()
+    }
+
+    private fun updateNamespaceOfNodesInParallel(nodeIDList: List<String>, workspaceID: String, namespaceID: String)  = runBlocking{
+
+        val jobToUpdateNamespace = CoroutineScope(Dispatchers.IO + Job()).async {
+            supervisorScope {
+                val deferredList = ArrayList<Deferred<*>>()
+                for (nodeID in nodeIDList) {
+                    deferredList.add(
+                            async {  nodeRepository.updateNodeNamespace(nodeID, workspaceID, namespaceID) }
+                    )
+                }
+                deferredList.joinAll()
+            }
+        }
+
+        jobToUpdateNamespace.await()
     }
 
     private fun updateHierarchiesInArchive(namespace: Namespace, passedNodeIDList: List<String>){

@@ -93,11 +93,11 @@ object NodeHelper {
                         .joinToString(Constants.DELIMITER)
     }
 
-    fun getNodeIDsFromHierarchy(hierarchiesToArchive : List<String>?) : List<String> {
-        if(hierarchiesToArchive.isNullOrEmpty()) return listOf()
-        return hierarchiesToArchive.map { nodePath ->
+    fun getNodeIDsFromHierarchy(hierarchiesList : List<String>) : List<String> {
+        if(hierarchiesList.isEmpty()) return listOf()
+        return hierarchiesList.map { nodePath ->
             getIDPath(nodePath).getListOfNodes()
-        }.flatten()
+        }.flatten().toSet().toList()
 
     }
 
@@ -135,10 +135,6 @@ object NodeHelper {
 
     fun isPathClashing(editedNodeTitle: String, passedNodeTitle: String): Boolean {
         return editedNodeTitle != passedNodeTitle
-    }
-
-    fun checkForDuplicateNodeIDInNamespaceAndWorkspace(workspaceHierarchy: List<String>, namespaceHierarchy: List<String>?, nodeID: String) {
-        require(workspaceHierarchy.none { it == nodeID } && (namespaceHierarchy?.none { it == nodeID } ?: true)) { "NodeID already exists" }
     }
 
     fun checkForDuplicateNodeID(nodeHierarchyInformation: List<String>, nodeID: String) {

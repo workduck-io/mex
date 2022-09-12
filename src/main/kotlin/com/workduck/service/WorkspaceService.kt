@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants

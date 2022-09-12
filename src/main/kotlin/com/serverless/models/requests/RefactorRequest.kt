@@ -24,9 +24,9 @@ data class RefactorRequest(
 ) : WDRequest {
 
     init {
-        // assuming single workspace
-        require(existingNodePath.path != newNodePath.path) {
-            "Old path and new path can't be same"
+
+        require( if(existingNodePath.namespaceID == newNodePath.namespaceID) existingNodePath.path != newNodePath.path else true ) {
+            "Old path and new path can't be same for same namespace"
         }
 
 
