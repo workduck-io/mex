@@ -12,9 +12,12 @@ object Constants {
     const val REMOVED_PATHS = "removedPaths"
     const val INTERNAL_WORKSPACE = "WORKSPACE_INTERNAL"
     const val NODE_ID_PREFIX = "NODE_"
+    const val NAMESPACE_ID_PREFIX = "NAMESPACE_"
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
     const val NANO_ID_SIZE = 21
     const val DDB_MAX_ITEM_SIZE = 350000
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
+    const val publicNoteExpTimeInSeconds: Long = 900
+    const val defaultPublicNoteCacheEndpoint: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
 
 }
