@@ -10,6 +10,7 @@ enum class ItemType {
     User,
     UserIdentifierRecord,
     UserPreferenceRecord,
+    Bookmark,
     Tag,
     NodeSchema,
     Snippet,

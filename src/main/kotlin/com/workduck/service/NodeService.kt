@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -148,7 +149,7 @@ class NodeService( // Todo: Inject them from handlers
             val nodeRequest: NodeRequest = request as NodeRequest
             val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
-            val jobToGetStoredNode = async { getNode(node.id, workspaceID) }
+            val jobToGetStoredNode = async { getNode(node.id, workspaceID, userID) }
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
@@ -655,17 +656,25 @@ class NodeService( // Todo: Inject them from handlers
         return list
     }
 
-    fun getNode(nodeID: String, workspaceID: String, bookmarkInfo: Boolean? = null, userID: String? = null): Node? =
-        (
-            (
-                pageRepository
-                    .get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java)
-                )?.let { node -> orderBlocks(node) } as Node?
-            )
-            ?.also { node ->
-                if (userID != null && bookmarkInfo == true)
-                    node.isBookmarked = UserBookmarkService().isNodeBookmarkedForUser(nodeID, userID)
+    fun getNode(nodeID: String, workspaceID: String, userID: String, starredInfo: Boolean = false) = runBlocking {
+
+        val jobToGetNode = async {  pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) }
+
+        val jobToGetStarredStatus = async { when(starredInfo) {
+                true -> UserStarService().isNodeStarredForUser(nodeID, userID, workspaceID)
+                false -> null
             }
+        }
+
+
+        return@runBlocking jobToGetNode.await()?.let { node ->
+            (orderBlocks(node) as Node).also { orderedNode ->
+                orderedNode.starred = jobToGetStarredStatus.await()
+            }
+
+        }
+
+    }
 
     fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 

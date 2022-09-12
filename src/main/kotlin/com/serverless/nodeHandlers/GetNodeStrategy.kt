@@ -14,19 +14,14 @@ class GetNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val pathParameters = input.pathParameters
         val queryStringParameters = input.queryStringParameters
-        println("pathParameters : $pathParameters")
-        println("queryParameters : $queryStringParameters")
         val nodeID = pathParameters?.id as String
 
-        val bookmarkInfo = queryStringParameters?.let{
-            it["bookmarkInfo"].toBoolean()
-        }
+        val starredInfo = queryStringParameters?.let{
+            it["starredInfo"].toBoolean()
+        } ?: false
 
-        val userID = queryStringParameters?.let{
-            it["userID"]
-        }
 
-        val node: Entity = nodeService.getNode(nodeID, input.headers.workspaceID, bookmarkInfo, userID).withNotFoundException()
+        val node: Entity = nodeService.getNode(nodeID, input.headers.workspaceID, input.tokenBody.userID, starredInfo).withNotFoundException()
 
         val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, Messages.ERROR_GETTING_NODE)
