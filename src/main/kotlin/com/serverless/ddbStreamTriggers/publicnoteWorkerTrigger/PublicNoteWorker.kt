@@ -64,10 +64,6 @@ private fun Map<String, AttributeValue>.toNode(): Node = this.also {
         "Invalid Record. NodeID not available"
     }
 }.let {
-    Helper.mapToJson(this)
-        .toMutableMap()
-        .let { res ->
-            Helper.objectMapper.convertValue(res, Node::class.java)
-        }
+    res -> Helper.objectMapper.convertValue(res, Node::class.java)
 }
 
