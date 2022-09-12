@@ -1,8 +1,10 @@
 package com.workduck.utils.extensions
 
+import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.WorkspaceRequest
+import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.Workspace
@@ -31,7 +33,7 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
             data = this.data,
             nodeMetaData = this.nodeMetadata
     )
-    node.namespaceIdentifier = this.nodePath.namespaceID?.let { NamespaceIdentifier(it) }
+    node.namespaceIdentifier = this.nodePath.namespaceID.let { NamespaceIdentifier(it) }
     return node
 }
 
@@ -40,4 +42,13 @@ fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
             id = workspaceID,
             name = this.name
     )
+}
+
+fun NamespaceRequest.toNamespace(workspaceID: String) : Namespace {
+    return Namespace(
+            id = this.id,
+            name = this.name,
+            namespaceMetadata = this.namespaceMetadata,
+            workspaceIdentifier = WorkspaceIdentifier(workspaceID))
+
 }

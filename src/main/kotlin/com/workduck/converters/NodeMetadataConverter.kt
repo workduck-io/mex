@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.NodeMetadata
 import com.workduck.utils.Helper
 
-class NodeMetaDataConverter : DynamoDBTypeConverter<String, NodeMetadata?> {
+class NodeMetadataConverter : DynamoDBTypeConverter<String, NodeMetadata?> {
     override fun convert(nodeMetadata: NodeMetadata?): String {
         return if(nodeMetadata == null) return ""
         else Helper.objectMapper.writeValueAsString(nodeMetadata)

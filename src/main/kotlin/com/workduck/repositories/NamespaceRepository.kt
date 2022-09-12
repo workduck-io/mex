@@ -15,6 +15,7 @@ import com.workduck.models.Identifier
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
 
@@ -48,16 +49,29 @@ class NamespaceRepository(
         TODO("Using deleteComment instead")
     }
 
-    fun renameNamespace(workspaceID: String, namespaceID: String, name: String) {
+    fun updateNamespace(workspaceID: String, namespaceID: String, namespace: Namespace) {
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":PK"] = workspaceID
-        expressionAttributeValues[":SK"] = namespaceID
-        expressionAttributeValues[":namespaceName"] = name
+
+        expressionAttributeValues[":namespaceName"] = namespace.name
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+
+        var updateExpression = ""
+        when(namespace.namespaceMetadata != null){
+            true -> {
+                expressionAttributeValues[":metadata"] = Helper.objectMapper.writeValueAsString(namespace.namespaceMetadata)
+                updateExpression = "SET namespaceName = :namespaceName, updatedAt = :updatedAt, metadata = :metadata"
+            }
+            false -> {
+                updateExpression = "SET namespaceName = :namespaceName, updatedAt = :updatedAt"
+            }
+
+        }
+        val conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
 
         return UpdateItemSpec().update(
-                pk = workspaceID, sk = namespaceID, updateExpression = "SET namespaceName = :namespaceName",
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+                pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
         ).let {
             table.updateItem(it)
         }
