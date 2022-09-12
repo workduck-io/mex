@@ -383,18 +383,33 @@ class NodeRepository(
         expressionAttributeValues[":title"] = newName
         expressionAttributeValues[":lastEditedBy"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
-        expressionAttributeValues[":namespaceIdentifier"] = namespaceID
+        expressionAttributeValues[":AK"] = namespaceID
 
         try {
             UpdateItemSpec().updateWithNullAttributes(
                 pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, " +
-                    "lastEditedBy = :lastEditedBy, namespaceIdentifier = :namespaceIdentifier",
+                    "lastEditedBy = :lastEditedBy, AK = :AK",
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
             ).also {
                 table.updateItem(it)
             }
         } catch (e: ConditionalCheckFailedException) {
             throw ConditionalCheckFailedException("Cannot Rename node since $nodeID does not exist")
+        }
+    }
+
+    fun updateNodeNamespace(nodeID: String, workspaceID: String, namespaceID: String) {
+        val table = dynamoDB.getTable(tableName)
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":AK"] = namespaceID
+
+        UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = "SET AK = :AK, updatedAt = :updatedAt",
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).also {
+            table.updateItem(it)
         }
     }
 
