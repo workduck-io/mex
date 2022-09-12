@@ -60,7 +60,7 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
 }
 
 private fun Map<String, AttributeValue>.toNode(): Node = this.also {
-    require(this["SK"]?.s != null) {
+    require(this["SK"] != null) {
         "Invalid Record. NodeID not available"
     }
 }.let {
