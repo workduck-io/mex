@@ -2,13 +2,14 @@ package com.workduck.repositories
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.interfaces.Cache
+import com.workduck.models.Node
 import com.workduck.utils.Helper
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 
-open class Cache<T>(
+class NodeCache(
     private val host: String = "localhost", private val port: Int = 6379
-) : Cache<T> {
+) : Cache<Node> {
     private var jedisPoolConfig = JedisPoolConfig()
     private lateinit var jedisClient: JedisPool
     private val maxRetries = 3
@@ -47,7 +48,7 @@ open class Cache<T>(
         }
     }
 
-    override fun getItem(key: String): T? {
+    override fun getItem(key: String): Node? {
         for (retryIndex in 0 .. maxRetries) {
             return try {
                 jedisClient.resource.get(key)?.also {
@@ -62,7 +63,7 @@ open class Cache<T>(
         return null
     }
 
-    override fun setItem(key: String, expInSeconds: Long, value: T) {
+    override fun setItem(key: String, expInSeconds: Long, value: Node) {
         for (retryIndex in 0 .. maxRetries) {
             try {
                 jedisClient.resource.setex(key, expInSeconds, Helper.objectMapper.writeValueAsString(value))

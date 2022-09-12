@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
 import com.serverless.utils.Constants
 import com.workduck.models.Node
-import com.workduck.repositories.Cache
+import com.workduck.repositories.NodeCache
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
@@ -15,8 +15,7 @@ import org.apache.logging.log4j.LogManager
 class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
 
     companion object {
-        private val publicNodeCache: Cache<Node> =
-            Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
+        private val publicNodeCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
         private val LOG = LogManager.getLogger(PublicNoteWorker::class.java)
     }
 
@@ -28,25 +27,21 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
                     val node: Node = newImage.toNode()
 
                     try {
-                        takeIf { node.hasPublicAccess() }.apply {
-                            //checked for value existing in cache
-                            publicNodeCache.getItem(node.id)
-                                ?.also { existingNode ->
-                                    if (existingNode.isOlderVariant(node)) {
-                                        publicNodeCache.setItem(
-                                            node.id,
-                                            Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
-                                            node
-                                        )
-                                    }
-                                } ?: publicNodeCache.setItem(
-                                node.id,
-                                Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
-                                node
-                            )
-
-                        }
-
+                        //checked for value existing in cache
+                        publicNodeCache.getItem(node.id)
+                            ?.also { existingNode ->
+                                if (existingNode.isOlderVariant(node)) {
+                                    publicNodeCache.setItem(
+                                        node.id,
+                                        Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
+                                        node
+                                    )
+                                }
+                            } ?: publicNodeCache.setItem(
+                            node.id,
+                            Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
+                            node
+                        )
                     } catch (ex: Exception) {
                         LOG.error(ex.message.toString())
                     } finally {
