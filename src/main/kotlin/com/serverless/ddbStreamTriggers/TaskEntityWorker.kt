@@ -50,7 +50,7 @@ class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
         val workspaceId = globalTaskEntityJSON?.get("pk").toString()
         val nodeId = globalTaskEntityJSON?.get("ak").toString()
 //        val userId = globalTaskEntityJSON?.get("userId").toString()
-        val userId = "f1c1b7f7-312b-4450-a996-48d5822d350f"
+        val userId = "145ce363-2d38-4c1e-8f99-608e9f6de8aa"
         val createdAtString = globalTaskEntityJSON?.get("_ct").toString()
         val createdAt = Instant.parse(createdAtString).epochSecond
         val nodeService = NodeService()
@@ -61,9 +61,7 @@ class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
             createdBy = userId,
             createdAt = createdAt))
         val nodeRequest = ElementRequest(elementList)
-
-        val map: Map<String, Any>? = nodeService.append(nodeId, workspaceId, userId, nodeRequest as WDRequest)
-        LOG.debug(map.toString())
+        nodeService.append(nodeId, workspaceId, userId, nodeRequest as WDRequest)
         return null
     }
 
