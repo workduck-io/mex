@@ -4,8 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder
-import com.amazonaws.services.sqs.model.SendMessageRequest
 import com.serverless.utils.Constants
 import com.workduck.models.Node
 import com.workduck.repositories.Cache
@@ -18,7 +16,7 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
 
     companion object {
         private val publicNodeCache: Cache<Node> =
-            Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.defaultPublicNoteCacheEndpoint)
+            Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
         private val LOG = LogManager.getLogger(PublicNoteWorker::class.java)
     }
 
@@ -37,13 +35,13 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
                                     if (existingNode.isOlderVariant(node)) {
                                         publicNodeCache.setItem(
                                             node.id,
-                                            Constants.publicNoteExpTimeInSeconds,
+                                            Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                                             node
                                         )
                                     }
                                 } ?: publicNodeCache.setItem(
                                 node.id,
-                                Constants.publicNoteExpTimeInSeconds,
+                                Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                                 node
                             )
 

@@ -17,7 +17,7 @@ object Constants {
     const val NANO_ID_SIZE = 21
     const val DDB_MAX_ITEM_SIZE = 350000
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
-    const val publicNoteExpTimeInSeconds: Long = 900
-    const val defaultPublicNoteCacheEndpoint: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
+    const val PUBLIC_NOTE_EXP_TIME_IN_SECONDS: Long = 900
+    const val DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
 
 }

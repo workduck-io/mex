@@ -101,7 +101,6 @@ class NodeService( // Todo: Inject them from handlers
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 ) {
-    private val defaultPublicNoteCacheEndpoint: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
@@ -890,10 +889,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getPublicNode(nodeID: String): Node {
-        val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: defaultPublicNoteCacheEndpoint)
+        val publicNodeCache: Cache<Node> = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
         val node = publicNodeCache.getItem(nodeID) ?: let{
             val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
-            publicNodeCache.setItem(nodeID, Constants.publicNoteExpTimeInSeconds, nodeFromDB)
+            publicNodeCache.setItem(nodeID, Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS, nodeFromDB)
             return nodeFromDB
         }
         publicNodeCache.closeConnection()
