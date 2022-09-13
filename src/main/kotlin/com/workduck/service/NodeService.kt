@@ -153,7 +153,7 @@ class NodeService( // Todo: Inject them from handlers
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
-                    namespaceService.getNamespace(namespaceID, workspaceID).let { namespace ->
+                    namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
                         require(namespace != null) {"Invalid NamespaceID"}
                         namespace
                     }
@@ -276,7 +276,7 @@ class NodeService( // Todo: Inject them from handlers
 
         val jobToGetExistingNamespace = async {
             existingNodes.namespaceID.let{ namespaceID ->
-                namespaceService.getNamespace(namespaceID, workspaceID).let { namespace ->
+                namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
                     require(namespace != null) {"Invalid NamespaceID ${existingNodes.namespaceID}"}
                     namespace
                 }
@@ -287,7 +287,7 @@ class NodeService( // Todo: Inject them from handlers
         val jobToGetTargetNamespace = when(existingNodes.namespaceID == newNodes.namespaceID) {
             false -> async {
                 newNodes.namespaceID.let{ namespaceID ->
-                    namespaceService.getNamespace(namespaceID, workspaceID).let { namespace ->
+                    namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
                         require(namespace != null) {"Invalid NamespaceID ${newNodes.namespaceID}"}
                         namespace
                     }
@@ -511,7 +511,7 @@ class NodeService( // Todo: Inject them from handlers
 
         val jobToGetNamespace = async {
             node.namespaceIdentifier.id.let { namespaceID ->
-                namespaceService.getNamespace(namespaceID, workspaceID).let { namespace ->
+                namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
                     require(namespace != null) {"Invalid NamespaceID"}
                     namespace
                 }

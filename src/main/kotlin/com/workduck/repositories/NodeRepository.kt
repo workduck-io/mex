@@ -276,17 +276,18 @@ class NodeRepository(
         if (mapOfNodeIDToName.isEmpty()) return mutableListOf()
 
         val table: Table = dynamoDB.getTable(tableName)
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        val expressionAttributeValues: MutableMap<String, Any?> = HashMap()
         expressionAttributeValues[":active"] = ItemStatus.ACTIVE.name
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":expireAt"] = null
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
 
         for ((nodeID, nodeName) in mapOfNodeIDToName) {
             try {
                 expressionAttributeValues[":title"] = "$nodeName(1)"
-                UpdateItemSpec().update(
-                    pk = workspaceID, sk = nodeID, updateExpression = "SET itemStatus = :active, title = :title, updatedAt = :updatedAt",
+                UpdateItemSpec().updateWithNullAttributes(
+                    pk = workspaceID, sk = nodeID, updateExpression = "SET itemStatus = :active, title = :title, updatedAt = :updatedAt, expireAt = :expireAt",
                     expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK)"
                 ).also {
                     table.updateItem(it)

@@ -1,5 +1,7 @@
 package com.serverless.utils
 
+import java.time.Instant
+
 object Constants {
     const val DELIMITER = "#"
     const val PATH_PARAMETER_SEPARATOR = "$"
@@ -7,6 +9,7 @@ object Constants {
     val NANO_ID_RANGE = "346789ABCDEFGHJKLMNPQRTUVWXYabcdefghijkmnpqrtwxyz".toCharArray()
     const val VALID_TITLE_SPECIAL_CHAR = ",:-@ _"
     fun getCurrentTime() : Long = System.currentTimeMillis()
+    fun getCurrentTimeInSeconds() : Long = Instant.now().epochSecond
     const val ADDED_PATHS = "addedPaths"
     const val ARCHIVED_HIERARCHY = "archivedHierarchy"
     const val REMOVED_PATHS = "removedPaths"

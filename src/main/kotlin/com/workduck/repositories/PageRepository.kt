@@ -25,6 +25,7 @@ import com.workduck.models.Page
 import com.workduck.models.Relationship
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.PageHelper
 import com.workduck.utils.SnippetHelper
 import org.apache.logging.log4j.LogManager
 
@@ -92,15 +93,20 @@ class PageRepository <T : Page> (
     fun unarchiveOrArchivePages(pageIDList: List<String>, workspaceID: String, itemStatus: ItemStatus): MutableList<String> {
         val table: Table = dynamoDB.getTable(tableName)
 
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        val expressionAttributeValues: MutableMap<String, Any?> = HashMap()
         expressionAttributeValues[":active"] = itemStatus.name
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+
+        expressionAttributeValues[":expireAt"] = when(itemStatus){
+            ItemStatus.ARCHIVED -> { PageHelper.getTTLForArchivedNode() }
+            ItemStatus.ACTIVE -> { null }
+        }
 
         val pagesProcessedList: MutableList<String> = mutableListOf()
         for (pageID in pageIDList) {
             try {
-                UpdateItemSpec().update(pk = workspaceID, sk = pageID, updateExpression = "SET itemStatus = :active, updatedAt = :updatedAt",
-                        conditionExpression = "attribute_exists(PK)", expressionAttributeValues = expressionAttributeValues).also {
+                UpdateItemSpec().updateWithNullAttributes(pk = workspaceID, sk = pageID, updateExpression = "SET itemStatus = :active, updatedAt = :updatedAt, expireAt = :expireAt",
+                        conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).also {
                     table.updateItem(it)
                     pagesProcessedList += pageID
                 }
