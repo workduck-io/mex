@@ -11,10 +11,11 @@ import com.workduck.service.NodeService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 import java.time.Instant
-import java.util.Date
 
 class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
-    var globalTaskEntityJSON: MutableMap<String?, Any?>? = null
+    private var globalTaskEntityJSON: MutableMap<String?, Any?>? = null
+    private val nodeService = NodeService()
+
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context?): Void? {
         dynamodbEvent?.records?.let {
             for (record in dynamodbEvent.records) {
@@ -45,32 +46,46 @@ class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
         return null
     }
 
-    private fun handleInsertEvent(): Void? {
+    private fun handleInsertEvent() {
         val entityId = globalTaskEntityJSON?.get("sk").toString()
         val workspaceId = globalTaskEntityJSON?.get("pk").toString()
         val nodeId = globalTaskEntityJSON?.get("ak").toString()
-//        val userId = globalTaskEntityJSON?.get("userId").toString()
-        val userId = "145ce363-2d38-4c1e-8f99-608e9f6de8aa"
+        val userId = globalTaskEntityJSON?.get("userId").toString()
+//        val userId = "145ce363-2d38-4c1e-8f99-608e9f6de8aa"
         val createdAtString = globalTaskEntityJSON?.get("_ct").toString()
         val createdAt = Instant.parse(createdAtString).epochSecond
-        val nodeService = NodeService()
+        val newBlockId = Helper.generateId(Constants.BLOCK_ID_PREFIX)
         val elementList = listOf(AdvancedElement(
-            id = entityId,
+            id = newBlockId,
             content = entityId,
-            elementType = "p",
+            elementType = Constants.ELEMENT_TYPE_P,
             createdBy = userId,
-            createdAt = createdAt))
-        val nodeRequest = ElementRequest(elementList)
-        nodeService.append(nodeId, workspaceId, userId, nodeRequest as WDRequest)
-        return null
+            createdAt = createdAt,
+            lastEditedBy = userId,
+            children = listOf(AdvancedElement(
+                id = newBlockId,
+                elementType = Constants.ELEMENT_TYPE_P,
+            ))
+        ))
+        ElementRequest(elementList).let {
+            nodeService.append(nodeId, workspaceId, userId, it as WDRequest)
+        }
     }
 
-    private fun handleModifyEvent(): Void? {
+    private fun handleModifyEvent() {
         TODO("Yet to be implemented")
     }
 
-    private fun handleRemoveEvent(): Void? {
-        TODO("Yet to be implemented")
+    private fun handleRemoveEvent() {
+        val workspaceId = globalTaskEntityJSON?.get("pk").toString()
+        val nodeId = globalTaskEntityJSON?.get("ak").toString()
+        val userId = globalTaskEntityJSON?.get("userId").toString()
+//        val userId = "145ce363-2d38-4c1e-8f99-608e9f6de8aa"
+        val blockId = globalTaskEntityJSON?.get("sk").toString()
+        // Fetch the node data and delete the block
+        nodeService.getNode(nodeId, workspaceId, userID = userId).let {
+            it?.dataOrder?.let { data -> nodeService.deleteBlockFromNode(blockId, workspaceId, nodeId, data) }
+        }
     }
 
     companion object {
