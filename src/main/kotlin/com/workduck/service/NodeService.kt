@@ -333,12 +333,12 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-    private fun updateHierarchyInRefactorAndReturnDifference(existingNamespace: Namespace, targetNamespace: Namespace, lastNodeHierarchy: List<String>,
+    private fun updateHierarchyInRefactorAndReturnDifference(sourceNamespace: Namespace, targetNamespace: Namespace, lastNodeHierarchy: List<String>,
                                                              newPathTillLastNode: String, existingNodes: NodeNamePath, workspaceID: String) : MutableMap<String, Any> = runBlocking{
 
         val mapOfDifferenceOfPaths = mutableMapOf<String, Any>()
-        val existingHierarchy = existingNamespace.nodeHierarchyInformation
-        val targetHierarchy = targetNamespace.nodeHierarchyInformation.toMutableList()
+        val hierarchyOfSourceNamespace = sourceNamespace.nodeHierarchyInformation
+        val hierarchyOfTargetNamespace = targetNamespace.nodeHierarchyInformation.toMutableList()
 
 
         val listOfChangedPaths = mutableListOf<Map<String, Any>>()
@@ -349,11 +349,11 @@ class NodeService( // Todo: Inject them from handlers
            Otherwise :
            - Refactor from One Namespace to Another Namespace
          */
-        when(existingNamespace == targetNamespace){
+        when(sourceNamespace == targetNamespace){
             true -> { /* need to update only one hierarchy */
-                val newHierarchy = createNewHierarchyInRefactor(lastNodeHierarchy, existingHierarchy, newPathTillLastNode, existingNodes)
-                launch { updateNamespaceHierarchy(targetNamespace, newHierarchy, HierarchyUpdateSource.NODE) }
-                listOfChangedPaths.add(getMapOfDifferenceOfPaths(newHierarchy, existingHierarchy, existingNamespace.id))
+                val newHierarchyOfSourceNamespace = createNewHierarchyInRefactor(lastNodeHierarchy, hierarchyOfSourceNamespace, newPathTillLastNode, existingNodes)
+                launch { updateNamespaceHierarchy(targetNamespace, newHierarchyOfSourceNamespace, HierarchyUpdateSource.NODE) }
+                listOfChangedPaths.add(getMapOfDifferenceOfPaths(newHierarchyOfSourceNamespace, hierarchyOfSourceNamespace, sourceNamespace.id))
 
 
             }
@@ -362,14 +362,14 @@ class NodeService( // Todo: Inject them from handlers
                 /* update namespace for the nodes in lastNodeHierarchy */
                 launch { updateNamespaceForSuccessorNodes(targetNamespace.id, workspaceID, lastNodeHierarchy) }
 
-                val updatedExistingHierarchy = getUpdatedExistingHierarchy(existingHierarchy, existingNodes)
-                launch { updateNamespaceHierarchy(existingNamespace, updatedExistingHierarchy, HierarchyUpdateSource.NODE) }
-                listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedExistingHierarchy, existingHierarchy, existingNamespace.id))
+                val updatedSourceNamespaceHierarchy = getUpdatedExistingHierarchy(hierarchyOfSourceNamespace, existingNodes)
+                launch { updateNamespaceHierarchy(sourceNamespace, updatedSourceNamespaceHierarchy, HierarchyUpdateSource.NODE) }
+                listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedSourceNamespaceHierarchy, hierarchyOfSourceNamespace, sourceNamespace.id))
 
 
-                val updatedTargetHierarchy = getNewHierarchyByAddingRefactoredPath(targetHierarchy, lastNodeHierarchy, newPathTillLastNode)
-                launch { updateNamespaceHierarchy(targetNamespace, updatedTargetHierarchy, HierarchyUpdateSource.NODE) }
-                listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedTargetHierarchy, targetHierarchy, targetNamespace.id))
+                val updatedTargetNamespaceHierarchy = getNewHierarchyByAddingRefactoredPath(hierarchyOfTargetNamespace, lastNodeHierarchy, newPathTillLastNode)
+                launch { updateNamespaceHierarchy(targetNamespace, updatedTargetNamespaceHierarchy, HierarchyUpdateSource.NODE) }
+                listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedTargetNamespaceHierarchy, hierarchyOfTargetNamespace, targetNamespace.id))
 
             }
         }
@@ -400,16 +400,18 @@ class NodeService( // Todo: Inject them from handlers
         return getNewHierarchyByRemovingPassedNamePath(currentHierarchy, existingNodes)
     }
 
-    private fun getNewHierarchyByAddingRefactoredPath(targetHierarchy: MutableList<String>, lastNodeHierarchy: List<String>, newPathTillLastNode: String) : List<String> {
+    private fun getNewHierarchyByAddingRefactoredPath(currentHierarchy: List<String>, lastNodeHierarchy: List<String>, newPathTillLastNode: String) : List<String> {
+        val updatedHierarchy = currentHierarchy.toMutableList()
+
         /* if the last node passed in refactor request does not have further notes, add new path till last node */
-        if (lastNodeHierarchy.isEmpty()) targetHierarchy.add(newPathTillLastNode)
+        if (lastNodeHierarchy.isEmpty()) updatedHierarchy.add(newPathTillLastNode)
         else {
             for (lastNodeHierarchyPath in lastNodeHierarchy) {
-                targetHierarchy.add(newPathTillLastNode.createNodePath(lastNodeHierarchyPath))
+                updatedHierarchy.add(newPathTillLastNode.createNodePath(lastNodeHierarchyPath))
             }
         }
 
-        return removeRedundantPaths(targetHierarchy)
+        return removeRedundantPaths(updatedHierarchy)
     }
 
 
