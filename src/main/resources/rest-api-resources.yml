@@ -7,7 +7,7 @@ Ping:
         method: get
 
 PublicNoteSQSWorker:
-  handler: com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger.PublicNoteSQSWorker
+  handler: com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger.PublicNoteDLQWorker
   events:
     - sqs:
         arn:
@@ -16,7 +16,7 @@ PublicNoteSQSWorker:
             - Arn
 
 PublicNoteWorker:
-  handler: com.serverless.ddbStreamTriggers.publicnoteWorkerTrigger.PublicNoteWorker
+  handler: com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger.PublicNoteWorker
   events:
     - sqs:
         arn:

@@ -1,4 +1,4 @@
-package com.serverless.ddbStreamTriggers.publicnoteWorkerTrigger
+package com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
