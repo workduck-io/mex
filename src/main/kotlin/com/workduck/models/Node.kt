@@ -16,7 +16,9 @@ import com.workduck.converters.ItemTypeSerializer
 import com.workduck.converters.NamespaceIdentifierConverter
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.NodeDataDeserializer
 import com.workduck.converters.NodeMetadataConverter
+import com.workduck.converters.NodeMetadataDeserializer
 import com.workduck.converters.NodeSchemaIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
@@ -58,12 +60,14 @@ data class Node(
 
     @JsonAlias("nodeData")
     @JsonProperty("data")
+    @JsonDeserialize(converter = NodeDataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
 
 
     @JsonProperty("metadata")
+    @JsonDeserialize(converter = NodeMetadataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeMetadataConverter::class)
     @DynamoDBAttribute(attributeName = "metadata")
     var nodeMetaData : NodeMetadata ?= null,
