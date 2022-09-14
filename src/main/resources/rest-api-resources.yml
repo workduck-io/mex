@@ -483,4 +483,4 @@ InternalTag:
   handler: com.serverless.internalTagHandlers.TagHandler
 
 TaskEntityWorker:
-  handler: com.serverless.ddbStreamTriggers.TaskEntityWorker
+  handler: com.serverless.sqsTriggers.taskEntitySQSWorkers.TaskEntityWorker

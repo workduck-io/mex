@@ -1,4 +1,4 @@
-package com.serverless.ddbStreamTriggers
+package com.serverless.sqsTriggers.taskEntitySQSWorkers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
