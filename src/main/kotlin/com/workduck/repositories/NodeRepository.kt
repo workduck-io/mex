@@ -16,6 +16,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes
 import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
 import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.amazonaws.services.dynamodbv2.model.Update
@@ -37,6 +38,7 @@ import com.workduck.utils.DDBTransactionHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 import java.time.Instant
+
 
 class NodeRepository(
     private val mapper: DynamoDBMapper,
@@ -511,6 +513,26 @@ class NodeRepository(
         }
     }
 
+    fun bathGetNodes(nodeIDList : List<String>, workspaceID: String) : List<Node> {
+        if(nodeIDList.isEmpty()) return mutableListOf()
+        val keysAndAttributes = TableKeysAndAttributes(tableName)
+
+        for(nodeID in nodeIDList){
+            keysAndAttributes.addHashAndRangePrimaryKey("PK", workspaceID, "SK", nodeID)
+        }
+
+        val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
+
+        val itemOutcome = dynamoDB.batchGetItem(spec)
+
+        val x =  itemOutcome.batchGetItemResult.responses[tableName]
+
+        val y = x?.get(0)
+
+        Helper.objectMapper.convertValue(x?.get(0), Node::class.java)
+        return listOf()
+
+    }
 
     fun batchGetNodeMetadataAndTitle(setOfNodeIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{
         if(setOfNodeIDWorkspaceID.isEmpty()) return mutableListOf()
