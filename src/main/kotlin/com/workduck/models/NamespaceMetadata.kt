@@ -1,5 +1,8 @@
 package com.workduck.models
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class NamespaceMetadata(
-    var iconUrl: String? = null
+    var icon: Icon? = null
 )

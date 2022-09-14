@@ -1,10 +1,12 @@
 package com.workduck.models
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class NodeMetadata(
-    var iconUrl: String? = null,
+    var icon: Icon? = null,
 
     // TODO(Add validation to check if the id exists)
     var templateID: String? = null // snippet id
