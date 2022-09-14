@@ -1,15 +1,11 @@
-package com.workduck.repositories
+package com.workduck.repositories.cache
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.interfaces.Cache
-import com.workduck.models.Node
 import com.workduck.utils.Helper
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 
-class NodeCache(
-    private val host: String = "localhost", private val port: Int = 6379
-) : Cache<Node> {
+open class Cache(private val host: String = "localhost", private val port: Int = 6379): Cache {
     private var jedisPoolConfig = JedisPoolConfig()
     private lateinit var jedisClient: JedisPool
     private val maxRetries = 3
@@ -25,7 +21,6 @@ class NodeCache(
             }
         }
     }
-
     override fun refreshConnection() {
         for (retryIndex in 0 .. maxRetries) {
             try {
@@ -48,12 +43,10 @@ class NodeCache(
         }
     }
 
-    override fun getItem(key: String): Node? {
+    protected fun getItem(key: String): String? {
         for (retryIndex in 0 .. maxRetries) {
             return try {
-                jedisClient.resource.get(key)?.also {
-                    value -> Helper.objectMapper.readValue(value)
-                }
+                jedisClient.resource.get(key)
                 break
             } catch (e: Throwable) {
                 if (retryIndex == maxRetries) throw e
@@ -63,7 +56,7 @@ class NodeCache(
         return null
     }
 
-    override fun setItem(key: String, expInSeconds: Long, value: Node) {
+    protected fun setItem(key: String, expInSeconds: Long, value: Any) {
         for (retryIndex in 0 .. maxRetries) {
             try {
                 jedisClient.resource.setex(key, expInSeconds, Helper.objectMapper.writeValueAsString(value))
@@ -73,4 +66,5 @@ class NodeCache(
             }
         }
     }
+
 }

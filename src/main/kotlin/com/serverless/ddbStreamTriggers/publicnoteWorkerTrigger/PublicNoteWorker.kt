@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
 import com.serverless.utils.Constants
 import com.workduck.models.Node
-import com.workduck.repositories.NodeCache
+import com.workduck.repositories.cache.NodeCache
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
@@ -28,16 +28,16 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
 
                     try {
                         //checked for value existing in cache
-                        publicNodeCache.getItem(node.id)
+                        publicNodeCache.getNode(node.id)
                             ?.also { existingNode ->
                                 if (existingNode.isOlderVariant(node)) {
-                                    publicNodeCache.setItem(
+                                    publicNodeCache.setNode(
                                         node.id,
                                         Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                                         node
                                     )
                                 }
-                            } ?: publicNodeCache.setItem(
+                            } ?: publicNodeCache.setNode(
                             node.id,
                             Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                             node
