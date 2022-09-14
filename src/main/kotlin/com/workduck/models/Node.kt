@@ -122,6 +122,9 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeVersionCount")
     var nodeVersionCount: Long = 0
 
+    @JsonProperty("expireAt")
+    @DynamoDBAttribute(attributeName = "expireAt")
+    var expireAt: Long? = null
 
     init {
         require(title.isNotBlank()) {

@@ -79,4 +79,7 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expireAt
+        Enabled: true
 
