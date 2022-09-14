@@ -1,11 +1,13 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
+import com.workduck.PublicAccessDeserializer
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.ItemTypeConverter
@@ -29,10 +31,12 @@ enum class NodeStatus {
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Node(
 
+    @JsonAlias("SK")
     @JsonProperty("id")
     @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
+    @JsonAlias("PK")
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
@@ -52,10 +56,12 @@ data class Node(
     @DynamoDBAttribute(attributeName = "createdBy")
     override var createdBy: String? = null,
 
+    @JsonAlias("nodeData")
     @JsonProperty("data")
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
+
 
     @JsonProperty("metadata")
     @DynamoDBTypeConverted(converter = NodeMetadataConverter::class)
@@ -74,6 +80,7 @@ data class Node(
     @DynamoDBVersionAttribute(attributeName = "version")
     override var version: Int? = null,
 
+    @JsonAlias("AK")
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
@@ -106,6 +113,7 @@ data class Node(
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
+    @JsonDeserialize(converter = PublicAccessDeserializer::class)
     override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")

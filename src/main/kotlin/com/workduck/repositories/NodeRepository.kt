@@ -527,9 +527,10 @@ class NodeRepository(
 
         val x =  itemOutcome.batchGetItemResult.responses[tableName]
 
-        val y = x?.get(0)
+        val y = x!![0]
+        val converted = Helper.mapToJson(y)
 
-        Helper.objectMapper.convertValue(x?.get(0), Node::class.java)
+        val obj = Helper.objectMapper.convertValue(converted, Node::class.java)
         return listOf()
 
     }
