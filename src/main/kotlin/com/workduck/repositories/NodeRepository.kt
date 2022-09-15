@@ -522,17 +522,15 @@ class NodeRepository(
         }
 
         val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
-
         val itemOutcome = dynamoDB.batchGetItem(spec)
+        val listOfNodesInMapFormat =  itemOutcome.batchGetItemResult.responses[tableName]
 
-        val x =  itemOutcome.batchGetItemResult.responses[tableName]
+        val listOfNodes = mutableListOf<Node>()
 
-        val y = x!![1]
-        val converted = Helper.mapToJson(y)
-
-        val obj = Helper.objectMapper.convertValue(converted, Node::class.java)
-        return listOf()
-
+        listOfNodesInMapFormat?.map {
+            listOfNodes.add(Helper.objectMapper.convertValue(Helper.mapToJson(it), Node::class.java))
+        }
+        return listOfNodes
     }
 
     fun batchGetNodeMetadataAndTitle(setOfNodeIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{

@@ -40,7 +40,6 @@ class NodeHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
 
         input.handleWarmup(LOG)?.let{ return it }
-
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         LOG.info(wdInput.routeKey)

@@ -12,7 +12,6 @@ import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.ItemTypeDeserializer
-import com.workduck.converters.ItemTypeSerializer
 import com.workduck.converters.NamespaceIdentifierConverter
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.converters.NodeDataConverter
@@ -102,7 +101,6 @@ data class Node(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    @JsonSerialize(converter = ItemTypeSerializer::class)
     @JsonDeserialize(converter = ItemTypeDeserializer::class)
     override var itemType: ItemType = ItemType.Node,
 

@@ -61,13 +61,13 @@ object Helper {
         }
     }
 
-    fun mapToJson(keyValueMap: Map<String, AttributeValue>): Map<String?, Any?> {
-        val finalKeyValueMap: MutableMap<String?, Any?> = mutableMapOf()
+    fun mapToJson(keyValueMap: Map<String, AttributeValue>): Map<String, Any?> {
+        val finalKeyValueMap: MutableMap<String, Any?> = mutableMapOf()
         for ((key, value) in keyValueMap.entries) {
             when (true) {
                 (value.n != null) -> finalKeyValueMap[key] = value.n
                 (value.m != null) -> finalKeyValueMap[key] = mapToJson(value.m)
-                (value.isNULL) -> finalKeyValueMap[key] = "NULL"
+                (value.isNULL) -> finalKeyValueMap[key] = null
                 (value.s != null) -> finalKeyValueMap[key] = value.s
                 (value.bool != null) -> finalKeyValueMap[key] = value.bool
                 (value.l != null) -> {

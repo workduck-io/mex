@@ -7,6 +7,8 @@ class NodeStrategyFactory {
 
         const val getNodeObject = "GET /node/{id}"
 
+        const val batchGetNodeObject = "GET /node/ids"
+
         const val createNodeObject = "POST /node"
 
         /* since we're not hard deleting, just moving to archive */
@@ -40,7 +42,7 @@ class NodeStrategyFactory {
 
         const val refactorNodePathObject = "POST /node/refactor"
 
-        const val bulkCreateNodesObject = "POST /node/bulkCreate"
+        const val bulkCreateNodesObject = "POST /node/bulk"
 
         const val shareNode = "POST /shared/node"
 
@@ -60,6 +62,7 @@ class NodeStrategyFactory {
 
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             getNodeObject to GetNodeStrategy(),
+            batchGetNodeObject to GetNodesByIDStrategy(),
             createNodeObject to CreateNodeStrategy(),
             archiveNodeObject to ArchiveNodeStrategy(),
             archiveNodeMiddlewareObject to ArchiveNodeMiddlewareStrategy(),

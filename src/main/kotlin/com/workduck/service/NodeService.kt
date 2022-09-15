@@ -1361,14 +1361,3 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 }
-
-fun main(){
-    val json = """
-        {
-            "ids" : [ "NODE_EP3HWTGtidt4FyMXte8F7", "NODE_gqGAUxbbDYjVabhXENYVd", "NODE_t9yVCcPAUXy8BTywhLVkA" ]
-            
-        }
-    """.trimIndent()
-
-    NodeService().getNodesInBatch(Helper.objectMapper.readValue(json), "WORKSPACE_gi6ttCHgeDRJ9Vbtxn3pp")
-}
