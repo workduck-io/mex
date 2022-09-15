@@ -83,9 +83,7 @@ class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
 //        val userId = "145ce363-2d38-4c1e-8f99-608e9f6de8aa"
         val blockId = globalTaskEntityJSON?.get("sk").toString()
         // Fetch the node data and delete the block
-        nodeService.getNode(nodeId, workspaceId, userID = userId).let {
-            it?.dataOrder?.let { data -> nodeService.deleteBlockFromNode(blockId, workspaceId, nodeId, data) }
-        }
+        nodeService.deleteBlockFromNode(blockId, workspaceId, nodeId, userId)
     }
 
     companion object {
