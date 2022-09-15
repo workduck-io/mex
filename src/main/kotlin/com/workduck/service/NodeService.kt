@@ -692,7 +692,7 @@ class NodeService( // Todo: Inject them from handlers
     fun getNodesInBatch(nodeIDRequest: WDRequest, workspaceID: String) : List<Node> {
         val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         require(nodeIDList.size < Constants.MAX_NODE_IDS_FOR_BATCH_GET) { "Number of NodeIDs should be lesser than ${Constants.MAX_NODE_IDS_FOR_BATCH_GET}" }
-        return nodeRepository.bathGetNodes(nodeIDList, workspaceID)
+        return nodeRepository.batchGetNodes(nodeIDList, workspaceID)
 
     }
 

@@ -513,7 +513,7 @@ class NodeRepository(
         }
     }
 
-    fun bathGetNodes(nodeIDList : List<String>, workspaceID: String) : List<Node> {
+    fun batchGetNodes(nodeIDList : List<String>, workspaceID: String) : List<Node> {
         if(nodeIDList.isEmpty()) return mutableListOf()
         val keysAndAttributes = TableKeysAndAttributes(tableName)
 
