@@ -73,6 +73,7 @@ import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
 import com.workduck.utils.extensions.toNode
+import com.workduck.utils.extensions.toNodeIDList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -688,9 +689,16 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
+    fun getNodesInBatch(nodeIDRequest: WDRequest, workspaceID: String) : List<Node> {
+        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
+        require(nodeIDList.size < Constants.MAX_NODE_IDS_FOR_BATCH_GET) { "Number of NodeIDs should be lesser than ${Constants.MAX_NODE_IDS_FOR_BATCH_GET}" }
+        return nodeRepository.batchGetNodes(nodeIDList, workspaceID)
+
+    }
+
     fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
-        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
 
         val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
         val jobToChangeNodeStatus =
@@ -706,7 +714,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): List<String> {
-        val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
             require(namespace != null) { "Invalid NamespaceID" }
             namespace
@@ -724,7 +732,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): MutableMap<String, List<String>> {
 
-        val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
             require(namespace != null) { "Invalid NamespaceID" }
             namespace
@@ -747,7 +755,7 @@ class NodeService( // Todo: Inject them from handlers
 
     // TODO( implement the behavior for renaming of nodes while un-archiving in case of clashing names at topmost level )
     fun unarchiveNodesNew(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): MutableMap<String, List<String>>  {
-        val passedNodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
+        val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
             require(namespace != null) { "Invalid NamespaceID" }
             namespace
@@ -781,7 +789,7 @@ class NodeService( // Todo: Inject them from handlers
 
 
     fun unarchiveNodesOld(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): List<String> = runBlocking {
-        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest) as MutableList
+        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList().toMutableList()
         val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID, namespaceID)
 
         LOG.debug(mapOfNodeIDToName)
@@ -930,9 +938,6 @@ class NodeService( // Todo: Inject them from handlers
         pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ARCHIVED)
     }
 
-    fun convertGenericRequestToList(genericRequest: GenericListRequest): List<String> {
-        return genericRequest.ids
-    }
 
     fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus): Map<String, String> {
         return nodeRepository.getAllNodeIDToNodeNameMap(workspaceID, itemStatus)
@@ -1138,7 +1143,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
 
-        val nodeIDList = convertGenericRequestToList(nodeIDRequest as GenericListRequest)
+        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         require(getAllArchivedNodeIDsOfWorkspace(workspaceID).containsAll(nodeIDList)) { "The passed IDs should be present and archived" }
         val deletedNodesList: MutableList<String> = mutableListOf()
         for (nodeID in nodeIDList) {

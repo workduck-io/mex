@@ -1,18 +1,23 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
+import com.workduck.PublicAccessDeserializer
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.ItemTypeConverter
+import com.workduck.converters.ItemTypeDeserializer
 import com.workduck.converters.NamespaceIdentifierConverter
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.NodeDataDeserializer
 import com.workduck.converters.NodeMetadataConverter
+import com.workduck.converters.NodeMetadataDeserializer
 import com.workduck.converters.NodeSchemaIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
@@ -27,10 +32,12 @@ enum class NodeStatus {
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Node(
 
+    @JsonAlias("SK")
     @JsonProperty("id")
     @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
+    @JsonAlias("PK")
     @JsonProperty("workspaceIdentifier")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
@@ -50,12 +57,16 @@ data class Node(
     @DynamoDBAttribute(attributeName = "createdBy")
     override var createdBy: String? = null,
 
+    @JsonAlias("nodeData")
     @JsonProperty("data")
+    @JsonDeserialize(converter = NodeDataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
 
+
     @JsonProperty("metadata")
+    @JsonDeserialize(converter = NodeMetadataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeMetadataConverter::class)
     @DynamoDBAttribute(attributeName = "metadata")
     var nodeMetaData : NodeMetadata ?= null,
@@ -72,6 +83,7 @@ data class Node(
     @DynamoDBVersionAttribute(attributeName = "version")
     override var version: Int? = null,
 
+    @JsonAlias("AK")
     @JsonProperty("namespaceIdentifier")
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
@@ -89,6 +101,7 @@ data class Node(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
+    @JsonDeserialize(converter = ItemTypeDeserializer::class)
     override var itemType: ItemType = ItemType.Node,
 
     @JsonProperty("itemStatus")
@@ -102,6 +115,7 @@ data class Node(
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
+    @JsonDeserialize(converter = PublicAccessDeserializer::class)
     override var publicAccess: Boolean = false,
 
     @JsonProperty("createdAt")

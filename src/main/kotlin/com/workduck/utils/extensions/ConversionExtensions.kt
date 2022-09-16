@@ -1,9 +1,12 @@
 package com.workduck.utils.extensions
 
+import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.WorkspaceRequest
+import com.serverless.utils.Constants
+import com.serverless.utils.isValidID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
@@ -51,4 +54,9 @@ fun NamespaceRequest.toNamespace(workspaceID: String) : Namespace {
             namespaceMetadata = this.namespaceMetadata,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID))
 
+}
+
+fun GenericListRequest.toNodeIDList() : List<String> {
+    require( this.ids.none { nodeID -> !nodeID.isValidID(Constants.NODE_ID_PREFIX) } ) { "Invalid NodeID(s)" }
+    return this.ids
 }

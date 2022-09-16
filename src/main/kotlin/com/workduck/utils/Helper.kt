@@ -1,6 +1,7 @@
 package com.workduck.utils
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -59,4 +60,52 @@ object Helper {
             }
         }
     }
+
+    fun mapToJson(keyValueMap: Map<String, AttributeValue>): Map<String, Any?> {
+        val finalKeyValueMap: MutableMap<String, Any?> = mutableMapOf()
+        for ((key, value) in keyValueMap.entries) {
+            when (true) {
+                (value.n != null) -> finalKeyValueMap[key] = value.n
+                (value.m != null) -> finalKeyValueMap[key] = mapToJson(value.m)
+                (value.isNULL) -> finalKeyValueMap[key] = null
+                (value.s != null) -> finalKeyValueMap[key] = value.s
+                (value.bool != null) -> finalKeyValueMap[key] = value.bool
+                (value.l != null) -> {
+                    if(value.l.isEmpty()){
+                        finalKeyValueMap[key] = emptyList<String>()
+                    }else if(value.l[0].s != null) {
+                        val mutableList = mutableListOf<String>()
+                        for (listValue in value.l) {
+                            mutableList.add(listValue.s)
+                        }
+                        finalKeyValueMap[key] = mutableList
+                    } else if(value.l[0].m !=null) {
+                        val mutableList = mutableListOf<MutableMap<String, String>>()
+                        val map = mutableMapOf<String, String>()
+                        for (listValue in value.l) {
+                            for ((k, v) in listValue.m)
+                                map[k] = v.s
+                        }
+                        mutableList.add(map)
+                        finalKeyValueMap[key] = mutableList
+                    }
+                }
+                else -> {
+                    LOG.error("Unhandled value type $key  $value")
+                    throw Error("Unhandled value type")
+                }
+            }
+        }
+        return finalKeyValueMap
+    }
+
+
+
+
+
+
+
+
+
+
 }

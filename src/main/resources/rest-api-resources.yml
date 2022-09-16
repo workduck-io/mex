@@ -14,6 +14,12 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    # batch get nodes by ids
+    - httpApi:
+        path: /node/ids
+        method: get
+        authorizer: mexAuthorizer
+
     - httpApi:
         path: /node
         method: post
@@ -96,7 +102,7 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/bulkCreate
+        path: /node/bulk
         method: post
         authorizer: mexAuthorizer
 
