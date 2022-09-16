@@ -576,11 +576,7 @@ class NodeRepository(
             filterExpression = "itemStatus = :itemStatus", projectionExpression = "dataOrder", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
-                if(!nodeList.isNullOrEmpty()){
-                    nodeList.first().dataOrder.let {
-                        if(it?.size!! > 0)  it else mutableListOf<String>()
-                    }
-                } else throw NoSuchElementException("Requested Resource Not Found")
+                nodeList.firstOrNull()?.let { node -> node.dataOrder ?: mutableListOf<String>() } ?: throw NoSuchElementException("Requested Resource Not Found")
             }
         }
     }
