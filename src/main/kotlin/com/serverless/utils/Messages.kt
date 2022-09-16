@@ -104,4 +104,5 @@ object Messages {
     const val BAD_REQUEST = "Bad Request"
     const val NPE = "Getting NPE"
 
+    const val ERROR_DELETING_BLOCK = "Error deleting block"
 }

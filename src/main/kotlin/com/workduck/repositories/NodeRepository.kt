@@ -330,6 +330,37 @@ class NodeRepository(
         client.transactWriteItems(moveBlockTransaction)
     }
 
+    fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, dataOrder: MutableList<String>, currentTime: Long): Update {
+
+        val nodeKey = HashMap<String, AttributeValue>()
+        nodeKey["PK"] = AttributeValue(workspaceID)
+        nodeKey["SK"] = AttributeValue(nodeID)
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = mutableMapOf()
+
+        val dataOrderList: MutableList<AttributeValue> = mutableListOf()
+        var updateExpression = ""
+        dataOrder.map {
+            for (blockId in blockIdList){
+                if(!it.equals(blockId)) dataOrderList.add(AttributeValue().withS(it))
+                else updateExpression += "nodeData.${blockId} "
+            }
+
+        }
+
+        expressionAttributeValues[":dataOrderNode1"] = AttributeValue().withL(dataOrderList)
+        expressionAttributeValues[":updatedAt"] = AttributeValue().withN(currentTime.toString())
+
+        val updateExpression1 = "remove $updateExpression " +
+                "set dataOrder = :dataOrderNode1, " +
+                "updatedAt = :updatedAt"
+
+        return Update().withTableName(tableName)
+            .withKey(nodeKey)
+            .withUpdateExpression(updateExpression1)
+            .withExpressionAttributeValues(expressionAttributeValues)
+    }
+
     private fun getUpdateToDeleteBlockFromNode(block: AdvancedElement?, workspaceID: String, nodeID: String, dataOrder: MutableList<String>, currentTime: Long): Update {
 
         val nodeKey = HashMap<String, AttributeValue>()

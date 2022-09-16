@@ -5,8 +5,9 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
+import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -30,7 +31,6 @@ import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeUnchanged
-import com.serverless.utils.listsEqual
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.workduck.models.AccessType
@@ -111,6 +111,23 @@ class NodeService( // Todo: Inject them from handlers
 
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
+
+    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String,userId: String) {
+        val blockIDList = convertGenericRequestToList(blockIDRequest as GenericListRequest)
+        val currentTime = Constants.getCurrentTime()
+        val node = this.getNode(nodeID, workspaceID, userID = userId ).let { node ->
+            require(node != null) {"Invalid NodeID"}
+            node
+        }
+        val deleteBlock = node?.dataOrder?.let {
+            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID,
+                it, currentTime)
+        }
+        val action: TransactWriteItem = TransactWriteItem().withUpdate(deleteBlock)
+        val deleteBlockTransaction = TransactWriteItemsRequest().withTransactItems(action)
+
+        client.transactWriteItems(deleteBlockTransaction)
+    }
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
         setMetadataOfNodeToCreate(node)

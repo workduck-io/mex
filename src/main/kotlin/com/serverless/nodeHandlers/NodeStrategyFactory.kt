@@ -58,7 +58,10 @@ class NodeStrategyFactory {
 
         const val getAllSharedNodes = "GET /shared/node/all"
 
+        const val deleteBlockObject = "POST /node/block/delete/{id}"
+
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
+            deleteBlockObject to DeleteBlockStrategy(),
             getNodeObject to GetNodeStrategy(),
             createNodeObject to CreateNodeStrategy(),
             archiveNodeObject to ArchiveNodeStrategy(),
