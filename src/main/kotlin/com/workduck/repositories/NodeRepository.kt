@@ -364,7 +364,7 @@ class NodeRepository(
                 table.updateItem(it)
             }
         } catch (e: ConditionalCheckFailedException) {
-            throw ConditionalCheckFailedException("Cannot Rename node since $nodeID does not exist")
+            throw ConditionalCheckFailedException("Cannot delete block since $nodeID does not exist")
         }
     }
 
