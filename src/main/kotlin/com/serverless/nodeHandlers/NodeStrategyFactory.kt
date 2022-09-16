@@ -16,7 +16,7 @@ class NodeStrategyFactory {
 
         const val archiveNodeMiddlewareObject = "PUT /node/archive/middleware/{id}"
 
-        const val appendToNodeObject = "POST /node/{id}/append"
+        const val appendToNodeObject = "PATCH /node/{id}/append"
 
         const val getAllNodesObject = "GET /node/all/{id}"
 

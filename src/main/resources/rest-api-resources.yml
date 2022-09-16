@@ -43,8 +43,8 @@ Node:
 
     - httpApi:
         path: /node/{id}/append
-        method: post
-#        authorizer: mexAuthorizer
+        method: patch
+        authorizer: mexAuthorizer
 
     - httpApi:
         path: /node/all/{id}
