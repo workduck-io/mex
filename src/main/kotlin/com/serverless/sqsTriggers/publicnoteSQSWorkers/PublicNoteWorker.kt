@@ -33,13 +33,11 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
                                 if (existingNode.isOlderVariant(node)) {
                                     publicNodeCache.setNode(
                                         node.id,
-                                        Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                                         node
                                     )
                                 }
                             } ?: publicNodeCache.setNode(
                             node.id,
-                            Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS,
                             node
                         )
                     } catch (ex: Exception) {

@@ -893,7 +893,7 @@ class NodeService( // Todo: Inject them from handlers
         val publicNodeCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
         val node = publicNodeCache.getNode(nodeID) ?: let{
             val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
-            publicNodeCache.setNode(nodeID, Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS, nodeFromDB)
+            publicNodeCache.setNode(nodeID, nodeFromDB)
             return nodeFromDB
         }
         publicNodeCache.closeConnection()
