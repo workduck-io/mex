@@ -110,16 +110,10 @@ class NodeService( // Todo: Inject them from handlers
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
 
-    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String,userID: String) {
+    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String, userID: String) {
         val blockIDList = convertGenericRequestToList(blockIDRequest as GenericListRequest)
-        val currentTime = Constants.getCurrentTime()
-        val dataOrder = nodeRepository.getNodeDataOrderByNodeID(nodeID).let { order ->
-            require(order != null) {"Invalid NodeID"}
-            order
-        }
-        dataOrder.let {
-            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID, userID,
-                it, currentTime)
+         nodeRepository.getNodeDataOrderByNodeID(nodeID, workspaceID).let {
+            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID, userID, it)
         }
     }
 

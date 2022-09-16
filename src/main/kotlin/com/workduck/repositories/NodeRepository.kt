@@ -330,13 +330,13 @@ class NodeRepository(
         client.transactWriteItems(moveBlockTransaction)
     }
 
-    fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, userID: String, dataOrder: MutableList<String>, currentTime: Long) {
+    fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, userID: String, dataOrder: MutableList<String>) {
         val table = dynamoDB.getTable(tableName)
         val nodeKey = HashMap<String, AttributeValue>()
         nodeKey["PK"] = AttributeValue(workspaceID)
         nodeKey["SK"] = AttributeValue(nodeID)
 
-        val expressionAttributeValues: MutableMap<String, Any?> = mutableMapOf()
+        val expressionAttributeValues: MutableMap<String, Any> = mutableMapOf()
 
         val dataOrderList: MutableList<AttributeValue> = mutableListOf()
         var blockIdExpression = ""
@@ -349,7 +349,7 @@ class NodeRepository(
         }
 
         expressionAttributeValues[":updatedDataOrder"] = AttributeValue().withL(dataOrderList)
-        expressionAttributeValues[":updatedAt"] = AttributeValue().withN(currentTime.toString())
+        expressionAttributeValues[":updatedAt"] = AttributeValue().withN(Constants.getCurrentTime().toString())
         expressionAttributeValues[":lastEditedBy"] = AttributeValue().withS(userID)
 
         val updateExpression = "remove $blockIdExpression " +
@@ -357,7 +357,7 @@ class NodeRepository(
                 "updatedAt = :updatedAt, lastEditedBy = :lastEditedBy"
 
         try {
-            UpdateItemSpec().updateWithNullAttributes(
+            UpdateItemSpec().update(
                 pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
             ).also {
@@ -565,18 +565,22 @@ class NodeRepository(
 
     }
 
-    fun getNodeDataOrderByNodeID(nodeID: String): MutableList<String>? {
+    fun getNodeDataOrderByNodeID(nodeID: String, workspaceID: String): MutableList<String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
-        expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
-        return DynamoDBQueryExpression<Node>().queryWithIndex(
-            index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "SK = :SK  and  PK = :PK",
             filterExpression = "itemStatus = :itemStatus", projectionExpression = "dataOrder", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
-                nodeList.firstOrNull()?.dataOrder ?: throw NoSuchElementException("Requested Resource Not Found")
+                if(!nodeList.isNullOrEmpty()){
+                    nodeList.first().dataOrder.let {
+                        if(it?.size!! > 0)  it else mutableListOf<String>()
+                    }
+                } else throw NoSuchElementException("Requested Resource Not Found")
             }
         }
     }
