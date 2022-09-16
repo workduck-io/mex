@@ -5,8 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
-import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
@@ -112,21 +110,17 @@ class NodeService( // Todo: Inject them from handlers
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
 
-    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String,userId: String) {
+    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String,userID: String) {
         val blockIDList = convertGenericRequestToList(blockIDRequest as GenericListRequest)
         val currentTime = Constants.getCurrentTime()
-        val node = this.getNode(nodeID, workspaceID, userID = userId ).let { node ->
-            require(node != null) {"Invalid NodeID"}
-            node
+        val dataOrder = nodeRepository.getNodeDataOrderByNodeID(nodeID).let { order ->
+            require(order != null) {"Invalid NodeID"}
+            order
         }
-        val deleteBlock = node?.dataOrder?.let {
-            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID,
+        dataOrder.let {
+            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID, userID,
                 it, currentTime)
         }
-        val action: TransactWriteItem = TransactWriteItem().withUpdate(deleteBlock)
-        val deleteBlockTransaction = TransactWriteItemsRequest().withTransactItems(action)
-
-        client.transactWriteItems(deleteBlockTransaction)
     }
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
