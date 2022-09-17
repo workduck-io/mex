@@ -1,13 +1,11 @@
-package com.workduck.repositories
+package com.workduck.repositories.cache
 
 import com.workduck.interfaces.Cache
-import redis.clients.jedis.Jedis
+import com.workduck.utils.Helper
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 
-class Cache(
-    private val host: String = "localhost", private val port: Int = 6379
-) : Cache {
+open class Cache(private val host: String = "localhost", private val port: Int = 6379): Cache {
     private var jedisPoolConfig = JedisPoolConfig()
     private lateinit var jedisClient: JedisPool
     private val maxRetries = 3
@@ -23,7 +21,6 @@ class Cache(
             }
         }
     }
-
     override fun refreshConnection() {
         for (retryIndex in 0 .. maxRetries) {
             try {
@@ -46,7 +43,7 @@ class Cache(
         }
     }
 
-    override fun get(key: String): String? {
+    protected fun getItem(key: String): String? {
         for (retryIndex in 0 .. maxRetries) {
             return try {
                 jedisClient.resource.get(key)
@@ -59,14 +56,15 @@ class Cache(
         return null
     }
 
-    override fun set(key: String, expInSeconds: Long, value: String) {
+    protected fun setItem(key: String, expInSeconds: Long, value: Any) {
         for (retryIndex in 0 .. maxRetries) {
             try {
-                jedisClient.resource.setex(key, expInSeconds, value)
+                jedisClient.resource.setex(key, expInSeconds, Helper.objectMapper.writeValueAsString(value))
                 break
             } catch (e: Throwable) {
                 if (retryIndex == maxRetries) throw e
             }
         }
     }
+
 }
