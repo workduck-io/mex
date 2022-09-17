@@ -35,13 +35,11 @@ data class Node(
 
     @JsonAlias("SK")
     @JsonProperty("id")
-    @JsonAlias("SK")
     @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.NODE.name),
 
     @JsonAlias("PK")
     @JsonProperty("workspaceIdentifier")
-    @JsonAlias("PK")
     @JsonDeserialize(converter = WorkspaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
@@ -64,7 +62,6 @@ data class Node(
     @JsonProperty("data")
     @JsonDeserialize(converter = NodeDataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
-    @JsonDeserialize(converter = NodeDataDeserializer::class) // for Cache Public Note use case
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
 
@@ -92,14 +89,8 @@ data class Node(
     @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-    @DynamoDBAttribute(attributeName = "namespaceIdentifier") var namespaceIdentifier: NamespaceIdentifier? = null,
-
-    /* WORKSPACE_ID#NAMESPACE_ID */
-    @JsonProperty("ak")
-    @JsonAlias("AK")
     @DynamoDBAttribute(attributeName = "AK")
     var namespaceIdentifier: NamespaceIdentifier = NamespaceIdentifier("DefaultNamespace"),
-
 
     @JsonProperty("nodeSchemaIdentifier")
     @DynamoDBTypeConverted(converter = NodeSchemaIdentifierConverter::class)
