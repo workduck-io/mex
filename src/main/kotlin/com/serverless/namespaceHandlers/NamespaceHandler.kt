@@ -54,7 +54,7 @@ class NamespaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         }
 
         return try {
-            //validateTokenAndWorkspace(wdInput)
+            validateTokenAndWorkspace(wdInput)
             strategy.apply(wdInput, namespaceService)
         }
         catch(e : Exception){
