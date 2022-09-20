@@ -23,6 +23,8 @@
         <mock.version>1.9.3</mock.version>
         <cognitoidp.version>1.12.172</cognitoidp.version>
         <jnanoid.version>2.0.0</jnanoid.version>
+        <jedis.version>4.2.0</jedis.version>
+        <awsjavasdk.version>1.12.197</awsjavasdk.version>
     </properties>
 
     <dependencyManagement>
@@ -85,6 +87,11 @@
             <version>${dynamo.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>${awsjavasdk.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>11.0.2</version>
@@ -131,7 +138,11 @@
             <version>2.9.0</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>

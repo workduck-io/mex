@@ -1,0 +1,19 @@
+Resources:
+  PublicNote:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: public-note-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "PublicNoteDLQ"
+            - "Arn"
+        maxReceiveCount: 5
+      # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
+      VisibilityTimeout: 180
+  PublicNoteDLQ:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: public-note-dlq-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true

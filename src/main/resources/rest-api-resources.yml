@@ -6,8 +6,50 @@ Ping:
         cors: true
         method: get
 
+PublicNoteSQSWorker:
+  handler: com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger.PublicNoteDLQWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - PublicNoteDLQ
+            - Arn
+
+PublicNoteWorker:
+  handler: com.serverless.sqsTriggers.publicnoteSQSWorkerTrigger.PublicNoteWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - PublicNote
+            - Arn
+  vpc:
+    subnetIds:
+      - "subnet-ad0a8de0"
+      - "subnet-f37686ac"
+      - "subnet-91d621f7"
+      - "subnet-c07d8fe1"
+      - "subnet-fddce7c3"
+      - "subnet-2054fd2e"
+    securityGroupIds:
+      - "sg-0aeaa35ab3c10796d"
+      - "sg-0fad68a531aa4fea5"
+      - "sg-51d4667f"
+
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
+  vpc:
+    subnetIds:
+      - "subnet-ad0a8de0"
+      - "subnet-f37686ac"
+      - "subnet-91d621f7"
+      - "subnet-c07d8fe1"
+      - "subnet-fddce7c3"
+      - "subnet-2054fd2e"
+    securityGroupIds:
+      - "sg-0aeaa35ab3c10796d"
+      - "sg-0fad68a531aa4fea5"
+      - "sg-51d4667f"
   events:
     - httpApi:
         path: /node/{id}

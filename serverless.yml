@@ -33,9 +33,15 @@ provider:
     TABLE_NAME: ${opt:stage, 'local'}-mex
     JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     STAGE: ${opt:stage, 'local'}
+    PUBLIC_NOTE_CACHE_ENDPOINT: "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
   iam:
     role:
       statements:
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            Fn::GetAtt: [PublicNoteDLQ, Arn]
         - Effect: Allow
           Action:
             - dynamodb:Scan
@@ -137,6 +143,7 @@ plugins:
   - serverless-offline
   - serverless-domain-manager
   - serverless-plugin-warmup
+  - serverless-prune-plugin
 custom:
   serverless-offline:
     noPrependStageInUrl: true
@@ -184,3 +191,4 @@ useDotenv: true
 resources:
   - ${file(src/main/resources/api-gateway-errors.yml)}
   - ${file(src/main/resources/mex.yml)}
+  - ${file(src/main/resources/queue-resources.yml)}

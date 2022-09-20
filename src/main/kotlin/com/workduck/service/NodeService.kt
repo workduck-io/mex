@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -51,10 +50,8 @@ import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.models.exceptions.WDNodeSizeLargeException
-import com.workduck.repositories.NodeRepository
-import com.workduck.repositories.PageRepository
-import com.workduck.repositories.Repository
-import com.workduck.repositories.RepositoryImpl
+import com.workduck.repositories.*
+import com.workduck.repositories.cache.NodeCache
 import com.workduck.utils.AccessItemHelper.getNodeAccessItems
 import com.workduck.utils.AccessItemHelper.getNodeAccessItemsFromAccessMap
 import com.workduck.utils.DDBHelper
@@ -107,9 +104,7 @@ class NodeService( // Todo: Inject them from handlers
 
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
-
 ) {
-
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
 
@@ -1165,7 +1160,14 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getPublicNode(nodeID: String): Node {
-        return orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
+        val publicNodeCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
+        val node = publicNodeCache.getNode(nodeID) ?: let{
+            val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
+            publicNodeCache.setNode(nodeID, nodeFromDB)
+            return nodeFromDB
+        }
+        publicNodeCache.closeConnection()
+        return node
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {

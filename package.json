@@ -5,6 +5,10 @@
     "serverless-domain-manager": "~5",
     "serverless-dynamodb-local": "~0.2.40",
     "serverless-offline": "~8.2.0",
-    "serverless-plugin-warmup": "~6.2.0"
+    "serverless-plugin-warmup": "~6.2.0",
+    "serverless-prune-plugin": "^2.0.1"
+  },
+  "dependencies": {
+    "serverless": "2.72.0-be446db9"
   }
 }
