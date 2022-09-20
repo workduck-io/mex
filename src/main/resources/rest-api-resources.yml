@@ -188,6 +188,12 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
+    #delete given block ids from the given nodeId
+    - httpApi:
+        path: /node/{id}/delete/block
+        method: patch
+        authorizer: mexAuthorizer
+
 
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler

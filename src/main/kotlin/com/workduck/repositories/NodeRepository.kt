@@ -332,6 +332,44 @@ class NodeRepository(
         client.transactWriteItems(moveBlockTransaction)
     }
 
+    fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, userID: String, dataOrder: MutableList<String>) {
+        val table = dynamoDB.getTable(tableName)
+        val nodeKey = HashMap<String, AttributeValue>()
+        nodeKey["PK"] = AttributeValue(workspaceID)
+        nodeKey["SK"] = AttributeValue(nodeID)
+
+        val expressionAttributeValues: MutableMap<String, Any> = mutableMapOf()
+
+        val dataOrderList: MutableList<AttributeValue> = mutableListOf()
+        var blockIdExpression = ""
+        dataOrder.map {
+            for (blockId in blockIdList){
+                if(!it.equals(blockId)) dataOrderList.add(AttributeValue().withS(it))
+                else blockIdExpression += "nodeData.${blockId} "
+            }
+
+        }
+
+        expressionAttributeValues[":updatedDataOrder"] = AttributeValue().withL(dataOrderList)
+        expressionAttributeValues[":updatedAt"] = AttributeValue().withN(Constants.getCurrentTime().toString())
+        expressionAttributeValues[":lastEditedBy"] = AttributeValue().withS(userID)
+
+        val updateExpression = "remove $blockIdExpression " +
+                "set dataOrder = :updatedDataOrder, " +
+                "updatedAt = :updatedAt, lastEditedBy = :lastEditedBy"
+
+        try {
+            UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+            ).also {
+                table.updateItem(it)
+            }
+        } catch (e: ConditionalCheckFailedException) {
+            throw ConditionalCheckFailedException("Cannot delete block since $nodeID does not exist")
+        }
+    }
+
     private fun getUpdateToDeleteBlockFromNode(block: AdvancedElement?, workspaceID: String, nodeID: String, dataOrder: MutableList<String>, currentTime: Long): Update {
 
         val nodeKey = HashMap<String, AttributeValue>()
@@ -546,6 +584,22 @@ class NodeRepository(
 
         return itemOutcome.batchGetItemResult.responses[tableName]!!
 
+    }
+
+    fun getNodeDataOrderByNodeID(nodeID: String, workspaceID: String): MutableList<String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(nodeID)
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
+
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "SK = :SK  and  PK = :PK",
+            filterExpression = "itemStatus = :itemStatus", projectionExpression = "dataOrder", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
+                nodeList.firstOrNull()?.let { node -> node.dataOrder ?: mutableListOf<String>() } ?: throw NoSuchElementException("Requested Resource Not Found")
+            }
+        }
     }
 
 

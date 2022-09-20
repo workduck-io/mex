@@ -29,7 +29,6 @@ import com.serverless.utils.getDifferenceWithOldHierarchy
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeUnchanged
-import com.serverless.utils.listsEqual
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.workduck.models.AccessType
@@ -107,6 +106,13 @@ class NodeService( // Todo: Inject them from handlers
 ) {
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
+
+    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String, userID: String) {
+        val blockIDList = convertGenericRequestToList(blockIDRequest as GenericListRequest)
+         nodeRepository.getNodeDataOrderByNodeID(nodeID, workspaceID).let {
+            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID, userID, it)
+        }
+    }
 
     fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
         setMetadataOfNodeToCreate(node)
