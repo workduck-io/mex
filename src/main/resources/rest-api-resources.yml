@@ -142,7 +142,7 @@ Node:
 
     #delete given block ids from the given nodeId
     - httpApi:
-        path: /node/block/delete/{id}
+        path: /node/{id}/delete/block
         method: patch
         authorizer: mexAuthorizer
 
