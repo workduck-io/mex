@@ -130,7 +130,7 @@ class NamespaceService (
         return@runBlocking hierarchyMap
     }
 
-    private fun constructNamespaceInfo(namespaceList: List<Namespace>){
+    private fun constructNamespaceInfo(namespaceList: List<Namespace>) : MutableMap<String, Any>{
 
         val namespaceHierarchyJson: MutableMap<String, Any> = mutableMapOf()
         for (namespace in namespaceList) {
@@ -140,6 +140,7 @@ class NamespaceService (
             mapOfNamespaceData[Constants.NAMESPACE_METADATA] = namespace.namespaceMetadata
             namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceData)
         }
+        return namespaceHierarchyJson
 
     }
 
