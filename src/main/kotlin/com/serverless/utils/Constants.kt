@@ -29,5 +29,6 @@ object Constants {
     const val NAMESPACE_INFO = "namespaceInfo"
     const val NAME = "name"
     const val NODE_HIERARCHY = "nodeHierarchy"
+    const val NAMESPACE_METADATA = "namespaceMetadata"
 
 }

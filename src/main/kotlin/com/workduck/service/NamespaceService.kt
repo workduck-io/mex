@@ -125,21 +125,20 @@ class NamespaceService (
 
         val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
 
-        val namespaceHierarchy : MutableMap<String, Any> = mutableMapOf()
-
-        constructNamespaceInfo(jobToGetNamespaces.await(), namespaceHierarchy)
-
-        hierarchyMap[Constants.NAMESPACE_INFO] = namespaceHierarchy
+        hierarchyMap[Constants.NAMESPACE_INFO] = constructNamespaceInfo(jobToGetNamespaces.await())
 
         return@runBlocking hierarchyMap
     }
 
-    private fun constructNamespaceInfo(namespaceList: List<Namespace>, namespaceHierarchyJson: MutableMap<String, Any>){
+    private fun constructNamespaceInfo(namespaceList: List<Namespace>){
+
+        val namespaceHierarchyJson: MutableMap<String, Any> = mutableMapOf()
         for (namespace in namespaceList) {
-            val mapOfNamespaceNameAndHierarchy = mutableMapOf<String, Any>()
-            mapOfNamespaceNameAndHierarchy[Constants.NAME] = namespace.name
-            mapOfNamespaceNameAndHierarchy[Constants.NODE_HIERARCHY] = namespace.nodeHierarchyInformation
-            namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceNameAndHierarchy)
+            val mapOfNamespaceData = mutableMapOf<String, Any?>()
+            mapOfNamespaceData[Constants.NAME] = namespace.name
+            mapOfNamespaceData[Constants.NODE_HIERARCHY] = namespace.nodeHierarchyInformation
+            mapOfNamespaceData[Constants.NAMESPACE_METADATA] = namespace.namespaceMetadata
+            namespaceHierarchyJson.putIfAbsent(namespace.id, mapOfNamespaceData)
         }
 
     }
