@@ -82,7 +82,7 @@ class NamespaceService (
         require( namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already private"}
         val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 1) /* get all public nodes */
         nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 0)
-        namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 1)
+        namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 0)
 
     }
 
