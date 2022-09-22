@@ -7,7 +7,7 @@ import com.serverless.utils.Constants
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
-open class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
+class TaskEntityDLQWorker: RequestHandler<DynamodbEvent, Void> {
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context?): Void? {
         dynamodbEvent?.records?.let {
             for (record in dynamodbEvent.records) {
@@ -31,8 +31,8 @@ open class TaskEntityWorker : RequestHandler<DynamodbEvent, Void> {
         }
         return null
     }
-    
+
     companion object {
-        private val LOG = LogManager.getLogger(TaskEntityWorker::class.java)
+        private val LOG = LogManager.getLogger(TaskEntityDLQWorker::class.java)
     }
 }

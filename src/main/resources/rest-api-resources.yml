@@ -482,5 +482,20 @@ Tag:
 InternalTag:
   handler: com.serverless.internalTagHandlers.TagHandler
 
-TaskEntityWorker:
+TaskEntityDLQWorker:
+  handler: com.serverless.sqsTriggers.taskEntitySQSWorkers.TaskEntityDLQWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - TaskEntityDLQ
+            - Arn
+
+TaskEntitySQSWorker:
   handler: com.serverless.sqsTriggers.taskEntitySQSWorkers.TaskEntityWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - TaskEntity
+            - Arn
