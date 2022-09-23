@@ -15,7 +15,7 @@ class InternalTagStrategyFactory {
         )
 
         fun getTagStrategy(routeKey: String): InternalTagStrategy? {
-            return tagRegistry[routeKey]
+            return tagRegistry[routeKey.replace("/v1", "")]
         }
     }
 }

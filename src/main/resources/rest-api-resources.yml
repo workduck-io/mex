@@ -119,6 +119,7 @@ Node:
         path: /node/archive
         method: get
         authorizer: mexAuthorizer
+
     - httpApi:
         path: /node/public/{id}
         method: get
@@ -194,6 +195,153 @@ Node:
         method: patch
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    - httpApi:
+        path: /v1/node/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    # batch get nodes by ids
+    - httpApi:
+        path: /v1/node/ids
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node
+        method: post
+        authorizer: mexAuthorizer
+
+      #deleteNodes( archive them )
+    - httpApi:
+        path: /v1/node/archive/{id}
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/archive/middleware/{id}
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/unarchive/{id}
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/{id}/append
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/all/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/{id}/blockUpdate
+        method: post
+      #        authorizer: mexAuthorizer
+
+      # get metadata + updatedAt of all nodes of a workspace
+    - httpApi:
+        path: /v1/node/metadata
+        method: get
+
+    - httpApi:
+        path: /v1/node/{id}/version/metadata
+        method: get
+        authorizer: mexAuthorizer
+
+      #delete given nodes ids from archive section ( hence, permanently )
+    - httpApi:
+        path: /v1/node/archive/delete
+        method: post
+        authorizer: mexAuthorizer
+
+      #get all archived nodes for a given workspaceID
+    - httpApi:
+        path: /v1/node/archive
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/public/{id}
+        method: get
+
+    - httpApi:
+        path: /v1/node/makePublic/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/makePrivate/{id}
+        method: patch
+        authorizer: mexAuthorizer
+    #copy  or move a block from sourceNode to destinationNode
+    - httpApi:
+        path: /v1/node/block/movement
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/refactor
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/node/bulk
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node/{nodeID}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node
+        method: put
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node/update
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node/{id}/users
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node/{id}/access
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/node/all
+        method: get
+        authorizer: mexAuthorizer
+
+    #delete given block ids from the given nodeId
+    - httpApi:
+        path: /v1/node/{id}/delete/block
+        method: patch
+        authorizer: mexAuthorizer
+
+
 
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler
@@ -259,6 +407,69 @@ Snippet:
         method: get
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    - httpApi:
+        path: /v1/snippet/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    # create/ update a new snippet
+    - httpApi:
+        path: /v1/snippet
+        method: post
+        authorizer: mexAuthorizer
+
+
+    #delete given snippet ids from archive section ( hence, permanently )
+    - httpApi:
+        path: /v1/snippet/{id}/{version}
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/snippet/{id}/all
+        method: delete
+        authorizer: mexAuthorizer
+
+    #get all archived snippets for a given workspaceID
+    #    - httpApi:
+    #        path: /v1/snippet/archive/{id}
+    #        method: get
+    #        authorizer: mexAuthorizer
+
+    # get a public snippet
+    - httpApi:
+        path: /v1/snippet/public/{id}/{version}
+        method: get
+
+    - httpApi:
+        path: /v1/snippet/clone/{id}/{version}
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/snippet/makePublic/{id}/{version}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/snippet/makePrivate/{id}/{version}
+        method: patch
+        authorizer: mexAuthorizer
+
+    # get all versions of a snippet
+    - httpApi:
+        path: /v1/snippet/{id}/all
+        method: get
+        authorizer: mexAuthorizer
+
+    # get all snippets of a workspace
+    - httpApi:
+        path: /v1/snippet/all
+        method: get
+        authorizer: mexAuthorizer
+
 
 
 Namespace:
@@ -309,6 +520,53 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    - httpApi:
+        path: /v1/namespace/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace/{id}
+        method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace/all
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace/makePublic/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace/makePrivate/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace/public/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/namespace/all/hierarchy
+        method: get
+        authorizer: mexAuthorizer
+
 
 Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
@@ -349,11 +607,56 @@ Workspace:
         method: patch
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    - httpApi:
+        path: /v1/workspace
+        method: get
+        authorizer: mexAuthorizer
+    #
+    #    - httpApi:
+    #        path: /v1/workspace
+    #        method: post
+    #        authorizer: mexAuthorizer
+
+    # used to rename workspace
+    - httpApi:
+        path: /v1/workspace
+        method: patch
+        authorizer: mexAuthorizer
+    #
+    #    - httpApi:
+    #        path: /v1/workspace
+    #        method: delete
+    #        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/workspace/data/{ids}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/workspace/hierarchy/archived
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/workspace/refreshHierarchy
+        method: patch
+        authorizer: mexAuthorizer
+
+
 User:
   handler: com.serverless.userHandlers.UserHandler
   events:
     - httpApi:
         path : /user/register
+        method: post
+        authorizer: mexAuthorizer
+
+    #################### v1 api paths ####################
+    - httpApi:
+        path: /v1/user/register
         method: post
         authorizer: mexAuthorizer
 
@@ -375,6 +678,22 @@ UserPreference:
         method: get
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    - httpApi:
+        path: /v1/userPreference
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/userPreference/{id}/{preferenceType}
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/userPreference/all/{id}
+        method: get
+        authorizer: mexAuthorizer
 
 UserStar:
   handler: com.serverless.userBookmarkHandlers.UserStarHandler
@@ -412,6 +731,41 @@ UserStar:
         method: delete
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    #bookmark the node
+    - httpApi:
+        path: /v1/userStar/{id}
+        method: post
+        authorizer: mexAuthorizer
+
+    #delete the bookmark on a particular node
+    - httpApi:
+        path: /v1/userStar/{id}
+        method: delete
+        authorizer: mexAuthorizer
+
+    #get all bookmarks by a particular user
+    - httpApi:
+        path: /v1/userStar/all
+        method: get
+
+    - httpApi:
+        path: /v1/userStar/namespace/{id}
+        method: get
+
+    #bookmark in batch
+    - httpApi:
+        path: /v1/userStar/batch
+        method: post
+        authorizer: mexAuthorizer
+
+    #delete bookmark in batch
+    - httpApi:
+        path: /v1/userStar/batch
+        method: delete
+        authorizer: mexAuthorizer
+
 
 Comment:
   handler: com.serverless.commentHandlers.CommentHandler
@@ -446,6 +800,38 @@ Comment:
         method: get
         authorizer: mexAuthorizer
 
+    #################### v1 api paths ####################
+
+    #create comment
+    - httpApi:
+        path: /v1/comment
+        method: post
+        authorizer: mexAuthorizer
+
+    #update comment
+    - httpApi:
+        path: /v1/comment
+        method: patch
+        authorizer: mexAuthorizer
+
+    #id -> nodeID/blockID-commentID
+    - httpApi:
+        path: /v1/comment/{id}
+        method: get
+        authorizer: mexAuthorizer
+
+    #id -> nodeID/blockID-commentID
+    - httpApi:
+        path: /v1/comment/{id}
+        method: delete
+        authorizer: mexAuthorizer
+
+    #get all comments of a node/block/user
+    - httpApi:
+        path: /v1/comment/all/{id}
+        method: get
+        authorizer: mexAuthorizer
+
 WorkspaceUpdateTrigger:
   handler: com.serverless.ddbStreamTriggers.workspaceUpdateTrigger.WorkspaceUpdateTrigger
 #  events:
@@ -476,6 +862,20 @@ Tag:
     #get all node ids which have a tag
     - httpApi:
         path: /tag/{tagName}/node
+        method: get
+        authorizer: mexAuthorizer
+
+    #################### v1 api paths ####################
+
+    #get all tags of a workspace
+    - httpApi:
+        path: /v1/tag/all
+        method: get
+        authorizer: mexAuthorizer
+
+    #get all node ids which have a tag
+    - httpApi:
+        path: /v1/tag/{tagName}/node
         method: get
         authorizer: mexAuthorizer
 

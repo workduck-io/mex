@@ -42,7 +42,7 @@ class SnippetStrategyFactory {
         )
 
         fun getSnippetStrategy(routeKey: String): SnippetStrategy? {
-            return snippetRegistry[routeKey]
+            return snippetRegistry[routeKey.replace("/v1", "")]
         }
     }
 }

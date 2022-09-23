@@ -24,7 +24,7 @@ class CommentStrategyFactory {
 
 
         fun getCommentStrategy(routeKey: String): CommentStrategy? {
-            return commentRegistry[routeKey]
+            return commentRegistry[routeKey.replace("/v1", "")]
         }
 
 

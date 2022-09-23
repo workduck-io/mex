@@ -19,7 +19,7 @@ class UserPreferenceStrategyFactory {
         )
 
         fun getUserPreferenceStrategy(routeKey: String): UserPreferenceStrategy? {
-            return userPreferenceRegistry[routeKey]
+            return userPreferenceRegistry[routeKey.replace("/v1", "")]
         }
     }
 }

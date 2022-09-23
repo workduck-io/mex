@@ -10,7 +10,7 @@ class UserStrategyFactory {
         )
 
         fun getUserStrategy(routeKey: String): UserStrategy? {
-            return userRegistry[routeKey]
+            return userRegistry[routeKey.replace("/v1", "")]
         }
     }
 }

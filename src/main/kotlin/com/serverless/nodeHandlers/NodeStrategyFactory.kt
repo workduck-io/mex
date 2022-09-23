@@ -95,7 +95,7 @@ class NodeStrategyFactory {
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {
-            return nodeRegistry[routeKey]
+            return nodeRegistry[routeKey.replace("/v1", "")]
         }
     }
 }
