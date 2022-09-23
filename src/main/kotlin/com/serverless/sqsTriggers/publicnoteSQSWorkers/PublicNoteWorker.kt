@@ -27,19 +27,24 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
                     val node: Node = newImage.toNode()
 
                     try {
-                        //checked for value existing in cache
-                        publicNodeCache.getNode(node.id)
-                            ?.also { existingNode ->
-                                if (existingNode.isOlderVariant(node)) {
-                                    publicNodeCache.setNode(
-                                        node.id,
-                                        node
-                                    )
-                                }
-                            } ?: publicNodeCache.setNode(
-                            node.id,
-                            node
-                        )
+                        if(node.hasPublicAccess()) {
+                            //checked for value existing in cache
+                            publicNodeCache.getNode(node.id)
+                                ?.also { existingNode ->
+                                    if (existingNode.isOlderVariant(node)) {
+                                        publicNodeCache.setNode(
+                                            node.id,
+                                            node
+                                        )
+                                    }
+                                } ?: publicNodeCache.setNode(
+                                node.id,
+                                node
+                            )
+                        } else {
+                            //Remove the node from the cache if it is made private
+                            publicNodeCache.deleteNode(node.id)
+                        }
                     } catch (ex: Exception) {
                         LOG.error(ex.message.toString())
                     } finally {

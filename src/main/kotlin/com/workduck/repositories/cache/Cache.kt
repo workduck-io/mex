@@ -46,8 +46,7 @@ open class Cache(private val host: String = "localhost", private val port: Int =
     protected fun getItem(key: String): String? {
         for (retryIndex in 0 .. maxRetries) {
             return try {
-                jedisClient.resource.get(key)
-                break
+                return jedisClient.resource.get(key)
             } catch (e: Throwable) {
                 if (retryIndex == maxRetries) throw e
                 null
@@ -65,6 +64,17 @@ open class Cache(private val host: String = "localhost", private val port: Int =
                 if (retryIndex == maxRetries) throw e
             }
         }
+    }
+
+    protected fun deleteItem(key: String): Long? {
+        for (retryIndex in 0 .. maxRetries) {
+            try {
+                return jedisClient.resource.del(key)
+            } catch (e: Throwable) {
+                if (retryIndex == maxRetries) throw e
+            }
+        }
+        return null
     }
 
 }
