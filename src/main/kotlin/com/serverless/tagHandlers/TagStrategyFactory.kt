@@ -15,7 +15,7 @@ class TagStrategyFactory {
         )
 
         fun getTagStrategy(routeKey: String): TagStrategy? {
-            return tagRegistry[routeKey]
+            return tagRegistry[routeKey.replace("/v1", "")]
         }
     }
 }

@@ -35,7 +35,7 @@ class NamespaceStrategyFactory {
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {
-            return namespaceRegistry[routeKey]
+            return namespaceRegistry[routeKey.replace("/v1", "")]
         }
     }
 }

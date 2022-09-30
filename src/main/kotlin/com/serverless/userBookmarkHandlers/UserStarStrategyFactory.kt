@@ -26,7 +26,7 @@ class UserStarStrategyFactory {
         )
 
         fun getUserStarStrategy(routeKey: String): UserStarStrategy? {
-            return userStarRegistry[routeKey]
+            return userStarRegistry[routeKey.replace("/v1", "")]
         }
     }
 }
