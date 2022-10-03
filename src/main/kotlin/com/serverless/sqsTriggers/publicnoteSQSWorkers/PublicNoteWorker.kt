@@ -20,9 +20,10 @@ class PublicNoteWorker : RequestHandler<DynamodbEvent, Void> {
     }
 
     override fun handleRequest(dynamodbEvent: DynamodbEvent?, context: Context): Void? {
+        LOG.debug("eventtt ${Helper.objectMapper.writeValueAsString(dynamodbEvent)}")
         dynamodbEvent?.also { event ->
             event.records?.let { records ->
-                records.parallelStream().map { record ->
+                records.map { record ->
                     val newImage = record.dynamodb.newImage
                     val node: Node = newImage.toNode()
 

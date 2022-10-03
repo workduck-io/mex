@@ -17,7 +17,7 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
     override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
         sqsEvent?.also { event ->
             event.records?.let { records ->
-                records.parallelStream().map { record ->
+                records.map { record ->
                     val nodeString = record.body
                     val node: Node = nodeString.toNode()
 

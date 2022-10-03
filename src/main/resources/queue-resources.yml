@@ -25,7 +25,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "PublicNoteDLQ"
+            - "TaskEntityDLQ"
             - "Arn"
         maxReceiveCount: 5
       # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout

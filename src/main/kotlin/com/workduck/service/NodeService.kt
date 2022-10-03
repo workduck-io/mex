@@ -19,19 +19,7 @@ import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.SharedNodeRequest
 import com.serverless.models.requests.UpdateAccessTypesRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.Constants
-import com.serverless.utils.Messages
-import com.serverless.utils.addAlphanumericStringToTitle
-import com.serverless.utils.addIfNotEmpty
-import com.serverless.utils.awaitAndThrowExceptionIfFalse
-import com.serverless.utils.convertToPathString
-import com.serverless.utils.createNodePath
-import com.serverless.utils.getDifferenceWithOldHierarchy
-import com.serverless.utils.getListOfNodes
-import com.serverless.utils.getRoughSizeOfEntity
-import com.serverless.utils.isNodeUnchanged
-import com.serverless.utils.mix
-import com.serverless.utils.removePrefixList
+import com.serverless.utils.*
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
@@ -105,7 +93,6 @@ class NodeService( // Todo: Inject them from handlers
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 ) {
-    private val publicNodeCache: Cache = Cache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT"))
     val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
 
