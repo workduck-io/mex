@@ -208,7 +208,7 @@ class NamespaceService (
 
         val namespaceID = namespaceData["SK"]!!.s
         map["namespaceID"] = namespaceID
-        map["namespaceTitle"] = namespaceData["namespaceTitle"]!!.s
+        map["namespaceTitle"] = namespaceData["namespaceName"]!!.s
         map["accessType"] = namespaceAccessItemsMap[namespaceID]!!.accessType.name
         map["granterID"] = namespaceAccessItemsMap[namespaceID]!!.granterID
 

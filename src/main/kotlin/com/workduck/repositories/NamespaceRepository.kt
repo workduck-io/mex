@@ -269,7 +269,7 @@ class NamespaceRepository(
             keysAndAttributes.addHashAndRangePrimaryKey("PK", namespaceToWorkspacePair.second, "SK", namespaceToWorkspacePair.first)
         }
 
-        keysAndAttributes.withProjectionExpression("PK, SK, title, metadata, createdAt, updatedAt")
+        keysAndAttributes.withProjectionExpression("PK, SK, namespaceName, metadata, createdAt, updatedAt")
         val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
         val itemOutcome = dynamoDB.batchGetItem(spec)
 

@@ -10,7 +10,7 @@ import com.workduck.models.AccessType
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("SharedNodeRequest")
+@JsonTypeName("SharedNamespaceRequest")
 data class SharedNamespaceRequest(
 
         val namespaceID: String,
