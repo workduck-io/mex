@@ -9,23 +9,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.serverless.utils.Constants
 import com.workduck.converters.AccessTypeConverter
 import com.workduck.converters.ItemTypeConverter
-import com.workduck.converters.NodeIdentifierConverter
+import com.workduck.converters.NamespaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 
-enum class AccessType {
-    WRITE,
-    READ,
-    MANAGE,
-    NO_ACCESS
-}
-
 @DynamoDBTable(tableName = "local-mex")
-class NodeAccess(
+class NamespaceAccess(
 
-    @JsonProperty("nodeID")
-    @DynamoDBAttribute(attributeName = "nodeID")
-    @DynamoDBTypeConverted(converter = NodeIdentifierConverter::class)
-    var node: NodeIdentifier = NodeIdentifier("node"),
+    @JsonProperty("namespaceID")
+    @DynamoDBAttribute(attributeName = "namespaceID")
+    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
+    var namespace: NamespaceIdentifier = NamespaceIdentifier("DefaultNamespace"),
 
     @JsonProperty("workspaceID")
     @DynamoDBAttribute(attributeName = "workspaceID")
@@ -33,7 +26,7 @@ class NodeAccess(
     override var workspace: WorkspaceIdentifier = WorkspaceIdentifier("workspace"),
 
     @DynamoDBHashKey(attributeName = "PK")
-    override var pk: String = "${IdentifierType.NODE_ACCESS.name}${Constants.DELIMITER}${node.id}",
+    override var pk: String = "${IdentifierType.NAMESPACE_ACCESS.name}${Constants.DELIMITER}${namespace.id}",
 
     @JsonProperty("userID")
     @DynamoDBRangeKey(attributeName = "SK")
@@ -43,10 +36,6 @@ class NodeAccess(
     @DynamoDBAttribute(attributeName = "granterID")
     override var granterID: String = "granter",
 
-    @JsonProperty("ownerID")
-    @DynamoDBAttribute(attributeName = "ownerID")
-    var ownerID: String = "owner",
-
     @JsonProperty("accessType")
     @DynamoDBAttribute(attributeName = "accessType")
     @DynamoDBTypeConverted(converter = AccessTypeConverter::class)
@@ -55,7 +44,7 @@ class NodeAccess(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: ItemType = ItemType.NodeAccess,
+    override var itemType: ItemType = ItemType.NamespaceAccess,
 
     @JsonProperty("createdAt")
     @DynamoDBAttribute(attributeName = "createdAt")

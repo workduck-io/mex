@@ -35,6 +35,7 @@ import com.serverless.utils.removePrefixList
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Entity
+import com.workduck.models.EntityOperationType
 import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
@@ -50,8 +51,12 @@ import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.models.exceptions.WDNodeSizeLargeException
-import com.workduck.repositories.*
+import com.workduck.repositories.NodeRepository
+import com.workduck.repositories.PageRepository
+import com.workduck.repositories.Repository
+import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.cache.NodeCache
+import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.AccessItemHelper.getNodeAccessItems
 import com.workduck.utils.AccessItemHelper.getNodeAccessItemsFromAccessMap
 import com.workduck.utils.DDBHelper
@@ -103,14 +108,16 @@ class NodeService( // Todo: Inject them from handlers
     private val pageRepository: PageRepository<Node> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
 
     private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
-    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
+    private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig),
+
 ) {
-    val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
-    val namespaceService: NamespaceService = NamespaceService(nodeService = this)
+    private val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
+    private val namespaceService: NamespaceService = NamespaceService(nodeService = this)
+    private val nodeAccessService: NodeAccessService = NodeAccessService(nodeRepository, namespaceService.namespaceAccessService)
 
     fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String, userID: String) {
         val blockIDList = (blockIDRequest as GenericListRequest).toNodeIDList()
-         nodeRepository.getNodeDataOrderByNodeID(nodeID, workspaceID).let {
+        nodeRepository.getNodeDataOrderByNodeID(nodeID, workspaceID).let {
             nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID, userID, it)
         }
     }
@@ -152,12 +159,16 @@ class NodeService( // Todo: Inject them from handlers
             val nodeRequest: NodeRequest = request as NodeRequest
             val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
+            require(nodeAccessService.checkIfUserHasAccessToNode(workspaceID, node.namespaceIdentifier.id, node.id, userID, EntityOperationType.EDIT)) {
+                Messages.ERROR_NODE_PERMISSION
+            }
+
             val jobToGetStoredNode = async { getNode(node.id, workspaceID, userID) }
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
-                    namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-                        require(namespace != null) {"Invalid NamespaceID"}
+                    namespaceService.getNamespaceAfterPermissionCheck(workspaceID, namespaceID).let { namespace ->
+                        require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
                         namespace
                     }
                 }
@@ -176,21 +187,20 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
 
-
-    fun updateNodeAttributesInSingleCreate(node: Node, nodeRequest: NodeRequest, namespace: Namespace){
+    fun updateNodeAttributesInSingleCreate(node: Node, nodeRequest: NodeRequest, namespace: Namespace) {
         node.title =
-                updateNamespaceHierarchyInSingleCreateAndReturnTitle(
-                        nodeRequest.referenceID,
-                        node.id,
-                        node.title,
-                        node.workspaceIdentifier.id,
-                        namespace
-                )
+            updateNamespaceHierarchyInSingleCreateAndReturnTitle(
+                nodeRequest.referenceID,
+                node.id,
+                node.title,
+                node.workspaceIdentifier.id,
+                namespace
+            )
 
         node.publicAccess = namespace.publicAccess /* if the namespace is public, node to be created should also be public. */
     }
 
-    private fun checkForPathClashAndResolveWithNewTitle(nodeHierarchy : List<String>, prefixNodePath :String, passedNodeTitle: String) : String {
+    private fun checkForPathClashAndResolveWithNewTitle(nodeHierarchy: List<String>, prefixNodePath: String, passedNodeTitle: String): String {
 
         // get the node name path after the node would get created
         val nodeNamePathToAdd = getNamePath(prefixNodePath).createNodePath(passedNodeTitle)
@@ -201,7 +211,6 @@ class NodeService( // Todo: Inject them from handlers
         }?.let {
             nodeNamePathToAdd.getListOfNodes().last().addAlphanumericStringToTitle()
         } ?: passedNodeTitle
-
     }
 
     private fun updateNamespaceHierarchyInSingleCreateAndReturnTitle(
@@ -210,7 +219,7 @@ class NodeService( // Todo: Inject them from handlers
         passedNodeTitle: String,
         workspaceID: String,
         namespace: Namespace
-    ): String{
+    ): String {
 
         NodeHelper.checkForDuplicateNodeID(namespace.nodeHierarchyInformation, nodeID)
 
@@ -231,7 +240,7 @@ class NodeService( // Todo: Inject them from handlers
                         nodeTitle = checkForPathClashAndResolveWithNewTitle(nodeHierarchy, nodePath, passedNodeTitle)
                         nodePathsToAdd.add("$nodePath${Constants.DELIMITER}$nodeTitle${Constants.DELIMITER}$nodeID")
 
-                        if(!NodeHelper.isPathClashing(nodeTitle, passedNodeTitle)) nodePathsToRemove.add(nodePath)
+                        if (!NodeHelper.isPathClashing(nodeTitle, passedNodeTitle)) nodePathsToRemove.add(nodePath)
                         break
                     } else if (nodePath.contains(referenceID)) { /* referenceID is not leaf node, and we need to extract path till referenceID */
                         val endIndex = nodePath.indexOf(referenceID) + referenceID.length - 1
@@ -275,23 +284,24 @@ class NodeService( // Todo: Inject them from handlers
         val existingNodes = refactorNodePathRequest.existingNodePath
         val newNodes = refactorNodePathRequest.newNodePath
 
-        // TODO(crosscheck if the last node name in the path is for the passed nodeID)
+        require(nodeAccessService.checkIfUserHasAccessForRefactor(workspaceID, existingNodes.namespaceID, newNodes.namespaceID, lastNodeID, userID, EntityOperationType.EDIT))
 
+        // TODO(crosscheck if the last node name in the path is for the passed nodeID)
         val jobToGetExistingNamespace = async {
-            existingNodes.namespaceID.let{ namespaceID ->
-                namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-                    require(namespace != null) {"Invalid NamespaceID ${existingNodes.namespaceID}"}
+            existingNodes.namespaceID.let { namespaceID ->
+                namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+                    require(namespace != null) { "Invalid NamespaceID ${existingNodes.namespaceID}" }
                     namespace
                 }
             }
         }
 
         // if the namespace id is same ( or null ), we are dealing with a single namespace ( or workspace )
-        val jobToGetTargetNamespace = when(existingNodes.namespaceID == newNodes.namespaceID) {
+        val jobToGetTargetNamespace = when (existingNodes.namespaceID == newNodes.namespaceID) {
             false -> async {
-                newNodes.namespaceID.let{ namespaceID ->
-                    namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-                        require(namespace != null) {"Invalid NamespaceID ${newNodes.namespaceID}"}
+                newNodes.namespaceID.let { namespaceID ->
+                    namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+                        require(namespace != null) { "Invalid NamespaceID ${newNodes.namespaceID}" }
                         namespace
                     }
                 }
@@ -301,11 +311,9 @@ class NodeService( // Todo: Inject them from handlers
 
         val paths = mutableListOf<String>()
 
-
         if (newNodes.allNodes.size > 1) addPathsAndCreateNodesBeforeLastNode(refactorNodePathRequest, paths, userID, jobToGetTargetNamespace.await(), workspaceID)
 
         launch { changeLastPassedNodeInRefactor(existingNodes, newNodes, lastNodeID, userID, workspaceID) }
-
 
         val renameNodePath = "${newNodes.allNodes.last()}${Constants.DELIMITER}$lastNodeID" /* even if no need to rename, we're good */
         LOG.debug("renameString : $renameNodePath")
@@ -317,12 +325,13 @@ class NodeService( // Todo: Inject them from handlers
         /* get paths emanating from lastNode */
         val lastNodeHierarchy = getHierarchyOfNode(jobToGetExistingNamespace.await().nodeHierarchyInformation, lastNodeID)
 
-        return@runBlocking updateHierarchyInRefactorAndReturnDifference(jobToGetExistingNamespace.await(), jobToGetTargetNamespace.await(),
-                lastNodeHierarchy, combinedPath, existingNodes, workspaceID)
+        return@runBlocking updateHierarchyInRefactorAndReturnDifference(
+            jobToGetExistingNamespace.await(), jobToGetTargetNamespace.await(),
+            lastNodeHierarchy, combinedPath, existingNodes, workspaceID
+        )
     }
 
-
-    private fun changeLastPassedNodeInRefactor(existingNodes:  NodeNamePath, newNodes:  NodeNamePath, lastNodeID: String, userID: String, workspaceID: String){
+    private fun changeLastPassedNodeInRefactor(existingNodes: NodeNamePath, newNodes: NodeNamePath, lastNodeID: String, userID: String, workspaceID: String) {
 
         val existingNamespaceID = existingNodes.namespaceID
         val newNamespaceID = newNodes.namespaceID
@@ -335,14 +344,18 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-
-    private fun updateHierarchyInRefactorAndReturnDifference(sourceNamespace: Namespace, targetNamespace: Namespace, lastNodeHierarchy: List<String>,
-                                                             newPathTillLastNode: String, existingNodes: NodeNamePath, workspaceID: String) : MutableMap<String, Any> = runBlocking{
+    private fun updateHierarchyInRefactorAndReturnDifference(
+        sourceNamespace: Namespace,
+        targetNamespace: Namespace,
+        lastNodeHierarchy: List<String>,
+        newPathTillLastNode: String,
+        existingNodes: NodeNamePath,
+        workspaceID: String
+    ): MutableMap<String, Any> = runBlocking {
 
         val mapOfDifferenceOfPaths = mutableMapOf<String, Any>()
         val hierarchyOfSourceNamespace = sourceNamespace.nodeHierarchyInformation
         val hierarchyOfTargetNamespace = targetNamespace.nodeHierarchyInformation.toMutableList()
-
 
         val listOfChangedPaths = mutableListOf<Map<String, Any>>()
 
@@ -352,13 +365,11 @@ class NodeService( // Todo: Inject them from handlers
            Otherwise :
            - Refactor from One Namespace to Another Namespace
          */
-        when(sourceNamespace == targetNamespace){
+        when (sourceNamespace == targetNamespace) {
             true -> { /* need to update only one hierarchy */
                 val newHierarchyOfSourceNamespace = createNewHierarchyInRefactor(lastNodeHierarchy, hierarchyOfSourceNamespace, newPathTillLastNode, existingNodes)
                 launch { updateNamespaceHierarchy(targetNamespace, newHierarchyOfSourceNamespace, HierarchyUpdateSource.NODE) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(newHierarchyOfSourceNamespace, hierarchyOfSourceNamespace, sourceNamespace.id))
-
-
             }
             false -> { /* two hierarchies gets affected in this case */
 
@@ -369,22 +380,18 @@ class NodeService( // Todo: Inject them from handlers
                 launch { updateNamespaceHierarchy(sourceNamespace, updatedSourceNamespaceHierarchy, HierarchyUpdateSource.NODE) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedSourceNamespaceHierarchy, hierarchyOfSourceNamespace, sourceNamespace.id))
 
-
                 val updatedTargetNamespaceHierarchy = getNewHierarchyByAddingRefactoredPath(hierarchyOfTargetNamespace, lastNodeHierarchy, newPathTillLastNode)
                 launch { updateNamespaceHierarchy(targetNamespace, updatedTargetNamespaceHierarchy, HierarchyUpdateSource.NODE) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedTargetNamespaceHierarchy, hierarchyOfTargetNamespace, targetNamespace.id))
-
             }
         }
 
         mapOfDifferenceOfPaths[Constants.CHANGED_PATHS] = listOfChangedPaths
 
         return@runBlocking mapOfDifferenceOfPaths
-
-
     }
 
-    private fun updateNamespaceForSuccessorNodes(namespaceID: String, workspaceID: String, lastNodeHierarchy: List<String>){
+    private fun updateNamespaceForSuccessorNodes(namespaceID: String, workspaceID: String, lastNodeHierarchy: List<String>) {
         val listOfNodeIDs = getNodeIDsFromHierarchy(lastNodeHierarchy)
         updateNamespaceOfNodesInParallel(listOfNodeIDs, workspaceID, namespaceID)
     }
@@ -398,12 +405,11 @@ class NodeService( // Todo: Inject them from handlers
         return getNewHierarchyByAddingRefactoredPath(newHierarchy, lastNodeHierarchy, newPathTillLastNode)
     }
 
-
-    private fun getUpdatedExistingHierarchy(currentHierarchy: List<String>, existingNodes: NodeNamePath) : MutableList<String>{
+    private fun getUpdatedExistingHierarchy(currentHierarchy: List<String>, existingNodes: NodeNamePath): MutableList<String> {
         return getNewHierarchyByRemovingPassedNamePath(currentHierarchy, existingNodes)
     }
 
-    private fun getNewHierarchyByAddingRefactoredPath(currentHierarchy: List<String>, lastNodeHierarchy: List<String>, newPathTillLastNode: String) : List<String> {
+    private fun getNewHierarchyByAddingRefactoredPath(currentHierarchy: List<String>, lastNodeHierarchy: List<String>, newPathTillLastNode: String): List<String> {
         val updatedHierarchy = currentHierarchy.toMutableList()
 
         /* if the last node passed in refactor request does not have further notes, add new path till last node */
@@ -417,9 +423,7 @@ class NodeService( // Todo: Inject them from handlers
         return removeRedundantPaths(updatedHierarchy)
     }
 
-
-
-    private fun getNewHierarchyByRemovingPassedNamePath(currentHierarchy: List<String>, existingNodes: NodeNamePath) : MutableList<String>{
+    private fun getNewHierarchyByRemovingPassedNamePath(currentHierarchy: List<String>, existingNodes: NodeNamePath): MutableList<String> {
         val newHierarchy = mutableListOf<String>()
         /* collect paths which need to be updated */
         val updatedPaths = mutableListOf<String>()
@@ -437,8 +441,13 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* used for refactor */
-    private fun addPathsAndCreateNodesBeforeLastNode(refactorNodePathRequest: RefactorRequest, paths: MutableList<String>,
-                                                     userID: String, targetNamespace: Namespace, workspaceID: String) {
+    private fun addPathsAndCreateNodesBeforeLastNode(
+        refactorNodePathRequest: RefactorRequest,
+        paths: MutableList<String>,
+        userID: String,
+        targetNamespace: Namespace,
+        workspaceID: String
+    ) {
         val newNodesWithoutLast = NodeNamePath(
             path = refactorNodePathRequest.newNodePath.allNodes.dropLast(1).convertToPathString(),
             namespaceID = refactorNodePathRequest.newNodePath.namespaceID
@@ -450,9 +459,10 @@ class NodeService( // Todo: Inject them from handlers
 
         var listOfNodesToCreate = mutableListOf<Node>()
         try {
-            listOfNodesToCreate = setMetaDataForEmptyNodes(getNodesToCreate(longestExistingPath, newNodesWithoutLast.path).toMutableList(),
-                    userID, workspaceID, refactorNodePathRequest.newNodePath.namespaceID)
-
+            listOfNodesToCreate = setMetaDataForEmptyNodes(
+                getNodesToCreate(longestExistingPath, newNodesWithoutLast.path).toMutableList(),
+                userID, workspaceID, refactorNodePathRequest.newNodePath.namespaceID
+            )
         } catch (e: IllegalArgumentException) {
             // don't do anything. Just a  case where only renaming has been done, or we're appending to an already existing path
         }
@@ -514,19 +524,24 @@ class NodeService( // Todo: Inject them from handlers
         val nodePath: NodePath = nodeRequest.nodePath
         val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, nodePath.allNodesNames.last(), nodePath.allNodesIDs.last(), workspaceID, userID)
 
+        require(namespaceService.namespaceAccessService.checkIfUserHasAccess(workspaceID, node.namespaceIdentifier.id, userID, EntityOperationType.READ)) {
+            Messages.ERROR_NAMESPACE_PERMISSION
+        }
+
+
         val jobToGetNamespace = async {
             node.namespaceIdentifier.id.let { namespaceID ->
-                namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-                    require(namespace != null) {"Invalid NamespaceID"}
+                namespaceService.getNamespaceAfterPermissionCheck(workspaceID, namespaceID).let { namespace ->
+                    require(namespace != null) { "Invalid NamespaceID" }
                     namespace
                 }
             }
         }
 
-        val namespace : Namespace = jobToGetNamespace.await()
+        val namespace: Namespace = jobToGetNamespace.await()
         val namespaceHierarchy = namespace.nodeHierarchyInformation
 
-        NodeHelper.checkForDuplicateNodeID(namespaceHierarchy , node.id)
+        NodeHelper.checkForDuplicateNodeID(namespaceHierarchy, node.id)
 
         val longestExistingPath = updateNodePath(NodeHelper.getLongestExistingPathFromNamePath(getNamePath(nodePath.path), namespaceHierarchy), nodePath, node)
 
@@ -549,20 +564,18 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking mapOfNodeAndDifference
     }
 
-    private fun getMapOfDifferenceOfPaths(updatedNodeHierarchy: List<String>, oldHierarchy: List<String>, namespaceID: String) : MutableMap<String, Any>{
+    private fun getMapOfDifferenceOfPaths(updatedNodeHierarchy: List<String>, oldHierarchy: List<String>, namespaceID: String): MutableMap<String, Any> {
         val mapOfChangedPaths = mutableMapOf<String, Any>()
         mapOfChangedPaths[namespaceID] = updatedNodeHierarchy.getDifferenceWithOldHierarchy(oldHierarchy)
         return mapOfChangedPaths
-
     }
 
-    private fun updateNamespaceHierarchy(namespace: Namespace, updatedNodeHierarchy:List<String>, updateSource: HierarchyUpdateSource){
+    private fun updateNamespaceHierarchy(namespace: Namespace, updatedNodeHierarchy: List<String>, updateSource: HierarchyUpdateSource) {
         namespaceService.updateNamespaceHierarchy(
-                namespace,
-                updatedNodeHierarchy,
-                updateSource
+            namespace,
+            updatedNodeHierarchy,
+            updateSource
         )
-
     }
 
     private fun getSuffixPathInBulkCreate(listOfNodes: List<Node>): String {
@@ -575,7 +588,6 @@ class NodeService( // Todo: Inject them from handlers
         }
         return suffixNodePath
     }
-
 
     private fun getListOfNodesToCreateInBulkCreate(nodePath: NodePath, longestExistingPath: String, node: Node): List<Node> {
 
@@ -591,11 +603,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun getUpdatedNodeHierarchyInBulkCreate(
-            existingHierarchy: MutableList<String>,
-            longestExistingPath: String,
-            suffixNodePath: String /* path to be added to longestExistingPath */
+        existingHierarchy: MutableList<String>,
+        longestExistingPath: String,
+        suffixNodePath: String /* path to be added to longestExistingPath */
     ): List<String> {
-
 
         var nodePathToRemove: String? = null
 
@@ -673,29 +684,30 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getNode(nodeID: String, workspaceID: String, userID: String, starredInfo: Boolean = false) = runBlocking {
 
-        val jobToGetNode = async {  pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) }
+        require(nodeAccessService.checkIfUserHasAccessToGetNode(workspaceID, nodeID, userID, EntityOperationType.READ)) {
+            Messages.ERROR_NODE_PERMISSION
+        }
 
-        val jobToGetStarredStatus = async { when(starredInfo) {
+        val jobToGetNode = async { pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) }
+
+        val jobToGetStarredStatus = async {
+            when (starredInfo) {
                 true -> UserStarService().isNodeStarredForUser(nodeID, userID, workspaceID)
                 false -> null
             }
         }
 
-
         return@runBlocking jobToGetNode.await()?.let { node ->
             (orderBlocks(node) as Node).also { orderedNode ->
                 orderedNode.starred = jobToGetStarredStatus.await()
             }
-
         }
-
     }
 
-    fun getNodesInBatch(nodeIDRequest: WDRequest, workspaceID: String) : List<Node> {
+    fun getNodesInBatch(nodeIDRequest: WDRequest, workspaceID: String): List<Node> {
         val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         require(nodeIDList.size < Constants.MAX_NODE_IDS_FOR_BATCH_GET) { "Number of NodeIDs should be lesser than ${Constants.MAX_NODE_IDS_FOR_BATCH_GET}" }
         return nodeRepository.batchGetNodes(nodeIDList, workspaceID)
-
     }
 
     fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
@@ -715,10 +727,12 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking jobToChangeNodeStatus.await()
     }
 
-    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): List<String> {
+    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): List<String> {
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-        val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-            require(namespace != null) { "Invalid NamespaceID" }
+
+        // permission for the user would be checked when fetching the namespace
+        val namespace = namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+            require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
             namespace
         }
 
@@ -732,11 +746,13 @@ class NodeService( // Todo: Inject them from handlers
         return nodeIDsToArchive
     }
 
-    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): MutableMap<String, List<String>> {
+    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> {
 
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-        val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-            require(namespace != null) { "Invalid NamespaceID" }
+
+        // permission for the user would be checked when fetching the namespace
+        val namespace = namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+            require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
             namespace
         }
 
@@ -752,17 +768,17 @@ class NodeService( // Todo: Inject them from handlers
         return mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
             it.putAll(namespace.nodeHierarchyInformation.getDifferenceWithOldHierarchy(currentActiveHierarchy))
         }
-
     }
 
     // TODO( implement the behavior for renaming of nodes while un-archiving in case of clashing names at topmost level )
-    fun unarchiveNodesNew(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): MutableMap<String, List<String>>  {
+    fun unarchiveNodesNew(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> {
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-        val namespace = namespaceService.getNamespace(workspaceID, namespaceID).let { namespace ->
-            require(namespace != null) { "Invalid NamespaceID" }
+
+        // permission for the user would be checked when fetching the namespace
+        val namespace = namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+            require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
             namespace
         }
-
 
         val currentActiveHierarchy = namespace.nodeHierarchyInformation
         val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation
@@ -780,19 +796,17 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-
-    fun getRemovedNodeIDs(oldHierarchy: List<String>, newHierarchy: List<String>) : List<String> {
+    fun getRemovedNodeIDs(oldHierarchy: List<String>, newHierarchy: List<String>): List<String> {
         val oldNodeIDs = getNodeIDsFromHierarchy(oldHierarchy)
         val newNodeIDs = getNodeIDsFromHierarchy(newHierarchy)
-        return oldNodeIDs.filter{ oldNodeID ->
-            newNodeIDs.all{ it != oldNodeID }
+        return oldNodeIDs.filter { oldNodeID ->
+            newNodeIDs.all { it != oldNodeID }
         }
     }
 
-
-    fun unarchiveNodesOld(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String): List<String> = runBlocking {
+    fun unarchiveNodesOld(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): List<String> = runBlocking {
         val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList().toMutableList()
-        val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID, namespaceID)
+        val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID, namespaceID, userID)
 
         LOG.debug(mapOfNodeIDToName)
         for ((nodeID, _) in mapOfNodeIDToName) {
@@ -802,20 +816,19 @@ class NodeService( // Todo: Inject them from handlers
         val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName, workspaceID) }
 
         val jobToUnarchiveNodes =
-                async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
+            async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
 
         return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
     }
 
-
-    private fun unarchiveOrArchiveNodesInParallel(nodeIDList: List<String>, workspaceID: String, itemStatus: ItemStatus)  = runBlocking{
+    private fun unarchiveOrArchiveNodesInParallel(nodeIDList: List<String>, workspaceID: String, itemStatus: ItemStatus) = runBlocking {
 
         val jobToArchive = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
                 val deferredList = ArrayList<Deferred<*>>()
                 for (nodeID in nodeIDList) {
                     deferredList.add(
-                            async {  pageRepository.unarchiveOrArchivePages(listOf(nodeID), workspaceID, itemStatus) }
+                        async { pageRepository.unarchiveOrArchivePages(listOf(nodeID), workspaceID, itemStatus) }
                     )
                 }
                 deferredList.joinAll()
@@ -825,13 +838,13 @@ class NodeService( // Todo: Inject them from handlers
         jobToArchive.await()
     }
 
-    fun makeNodesPublicOrPrivateInParallel(nodeIDList: List<String>, workspaceID: String, accessValueToSet : Int) = runBlocking {
+    fun makeNodesPublicOrPrivateInParallel(nodeIDList: List<String>, workspaceID: String, accessValueToSet: Int) = runBlocking {
         val jobToArchive = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
                 val deferredList = ArrayList<Deferred<*>>()
                 for (nodeID in nodeIDList) {
                     deferredList.add(
-                            async {  pageRepository.togglePagePublicAccess(nodeID, workspaceID, accessValueToSet) }
+                        async { pageRepository.togglePagePublicAccess(nodeID, workspaceID, accessValueToSet) }
                     )
                 }
                 deferredList.joinAll()
@@ -840,14 +853,14 @@ class NodeService( // Todo: Inject them from handlers
         jobToArchive.await()
     }
 
-    private fun updateNamespaceOfNodesInParallel(nodeIDList: List<String>, workspaceID: String, namespaceID: String)  = runBlocking{
+    private fun updateNamespaceOfNodesInParallel(nodeIDList: List<String>, workspaceID: String, namespaceID: String) = runBlocking {
 
         val jobToUpdateNamespace = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
                 val deferredList = ArrayList<Deferred<*>>()
                 for (nodeID in nodeIDList) {
                     deferredList.add(
-                            async {  nodeRepository.updateNodeNamespace(nodeID, workspaceID, namespaceID) }
+                        async { nodeRepository.updateNodeNamespace(nodeID, workspaceID, namespaceID) }
                     )
                 }
                 deferredList.joinAll()
@@ -857,7 +870,7 @@ class NodeService( // Todo: Inject them from handlers
         jobToUpdateNamespace.await()
     }
 
-    private fun updateHierarchiesInArchive(namespace: Namespace, passedNodeIDList: List<String>){
+    private fun updateHierarchiesInArchive(namespace: Namespace, passedNodeIDList: List<String>) {
 
         val activeHierarchy = namespace.nodeHierarchyInformation
         require(activeHierarchy.isNotEmpty()) { "Hierarchy does not exist" }
@@ -869,11 +882,9 @@ class NodeService( // Todo: Inject them from handlers
 
         Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
         namespaceService.updateNamespace(namespace)
-
     }
 
-
-    private fun updateHierarchiesInUnarchive(namespace: Namespace, passedNodeIDList: List<String>){
+    private fun updateHierarchiesInUnarchive(namespace: Namespace, passedNodeIDList: List<String>) {
 
         val archivedHierarchy = namespace.archivedNodeHierarchyInformation
         require(archivedHierarchy.isNotEmpty()) { "Archived hierarchy does not exist" }
@@ -881,14 +892,11 @@ class NodeService( // Todo: Inject them from handlers
         val newActiveHierarchy = namespace.nodeHierarchyInformation.toMutableList()
         val newArchivedHierarchy = mutableListOf<String>()
 
-
         updateHierarchiesInArchiveUnarchive(archivedHierarchy, newArchivedHierarchy, newActiveHierarchy, passedNodeIDList)
 
         Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
         namespaceService.updateNamespace(namespace)
-
     }
-
 
     /* sourceHierarchy : Hierarchy to move nodes from.
        In case of archiving, sourceHierarchy will be active hierarchy
@@ -904,42 +912,44 @@ class NodeService( // Todo: Inject them from handlers
        In case of unarchiving, newDestinationHierarchy will be newActiveHierarchy hierarchy
 
      */
-    private fun updateHierarchiesInArchiveUnarchive(sourceHierarchy: List<String>, newSourceHierarchy: MutableList<String>,
-                                                    newDestinationHierarchy: MutableList<String>, passedNodeIDList: List<String>){
+    private fun updateHierarchiesInArchiveUnarchive(
+        sourceHierarchy: List<String>,
+        newSourceHierarchy: MutableList<String>,
+        newDestinationHierarchy: MutableList<String>,
+        passedNodeIDList: List<String>
+    ) {
 
-        for(nodePath in sourceHierarchy) {
+        for (nodePath in sourceHierarchy) {
             var isNodePresentInPath = false
             val pathsListForSinglePath = mutableListOf<String>() /* more than one node ids from a single path could be passed */
             for (nodeID in passedNodeIDList) {
                 if (nodePath.contains(nodeID)) {
                     isNodePresentInPath = true
-                    pathsListForSinglePath.add(nodePath.getListOfNodes().let {
-                        it.subList(it.indexOf(nodeID) - 1, it.size)
-                    }.convertToPathString())
+                    pathsListForSinglePath.add(
+                        nodePath.getListOfNodes().let {
+                            it.subList(it.indexOf(nodeID) - 1, it.size)
+                        }.convertToPathString()
+                    )
                 }
             }
-            if(isNodePresentInPath){
+            if (isNodePresentInPath) {
                 val finalPathToArchive = removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
                 newDestinationHierarchy.add(finalPathToArchive)
                 /* active hierarchy is nodePath minus the archived path */
                 newSourceHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
-            }
-            else { /* this path will remain unchanged */
+            } else { /* this path will remain unchanged */
                 newSourceHierarchy.add(nodePath)
             }
         }
 
         removeRedundantPaths(newDestinationHierarchy)
         removeRedundantPaths(newSourceHierarchy)
-
     }
-
 
     /* Getting called Internally via trigger. No need to update hierarchy */
     fun archiveNodes(nodeIDList: List<String>, workspaceID: String) = runBlocking {
         pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ARCHIVED)
     }
-
 
     fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus): Map<String, String> {
         return nodeRepository.getAllNodeIDToNodeNameMap(workspaceID, itemStatus)
@@ -1004,7 +1014,7 @@ class NodeService( // Todo: Inject them from handlers
             for (nodePath in currentHierarchy) {
                 val idList = getIDPath(nodePath).getListOfNodes()
                 val indexOfNodeID = idList.indexOf(node.id)
-                if(indexOfNodeID != -1){
+                if (indexOfNodeID != -1) {
                     val nameList = getNamePath(nodePath).getListOfNodes().toMutableList()
                     nameList[indexOfNodeID] = node.title
                     newHierarchy.add(nameList.mix(idList).convertToPathString())
@@ -1050,19 +1060,17 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithUserID(userID)
     }
 
-
-    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String) : List<String> {
+    fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): List<String> {
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
 
-    fun getAllNodesWithNamespaceIDAndAccess(namespaceID: String, workspaceID: String, publicAccess: Int) : List<String> {
+    fun getAllNodesWithNamespaceIDAndAccess(namespaceID: String, workspaceID: String, publicAccess: Int): List<String> {
         return nodeRepository.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, publicAccess)
     }
 
-    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus) : List<String> {
+    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus): List<String> {
         return nodeRepository.getAllNodesWithNamespaceIDAndStatus(namespaceID, workspaceID, itemStatus)
     }
-
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
 
@@ -1079,7 +1087,7 @@ class NodeService( // Todo: Inject them from handlers
 
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userID: String): Node =
         nodeRequest.toNode(workspaceID, userID).also {
-            if(it.getRoughSizeOfEntity() > Constants.DDB_MAX_ITEM_SIZE)  throw WDNodeSizeLargeException("Node size is too large")
+            if (it.getRoughSizeOfEntity() > Constants.DDB_MAX_ITEM_SIZE) throw WDNodeSizeLargeException("Node size is too large")
         }
 
     private fun createNodeObjectFromUpdateShareNodeRequest(nodeRequest: UpdateSharedNodeRequest, workspaceID: String, namespaceID: String, userID: String): Node =
@@ -1101,10 +1109,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* to ensure that nodes at same level don't have same name */
-    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String, namespaceID: String): Map<String, String> =
+    private fun getArchivedNodesToRename(nodeIDList: List<String>, workspaceID: String, namespaceID: String, userID: String): Map<String, String> =
         runBlocking {
 
-            val jobToGetWorkspace = async { namespaceService.getNamespace(workspaceID, namespaceID) }
+            val jobToGetWorkspace = async { namespaceService.getNamespace(workspaceID, namespaceID, userID) }
 
             val jobToGetArchivedNodeIDToNameMap = async { getAllNodeIDToNodeNameMap(workspaceID, ItemStatus.ARCHIVED) }
             val jobToGetArchivedHierarchyRelationship =
@@ -1173,7 +1181,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getPublicNode(nodeID: String): Node {
         val publicNodeCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
-        val node = publicNodeCache.getNode(nodeID) ?: let{
+        val node = publicNodeCache.getNode(nodeID) ?: let {
             val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
             publicNodeCache.setNode(nodeID, nodeFromDB)
             return nodeFromDB
@@ -1203,14 +1211,10 @@ class NodeService( // Todo: Inject them from handlers
             Messages.SOURCE_ID_DESTINATION_ID_SAME
         }
 
-        val jobToGetSourceNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
-        val jobToGetDestinationNodeWorkspaceID = async { checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
+        val jobToGetSourceNodeWorkspaceID = async { nodeAccessService.checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
+        val jobToGetDestinationNodeWorkspaceID = async { nodeAccessService.checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
 
         jobToGetSourceNodeWorkspaceID.awaitAndThrowExceptionIfFalse(jobToGetDestinationNodeWorkspaceID, Messages.NODE_IDS_DO_NOT_EXIST)
-    }
-
-    private fun checkIfNodeExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
-        return nodeRepository.checkIfNodeExistsForWorkspace(nodeID, workspaceID)
     }
 
     private fun copyBlock(blockID: String, workspaceID: String, sourceNodeID: String, destinationNodeID: String) {
@@ -1236,60 +1240,25 @@ class NodeService( // Todo: Inject them from handlers
 
     fun shareNode(wdRequest: WDRequest, granterID: String, granterWorkspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
-        val userIDs = getUserIDsWithoutGranterID(sharedNodeRequest.userIDs, granterID) // remove granterID from userIDs if applicable.
+        val userIDs = AccessItemHelper.getUserIDsWithoutGranterID(sharedNodeRequest.userIDs, granterID) // remove granterID from userIDs if applicable.
 
         if (userIDs.isEmpty()) return
 
-        val nodeWorkspaceDetails = checkIfOwnerCanManageAndGetWorkspaceDetails(sharedNodeRequest.nodeID, granterWorkspaceID, granterID)
+        val nodeWorkspaceDetails = nodeAccessService.checkIfGranterCanManageAndGetWorkspaceDetails(sharedNodeRequest.nodeID, granterWorkspaceID, granterID)
         val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
-    private fun getUserIDsWithoutGranterID(userIDs: List<String>, ownerID: String): List<String> {
-        return userIDs.filter { id -> id != ownerID }
-    }
-
-    private fun checkIfOwnerCanManageAndGetWorkspaceDetails(nodeID: String, workspaceID: String, granterID: String): Map<String, String> {
-        var isNodeInCurrentWorkspace = false
-
-        if (checkIfNodeExistsForWorkspace(nodeID, workspaceID)) isNodeInCurrentWorkspace = true
-        else if (!nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(granterID)) {
-            throw NoSuchElementException("Node you're trying to share does not exist")
-        }
-
-        val workspaceDetailsMap = mutableMapOf<String, String>()
-
-        return when (isNodeInCurrentWorkspace) {
-            true -> {
-                workspaceDetailsMap["workspaceID"] = workspaceID
-                workspaceDetailsMap["workspaceOwner"] = granterID
-                workspaceDetailsMap
-            }
-            false -> {
-                nodeRepository.getNodeWorkspaceIDAndOwner(nodeID)
-            }
-        }
-    }
-
     fun getSharedNode(nodeID: String, userID: String): Entity {
-        require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { "Error Accessing Node" }
+        require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { Messages.ERROR_NODE_PERMISSION }
         return orderBlocks(nodeRepository.getNodeByNodeID(nodeID))
     }
 
     fun changeAccessType(wdRequest: WDRequest, granterID: String, workspaceID: String) {
         val updateAccessRequest = wdRequest as UpdateAccessTypesRequest
-        val nodeWorkspaceDetails = checkIfOwnerCanManageAndGetWorkspaceDetails(updateAccessRequest.nodeID, workspaceID, granterID)
+        val nodeWorkspaceDetails = nodeAccessService.checkIfGranterCanManageAndGetWorkspaceDetails(updateAccessRequest.nodeID, workspaceID, granterID)
         val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, updateAccessRequest.userIDToAccessTypeMap)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
-    }
-
-    private fun checkIfGranterCanManage(granterID: String, workspaceID: String, nodeID: String): Boolean {
-        return checkIfNodeExistsForWorkspace(nodeID, workspaceID) ||
-            nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE)).contains(granterID)
-    }
-
-    private fun checkIfUserHasWriteAccessOrOwner(nodeID: String, userID: String, workspaceID: String) : Boolean {
-        return  checkIfNodeExistsForWorkspace(nodeID, workspaceID) || nodeRepository.getUserIDsWithNodeAccess(nodeID, listOf(AccessType.MANAGE, AccessType.WRITE)).contains(userID)
     }
 
     fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
@@ -1300,22 +1269,24 @@ class NodeService( // Todo: Inject them from handlers
         return updateNode(node, storedNode, false)
     }
 
-    fun revokeSharedAccess(wdRequest: WDRequest, ownerID: String, workspaceID: String) {
+    fun revokeSharedAccess(wdRequest: WDRequest, revokerID: String, workspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
-        if (!checkIfGranterCanManage(ownerID, workspaceID, sharedNodeRequest.nodeID)) throw NoSuchElementException("Node you're trying to share does not exist")
 
-        // since PK and SK matter here for deletion, can fill dummy fields.
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, workspaceID, ownerID, ownerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        // check if the revoker has manage access
+        require(nodeAccessService.checkIfUserHasAccess(workspaceID, sharedNodeRequest.nodeID, revokerID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
+
+        // since only PK and SK matter here for deletion, can fill dummy fields.
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, workspaceID, revokerID, revokerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
         nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
     }
 
-    fun getAllSharedUsersOfNode(nodeID: String, userID: String, workspaceID: String) : Map<String, String>{
-        if(!checkIfUserHasWriteAccessOrOwner(nodeID, userID, workspaceID)) throw NoSuchElementException("Not Found")
+    fun getAllSharedUsersOfNode(nodeID: String, userID: String, workspaceID: String): Map<String, String> {
+        require(nodeAccessService.checkIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
         return nodeRepository.getSharedUserInformation(nodeID)
     }
 
-    fun getAccessDataForUser(nodeID: String, userID: String, workspaceID: String): String{
-        if(checkIfNodeExistsForWorkspace(nodeID, workspaceID)) return AccessType.MANAGE.name
+    fun getAccessDataForUser(nodeID: String, userID: String, workspaceID: String): String {
+        if (nodeAccessService.checkIfNodeExistsForWorkspace(nodeID, workspaceID)) return AccessType.MANAGE.name
         return nodeRepository.getUserNodeAccessRecord(nodeID, userID)
     }
 
@@ -1330,7 +1301,7 @@ class NodeService( // Todo: Inject them from handlers
         val list = mutableListOf<Map<String, String>>()
         for (nodeData in unprocessedData) {
             populateMapForSharedNodeData(nodeData, nodeAccessItemsMap).let {
-                if(it.isNotEmpty()) list.add(it)
+                if (it.isNotEmpty()) list.add(it)
             }
         }
         return list
@@ -1341,7 +1312,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun populateMapForSharedNodeData(nodeData: MutableMap<String, AttributeValue>, nodeAccessItemsMap: Map<String, NodeAccess>): Map<String, String> {
-        if( nodeData["itemStatus"]!!.s == ItemStatus.ARCHIVED.name ) return mapOf() // if the shared node has been archived, don't return data.
+        if (nodeData["itemStatus"]!!.s == ItemStatus.ARCHIVED.name) return mapOf() // if the shared node has been archived, don't return data.
         val map = mutableMapOf<String, String>()
 
         val nodeID = nodeData["SK"]!!.s
@@ -1351,8 +1322,7 @@ class NodeService( // Todo: Inject them from handlers
         map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
         map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
 
-
-        val metadata  = if(nodeData.containsKey("metadata")) nodeData["metadata"]!!.s else null
+        val metadata = if (nodeData.containsKey("metadata")) nodeData["metadata"]!!.s else null
         val nodeMetadataJson = """
             {
                 "createdAt" : ${nodeData["createdAt"]!!.n} ,
@@ -1366,12 +1336,11 @@ class NodeService( // Todo: Inject them from handlers
         return map
     }
 
-    fun getMetadataForNodesOfWorkspace(workspaceID: String) : Map<String, Map<String, Any?>> {
-       return  nodeRepository.getMetadataForNodesOfWorkspace(workspaceID)
+    fun getMetadataForNodesOfWorkspace(workspaceID: String): Map<String, Map<String, Any?>> {
+        return nodeRepository.getMetadataForNodesOfWorkspace(workspaceID)
     }
 
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
-
 }

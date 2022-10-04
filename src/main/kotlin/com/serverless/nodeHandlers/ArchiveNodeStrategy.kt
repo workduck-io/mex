@@ -12,7 +12,7 @@ class ArchiveNodeStrategy : NodeStrategy {
         /* since the path has been matched already, id cannot be null */
         return  input.pathParameters!!.id!!.let { namespaceID ->
             input.payload?.let { nodeIDsRequest ->
-                val nodeIDList =nodeService.archiveNodes(nodeIDsRequest, input.headers.workspaceID, namespaceID)
+                val nodeIDList =nodeService.archiveNodes(nodeIDsRequest, input.headers.workspaceID, namespaceID, input.tokenBody.userID)
 
                 ApiResponseHelper.generateStandardResponse(nodeIDList, Messages.ERROR_ARCHIVING_NODE)
             } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_ARCHIVING_NODE)

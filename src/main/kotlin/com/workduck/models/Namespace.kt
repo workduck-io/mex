@@ -36,7 +36,7 @@ class Namespace(
     @JsonSerialize(converter = IdentifierSerializer::class)
     @DynamoDBTypeConverted(converter = WorkspaceIdentifierConverter::class)
     @DynamoDBHashKey(attributeName = "PK")
-    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
+    var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultNamespace"),
 
 
     @JsonProperty("id")
