@@ -39,3 +39,5 @@ node_modules
 *.classpath
 reports
 sampleJson
+*/.warmup/**
+.warmup
