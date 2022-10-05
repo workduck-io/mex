@@ -55,13 +55,6 @@ object Messages {
     const val ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ACTIVE = "Either namespace does not exist or it is already active"
 
 
-    const val ERROR_GETTING_COMMENT = "Error getting comment"
-    const val ERROR_GETTING_COMMENTS = "Error getting comments"
-    const val ERROR_UPDATING_COMMENT = "Error updating comment"
-    const val ERROR_CREATING_COMMENT = "Error creating comment"
-    const val ERROR_DELETING_COMMENT = "Error deleting comment"
-
-
     const val ERROR_CREATING_SNIPPET = "Error creating snippet"
     const val ERROR_GETTING_SNIPPET = "Error getting snippet"
     const val ERROR_GETTING_SNIPPETS = "Error getting snippets"
