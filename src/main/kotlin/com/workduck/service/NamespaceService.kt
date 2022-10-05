@@ -145,60 +145,6 @@ class NamespaceService (
     }
 
 
-//    fun archiveNamespace(workspaceID: String, namespaceID: String) {
-//        val namespace = getNamespace(namespaceID, workspaceID).let { namespace ->
-//            require(namespace != null && namespace.publicAccess) { Messages.ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ARCHIVED }
-//            namespace
-//        }
-//        archiveOrUnarchiveNamespace(namespace, ItemStatus.ACTIVE, ItemStatus.ARCHIVED)
-//    }
-//
-//
-//    fun unarchiveNamespace(workspaceID: String, namespaceID: String) {
-//        val namespace = getNamespace(namespaceID, workspaceID).let { namespace ->
-//            require(namespace != null && !namespace.publicAccess) { Messages.ERROR_NAMESPACE_DOES_NOT_EXIST_OR_ACTIVE }
-//            namespace
-//        }
-//        archiveOrUnarchiveNamespace(namespace, ItemStatus.ARCHIVED, ItemStatus.ACTIVE)
-//    }
-//
-//    fun archiveOrUnarchiveNamespace(namespace: Namespace, nodeStatus: ItemStatus, targetStatus: ItemStatus) = runBlocking{
-//
-//        val nodeIDList = getAllNodesWithStatus(namespace, nodeStatus) /* get all nodes with nodeStatus ( opposite of targetStatus ) */
-//        launch { nodeService.unarchiveOrArchiveNodesInParallel(nodeIDList, namespace.id, targetStatus) }
-//        launch { setNamespaceStatusAndHierarchy(namespace, targetStatus) }
-//
-//    }
-//
-//    private fun getAllNodesWithStatus(namespace: Namespace, nodeStatus: ItemStatus) : List<String>{
-//        return when(nodeStatus){
-//            ItemStatus.ACTIVE -> {
-//                NodeHelper.getNodeIDsFromHierarchy(namespace.nodeHierarchyInformation)
-//            }
-//            ItemStatus.ARCHIVED -> {
-//                NodeHelper.getNodeIDsFromHierarchy(namespace.archivedNodeHierarchyInformation)
-//            }
-//        }
-//    }
-//
-//    private fun setNamespaceStatusAndHierarchy(namespace: Namespace, targetStatus: ItemStatus){
-//        when(targetStatus){
-//            ItemStatus.ARCHIVED -> {
-//                val newArchivedHierarchy = namespace.archivedNodeHierarchyInformation.toMutableList() + namespace.nodeHierarchyInformation
-//                namespace.archivedNodeHierarchyInformation = newArchivedHierarchy
-//                namespace.nodeHierarchyInformation = listOf()
-//            }
-//            ItemStatus.ACTIVE -> {
-//                val newActiveHierarchy = namespace.archivedNodeHierarchyInformation
-//            }
-//        }
-//    }
-//
-//    fun isNamespaceActive(workspaceID: String, namespaceID: String) : Boolean {
-//        return namespaceRepository.isNamespaceActive(workspaceID, namespaceID)
-//    }
-//
-
     companion object {
         private val LOG = LogManager.getLogger(NamespaceService::class.java)
     }

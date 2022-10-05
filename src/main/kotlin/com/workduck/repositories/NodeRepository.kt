@@ -16,7 +16,6 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes
 import com.amazonaws.services.dynamodbv2.model.TransactWriteItem
 import com.amazonaws.services.dynamodbv2.model.TransactWriteItemsRequest
 import com.amazonaws.services.dynamodbv2.model.Update
@@ -89,7 +88,7 @@ class NodeRepository(
             keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
             filterExpression = "AK = :AK", expressionAttributeValues = expressionAttributeValues
         ).let {
-            mapper.query(Node::class.java, it).map { node ->
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
             }
         }
@@ -106,7 +105,7 @@ class NodeRepository(
                 keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
                 filterExpression = "AK = :AK and publicAccess = :publicAccess", expressionAttributeValues = expressionAttributeValues
         ).let {
-            mapper.query(Node::class.java, it).map { node ->
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
             }
         }
@@ -123,7 +122,7 @@ class NodeRepository(
                 keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
                 filterExpression = "AK = :AK and itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
         ).let {
-            mapper.query(Node::class.java, it).map { node ->
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
             }
         }
@@ -311,7 +310,7 @@ class NodeRepository(
             keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "nodeData.$blockID, dataOrder",
             expressionAttributeValues = expressionAttributeValues
         ).let {
-            mapper.query(Node::class.java, it)
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig)
         }.firstOrNull()
     }
 
