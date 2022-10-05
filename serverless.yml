@@ -192,3 +192,4 @@ resources:
   - ${file(src/main/resources/api-gateway-errors.yml)}
   - ${file(src/main/resources/mex.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
+  - ${file(src/main/resources/vpc-resources.yml)}
