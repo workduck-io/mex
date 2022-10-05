@@ -49,7 +49,7 @@ class NodeAccessService(
         return nodeRepository.checkIfNodeExistsForWorkspace(nodeID, workspaceID)
     }
 
-    fun checkIfUserHasAccessToGetNode(userWorkspaceID: String, nodeID: String, userID: String, operationType: EntityOperationType) : Boolean {
+    fun getNamespaceIDAndCheckIfUserHasAccess(userWorkspaceID: String, nodeID: String, userID: String, operationType: EntityOperationType) : Boolean {
         val nodeWorkspaceNamespacePair = nodeRepository.getNodeWorkspaceAndNamespace(nodeID)
         require(nodeWorkspaceNamespacePair != null) { Messages.INVALID_NODE_ID}
 

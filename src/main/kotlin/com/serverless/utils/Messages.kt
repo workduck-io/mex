@@ -52,6 +52,8 @@ object Messages {
     const val ERROR_CREATING_NAMESPACE = "Error creating namespace"
     const val ERROR_DELETING_NAMESPACE = "Error deleting namespace"
     const val ERROR_NAMESPACE_PERMISSION = "Either the namespace does not exist or you do not have permissions"
+    const val ERROR_NAMESPACE_PRIVATE = "Namespace already private"
+    const val ERROR_NAMESPACE_PUBLIC = "Namespace already public"
     const val INVALID_NAMESPACE_ID  = "Invalid NamespaceID"
 
 

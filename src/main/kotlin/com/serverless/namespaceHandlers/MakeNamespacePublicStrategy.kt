@@ -9,7 +9,7 @@ import com.workduck.service.NamespaceService
 class MakeNamespacePublicStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
         return input.pathParameters?.id?.let {
-            namespaceService.makeNamespacePublic(it, input.headers.workspaceID)
+            namespaceService.makeNamespacePublic(it, input.headers.workspaceID, input.tokenBody.userID)
             ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_MAKING_NODE_PUBLIC)
         }!!
     }

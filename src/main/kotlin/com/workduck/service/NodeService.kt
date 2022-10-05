@@ -684,7 +684,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getNode(nodeID: String, workspaceID: String, userID: String, starredInfo: Boolean = false) = runBlocking {
 
-        require(nodeAccessService.checkIfUserHasAccessToGetNode(workspaceID, nodeID, userID, EntityOperationType.READ)) {
+        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.READ)) {
             Messages.ERROR_NODE_PERMISSION
         }
 
@@ -1171,11 +1171,13 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking deletedNodesList
     }
 
-    fun makeNodePublic(nodeID: String, workspaceID: String) {
+    fun makeNodePublic(nodeID: String, workspaceID: String, userID: String) {
+        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.MANAGE))
         pageRepository.togglePagePublicAccess(nodeID, workspaceID, 1)
     }
 
-    fun makeNodePrivate(nodeID: String, workspaceID: String) {
+    fun makeNodePrivate(nodeID: String, workspaceID: String, userID: String) {
+        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.MANAGE))
         pageRepository.togglePagePublicAccess(nodeID, workspaceID, 0)
     }
 
@@ -1263,7 +1265,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
         val nodeRequest = wdRequest as UpdateSharedNodeRequest
-        require(nodeRepository.getUserIDsWithNodeAccess(nodeRequest.id, listOf(AccessType.MANAGE, AccessType.WRITE)).contains(userID)) { "Error Accessing Node" }
+        require(nodeAccessService.checkIfNodeSharedWithUser(nodeRequest.id, userID, listOf(AccessType.MANAGE, AccessType.WRITE))) { Messages.ERROR_NODE_PERMISSION }
         val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id)
         val node = createNodeObjectFromUpdateShareNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, storedNode.namespaceIdentifier.id, userID)
         return updateNode(node, storedNode, false)

@@ -89,16 +89,18 @@ class NamespaceService (
     }
 
 
-    fun makeNamespacePublic(namespaceID: String, workspaceID: String) {
-        require( !namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already public"}
+    fun makeNamespacePublic(namespaceID: String, workspaceID: String, userID: String) {
+        require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NAMESPACE_PERMISSION }
+        require( !namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) { Messages.ERROR_NAMESPACE_PUBLIC }
         val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 0) /* get all private nodes */
         nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 1)
         namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 1)
 
     }
 
-    fun makeNamespacePrivate(namespaceID: String, workspaceID: String) {
-        require( namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) {"Namespace already private"}
+    fun makeNamespacePrivate(namespaceID: String, workspaceID: String, userID: String) {
+        require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NAMESPACE_PERMISSION }
+        require( namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) { Messages.ERROR_NAMESPACE_PRIVATE }
         val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 1) /* get all public nodes */
         nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 0)
         namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 0)
