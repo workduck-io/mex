@@ -16,6 +16,7 @@ import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.SharedNodeRequest
 import com.serverless.models.requests.UpdateAccessTypesRequest
+import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
@@ -1081,6 +1082,11 @@ class NodeService( // Todo: Inject them from handlers
             if(it.getRoughSizeOfEntity() > Constants.DDB_MAX_ITEM_SIZE)  throw WDNodeSizeLargeException("Node size is too large")
         }
 
+    private fun createNodeObjectFromUpdateShareNodeRequest(nodeRequest: UpdateSharedNodeRequest, workspaceID: String, namespaceID: String, userID: String): Node =
+            nodeRequest.toNode(workspaceID, namespaceID, userID).also {
+                if(it.getRoughSizeOfEntity() > Constants.DDB_MAX_ITEM_SIZE)  throw WDNodeSizeLargeException("Node size is too large")
+            }
+
     private fun createNodeObjectFromNodeBulkRequest(nodeBulkRequest: NodeBulkRequest, nodeTitle: String,
                                                     nodeID: String, workspaceID: String, userID: String): Node =
         nodeBulkRequest.toNode(nodeID, nodeTitle, workspaceID, userID)
@@ -1287,10 +1293,10 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
-        val nodeRequest = wdRequest as NodeRequest
+        val nodeRequest = wdRequest as UpdateSharedNodeRequest
         require(nodeRepository.getUserIDsWithNodeAccess(nodeRequest.id, listOf(AccessType.MANAGE, AccessType.WRITE)).contains(userID)) { "Error Accessing Node" }
         val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id)
-        val node = createNodeObjectFromNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, userID)
+        val node = createNodeObjectFromUpdateShareNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, storedNode.namespaceIdentifier.id, userID)
         return updateNode(node, storedNode, false)
     }
 
