@@ -171,6 +171,7 @@ class NodeService( // Todo: Inject them from handlers
                 }
                 else -> {
                     jobToGetNamespace.cancel()
+                    check(storedNode.itemStatus ==  ItemStatus.ACTIVE) { Messages.ERROR_UPDATING_ARCHIVED_NODE }
                     updateNode(node, storedNode, versionEnabled)
                 }
             }

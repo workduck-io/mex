@@ -20,6 +20,7 @@ object Messages {
     const val ERROR_DELETING_NODE = "Error deleting node"
     const val ERROR_UNARCHIVING_NODE = "Error un-archiving node"
     const val ERROR_ARCHIVING_NODE = "Error archiving node"
+    const val ERROR_UPDATING_ARCHIVED_NODE = "Cannot update archived node"
 
     const val ERROR_MAKING_NODE_PUBLIC = "Error making node public"
     const val ERROR_MAKING_NODE_PRIVATE = "Error making node private"
