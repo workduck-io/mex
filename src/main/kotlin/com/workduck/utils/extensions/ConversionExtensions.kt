@@ -4,6 +4,7 @@ import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
@@ -24,6 +25,19 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
                 data = this.data,
                 nodeMetaData = this.nodeMetadata
         )
+
+fun UpdateSharedNodeRequest.toNode(workspaceID: String, namespaceID: String, userID: String): Node =
+        Node(
+                id = this.id,
+                title = this.title,
+                namespaceIdentifier = NamespaceIdentifier(namespaceID),
+                workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+                lastEditedBy = userID,
+                tags = this.tags ,
+                data = this.data,
+                nodeMetaData = this.nodeMetadata
+        )
+
 
 
 fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: String, userID: String): Node {
