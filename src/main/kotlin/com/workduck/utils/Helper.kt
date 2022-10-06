@@ -3,6 +3,7 @@ package com.workduck.utils
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.logging.log4j.LogManager
@@ -15,7 +16,7 @@ object Helper {
 
     private val LOG = LogManager.getLogger(Helper::class.java)
 
-    val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
+    val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
     private fun uuidBase32(prefix: String): String? {
         return uuidBase32(UUID.randomUUID(), java.lang.StringBuilder(prefix)).toString()
