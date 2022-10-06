@@ -14,7 +14,7 @@ data class SharedNodeRequest(
 
     val nodeID: String,
 
-    val userIDs: List<String> = listOf(),
+    val userIDs: List<String>,
 
     @JsonDeserialize(converter = AccessTypeDeserializer::class)
     val accessType: AccessType = AccessType.MANAGE
