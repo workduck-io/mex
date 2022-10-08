@@ -11,7 +11,7 @@ class SnippetStrategyFactory {
 
         const val updateSameSnippetVersion = "PUT /snippet"
 
-        const val deleteSnippet = "DELETE /snippet/{id}/{version}"
+        const val deleteSnippet = "DELETE /snippet/{id}"
 
         const val deleteAllVersionsOfSnippet = "DELETE /snippet/{id}/all"
 

@@ -24,7 +24,7 @@ object SnippetHelper {
     }
 
 
-    fun getSnippetVersion(version : String) : Int{
+    fun getValidVersion(version : String) : Int{
         return if(version.toDoubleOrNull() != null) checkForWholeNumber(version)
         else throw IllegalArgumentException("Enter a valid version")
     }
