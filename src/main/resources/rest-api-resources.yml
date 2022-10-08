@@ -358,9 +358,8 @@ Snippet:
         authorizer: mexAuthorizer
 
 
-    #delete given snippet ids from archive section ( hence, permanently )
     - httpApi:
-        path: /snippet/{id}/{version}
+        path: /snippet/{id}
         method: delete
         authorizer: mexAuthorizer
 
@@ -421,9 +420,8 @@ Snippet:
         authorizer: mexAuthorizer
 
 
-    #delete given snippet ids from archive section ( hence, permanently )
     - httpApi:
-        path: /v1/snippet/{id}/{version}
+        path: /v1/snippet/{id}
         method: delete
         authorizer: mexAuthorizer
 

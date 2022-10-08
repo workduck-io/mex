@@ -161,8 +161,12 @@ class SnippetService {
     }
 
 
-    fun deleteSnippetVersion(snippetID: String, version: Int, workspaceID: String) {
-        snippetRepository.deleteSnippetByVersion(snippetID, workspaceID, version)
+    fun deleteSnippet(snippetID: String, version: Int? = null, workspaceID: String) {
+        val versionToDelete = when(version != null){
+            true -> version
+            false -> getLatestVersionNumberOfSnippet(snippetID, workspaceID)
+        }
+        snippetRepository.deleteSnippetByVersion(snippetID, workspaceID, versionToDelete)
     }
 
     fun deleteAllVersionsOfSnippet(snippetID: String, workspaceID: String){
