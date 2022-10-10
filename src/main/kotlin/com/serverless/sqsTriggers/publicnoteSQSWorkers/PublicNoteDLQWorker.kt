@@ -3,6 +3,7 @@ package com.serverless.sqsTriggers.publicnoteSQSWorkers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
 import com.workduck.models.Node
 import com.workduck.repositories.cache.NodeCache
@@ -18,8 +19,10 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
         sqsEvent?.also { event ->
             event.records?.let { records ->
                 records.map { record ->
-                    val nodeString = record.body
-                    val node: Node = nodeString.toNode()
+                    val sqsPayload = record.body
+                    val message: MutableMap<String, Any?> = Helper.objectMapper.readValue(sqsPayload)
+                    val nodeJSON = Helper.objectMapper.writeValueAsString(message.get("NewImage"))
+                    val node = nodeJSON.toNode()
 
                     try {
                         if(node.hasPublicAccess()) {
@@ -52,4 +55,4 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
     }
 }
 
-private fun String.toNode(): Node = Helper.objectMapper.convertValue(this, Node::class.java)
+private fun String.toNode(): Node = Helper.objectMapper.readValue(this, Node::class.java)
