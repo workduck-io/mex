@@ -26,8 +26,6 @@ class NamespaceStrategyFactory {
 
         const val revokeNamespaceAccess = "DELETE /shared/namespace"
 
-        const val getAllSharedNamespaces = "GET /shared/namespace/all"
-
         const val getAllSharedUsers = "GET /shared/namespace/{id}/users"
 
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
@@ -42,7 +40,6 @@ class NamespaceStrategyFactory {
             getNodeHierarchyObject to GetHierarchyStrategy(),
             shareNamespace to ShareNamespaceStrategy(),
             revokeNamespaceAccess to RevokeNamespaceAccessStrategy(),
-            getAllSharedNamespaces to GetAllSharedNamespacesStrategy(),
             getAllSharedUsers to GetAllSharedUsersStrategy()
         )
 

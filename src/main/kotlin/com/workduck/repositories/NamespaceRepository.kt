@@ -38,6 +38,8 @@ class NamespaceRepository(
         else -> System.getenv("TABLE_NAME")
     }
 
+    private val projectionExpressionForNamespaceMetadata = "PK, SK, namespaceName, metadata, createdAt, updatedAt"
+
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Namespace>): Namespace? {
         return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig)
@@ -248,6 +250,24 @@ class NamespaceRepository(
     }
 
 
+    fun getAllNamespaceIDsForWorkspace(workspaceID: String): List<String> {
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(ItemType.Namespace.name.uppercase())
+
+
+        return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)",
+                expressionAttributeValues = expressionAttributeValues, projectionExpression = "PK, SK").let {
+                    mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).map { namespace ->
+                        namespace.id
+                    }
+                }
+    }
+
+
+
+    /* returns map of namespaceID to namespaceAccess */
     fun getAllSharedNamespacesWithUser(userID: String): Map<String, NamespaceAccess> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(userID)
@@ -269,7 +289,7 @@ class NamespaceRepository(
             keysAndAttributes.addHashAndRangePrimaryKey("PK", namespaceToWorkspacePair.second, "SK", namespaceToWorkspacePair.first)
         }
 
-        keysAndAttributes.withProjectionExpression("PK, SK, namespaceName, metadata, createdAt, updatedAt")
+        keysAndAttributes.withProjectionExpression(projectionExpressionForNamespaceMetadata)
         val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
         val itemOutcome = dynamoDB.batchGetItem(spec)
 

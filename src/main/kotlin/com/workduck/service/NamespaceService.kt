@@ -111,6 +111,7 @@ class NamespaceService (
         return namespaceRepository.getAllNamespaceData(workspaceID)
     }
 
+
     private fun checkIfNamespaceNameExists(workspaceID: String, namespaceName: String) : Boolean {
         return namespaceRepository.checkIfNamespaceNameExists(workspaceID, namespaceName)
     }
@@ -187,32 +188,64 @@ class NamespaceService (
         namespaceRepository.deleteBatchNamespaceAccessItems(namespaceAccessItems)
     }
 
-    fun getAllSharedNamespacesWithUser(userID: String): List<Map<String, String>> {
-        val namespaceAccessItemsMap = namespaceRepository.getAllSharedNamespacesWithUser(userID)
-        return getNamespaceTitleWithIDs(namespaceAccessItemsMap)
+
+    fun getAllNamespaceMetadata(workspaceID: String, userID: String): List<Map<String, String?>> = runBlocking {
+        val jobToGetListOfNamespacesInOwnWorkspace = async { namespaceRepository.getAllNamespaceIDsForWorkspace(workspaceID) }
+
+        val jobToGetAccessItemsForSharedNamespaces = async {  namespaceRepository.getAllSharedNamespacesWithUser(userID) }
+
+
+        val setOfNamespaceIDToWorkspaceID = mutableSetOf<Pair<String, String>>()
+        jobToGetListOfNamespacesInOwnWorkspace.await().map {
+            setOfNamespaceIDToWorkspaceID.add(Pair(it, workspaceID))
+        }
+
+        return@runBlocking getNamespaceTitleWithIDs(jobToGetAccessItemsForSharedNamespaces.await(), setOfNamespaceIDToWorkspaceID)
+
+    }
+
+    fun getAllNamespacesOfWorkspace(workspaceID: String): List<Map<String, String?>> {
+        val namespaceIDsOfWorkspace = namespaceRepository.getAllNamespaceIDsForWorkspace(workspaceID)
+
+        val setOfNamespaceIDToWorkspaceID = mutableSetOf<Pair<String, String>>()
+
+        namespaceIDsOfWorkspace.map {
+            setOfNamespaceIDToWorkspaceID.add(Pair(it, workspaceID))
+        }
+
+        return getNamespaceTitleWithIDs(emptyMap(), setOfNamespaceIDToWorkspaceID)
+
+    }
+
+    fun getAllSharedNamespacesWithUser(userID: String): List<Map<String, String?>> {
+        val accessItemsMapForSharedNamespaces = namespaceRepository.getAllSharedNamespacesWithUser(userID)
+        return getNamespaceTitleWithIDs(accessItemsMapForSharedNamespaces, mutableSetOf())
     }
 
 
-    fun getNamespaceTitleWithIDs(namespaceAccessItemsMap: Map<String, NamespaceAccess>): List<Map<String, String>> {
-        val setOfNamespaceIDWorkspaceID = createSetFromNamespaceAccessItems(namespaceAccessItemsMap.values.toList())
+    fun getNamespaceTitleWithIDs(namespaceAccessItemsMap: Map<String, NamespaceAccess>, setOfNamespaceIDWorkspaceID: MutableSet<Pair<String, String>>): List<Map<String, String?>> {
+        setOfNamespaceIDWorkspaceID.addAll(createSetFromNamespaceAccessItems(namespaceAccessItemsMap.values.toList()))
+
         val unprocessedData = namespaceRepository.batchGetNamespaceMetadataAndTitle(setOfNamespaceIDWorkspaceID)
-        val list = mutableListOf<Map<String, String>>()
+        val listOfNamespaceData = mutableListOf<Map<String, String?>>()
+
         for (namespaceData in unprocessedData) {
             populateMapForSharedNamespaceData(namespaceData, namespaceAccessItemsMap).let {
-                if(it.isNotEmpty()) list.add(it)
+                if(it.isNotEmpty()) listOfNamespaceData.add(it)
             }
         }
-        return list
+
+        return listOfNamespaceData
     }
 
-    private fun populateMapForSharedNamespaceData(namespaceData: MutableMap<String, AttributeValue>, namespaceAccessItemsMap: Map<String, NamespaceAccess>): Map<String, String> {
-        val map = mutableMapOf<String, String>()
+    private fun populateMapForSharedNamespaceData(namespaceData: MutableMap<String, AttributeValue>, namespaceAccessItemsMap: Map<String, NamespaceAccess>): Map<String, String?> {
+        val map = mutableMapOf<String, String?>()
 
         val namespaceID = namespaceData["SK"]!!.s
         map["namespaceID"] = namespaceID
         map["namespaceTitle"] = namespaceData["namespaceName"]!!.s
-        map["accessType"] = namespaceAccessItemsMap[namespaceID]!!.accessType.name
-        map["granterID"] = namespaceAccessItemsMap[namespaceID]!!.granterID
+        map["accessType"] = namespaceAccessItemsMap[namespaceID]?.accessType?.name ?: AccessType.MANAGE.name
+        map["granterID"] = namespaceAccessItemsMap[namespaceID]?.granterID
 
 
 
