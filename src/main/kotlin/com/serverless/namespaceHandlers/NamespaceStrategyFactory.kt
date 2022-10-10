@@ -22,6 +22,12 @@ class NamespaceStrategyFactory {
 
         const val getNodeHierarchyObject = "GET /namespace/all/hierarchy"
 
+        const val shareNamespace = "POST /shared/namespace"
+
+        const val revokeNamespaceAccess = "DELETE /shared/namespace"
+
+        const val getAllSharedUsers = "GET /shared/namespace/{id}/users"
+
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),
@@ -31,7 +37,10 @@ class NamespaceStrategyFactory {
             makeNamespacePublicObject to MakeNamespacePublicStrategy(),
             makeNamespacePrivateObject to MakeNamespacePrivateStrategy(),
             getPublicNamespaceObject to GetPublicNamespaceStrategy(),
-            getNodeHierarchyObject to GetHierarchyStrategy()
+            getNodeHierarchyObject to GetHierarchyStrategy(),
+            shareNamespace to ShareNamespaceStrategy(),
+            revokeNamespaceAccess to RevokeNamespaceAccessStrategy(),
+            getAllSharedUsers to GetAllSharedUsersStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {

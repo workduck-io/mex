@@ -518,6 +518,22 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+      path: /shared/namespace
+      method: post
+      authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /shared/namespace
+        method: delete
+        authorizer: mexAuthorizer
+
+
+    - httpApi:
+        path: /shared/namespace/{id}/users
+        method: get
+        authorizer: mexAuthorizer
+
     #################### v1 api paths ####################
 
     - httpApi:
@@ -562,6 +578,22 @@ Namespace:
 
     - httpApi:
         path: /v1/namespace/all/hierarchy
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/namespace
+        method: post
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/namespace
+        method: delete
+        authorizer: mexAuthorizer
+
+    ## Get all users with whom the namespace has been shared
+    - httpApi:
+        path: /v1/shared/namespace/{id}/users
         method: get
         authorizer: mexAuthorizer
 

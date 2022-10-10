@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
 import com.serverless.utils.Constants.getCurrentTime
+import com.serverless.utils.Messages
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.Element
@@ -32,7 +33,7 @@ import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeVersion
-import com.workduck.utils.AccessItemHelper.getAccessItemPK
+import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.DDBTransactionHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -466,6 +467,26 @@ class NodeRepository(
         }.isNotEmpty()
     }
 
+    fun getNodeWorkspaceAndNamespace(nodeID: String): Pair<String, String>? {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+
+        return DynamoDBQueryExpression<Node>().queryWithIndex( index = "SK-PK-Index",
+                keyConditionExpression = "SK = :sk and begins_with(PK, :pK)", projectionExpression = "PK, AK",
+                expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig)
+        }.firstOrNull()?.let { node ->
+            Pair(node.workspaceIdentifier.id, node.namespaceIdentifier.id)
+        }
+    }
+
+
+
+
+
+
     fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus): Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
@@ -491,12 +512,13 @@ class NodeRepository(
     }
 
     fun checkIfAccessRecordExists(nodeID: String, userID: String): Boolean {
-        return mapper.load(NodeAccess::class.java, getAccessItemPK(nodeID), userID, dynamoDBMapperConfig) != null
+        return mapper.load(NodeAccess::class.java, AccessItemHelper.getNodeAccessItemPK(nodeID), userID, dynamoDBMapperConfig) != null
     }
 
-    fun getUserIDsWithNodeAccess(nodeID: String, accessTypeList: List<AccessType>): List<String> {
+    fun checkIfUserHasAccess(nodeID: String, userID: String, accessTypeList: List<AccessType>): Boolean {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNodeAccessItemPK(nodeID))
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
         return DynamoDBQueryExpression<NodeAccess>().query(
@@ -504,12 +526,12 @@ class NodeRepository(
             projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
-        }.filter { it.accessType in accessTypeList }.map { accessItem -> accessItem.userID }
+        }.filter { it.accessType in accessTypeList }.map { accessItem -> accessItem.userID }.isNotEmpty()
     }
 
     fun getUserNodeAccessRecord(nodeID: String, userID: String) : String {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNodeAccessItemPK(nodeID))
         expressionAttributeValues[":SK"] = AttributeValue(userID)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
@@ -523,7 +545,7 @@ class NodeRepository(
 
     fun getSharedUserInformation(nodeID: String) : Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":PK"] = AttributeValue(getAccessItemPK(nodeID))
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNodeAccessItemPK(nodeID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
         return DynamoDBQueryExpression<NodeAccess>().query(

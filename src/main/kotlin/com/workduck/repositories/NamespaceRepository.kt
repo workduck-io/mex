@@ -5,16 +5,23 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
+import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
+import com.workduck.models.AccessType
 import com.workduck.models.Identifier
+import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
+import com.workduck.models.NamespaceAccess
+import com.workduck.models.Node
+import com.workduck.models.NodeAccess
+import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
@@ -30,6 +37,8 @@ class NamespaceRepository(
         null -> "local-mex" /* for local testing without serverless offline */
         else -> System.getenv("TABLE_NAME")
     }
+
+    private val projectionExpressionForNamespaceMetadata = "PK, SK, namespaceName, metadata, createdAt, updatedAt"
 
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Namespace>): Namespace? {
@@ -191,6 +200,125 @@ class NamespaceRepository(
         }
 
     }
+
+    fun getWorkspaceIDOfNamespace(namespaceID: String): String {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+
+
+        return DynamoDBQueryExpression<Namespace>().queryWithIndex(
+                index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { namespaceList ->
+                namespaceList.firstOrNull()?.id ?: throw NoSuchElementException("Requested Resource Not Found")
+            }
+        }
+    }
+
+    fun checkIfUserHasAccess(namespaceID: String, userID: String, accessTypeList: List<AccessType>): Boolean {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNamespaceAccessItemPK(namespaceID))
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NamespaceAccess.name)
+
+        return DynamoDBQueryExpression<NamespaceAccess>().query(
+                keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(NamespaceAccess::class.java, it, dynamoDBMapperConfig)
+        }.filter { it.accessType in accessTypeList }.map { accessItem -> accessItem.userID }.isNotEmpty()
+    }
+
+    fun createBatchNamespaceAccessItem(namespaceAccessItems: List<NamespaceAccess>) {
+        val failedBatches = mapper.batchWrite(namespaceAccessItems, emptyList<Any>(), dynamoDBMapperConfig)
+        Helper.logFailureForBatchOperation(failedBatches)
+    }
+
+    fun checkIfNamespaceExistsForWorkspace(namespaceID: String, workspaceID: String): Boolean {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
+        expressionAttributeValues[":sk"] = AttributeValue().withS(namespaceID)
+
+        return DynamoDBQueryExpression<Namespace>().query(
+                keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "PK",
+                expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig)
+        }.isNotEmpty()
+    }
+
+
+    fun getAllNamespaceIDsForWorkspace(workspaceID: String): List<String> {
+
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(ItemType.Namespace.name.uppercase())
+
+
+        return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)",
+                expressionAttributeValues = expressionAttributeValues, projectionExpression = "PK, SK").let {
+                    mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).map { namespace ->
+                        namespace.id
+                    }
+                }
+    }
+
+
+
+    /* returns map of namespaceID to namespaceAccess */
+    fun getAllSharedNamespacesWithUser(userID: String): Map<String, NamespaceAccess> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":PK"] = AttributeValue(IdentifierType.NAMESPACE_ACCESS.name)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NamespaceAccess.name)
+
+        return DynamoDBQueryExpression<NamespaceAccess>().queryWithIndex(
+                index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                filterExpression = "itemType = :itemType", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(NamespaceAccess::class.java, it, dynamoDBMapperConfig).associateBy { namespaceAccess -> namespaceAccess.namespace.id }
+        }
+    }
+
+    fun batchGetNamespaceMetadataAndTitle(setOfNamespaceIDWorkspaceID: Set<Pair<String, String>>) : MutableList<MutableMap<String, AttributeValue>>{
+        if(setOfNamespaceIDWorkspaceID.isEmpty()) return mutableListOf()
+        val keysAndAttributes = TableKeysAndAttributes(tableName)
+        for (namespaceToWorkspacePair in setOfNamespaceIDWorkspaceID) {
+            keysAndAttributes.addHashAndRangePrimaryKey("PK", namespaceToWorkspacePair.second, "SK", namespaceToWorkspacePair.first)
+        }
+
+        keysAndAttributes.withProjectionExpression(projectionExpressionForNamespaceMetadata)
+        val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
+        val itemOutcome = dynamoDB.batchGetItem(spec)
+
+        return itemOutcome.batchGetItemResult.responses[tableName]!!
+    }
+
+
+    fun deleteBatchNamespaceAccessItems(namespaceAccessItems: List<NamespaceAccess>) {
+        val failedBatches = mapper.batchWrite(emptyList<Any>(), namespaceAccessItems, dynamoDBMapperConfig)
+        Helper.logFailureForBatchOperation(failedBatches)
+    }
+
+    fun getSharedUserInformation(namespaceID: String) : Map<String, String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNamespaceAccessItemPK(namespaceID))
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NamespaceAccess.name)
+
+        return DynamoDBQueryExpression<NamespaceAccess>().query(
+                keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(NamespaceAccess::class.java, it, dynamoDBMapperConfig).associate { accessItem ->
+                accessItem.userID to accessItem.accessType.name
+            }
+        }
+    }
+
+
+
 //
 //
 //    fun getActiveNamespace(workspaceID: String, namespaceID: String): Namespace? {
