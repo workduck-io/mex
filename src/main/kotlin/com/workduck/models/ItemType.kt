@@ -14,5 +14,6 @@ enum class ItemType {
     Tag,
     NodeSchema,
     Snippet,
-    NodeAccess
+    NodeAccess,
+    NamespaceAccess
 }

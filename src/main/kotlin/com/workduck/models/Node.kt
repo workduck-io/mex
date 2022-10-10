@@ -30,6 +30,13 @@ enum class NodeStatus {
     UNLINKED
 }
 
+enum class EntityOperationType {
+    EDIT,
+    READ,
+    MANAGE
+
+}
+
 @DynamoDBTable(tableName = "local-mex")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Node(
