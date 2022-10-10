@@ -4,6 +4,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
   PrivateSubnet1:
+    DependsOn: ElasticacheVpc
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: ${self:provider.region}a
@@ -11,6 +12,7 @@ Resources:
       VpcId:
         Ref: ElasticacheVpc
   PrivateSubnet2:
+    DependsOn: ElasticacheVpc
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: ${self:provider.region}b
@@ -40,3 +42,10 @@ Resources:
         - Ref: PrivateSubnet2
       VpcId:
         Ref: ElasticacheVpc
+  ElasticCacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: "Cache Subnet Group"
+      SubnetIds:
+        - Ref: PrivateSubnet1
+        - Ref: PrivateSubnet2
