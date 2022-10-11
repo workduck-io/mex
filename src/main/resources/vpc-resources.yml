@@ -4,26 +4,22 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
   PrivateSubnet1:
-    DependsOn: ElasticacheVpc
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: ${self:provider.region}a
       CidrBlock: 10.0.1.0/24
       VpcId:
         Ref: ElasticacheVpc
-  PrivateSubnet2:
-    DependsOn: ElasticacheVpc
-    Type: AWS::EC2::Subnet
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
     Properties:
-      AvailabilityZone: ${self:provider.region}b
-      CidrBlock: 10.0.2.0/24
       VpcId:
         Ref: ElasticacheVpc
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow all traffic
-      GroupName: ${self:service}-${self:provider.stage}-lambdaSecurityGroup
+      GroupName: ${self:service}-${opt:stage, self:provider.stage}-lambdaSecurityGroup
       VpcId:
         Ref: ElasticacheVpc
       SecurityGroupIngress:
@@ -39,7 +35,6 @@ Resources:
       VpcEndpointType: Interface
       SubnetIds:
         - Ref: PrivateSubnet1
-        - Ref: PrivateSubnet2
       VpcId:
         Ref: ElasticacheVpc
   ElasticCacheSubnetGroup:
@@ -48,4 +43,3 @@ Resources:
       Description: "Cache Subnet Group"
       SubnetIds:
         - Ref: PrivateSubnet1
-        - Ref: PrivateSubnet2

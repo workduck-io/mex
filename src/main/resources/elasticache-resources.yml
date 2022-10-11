@@ -1,13 +1,14 @@
 Resources:
-  ElasticCacheCluster:
-    DependsOn: LambdaSecurityGroup
-    Type: AWS::ElastiCache::CacheCluster
+  PublicNoteElasticCacheCluster:
+    Type: AWS::ElastiCache::ReplicationGroup
     Properties:
+      ReplicationGroupDescription: "Public note cache cluster"
+      AutomaticFailoverEnabled: true
       AutoMinorVersionUpgrade: true
       Engine: redis
       CacheNodeType: cache.t3.small
-      NumCacheNodes: 1
-      VpcSecurityGroupIds:
+      NumCacheClusters: 2
+      SecurityGroupIds:
         - "Fn::GetAtt": LambdaSecurityGroup.GroupId
       CacheSubnetGroupName:
         Ref: ElasticCacheSubnetGroup

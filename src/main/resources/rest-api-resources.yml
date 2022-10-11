@@ -17,7 +17,6 @@ PublicNoteSQSWorker:
   vpc:
     subnetIds:
       - Ref: PrivateSubnet1
-      - Ref: PrivateSubnet2
     securityGroupIds:
       - Ref: LambdaSecurityGroup
 
@@ -32,18 +31,11 @@ PublicNoteWorker:
   vpc:
     subnetIds:
       - Ref: PrivateSubnet1
-      - Ref: PrivateSubnet2
     securityGroupIds:
       - Ref: LambdaSecurityGroup
 
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
-  vpc:
-    subnetIds:
-      - Ref: PrivateSubnet1
-      - Ref: PrivateSubnet2
-    securityGroupIds:
-      - Ref: LambdaSecurityGroup
   events:
     - httpApi:
         path: /node/{id}
