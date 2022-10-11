@@ -12,8 +12,8 @@ class ClonePublicSnippetStrategy: SnippetStrategy {
         val version = input.pathParameters?.version?.let { SnippetHelper.getValidVersion(it) } !!
 
         return input.pathParameters.id?.let { snippetID ->
-            snippetService.clonePublicSnippet(snippetID, version, input.tokenBody.userID, input.headers.workspaceID).let {
-                ApiResponseHelper.generateStandardResponse(SnippetHelper.convertSnippetToSnippetResponse(it), Messages.ERROR_CLONING_SNIPPET)
+            snippetService.clonePublicSnippet(snippetID, version, input.tokenBody.userID, input.headers.workspaceID).let { newSnippetID ->
+                ApiResponseHelper.generateStandardResponse(newSnippetID, Messages.ERROR_CLONING_SNIPPET)
             }
         }!! /* id will always exist ( non-null ) since path is being matched */
 

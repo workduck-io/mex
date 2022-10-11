@@ -105,10 +105,10 @@ class SnippetService {
     }
 
 
-    private fun createSnippetWithVersion(snippet: Snippet, version: Int = 1) : Entity{
+    private fun createSnippetWithVersion(snippet: Snippet, version: Int = 1){
         setMetadata(snippet)
         snippet.setVersion(version)
-        return repository.create(snippet)
+        repository.create(snippet)
     }
 
     fun getSnippet(snippetID: String, workspaceID: String, version: Int? = null) : Snippet? {
@@ -184,10 +184,11 @@ class SnippetService {
         }
     }
 
-    fun clonePublicSnippet(snippetID: String, version: Int, userID: String, workspaceID: String): Entity {
+    fun clonePublicSnippet(snippetID: String, version: Int, userID: String, workspaceID: String): String {
         val publicSnippet = getPublicSnippet(snippetID, version) as Snippet? ?: throw NoSuchElementException("Requested Snippet Not Found")
         val newSnippet = createSnippetFromPublicSnippet(publicSnippet, userID, workspaceID)
-        return createSnippetWithVersion(newSnippet)
+        createSnippetWithVersion(newSnippet)
+        return newSnippet.id
 
     }
 

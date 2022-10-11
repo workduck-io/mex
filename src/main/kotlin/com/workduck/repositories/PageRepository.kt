@@ -37,11 +37,11 @@ class PageRepository <T : Page> (
         private val tableName: String
 ) : Repository<T>{
 
-    override fun create(t: T): T {
+    override fun create(t: T) {
         TODO("Not yet implemented")
     }
 
-    override fun update(t: T): T {
+    override fun update(t: T) {
         TODO("Not yet implemented")
     }
 

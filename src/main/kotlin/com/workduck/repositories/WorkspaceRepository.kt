@@ -31,11 +31,11 @@ class WorkspaceRepository(
         TODO("Not yet implemented")
     }
 
-    override fun create(t: Workspace): Workspace {
+    override fun create(t: Workspace) {
         TODO("Not yet implemented")
     }
 
-    override fun update(t: Workspace): Workspace {
+    override fun update(t: Workspace) {
         TODO("Not yet implemented")
     }
 

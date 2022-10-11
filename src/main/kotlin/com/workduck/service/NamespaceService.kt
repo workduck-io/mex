@@ -58,10 +58,10 @@ class NamespaceService (
     val namespaceAccessService: NamespaceAccessService = NamespaceAccessService(namespaceRepository)
 ) {
 
-    fun createNamespace(namespaceRequest: WDRequest, workspaceID: String): Entity {
+    fun createNamespace(namespaceRequest: WDRequest, workspaceID: String) {
         val namespace: Namespace = (namespaceRequest as NamespaceRequest).toNamespace(workspaceID)
         require(!checkIfNamespaceNameExists(workspaceID, namespace.name)) { "Cannot use an existing Namespace Name" }
-        return repository.create(namespace)
+        repository.create(namespace)
     }
 
     fun getNamespace(workspaceID: String, namespaceID: String, userID: String): Namespace? {

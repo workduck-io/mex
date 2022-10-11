@@ -16,7 +16,7 @@ class CreateNodeStrategy : NodeStrategy {
         return input.payload?.let { nodeRequest ->
             nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID)
             ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_CREATING_NODE)
-        } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.ERROR_CREATING_NODE)
+        } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
 
     }
 }
