@@ -14,7 +14,7 @@ import com.workduck.service.NamespaceService
 class DeleteNamespaceStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
         return input.pathParameters?.id?.let { namespaceID ->
-            namespaceService.deleteNamespace(namespaceID, input.headers.workspaceID).let {
+            namespaceService.deleteNamespace(namespaceID, input.headers.workspaceID, input.tokenBody.userID).let {
                 ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_DELETING_NAMESPACE)
             }
         }!!

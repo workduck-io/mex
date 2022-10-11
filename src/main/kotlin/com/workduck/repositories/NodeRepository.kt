@@ -511,6 +511,11 @@ class NodeRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
+    fun deleteBatchNodes(nodes: List<Node>) {
+        val failedBatches = mapper.batchWrite(emptyList<Any>(), nodes, dynamoDBMapperConfig)
+        Helper.logFailureForBatchOperation(failedBatches)
+    }
+
     fun checkIfAccessRecordExists(nodeID: String, userID: String): Boolean {
         return mapper.load(NodeAccess::class.java, AccessItemHelper.getNodeAccessItemPK(nodeID), userID, dynamoDBMapperConfig) != null
     }

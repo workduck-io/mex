@@ -1048,8 +1048,14 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, publicAccess)
     }
 
-    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus): List<String> {
-        return nodeRepository.getAllNodesWithNamespaceIDAndStatus(namespaceID, workspaceID, itemStatus)
+    fun batchDeleteNodes(listOfNodeIDs : List<String>, workspaceID: String){
+        val nodesWithValidPKSK = listOfNodeIDs.map { nodeID ->
+            Node( id = nodeID,
+                  workspaceIdentifier = WorkspaceIdentifier(workspaceID))
+        }
+
+        nodeRepository.deleteBatchNodes(nodesWithValidPKSK)
+
     }
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
