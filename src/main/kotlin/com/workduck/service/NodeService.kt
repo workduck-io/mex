@@ -122,18 +122,11 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun createNode(node: Node, versionEnabled: Boolean): Entity? = runBlocking {
+    fun createNode(node: Node) = runBlocking {
         setMetadataOfNodeToCreate(node)
-
         launch { createTags(node.tags, node.id, node.workspaceIdentifier.id) }
-        return@runBlocking if (versionEnabled) {
-            node.lastVersionCreatedAt = node.createdAt
-            val nodeVersion: NodeVersion = createNodeVersionFromNode(node)
-            node.nodeVersionCount = 1
-            nodeRepository.createNodeWithVersion(node, nodeVersion)
-        } else {
-            repository.create(node)
-        }
+        repository.create(node)
+
     }
 
     private fun createNodeVersionFromNode(node: Node): NodeVersion {
@@ -153,7 +146,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userID: String, versionEnabled: Boolean = false): Entity? =
+    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userID: String) =
         runBlocking {
 
             val nodeRequest: NodeRequest = request as NodeRequest
@@ -177,13 +170,13 @@ class NodeService( // Todo: Inject them from handlers
             return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
                 null -> {
                     updateNodeAttributesInSingleCreate(node, nodeRequest, jobToGetNamespace.await())
-                    val jobToCreateNode = async { createNode(node, versionEnabled) }
+                    val jobToCreateNode = async { createNode(node) }
                     jobToCreateNode.await()
                 }
                 else -> {
                     jobToGetNamespace.cancel()
                     require(storedNode.itemStatus ==  ItemStatus.ACTIVE) { Messages.ERROR_UPDATING_ARCHIVED_NODE }
-                    updateNode(node, storedNode, versionEnabled)
+                    updateNode(node, storedNode)
                 }
             }
         }
@@ -972,7 +965,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
     }
 
-    fun updateNode(node: Node, storedNode: Node, versionEnabled: Boolean): Entity? = runBlocking {
+    fun updateNode(node: Node, storedNode: Node)  = runBlocking {
 
         Page.populatePageWithCreatedAndPublicFields(node, storedNode)
 
@@ -988,23 +981,9 @@ class NodeService( // Todo: Inject them from handlers
         launch { updateHierarchyIfRename(node, storedNode) }
 
         launch { updateTags(node.tags, storedNode.tags, node.id, node.workspaceIdentifier.id) }
-        if (versionEnabled) {
-            /* if the time diff b/w the latest version ( in version table ) and current node's updatedAt is < 5 minutes, don't create another version */
-            if (node.updatedAt - storedNode.lastVersionCreatedAt!! < 300000) {
-                node.lastVersionCreatedAt = storedNode.lastVersionCreatedAt
-                return@runBlocking repository.update(node)
-            }
-            node.lastVersionCreatedAt = node.updatedAt
-            checkNodeVersionCount(node, storedNode.nodeVersionCount)
 
-            val nodeVersion = createNodeVersionFromNode(node)
-            nodeVersion.createdAt = storedNode.createdAt
-            nodeVersion.createdBy = storedNode.createdBy
+        launch { repository.update(node) }
 
-            return@runBlocking nodeRepository.updateNodeWithVersion(node, nodeVersion)
-        } else {
-            return@runBlocking repository.update(node)
-        }
     }
 
     private fun updateHierarchyIfRename(node: Node, storedNode: Node) {
@@ -1264,12 +1243,12 @@ class NodeService( // Todo: Inject them from handlers
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
-    fun updateSharedNode(wdRequest: WDRequest, userID: String): Entity? {
+    fun updateSharedNode(wdRequest: WDRequest, userID: String) {
         val nodeRequest = wdRequest as UpdateSharedNodeRequest
         require(nodeAccessService.checkIfNodeSharedWithUser(nodeRequest.id, userID, listOf(AccessType.MANAGE, AccessType.WRITE))) { Messages.ERROR_NODE_PERMISSION }
         val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id)
         val node = createNodeObjectFromUpdateShareNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, storedNode.namespaceIdentifier.id, userID)
-        return updateNode(node, storedNode, false)
+        updateNode(node, storedNode)
     }
 
     fun revokeSharedAccess(wdRequest: WDRequest, revokerID: String, workspaceID: String) {
