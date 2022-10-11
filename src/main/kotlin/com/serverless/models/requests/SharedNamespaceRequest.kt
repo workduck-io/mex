@@ -8,23 +8,24 @@ import com.serverless.utils.isValidID
 import com.workduck.converters.AccessTypeDeserializer
 import com.workduck.models.AccessType
 
+
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("SharedNodeRequest")
-data class SharedNodeRequest(
+@JsonTypeName("SharedNamespaceRequest")
+data class SharedNamespaceRequest(
 
-    val nodeID: String,
+        val namespaceID: String,
 
-    val userIDs: List<String>,
+        val userIDs: List<String>,
 
-    @JsonDeserialize(converter = AccessTypeDeserializer::class)
-    val accessType: AccessType = AccessType.MANAGE
+        @JsonDeserialize(converter = AccessTypeDeserializer::class)
+        val accessType: AccessType = AccessType.MANAGE
 
 ) : WDRequest {
 
     init {
         require(userIDs.isNotEmpty()) { "Need to provide userIDs" }
 
-        require(nodeID.isValidID(Constants.NODE_ID_PREFIX)) { "Invalid NodeID" }
+        require(namespaceID.isValidID(Constants.NAMESPACE_ID_PREFIX)) { "Invalid NamespaceID" }
 
     }
 }

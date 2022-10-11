@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = NodeRequest::class, name = "NodeRequest"),
     JsonSubTypes.Type(value = SharedNodeRequest::class, name = "SharedNodeRequest"),
     JsonSubTypes.Type(value = UpdateSharedNodeRequest::class, name = "UpdateSharedNodeRequest"),
+    JsonSubTypes.Type(value = SharedNamespaceRequest::class, name = "SharedNamespaceRequest"),
     JsonSubTypes.Type(value = UpdateAccessTypesRequest::class, name = "UpdateAccessTypesRequest"),
     JsonSubTypes.Type(value = SnippetRequest::class, name = "SnippetRequest"),
     JsonSubTypes.Type(value = ElementRequest::class, name = "ElementRequest"),
