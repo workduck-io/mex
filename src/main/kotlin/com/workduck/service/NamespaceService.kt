@@ -33,6 +33,7 @@ import com.workduck.utils.DDBHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
 
 class NamespaceService (
@@ -84,8 +85,16 @@ class NamespaceService (
         repository.update(namespace)
     }
 
-    fun deleteNamespace(namespaceID: String, workspaceID: String): Identifier {
-        return repository.delete(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID))
+    fun deleteNamespace(namespaceID: String, userWorkspaceID: String, userID: String) = runBlocking {
+
+        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)["workspaceID"]
+                ?: throw IllegalArgumentException("Invalid Parameters")
+
+        val jobToGetListOfNodeIDsToDelete = async { nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceIDOfNamespace) }
+        launch { nodeService.batchDeleteNodes(jobToGetListOfNodeIDsToDelete.await(), workspaceIDOfNamespace) }
+        launch { repository.delete(WorkspaceIdentifier(workspaceIDOfNamespace), NamespaceIdentifier(namespaceID)) }
+
+
     }
 
 
@@ -173,7 +182,7 @@ class NamespaceService (
 
         if (userIDs.isEmpty()) return
 
-        val workspaceDetailsOfNamespace = namespaceAccessService.checkIfGranterCanManageAndGetWorkspaceDetails(sharedNamespaceRequest.namespaceID, granterWorkspaceID, granterID)
+        val workspaceDetailsOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(sharedNamespaceRequest.namespaceID, granterWorkspaceID, granterID, EntityOperationType.MANAGE)
         val namespaceAccessItems = AccessItemHelper.getNamespaceAccessItems(sharedNamespaceRequest.namespaceID, workspaceDetailsOfNamespace["workspaceID"]!!, granterID, userIDs, sharedNamespaceRequest.accessType)
         namespaceRepository.createBatchNamespaceAccessItem(namespaceAccessItems)
     }

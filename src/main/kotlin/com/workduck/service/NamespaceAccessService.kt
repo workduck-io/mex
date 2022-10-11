@@ -24,11 +24,12 @@ class NamespaceAccessService(
         return namespaceRepository.checkIfNamespaceExistsForWorkspace(nodeID, workspaceID)
     }
 
-    fun checkIfGranterCanManageAndGetWorkspaceDetails(namespaceID: String, workspaceID: String, granterID: String): Map<String, String> {
+    fun checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID: String, workspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> {
         var isNodeInCurrentWorkspace = false
 
+        val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
         if (checkIfNamespaceExistsForWorkspace(namespaceID, workspaceID)) isNodeInCurrentWorkspace = true
-        else if (!namespaceRepository.checkIfUserHasAccess(namespaceID, granterID, listOf(AccessType.MANAGE))) {
+        else if (!namespaceRepository.checkIfUserHasAccess(namespaceID, userID, accessTypeList)) {
             throw NoSuchElementException("Node you're trying to share does not exist")
         }
 
