@@ -473,7 +473,7 @@ class NodeRepository(
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
 
         return DynamoDBQueryExpression<Node>().queryWithIndex( index = "SK-PK-Index",
-                keyConditionExpression = "SK = :sk and begins_with(PK, :pK)", projectionExpression = "PK, AK",
+                keyConditionExpression = "SK = :sk and begins_with(PK, :pk)", projectionExpression = "PK, AK",
                 expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
