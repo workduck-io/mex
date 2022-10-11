@@ -31,12 +31,11 @@ class RepositoryImpl<T : Entity>(
         return skIdentifier
     }
 
-    override fun create(t: T): T {
+    override fun create(t: T){
         mapper.save(t, dynamoDBMapperConfig)
-        return t
     }
 
-    override fun update(t: T): T {
+    override fun update(t: T){
 
         val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
@@ -45,8 +44,6 @@ class RepositoryImpl<T : Entity>(
             .build()
 
         mapper.save(t, dynamoDBMapperConfig)
-        return t
-
     }
 
     companion object {

@@ -13,16 +13,10 @@ import com.workduck.service.NodeService
 class CreateNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
 
-        val nodeRequest : WDRequest? = input.payload
-        val versionEnabled : Boolean? = input.queryStringParameters?.let{
-            it["versionEnabled"].toBoolean()
-        }
+        return input.payload?.let { nodeRequest ->
+            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID)
+            ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_CREATING_NODE)
+        } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
 
-        val node: Entity? = if(versionEnabled != null)
-            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID, versionEnabled)
-        else nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID)
-
-        val nodeResponse: Response? = NodeHelper.convertNodeToNodeResponse(node)
-        return ApiResponseHelper.generateStandardResponse(nodeResponse, Messages.ERROR_CREATING_NODE)
     }
 }

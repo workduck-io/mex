@@ -45,11 +45,11 @@ class NamespaceRepository(
         return mapper.load(clazz, pkIdentifier, skIdentifier.id, dynamoDBMapperConfig)
     }
 
-    override fun create(t: Namespace): Namespace {
+    override fun create(t: Namespace) {
         TODO("Not yet implemented")
     }
 
-    override fun update(t: Namespace): Namespace {
+    override fun update(t: Namespace) {
         TODO("Not yet implemented")
     }
 

@@ -54,10 +54,11 @@ class WorkspaceService (
 
 ) {
 
-    fun createWorkspace(workspaceRequest: WDRequest): Entity? {
+    fun createWorkspace(workspaceRequest: WDRequest): Entity {
         val workspaceID = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
         val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest, workspaceID)
-        return repository.create(workspace)
+        repository.create(workspace)
+        return workspace
     }
 
     fun getWorkspace(workspaceID: String): Entity? {
