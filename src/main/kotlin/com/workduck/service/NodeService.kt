@@ -1190,7 +1190,7 @@ class NodeService( // Todo: Inject them from handlers
             return nodeFromDB
         }
         publicNodeCache.closeConnection()
-        return node
+        return orderBlocks(node) as Node
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
