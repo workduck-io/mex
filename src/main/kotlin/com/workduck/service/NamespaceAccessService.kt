@@ -1,5 +1,6 @@
 package com.workduck.service
 
+import com.serverless.utils.Constants
 import com.workduck.models.AccessType
 import com.workduck.models.EntityOperationType
 import com.workduck.repositories.NamespaceRepository
@@ -37,10 +38,10 @@ class NamespaceAccessService(
 
         when (isNodeInCurrentWorkspace) {
             true -> {
-                workspaceDetailsMap["workspaceID"] = workspaceID
+                workspaceDetailsMap[Constants.WORKSPACE_ID] = workspaceID
             }
             false -> {
-                workspaceDetailsMap["workspaceID"] = namespaceRepository.getWorkspaceIDOfNamespace(namespaceID)
+                workspaceDetailsMap[Constants.WORKSPACE_ID] = namespaceRepository.getWorkspaceIDOfNamespace(namespaceID)
             }
         }
 

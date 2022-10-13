@@ -67,11 +67,11 @@ class NamespaceService (
 
     fun getNamespace(workspaceID: String, namespaceID: String, userID: String): Namespace? {
         require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.READ)) { Messages.ERROR_NAMESPACE_PERMISSION }
-        return getNamespaceAfterPermissionCheck(workspaceID, namespaceID)
+        return getNamespaceAfterPermissionCheck(namespaceID)
     }
 
-    fun getNamespaceAfterPermissionCheck(workspaceID: String, namespaceID: String) : Namespace? {
-        return namespaceRepository.get(WorkspaceIdentifier(workspaceID), NamespaceIdentifier(namespaceID), Namespace::class.java)
+    fun getNamespaceAfterPermissionCheck(namespaceID: String) : Namespace? {
+        return namespaceRepository.getNamespaceByNamespaceID(namespaceID)
     }
 
 
@@ -87,7 +87,7 @@ class NamespaceService (
 
     fun deleteNamespace(namespaceID: String, userWorkspaceID: String, userID: String) = runBlocking {
 
-        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)["workspaceID"]
+        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID]
                 ?: throw IllegalArgumentException("Invalid Parameters")
 
         val jobToGetListOfNodeIDsToDelete = async { nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceIDOfNamespace) }
@@ -183,7 +183,7 @@ class NamespaceService (
         if (userIDs.isEmpty()) return
 
         val workspaceDetailsOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(sharedNamespaceRequest.namespaceID, granterWorkspaceID, granterID, EntityOperationType.MANAGE)
-        val namespaceAccessItems = AccessItemHelper.getNamespaceAccessItems(sharedNamespaceRequest.namespaceID, workspaceDetailsOfNamespace["workspaceID"]!!, granterID, userIDs, sharedNamespaceRequest.accessType)
+        val namespaceAccessItems = AccessItemHelper.getNamespaceAccessItems(sharedNamespaceRequest.namespaceID, workspaceDetailsOfNamespace[Constants.WORKSPACE_ID]!!, granterID, userIDs, sharedNamespaceRequest.accessType)
         namespaceRepository.createBatchNamespaceAccessItem(namespaceAccessItems)
     }
 

@@ -30,5 +30,7 @@ object Constants {
     const val NAME = "name"
     const val NODE_HIERARCHY = "nodeHierarchy"
     const val NAMESPACE_METADATA = "namespaceMetadata"
+    const val WORKSPACE_ID = "workspaceID"
+    const val WORKSPACE_OWNER = "workspaceOwner"
 
 }

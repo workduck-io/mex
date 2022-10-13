@@ -146,26 +146,25 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, workspaceID: String, userID: String) =
+    fun createAndUpdateNode(request: WDRequest?, userWorkspaceID: String, userID: String) =
         runBlocking {
-
             val nodeRequest: NodeRequest = request as NodeRequest
-            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, workspaceID, userID)
 
-            require(nodeAccessService.checkIfUserHasAccessToNode(workspaceID, node.namespaceIdentifier.id, node.id, userID, EntityOperationType.EDIT)) {
-                Messages.ERROR_NODE_PERMISSION
-            }
+            val nodeWorkspaceID = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.id, userWorkspaceID, userID, EntityOperationType.EDIT)[Constants.WORKSPACE_ID]!!
 
-            val jobToGetStoredNode = async { getNode(node.id, workspaceID, userID) }
+            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
+
+            val jobToGetStoredNode = async { getNode(node.id, nodeWorkspaceID, userID) }
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
-                    namespaceService.getNamespaceAfterPermissionCheck(workspaceID, namespaceID).let { namespace ->
+                    namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
                         require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
                         namespace
                     }
                 }
             }
+
 
             return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
                 null -> {
@@ -175,7 +174,6 @@ class NodeService( // Todo: Inject them from handlers
                 }
                 else -> {
                     jobToGetNamespace.cancel()
-                    require(storedNode.itemStatus ==  ItemStatus.ACTIVE) { Messages.ERROR_UPDATING_ARCHIVED_NODE }
                     updateNode(node, storedNode)
                 }
             }
@@ -269,7 +267,7 @@ class NodeService( // Todo: Inject them from handlers
         4. Unchanged Suffix Path ( if any )
     */
 
-    fun refactor(wdRequest: WDRequest, userID: String, workspaceID: String): Map<String, Any> = runBlocking {
+    fun refactor(wdRequest: WDRequest, userID: String, userWorkspaceID: String): Map<String, Any> = runBlocking {
         val refactorNodePathRequest = wdRequest as RefactorRequest
 
         /* existingNodePath is path from root till last node in the path and not necessarily path till a leaf node */
@@ -278,23 +276,23 @@ class NodeService( // Todo: Inject them from handlers
         val existingNodes = refactorNodePathRequest.existingNodePath
         val newNodes = refactorNodePathRequest.newNodePath
 
-        require(nodeAccessService.checkIfUserHasAccessForRefactor(workspaceID, existingNodes.namespaceID, newNodes.namespaceID, lastNodeID, userID, EntityOperationType.EDIT))
+        val workspaceID = nodeAccessService.checkAccessForRefactorAndGetWorkspaceID(userWorkspaceID, existingNodes.namespaceID, newNodes.namespaceID, lastNodeID, userID)
 
         // TODO(crosscheck if the last node name in the path is for the passed nodeID)
         val jobToGetExistingNamespace = async {
             existingNodes.namespaceID.let { namespaceID ->
-                namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+                namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
                     require(namespace != null) { "Invalid NamespaceID ${existingNodes.namespaceID}" }
                     namespace
                 }
             }
         }
 
-        // if the namespace id is same ( or null ), we are dealing with a single namespace ( or workspace )
+        /* if the namespace id is same ( or null ), we are dealing with a single namespace ( or workspace ) */
         val jobToGetTargetNamespace = when (existingNodes.namespaceID == newNodes.namespaceID) {
             false -> async {
                 newNodes.namespaceID.let { namespaceID ->
-                    namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+                    namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
                         require(namespace != null) { "Invalid NamespaceID ${newNodes.namespaceID}" }
                         namespace
                     }
@@ -525,7 +523,7 @@ class NodeService( // Todo: Inject them from handlers
 
         val jobToGetNamespace = async {
             node.namespaceIdentifier.id.let { namespaceID ->
-                namespaceService.getNamespaceAfterPermissionCheck(workspaceID, namespaceID).let { namespace ->
+                namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
                     require(namespace != null) { "Invalid NamespaceID" }
                     namespace
                 }
@@ -676,23 +674,24 @@ class NodeService( // Todo: Inject them from handlers
         return list
     }
 
-    fun getNode(nodeID: String, workspaceID: String, userID: String, starredInfo: Boolean = false) = runBlocking {
+    fun getNode(nodeID: String, userWorkspaceID: String, userID: String, itemStatus: ItemStatus = ItemStatus.ACTIVE, starredInfo: Boolean = false) = runBlocking {
 
-        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.READ)) {
+        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(userWorkspaceID, nodeID, userID, EntityOperationType.READ)) {
             Messages.ERROR_NODE_PERMISSION
         }
 
-        val jobToGetNode = async { pageRepository.get(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID), Node::class.java) }
+        /* to avoid fetching node's workspace first, directly use GSI to get node by node ID */
+        val node = nodeRepository.getNodeByNodeID(nodeID, itemStatus)
 
         val jobToGetStarredStatus = async {
-            when (starredInfo) {
-                true -> UserStarService().isNodeStarredForUser(nodeID, userID, workspaceID)
+            when (starredInfo && node != null) {
+                true -> UserStarService().isNodeStarredForUser(nodeID, userID, node.workspaceIdentifier.id)
                 false -> null
             }
         }
 
-        return@runBlocking jobToGetNode.await()?.let { node ->
-            (orderBlocks(node) as Node).also { orderedNode ->
+        return@runBlocking node?.let { it ->
+            (orderBlocks(it) as Node).also { orderedNode ->
                 orderedNode.starred = jobToGetStarredStatus.await()
             }
         }
@@ -1232,27 +1231,30 @@ class NodeService( // Todo: Inject them from handlers
 
         if (userIDs.isEmpty()) return
 
-        val nodeWorkspaceDetails = nodeAccessService.checkIfGranterCanManageAndGetWorkspaceDetails(sharedNodeRequest.nodeID, granterWorkspaceID, granterID)
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, userIDs, sharedNodeRequest.accessType)
+        val nodeWorkspaceDetails = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(sharedNodeRequest.nodeID, granterWorkspaceID, granterID, EntityOperationType.MANAGE)
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceDetails[Constants.WORKSPACE_ID]!!, nodeWorkspaceDetails[Constants.WORKSPACE_OWNER]!!, granterID, userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
     fun getSharedNode(nodeID: String, userID: String): Entity {
         require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { Messages.ERROR_NODE_PERMISSION }
-        return orderBlocks(nodeRepository.getNodeByNodeID(nodeID))
+        return nodeRepository.getNodeByNodeID(nodeID, ItemStatus.ACTIVE)?.let {
+            orderBlocks(it)
+        } ?: throw NoSuchElementException(Messages.INVALID_NODE_ID)
+
     }
 
     fun changeAccessType(wdRequest: WDRequest, granterID: String, workspaceID: String) {
         val updateAccessRequest = wdRequest as UpdateAccessTypesRequest
-        val nodeWorkspaceDetails = nodeAccessService.checkIfGranterCanManageAndGetWorkspaceDetails(updateAccessRequest.nodeID, workspaceID, granterID)
-        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceDetails["workspaceID"]!!, nodeWorkspaceDetails["workspaceOwner"]!!, granterID, updateAccessRequest.userIDToAccessTypeMap)
+        val nodeWorkspaceDetails = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(updateAccessRequest.nodeID, workspaceID, granterID, EntityOperationType.MANAGE)
+        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceDetails[Constants.WORKSPACE_ID]!!, nodeWorkspaceDetails[Constants.WORKSPACE_OWNER]!!, granterID, updateAccessRequest.userIDToAccessTypeMap)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
     fun updateSharedNode(wdRequest: WDRequest, userID: String) {
         val nodeRequest = wdRequest as UpdateSharedNodeRequest
         require(nodeAccessService.checkIfNodeSharedWithUser(nodeRequest.id, userID, listOf(AccessType.MANAGE, AccessType.WRITE))) { Messages.ERROR_NODE_PERMISSION }
-        val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id)
+        val storedNode = nodeRepository.getNodeByNodeID(nodeRequest.id, ItemStatus.ACTIVE) ?: throw NoSuchElementException( Messages.INVALID_NODE_ID )
         val node = createNodeObjectFromUpdateShareNodeRequest(nodeRequest, storedNode.workspaceIdentifier.id, storedNode.namespaceIdentifier.id, userID)
         updateNode(node, storedNode)
     }
