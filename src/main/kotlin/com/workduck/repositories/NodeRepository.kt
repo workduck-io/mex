@@ -629,15 +629,27 @@ class NodeRepository(
     }
 
 
-    fun getNodeByNodeID(nodeID: String, itemStatus: ItemStatus): Node? {
+    fun getNodeByNodeID(nodeID: String, itemStatus: ItemStatus? = null): Node? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
-        expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
+
+        /* if itemStatus not provided, search for both types of nodes */
+        val filterExpression = when(itemStatus == null){
+            true -> {
+                expressionAttributeValues[":active"] = AttributeValue(ItemStatus.ACTIVE.name)
+                expressionAttributeValues[":archived"] = AttributeValue(ItemStatus.ARCHIVED.name)
+                "itemStatus = :active or itemStatus = :archived"
+            }
+            false -> {
+                expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
+                "itemStatus = :itemStatus"
+            }
+        }
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(
             index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-            filterExpression = "itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
+            filterExpression = filterExpression, expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).firstOrNull()
         }

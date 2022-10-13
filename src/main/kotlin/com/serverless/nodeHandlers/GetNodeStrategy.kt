@@ -21,7 +21,7 @@ class GetNodeStrategy : NodeStrategy {
         } ?: false
 
 
-        val node: Entity = nodeService.getNode(nodeID, input.headers.workspaceID, input.tokenBody.userID, starredInfo).withNotFoundException()
+        val node: Entity = nodeService.getNode(nodeID, input.headers.workspaceID, input.tokenBody.userID, starredInfo = starredInfo).withNotFoundException()
 
         val nodeResponse : Response? = NodeHelper.convertNodeToNodeResponse(node)
         return ApiResponseHelper.generateStandardResponse(nodeResponse, Messages.ERROR_GETTING_NODE)

@@ -154,7 +154,7 @@ class NodeService( // Todo: Inject them from handlers
 
             val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
 
-            val jobToGetStoredNode = async { getNode(node.id, nodeWorkspaceID, userID) }
+            val jobToGetStoredNode = async { getNode(node.id, nodeWorkspaceID, userID, ItemStatus.ACTIVE) }
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
@@ -674,7 +674,7 @@ class NodeService( // Todo: Inject them from handlers
         return list
     }
 
-    fun getNode(nodeID: String, userWorkspaceID: String, userID: String, itemStatus: ItemStatus = ItemStatus.ACTIVE, starredInfo: Boolean = false) = runBlocking {
+    fun getNode(nodeID: String, userWorkspaceID: String, userID: String, itemStatus: ItemStatus? = null, starredInfo: Boolean = false) = runBlocking {
 
         require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(userWorkspaceID, nodeID, userID, EntityOperationType.READ)) {
             Messages.ERROR_NODE_PERMISSION
