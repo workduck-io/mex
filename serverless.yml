@@ -27,13 +27,19 @@ provider:
   lambdaHashingVersion: 20201221
   timeout: 20
   memorySize: 1024
+  logRetentionInDays: 7
   environment:
     #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     TABLE_NAME: ${opt:stage, 'local'}-mex
     JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     STAGE: ${opt:stage, 'local'}
-    PUBLIC_NOTE_CACHE_ENDPOINT: "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
+#    PUBLIC_NOTE_CACHE_ENDPOINT: mex-public-note-cache-vpc-deploy-test.m6edlo.ng.0001.use1.cache.amazonaws.com
+    PUBLIC_NOTE_CACHE_ENDPOINT:
+      Fn::Join:
+        -  ''
+        - - Ref: PublicNoteElasticCacheCluster
+          - .m6edlo.ng.0001.use1.cache.amazonaws.com
   iam:
     role:
       statements:
@@ -192,5 +198,4 @@ resources:
   - ${file(src/main/resources/api-gateway-errors.yml)}
   - ${file(src/main/resources/mex.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
-  - ${file(src/main/resources/vpc-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
