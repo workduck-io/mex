@@ -5,6 +5,7 @@ Ping:
         path: /ping
         cors: true
         method: get
+  vpc: ${file(src/main/resources/vpc-config-resources.yml)}
 
 PublicNoteSQSWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteDLQWorker
@@ -14,6 +15,7 @@ PublicNoteSQSWorker:
           Fn::GetAtt:
             - PublicNoteDLQ
             - Arn
+  vpc: ${file(src/main/resources/vpc-config-resources.yml)}
 
 PublicNoteWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteWorker
@@ -23,33 +25,13 @@ PublicNoteWorker:
           Fn::GetAtt:
             - PublicNote
             - Arn
-  vpc:
-    subnetIds:
-      - "subnet-ad0a8de0"
-      - "subnet-f37686ac"
-      - "subnet-91d621f7"
-      - "subnet-c07d8fe1"
-      - "subnet-fddce7c3"
-      - "subnet-2054fd2e"
-    securityGroupIds:
-      - "sg-0aeaa35ab3c10796d"
-      - "sg-0fad68a531aa4fea5"
-      - "sg-51d4667f"
+  vpc: ${file(src/main/resources/vpc-config-resources.yml)}
 
+# Note: Since we are creating new elasticache cluster and all the lambdas irrespective of stage in the same VPC we don't need to create new VPC endpoints.
+# Refer: https://us-east-1.console.aws.amazon.com/vpc/home?region=us-east-1#Endpoints:
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
-  vpc:
-    subnetIds:
-      - "subnet-ad0a8de0"
-      - "subnet-f37686ac"
-      - "subnet-91d621f7"
-      - "subnet-c07d8fe1"
-      - "subnet-fddce7c3"
-      - "subnet-2054fd2e"
-    securityGroupIds:
-      - "sg-0aeaa35ab3c10796d"
-      - "sg-0fad68a531aa4fea5"
-      - "sg-51d4667f"
+  vpc: ${file(src/main/resources/vpc-config-resources.yml)}
   events:
     - httpApi:
         path: /node/{id}
