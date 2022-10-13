@@ -216,21 +216,24 @@ class NamespaceRepository(
 
     }
 
-    fun getWorkspaceIDOfNamespace(namespaceID: String): String {
+
+    fun getNamespaceAccessItem(namespaceID: String, userID: String, accessTypeList: List<AccessType>): NamespaceAccess? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
-        expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNamespaceAccessItemPK(namespaceID))
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NamespaceAccess.name)
 
-
-        return DynamoDBQueryExpression<Namespace>().queryWithIndex(
-                index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues
+        return DynamoDBQueryExpression<NamespaceAccess>().query(
+                keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
         ).let {
-            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { namespaceList ->
-                namespaceList.firstOrNull()?.id ?: throw NoSuchElementException("Requested Resource Not Found")
+            mapper.query(NamespaceAccess::class.java, it, dynamoDBMapperConfig).firstOrNull()?.takeIf { item ->
+                item.accessType in accessTypeList
             }
         }
     }
+
+
 
     fun checkIfUserHasAccess(namespaceID: String, userID: String, accessTypeList: List<AccessType>): Boolean {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()

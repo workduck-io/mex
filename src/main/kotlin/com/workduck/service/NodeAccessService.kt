@@ -6,6 +6,8 @@ import com.workduck.models.AccessType
 import com.workduck.models.EntityOperationType
 import com.workduck.repositories.NodeRepository
 import com.workduck.utils.AccessItemHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 class NodeAccessService(
         private val nodeRepository: NodeRepository,
@@ -23,27 +25,31 @@ class NodeAccessService(
         return nodeRepository.checkIfUserHasAccess(nodeID, userID, accessTypeList)
     }
 
-    fun checkIfUserHasAccessAndGetWorkspaceDetails(nodeID: String, workspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> {
-        var isNodeInCurrentWorkspace = false
+    fun checkIfUserHasAccessAndGetWorkspaceDetails(nodeID: String, userWorkspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> = runBlocking {
+
         val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
 
-        if (checkIfNodeExistsForWorkspace(nodeID, workspaceID)) isNodeInCurrentWorkspace = true
-        else if (!checkIfNodeSharedWithUser(nodeID, userID, accessTypeList)) {
-            throw NoSuchElementException(Messages.ERROR_NODE_PERMISSION)
-        }
+        val jobToCheckIfNodeExistsForWorkspace = async { checkIfNodeExistsForWorkspace(nodeID, userWorkspaceID) }
+        val jobToGetNodeAccessItem = async { nodeRepository.getNodeAccessItem(nodeID, userID, accessTypeList) }
 
         val workspaceDetailsMap = mutableMapOf<String, String>()
 
-        return when (isNodeInCurrentWorkspace) {
+        when (jobToCheckIfNodeExistsForWorkspace.await()) {
             true -> {
-                workspaceDetailsMap[Constants.WORKSPACE_ID] = workspaceID
+                jobToGetNodeAccessItem.cancel()
+                workspaceDetailsMap[Constants.WORKSPACE_ID] = userWorkspaceID
                 workspaceDetailsMap[Constants.WORKSPACE_OWNER] = userID
-                workspaceDetailsMap
+
             }
-            false -> {
-                nodeRepository.getNodeWorkspaceIDAndOwner(nodeID)
+            false -> { /* if node does not exist in user's workspace, it means that the node has been shared with the user */
+                val nodeAccessItem = jobToGetNodeAccessItem.await()
+                        ?: throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
+
+                workspaceDetailsMap[Constants.WORKSPACE_ID] = nodeAccessItem.workspace.id
+                workspaceDetailsMap[Constants.WORKSPACE_OWNER] = nodeAccessItem.ownerID
             }
         }
+        return@runBlocking workspaceDetailsMap
     }
 
 
@@ -90,12 +96,6 @@ class NodeAccessService(
             }
         }
 
-    }
-
-
-    fun checkIfUserHasAccessToNode(workspaceID: String, namespaceID: String, nodeID: String, userID: String, operationType: EntityOperationType) : Boolean {
-        val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
-        return checkIfUserHasAccess(workspaceID, nodeID, userID, operationType) || namespaceAccessService.checkIfNamespaceSharedWithUser(namespaceID, userID, accessTypeList)
     }
 
 }
