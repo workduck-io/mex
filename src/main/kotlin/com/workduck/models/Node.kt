@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
 import com.workduck.PublicAccessDeserializer
+import com.workduck.converters.PublicAccessSerializer
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.ItemTypeConverter
@@ -20,6 +21,7 @@ import com.workduck.converters.NodeDataDeserializer
 import com.workduck.converters.NodeDataSerializer
 import com.workduck.converters.NodeMetadataConverter
 import com.workduck.converters.NodeMetadataDeserializer
+import com.workduck.converters.NodeMetadataSerializer
 import com.workduck.converters.NodeSchemaIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
@@ -76,6 +78,7 @@ data class Node(
 
 
     @JsonProperty("metadata")
+    @JsonSerialize(converter = NodeMetadataSerializer::class)
     @JsonDeserialize(converter = NodeMetadataDeserializer::class)
     @DynamoDBTypeConverted(converter = NodeMetadataConverter::class)
     @DynamoDBAttribute(attributeName = "metadata")
@@ -123,6 +126,7 @@ data class Node(
     var starred: Boolean? = null, /* sent as null in node response if user didn't ask for this specifically */
 
     @JsonProperty("publicAccess")
+    @JsonSerialize(converter = PublicAccessSerializer::class)
     @DynamoDBAttribute(attributeName = "publicAccess")
     @JsonDeserialize(converter = PublicAccessDeserializer::class)
     override var publicAccess: Boolean = false,
