@@ -161,6 +161,21 @@ class NamespaceRepository(
         }
     }
 
+    fun getNamespaceByNamespaceID(namespaceID: String): Namespace? {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+
+        return DynamoDBQueryExpression<Namespace>().queryWithIndex(
+                index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).firstOrNull()
+        }
+    }
+
+
+
     fun getPublicNamespace(namespaceID: String) : Namespace {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(namespaceID)

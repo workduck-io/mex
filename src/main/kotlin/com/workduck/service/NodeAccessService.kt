@@ -1,5 +1,6 @@
 package com.workduck.service
 
+import com.serverless.utils.Constants
 import com.serverless.utils.Messages
 import com.workduck.models.AccessType
 import com.workduck.models.EntityOperationType
@@ -22,11 +23,12 @@ class NodeAccessService(
         return nodeRepository.checkIfUserHasAccess(nodeID, userID, accessTypeList)
     }
 
-    fun checkIfGranterCanManageAndGetWorkspaceDetails(nodeID: String, workspaceID: String, granterID: String): Map<String, String> {
+    fun checkIfUserHasAccessAndGetWorkspaceDetails(nodeID: String, workspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> {
         var isNodeInCurrentWorkspace = false
+        val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
 
         if (checkIfNodeExistsForWorkspace(nodeID, workspaceID)) isNodeInCurrentWorkspace = true
-        else if (!nodeRepository.checkIfUserHasAccess(nodeID, granterID, listOf(AccessType.MANAGE))) {
+        else if (!checkIfNodeSharedWithUser(nodeID, userID, accessTypeList)) {
             throw NoSuchElementException(Messages.ERROR_NODE_PERMISSION)
         }
 
@@ -34,8 +36,8 @@ class NodeAccessService(
 
         return when (isNodeInCurrentWorkspace) {
             true -> {
-                workspaceDetailsMap["workspaceID"] = workspaceID
-                workspaceDetailsMap["workspaceOwner"] = granterID
+                workspaceDetailsMap[Constants.WORKSPACE_ID] = workspaceID
+                workspaceDetailsMap[Constants.WORKSPACE_OWNER] = userID
                 workspaceDetailsMap
             }
             false -> {
@@ -61,7 +63,8 @@ class NodeAccessService(
 
     }
 
-    fun checkIfUserHasAccessForRefactor(userWorkspaceID: String, sourceNamespaceID: String, targetNamespaceID: String, nodeID: String, userID: String, operationType: EntityOperationType) : Boolean {
+    /* return workspaceID of the affected namespace */
+    fun checkAccessForRefactorAndGetWorkspaceID(userWorkspaceID: String, sourceNamespaceID: String, targetNamespaceID: String, nodeID: String, userID: String) : String {
         val nodeWorkspaceNamespacePair = nodeRepository.getNodeWorkspaceAndNamespace(nodeID)
         require(nodeWorkspaceNamespacePair != null) { Messages.INVALID_NODE_ID}
         require(nodeWorkspaceNamespacePair.second == sourceNamespaceID) { Messages.INVALID_NAMESPACE_ID }
@@ -69,11 +72,22 @@ class NodeAccessService(
         // check if node's workspace is same as user's workspace => owner
         val isWorkspaceOwner = nodeWorkspaceNamespacePair.first == userWorkspaceID
 
-        return if(sourceNamespaceID != targetNamespaceID){ // allowed only by workspace owner
-            isWorkspaceOwner
-        } else {
-            val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
-            isWorkspaceOwner || namespaceAccessService.checkIfNamespaceSharedWithUser(nodeWorkspaceNamespacePair.second, userID, accessTypeList)
+        return when(sourceNamespaceID != targetNamespaceID){
+            true -> { /* cross namespace refactor allowed only by workspace owner */
+                when(isWorkspaceOwner){
+                    true -> userWorkspaceID
+                    false -> throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
+                }
+            }
+            false -> {
+                /* for same namespace refactor, either the user can be workspace owner or should have EDIT access */
+                val accessTypeList = AccessItemHelper.getAccessTypesForOperation(EntityOperationType.EDIT)
+                when(isWorkspaceOwner || namespaceAccessService.checkIfNamespaceSharedWithUser(nodeWorkspaceNamespacePair.second, userID, accessTypeList)){
+                    true -> nodeWorkspaceNamespacePair.first
+                    false -> throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
+                }
+
+            }
         }
 
     }

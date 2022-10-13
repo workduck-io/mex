@@ -629,19 +629,17 @@ class NodeRepository(
     }
 
 
-    fun getNodeByNodeID(nodeID: String): Node {
+    fun getNodeByNodeID(nodeID: String, itemStatus: ItemStatus): Node? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
-        expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
+        expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(
             index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
             filterExpression = "itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
         ).let {
-            mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
-                nodeList.firstOrNull() ?: throw NoSuchElementException("Requested Resource Not Found")
-            }
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).firstOrNull()
         }
     }
 
@@ -659,8 +657,8 @@ class NodeRepository(
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
                 nodeList.firstOrNull()?.let { node ->
-                    workspaceDetailsMap["workspaceID"] = node.workspaceIdentifier.id
-                    workspaceDetailsMap["workspaceOwner"] = node.createdBy!!
+                    workspaceDetailsMap[Constants.WORKSPACE_ID] = node.workspaceIdentifier.id
+                    workspaceDetailsMap[Constants.WORKSPACE_OWNER] = node.createdBy!!
                     workspaceDetailsMap
                 } ?: throw NoSuchElementException("Requested Resource Not Found")
             }
