@@ -30,6 +30,7 @@ import com.workduck.models.Element
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
+import com.workduck.models.NamespaceAccess
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeVersion
@@ -532,6 +533,23 @@ class NodeRepository(
         ).let {
             mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
         }.filter { it.accessType in accessTypeList }.map { accessItem -> accessItem.userID }.isNotEmpty()
+    }
+
+
+    fun getNodeAccessItem(nodeID: String, userID: String, accessTypeList: List<AccessType>): NodeAccess? {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNamespaceAccessItemPK(nodeID))
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
+
+        return DynamoDBQueryExpression<NodeAccess>().query(
+                keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
+                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig).firstOrNull()?.takeIf { item ->
+                item.accessType in accessTypeList
+            }
+        }
     }
 
     fun getUserNodeAccessRecord(nodeID: String, userID: String) : String {

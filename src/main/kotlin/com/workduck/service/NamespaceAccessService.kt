@@ -1,10 +1,13 @@
 package com.workduck.service
 
 import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 import com.workduck.models.AccessType
 import com.workduck.models.EntityOperationType
 import com.workduck.repositories.NamespaceRepository
 import com.workduck.utils.AccessItemHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 class NamespaceAccessService(
         val namespaceRepository: NamespaceRepository
@@ -20,32 +23,29 @@ class NamespaceAccessService(
         return namespaceRepository.checkIfUserHasAccess(namespaceID, userID, accessTypeList)
     }
 
-
     private fun checkIfNamespaceExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
         return namespaceRepository.checkIfNamespaceExistsForWorkspace(nodeID, workspaceID)
     }
 
-    fun checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID: String, workspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> {
-        var isNodeInCurrentWorkspace = false
+    fun checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID: String, userWorkspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> = runBlocking {
 
         val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
-        if (checkIfNamespaceExistsForWorkspace(namespaceID, workspaceID)) isNodeInCurrentWorkspace = true
-        else if (!namespaceRepository.checkIfUserHasAccess(namespaceID, userID, accessTypeList)) {
-            throw NoSuchElementException("Node you're trying to share does not exist")
-        }
+        val jobToCheckIfNamespaceExistsForWorkspace = async { checkIfNamespaceExistsForWorkspace(namespaceID, userWorkspaceID) }
+        val jobToGetNamespaceAccessItem = async { namespaceRepository.getNamespaceAccessItem(namespaceID, userID, accessTypeList) }
 
-        val workspaceDetailsMap = mutableMapOf<String, String>()
-
-        when (isNodeInCurrentWorkspace) {
+        val workspaceIDOfNamespace = when (jobToCheckIfNamespaceExistsForWorkspace.await()) {
             true -> {
-                workspaceDetailsMap[Constants.WORKSPACE_ID] = workspaceID
+                jobToGetNamespaceAccessItem.cancel()
+                userWorkspaceID
             }
-            false -> {
-                workspaceDetailsMap[Constants.WORKSPACE_ID] = namespaceRepository.getWorkspaceIDOfNamespace(namespaceID)
+            false -> { /* if namespace does not exist in user's workspace, it means that the namespace has been shared with the user */
+                val namespaceAccessItem = jobToGetNamespaceAccessItem.await()
+                        ?: throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
+                namespaceAccessItem.workspace.id
             }
         }
 
-        return workspaceDetailsMap
+        return@runBlocking mutableMapOf(Constants.WORKSPACE_ID to workspaceIDOfNamespace)
     }
 
 
