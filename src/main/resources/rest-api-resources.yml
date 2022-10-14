@@ -612,6 +612,12 @@ Namespace:
         authorizer: mexAuthorizer
 
 
+    - httpApi:
+        path: /v2/namespace/all
+        method: get
+        authorizer: mexAuthorizer
+
+
 Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
   events:

@@ -12,7 +12,9 @@ class NamespaceStrategyFactory {
 
         const val deleteNamespaceObject = "DELETE /namespace/{id}"
 
-        const val getNamespaceDataObject = "GET /namespace/all"
+        const val getAllNamespaceDataObject = "GET /namespace/all"
+
+        const val getAllNamespaceDataV2Object = "GET /v2/namespace/all"
 
         const val makeNamespacePublicObject = "PATCH /namespace/makePublic/{id}"
 
@@ -33,7 +35,8 @@ class NamespaceStrategyFactory {
             createNamespaceObject to CreateNamespaceStrategy(),
             updateNamespaceObject to UpdateNamespaceStrategy(),
             deleteNamespaceObject to DeleteNamespaceStrategy(),
-            getNamespaceDataObject to GetAllNamespaceDataStrategy(),
+            getAllNamespaceDataObject to GetAllNamespaceDataStrategy(),
+            getAllNamespaceDataV2Object to GetAllNamespaceDataV2Strategy(),
             makeNamespacePublicObject to MakeNamespacePublicStrategy(),
             makeNamespacePrivateObject to MakeNamespacePrivateStrategy(),
             getPublicNamespaceObject to GetPublicNamespaceStrategy(),
