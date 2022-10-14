@@ -79,3 +79,7 @@ fun GenericListRequest.toNodeIDList() : List<String> {
     require( this.ids.none { nodeID -> !nodeID.isValidID(Constants.NODE_ID_PREFIX) } ) { "Invalid NodeID(s)" }
     return this.ids
 }
+
+fun Boolean.toInt(): Int {
+    return if (this) 1 else 0
+}

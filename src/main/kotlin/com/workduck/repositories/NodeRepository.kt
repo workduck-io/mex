@@ -418,19 +418,20 @@ class NodeRepository(
             .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-    fun renameNodeInNamespace(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String?) {
+    fun renameNodeInNamespaceWithAccessValue(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String, publicAccess: Int) {
         val table = dynamoDB.getTable(tableName)
 
-        val expressionAttributeValues: MutableMap<String, Any?> = HashMap()
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":title"] = newName
         expressionAttributeValues[":lastEditedBy"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":AK"] = namespaceID
+        expressionAttributeValues[":publicAccess"] = publicAccess
 
         try {
-            UpdateItemSpec().updateWithNullAttributes(
+            UpdateItemSpec().update(
                 pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, " +
-                    "lastEditedBy = :lastEditedBy, AK = :AK",
+                    "lastEditedBy = :lastEditedBy, AK = :AK, publicAccess = :publicAccess",
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
             ).also {
                 table.updateItem(it)
@@ -440,15 +441,16 @@ class NodeRepository(
         }
     }
 
-    fun updateNodeNamespace(nodeID: String, workspaceID: String, namespaceID: String) {
+    fun updateNodeNamespaceAndPublicAccess(nodeID: String, workspaceID: String, namespaceID: String, publicAccess: Int) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":AK"] = namespaceID
+        expressionAttributeValues[":publicAccess"] = publicAccess
 
         UpdateItemSpec().update(
-                pk = workspaceID, sk = nodeID, updateExpression = "SET AK = :AK, updatedAt = :updatedAt",
+                pk = workspaceID, sk = nodeID, updateExpression = "SET AK = :AK, updatedAt = :updatedAt, publicAccess = :publicAccess",
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
         ).also {
             table.updateItem(it)
