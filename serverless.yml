@@ -34,6 +34,11 @@ provider:
     TABLE_NAME: ${opt:stage, 'local'}-mex
     JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     STAGE: ${opt:stage, 'local'}
+    PUBLIC_NOTE_CACHE_READER_ENDPOINT:
+      Fn::Join:
+        - ''
+        - - Ref: PublicNoteElasticCacheCluster
+          - -ro.m6edlo.ng.0001.use1.cache.amazonaws.com
     PUBLIC_NOTE_CACHE_ENDPOINT:
       Fn::Join:
         -  ''
