@@ -1167,14 +1167,19 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun getPublicNode(nodeID: String): Node {
-        val publicNodeCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_READER_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
-        val node = publicNodeCache.getNode(nodeID) ?: let {
-            val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
-            publicNodeCache.setNode(nodeID, nodeFromDB)
-            return nodeFromDB
+        val publicNodeWriteCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
+        val publicNodeReadCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_READER_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
+        try {
+            val node = publicNodeReadCache.getNode(nodeID) ?: let {
+                val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
+                publicNodeWriteCache.setNode(nodeID, nodeFromDB)
+                return nodeFromDB
+            }
+            return orderBlocks(node) as Node
+        } finally {
+            publicNodeReadCache.closeConnection()
+            publicNodeWriteCache.closeConnection()
         }
-        publicNodeCache.closeConnection()
-        return orderBlocks(node) as Node
     }
 
     fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
