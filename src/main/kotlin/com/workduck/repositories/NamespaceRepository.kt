@@ -225,7 +225,7 @@ class NamespaceRepository(
 
         return DynamoDBQueryExpression<NamespaceAccess>().query(
                 keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
-                projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
+                projectionExpression = "SK, accessType, workspaceID", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(NamespaceAccess::class.java, it, dynamoDBMapperConfig).firstOrNull()?.takeIf { item ->
                 item.accessType in accessTypeList
