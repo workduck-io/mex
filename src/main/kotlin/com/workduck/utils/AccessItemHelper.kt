@@ -22,13 +22,13 @@ object AccessItemHelper {
         return userIDs.filter { id -> id != ownerID }
     }
 
-    fun getNodeAccessItems(nodeID: String, workspaceID: String, ownerID: String, granterID: String, userIDList: List<String>, accessType: AccessType): List<NodeAccess> {
+    fun getNodeAccessItems(nodeID: String, workspaceID: String, granterID: String, userIDList: List<String>, accessType: AccessType): List<NodeAccess> {
         return userIDList.map {
             NodeAccess(
                     node = NodeIdentifier(nodeID),
                     workspace = WorkspaceIdentifier(workspaceID),
                     granterID = granterID,
-                    ownerID = ownerID,
+                    //ownerID = ownerID,
                     userID = it,
                     accessType = accessType
             )
@@ -47,13 +47,13 @@ object AccessItemHelper {
         }
     }
 
-    fun getNodeAccessItemsFromAccessMap(nodeID: String, workspaceID: String, ownerID: String, granterID: String, userIDToAccessMap: Map<String, AccessType>): List<NodeAccess> {
+    fun getNodeAccessItemsFromAccessMap(nodeID: String, workspaceID: String, granterID: String, userIDToAccessMap: Map<String, AccessType>): List<NodeAccess> {
         return userIDToAccessMap.map {
             NodeAccess(
                     node = NodeIdentifier(nodeID),
                     workspace = WorkspaceIdentifier(workspaceID),
                     granterID = granterID,
-                    ownerID = ownerID,
+                    //ownerID = ownerID,
                     userID = it.key,
                     accessType = it.value
             )

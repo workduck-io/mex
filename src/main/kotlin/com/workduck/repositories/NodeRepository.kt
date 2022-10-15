@@ -472,11 +472,11 @@ class NodeRepository(
 
     fun getNodeWorkspaceAndNamespace(nodeID: String): Pair<String, String>? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue().withS(ItemType.Workspace.name.uppercase())
-        expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":PK"] = AttributeValue().withS(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":SK"] = AttributeValue().withS(nodeID)
 
         return DynamoDBQueryExpression<Node>().queryWithIndex( index = "SK-PK-Index",
-                keyConditionExpression = "SK = :sk and begins_with(PK, :pK)", projectionExpression = "PK, AK",
+                keyConditionExpression = "SK = :SK and begins_with(PK, :PK)", projectionExpression = "PK, AK",
                 expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
@@ -530,7 +530,7 @@ class NodeRepository(
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NodeAccess.name)
 
         return DynamoDBQueryExpression<NodeAccess>().query(
-            keyConditionExpression = "PK = :PK", filterExpression = "itemType = :itemType",
+            keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
             projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(NodeAccess::class.java, it, dynamoDBMapperConfig)
@@ -624,7 +624,7 @@ class NodeRepository(
             keysAndAttributes.addHashAndRangePrimaryKey("PK", nodeToWorkspacePair.second, "SK", nodeToWorkspacePair.first)
         }
 
-        keysAndAttributes.withProjectionExpression("PK, SK, title, itemStatus, metadata, createdAt, updatedAt")
+        keysAndAttributes.withProjectionExpression("PK, SK, title, itemStatus, metadata, createdAt, updatedAt, createdBy")
         val spec = BatchGetItemSpec().withTableKeyAndAttributes(keysAndAttributes)
         val itemOutcome = dynamoDB.batchGetItem(spec)
 

@@ -39,7 +39,7 @@ class NamespaceAccessService(
                 userWorkspaceID
             }
             false -> { /* if namespace does not exist in user's workspace, it means that the namespace has been shared with the user */
-                val namespaceAccessItem = jobToGetNamespaceAccessItem.await()
+                val namespaceAccessItem = jobToGetNamespaceAccessItem.await() /* if no access record for namespace, then illegal access */
                         ?: throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
                 namespaceAccessItem.workspace.id
             }
