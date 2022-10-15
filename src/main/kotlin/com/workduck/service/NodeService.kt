@@ -161,7 +161,7 @@ class NodeService( // Todo: Inject them from handlers
 
             val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
 
-            val jobToGetStoredNode = async { getNode(node.id, nodeWorkspaceID, userID, ItemStatus.ACTIVE) }
+            val jobToGetStoredNode = async { getNodeAfterPermissionCheck(node.id, userID, ItemStatus.ACTIVE) }
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
@@ -702,6 +702,11 @@ class NodeService( // Todo: Inject them from handlers
             Messages.ERROR_NODE_PERMISSION
         }
 
+        getNodeAfterPermissionCheck(nodeID, userID, itemStatus, starredInfo)
+
+    }
+
+    fun getNodeAfterPermissionCheck(nodeID: String, userID: String, itemStatus: ItemStatus? = null, starredInfo: Boolean = false) = runBlocking {
         /* to avoid fetching node's workspace first, directly use GSI to get node by node ID */
         val node = nodeRepository.getNodeByNodeID(nodeID, itemStatus)
 

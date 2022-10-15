@@ -29,7 +29,7 @@ class NodeAccessService(
 
         val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
 
-        val jobToCheckNamespaceAccess = async { namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, nodeID, operationType) }
+        val jobToCheckNamespaceAccess = async { namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, operationType) }
         val jobToGetNodeAccessItem = async { nodeRepository.getNodeAccessItem(nodeID, userID, accessTypeList) }
 
         val workspaceDetailsMap = mutableMapOf<String, String>()
