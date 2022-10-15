@@ -11,6 +11,8 @@ class NodeStrategyFactory {
 
         const val createNodeObject = "POST /node"
 
+        const val createNodeObjectV2 = "POST /v2/node"
+
         /* since we're not hard deleting, just moving to archive */
         const val archiveNodeObject = "PUT /node/archive/{id}"
 
@@ -67,6 +69,7 @@ class NodeStrategyFactory {
             getNodeObject to GetNodeStrategy(),
             batchGetNodeObject to GetNodesByIDStrategy(),
             createNodeObject to CreateNodeStrategy(),
+            createNodeObjectV2 to CreateNodeStrategyV2(),
             archiveNodeObject to ArchiveNodeStrategy(),
             archiveNodeMiddlewareObject to ArchiveNodeMiddlewareStrategy(),
             appendToNodeObject to AppendToNodeStrategy(),
