@@ -81,6 +81,11 @@ Node:
         method: post
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /v2/node
+        method: post
+        authorizer: mexAuthorizer
+
       #deleteNodes( archive them )
     - httpApi:
         path: /node/archive/{id}

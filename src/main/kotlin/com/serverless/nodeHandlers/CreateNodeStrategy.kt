@@ -14,8 +14,9 @@ class CreateNodeStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
 
         return input.payload?.let { nodeRequest ->
-            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID)
-            ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_CREATING_NODE)
+            nodeService.createAndUpdateNode(nodeRequest, input.headers.workspaceID, input.tokenBody.userID).let {
+                ApiResponseHelper.generateStandardResponse(NodeHelper.convertNodeToNodeResponse(it), Messages.ERROR_CREATING_NODE)
+            }
         } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
 
     }

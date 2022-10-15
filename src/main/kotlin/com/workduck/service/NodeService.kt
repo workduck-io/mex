@@ -123,32 +123,19 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun createNode(node: Node, namespace: Namespace) = runBlocking {
+    fun createNode(node: Node, namespace: Namespace) : Node = runBlocking {
         setMetadataOfNodeToCreate(node, namespace)
 
         launch { createTags(node.tags, node.id, node.workspaceIdentifier.id) }
         repository.create(node)
+        return@runBlocking node
 
     }
 
-    private fun createNodeVersionFromNode(node: Node): NodeVersion {
-        val nodeVersion = NodeVersion(
-            id = "${node.id}${Constants.DELIMITER}VERSION",
-            lastEditedBy = node.lastEditedBy,
-            createdBy = node.createdBy,
-            data = node.data,
-            dataOrder = node.dataOrder,
-            createdAt = node.createdAt,
-            namespaceIdentifier = node.namespaceIdentifier,
-            workspaceIdentifier = node.workspaceIdentifier,
-            updatedAt = "UPDATED_AT${Constants.DELIMITER}${node.updatedAt}"
-        )
-        nodeVersion.version = Helper.generateId("version")
-        return nodeVersion
-    }
+
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, userWorkspaceID: String, userID: String) =
+    fun createAndUpdateNode(request: WDRequest?, userWorkspaceID: String, userID: String): Node =
         runBlocking {
             val nodeRequest: NodeRequest = request as NodeRequest
 
@@ -177,8 +164,7 @@ class NodeService( // Todo: Inject them from handlers
                 null -> {
                     val namespace = jobToGetNamespace.await()
                     updateNodeAttributesInSingleCreate(node, nodeRequest, namespace)
-                    val jobToCreateNode = async { createNode(node, namespace) }
-                    jobToCreateNode.await()
+                    createNode(node, namespace)
                 }
                 else -> {
                     jobToGetNamespace.cancel()
@@ -186,6 +172,46 @@ class NodeService( // Todo: Inject them from handlers
                 }
             }
         }
+
+
+
+    fun createAndUpdateNodeV2(request: WDRequest?, userWorkspaceID: String, userID: String) =
+            runBlocking {
+                val nodeRequest: NodeRequest = request as NodeRequest
+
+                val nodeWorkspaceID = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.id, userWorkspaceID,
+                        nodeRequest.namespaceIdentifier.id, userID, EntityOperationType.EDIT).let { workspaceDetails ->
+                    require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
+                    workspaceDetails[Constants.WORKSPACE_ID]!!
+                }
+
+
+                val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
+
+                val jobToGetStoredNode = async { getNodeAfterPermissionCheck(node.id, userID, ItemStatus.ACTIVE) }
+
+                val jobToGetNamespace = async {
+                    node.namespaceIdentifier.id.let { namespaceID ->
+                        namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
+                            require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
+                            namespace
+                        }
+                    }
+                }
+
+
+                when (val storedNode = jobToGetStoredNode.await()) {
+                    null -> {
+                        val namespace = jobToGetNamespace.await()
+                        updateNodeAttributesInSingleCreate(node, nodeRequest, namespace)
+                        createNode(node, namespace)
+                    }
+                    else -> {
+                        jobToGetNamespace.cancel()
+                        updateNode(node, storedNode)
+                    }
+                }
+            }
 
     fun updateNodeAttributesInSingleCreate(node: Node, nodeRequest: NodeRequest, namespace: Namespace) {
         node.title =
@@ -991,7 +1017,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
     }
 
-    fun updateNode(node: Node, storedNode: Node)  = runBlocking {
+    fun updateNode(node: Node, storedNode: Node) : Node = runBlocking {
 
         Page.populatePageWithCreatedAndPublicFields(node, storedNode)
 
@@ -1009,6 +1035,7 @@ class NodeService( // Todo: Inject them from handlers
         launch { updateTags(node.tags, storedNode.tags, node.id, node.workspaceIdentifier.id) }
 
         launch { repository.update(node) }
+        return@runBlocking node
 
     }
 
