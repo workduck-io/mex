@@ -152,11 +152,16 @@ class NodeService( // Todo: Inject them from handlers
         runBlocking {
             val nodeRequest: NodeRequest = request as NodeRequest
 
-            val nodeWorkspaceID = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.id, userWorkspaceID, userID, EntityOperationType.EDIT)[Constants.WORKSPACE_ID]!!
+            val nodeWorkspaceID = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.id, userWorkspaceID,
+                    nodeRequest.namespaceIdentifier.id, userID, EntityOperationType.EDIT).let { workspaceDetails ->
+                        require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
+                        workspaceDetails[Constants.WORKSPACE_ID]!!
+            }
+
 
             val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
 
-            val jobToGetStoredNode = async { getNode(node.id, nodeWorkspaceID, userID, ItemStatus.ACTIVE) }
+            val jobToGetStoredNode = async { getNodeAfterPermissionCheck(node.id, userID, ItemStatus.ACTIVE) }
 
             val jobToGetNamespace = async {
                 node.namespaceIdentifier.id.let { namespaceID ->
@@ -697,6 +702,11 @@ class NodeService( // Todo: Inject them from handlers
             Messages.ERROR_NODE_PERMISSION
         }
 
+        getNodeAfterPermissionCheck(nodeID, userID, itemStatus, starredInfo)
+
+    }
+
+    fun getNodeAfterPermissionCheck(nodeID: String, userID: String, itemStatus: ItemStatus? = null, starredInfo: Boolean = false) = runBlocking {
         /* to avoid fetching node's workspace first, directly use GSI to get node by node ID */
         val node = nodeRepository.getNodeByNodeID(nodeID, itemStatus)
 
@@ -1253,8 +1263,8 @@ class NodeService( // Todo: Inject them from handlers
 
         if (userIDs.isEmpty()) return
 
-        val nodeWorkspaceDetails = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(sharedNodeRequest.nodeID, granterWorkspaceID, granterID, EntityOperationType.MANAGE)
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceDetails[Constants.WORKSPACE_ID]!!, nodeWorkspaceDetails[Constants.WORKSPACE_OWNER]!!, granterID, userIDs, sharedNodeRequest.accessType)
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(granterWorkspaceID, sharedNodeRequest.nodeID, granterID, EntityOperationType.MANAGE)
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceID, granterID, userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -1266,10 +1276,10 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
-    fun changeAccessType(wdRequest: WDRequest, granterID: String, workspaceID: String) {
+    fun changeAccessType(wdRequest: WDRequest, granterID: String, granterWorkspaceID: String) {
         val updateAccessRequest = wdRequest as UpdateAccessTypesRequest
-        val nodeWorkspaceDetails = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(updateAccessRequest.nodeID, workspaceID, granterID, EntityOperationType.MANAGE)
-        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceDetails[Constants.WORKSPACE_ID]!!, nodeWorkspaceDetails[Constants.WORKSPACE_OWNER]!!, granterID, updateAccessRequest.userIDToAccessTypeMap)
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(granterWorkspaceID, updateAccessRequest.nodeID, granterID, EntityOperationType.MANAGE)
+        val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceID, granterID, updateAccessRequest.userIDToAccessTypeMap)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -1281,14 +1291,14 @@ class NodeService( // Todo: Inject them from handlers
         updateNode(node, storedNode)
     }
 
-    fun revokeSharedAccess(wdRequest: WDRequest, revokerID: String, workspaceID: String) {
+    fun revokeSharedAccess(wdRequest: WDRequest, revokerID: String, revokerWorkspaceID: String) {
         val sharedNodeRequest = wdRequest as SharedNodeRequest
 
         // check if the revoker has manage access
-        require(nodeAccessService.checkIfUserHasAccess(workspaceID, sharedNodeRequest.nodeID, revokerID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
+        require(nodeAccessService.checkIfUserHasAccess(revokerWorkspaceID, sharedNodeRequest.nodeID, revokerID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
 
         // since only PK and SK matter here for deletion, can fill dummy fields.
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, workspaceID, revokerID, revokerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, revokerWorkspaceID, revokerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
         nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
     }
 
@@ -1332,7 +1342,7 @@ class NodeService( // Todo: Inject them from handlers
         map["nodeTitle"] = nodeData["title"]!!.s
         map["accessType"] = nodeAccessItemsMap[nodeID]!!.accessType.name
         map["granterID"] = nodeAccessItemsMap[nodeID]!!.granterID
-        map["ownerID"] = nodeAccessItemsMap[nodeID]!!.ownerID
+        map["ownerID"] = nodeData["createdBy"]!!.s
 
         val metadata = if (nodeData.containsKey("metadata")) nodeData["metadata"]!!.s else null
         val nodeMetadataJson = """

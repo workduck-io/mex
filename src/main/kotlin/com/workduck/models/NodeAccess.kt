@@ -43,9 +43,9 @@ class NodeAccess(
     @DynamoDBAttribute(attributeName = "granterID")
     override var granterID: String = "granter",
 
-    @JsonProperty("ownerID")
-    @DynamoDBAttribute(attributeName = "ownerID")
-    var ownerID: String = "owner",
+//    @JsonProperty("ownerID")
+//    @DynamoDBAttribute(attributeName = "ownerID")
+//    var ownerID: String = "owner",
 
     @JsonProperty("accessType")
     @DynamoDBAttribute(attributeName = "accessType")
