@@ -27,18 +27,6 @@ import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
-enum class NodeStatus {
-    LINKED,
-    UNLINKED
-}
-
-enum class EntityOperationType {
-    EDIT,
-    READ,
-    MANAGE
-
-}
-
 @DynamoDBTable(tableName = "local-mex")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Node(
