@@ -199,7 +199,18 @@ functions:
 useDotenv: true
 
 resources:
+  - Conditions:
+      IsProd:
+        Fn::Equals:
+          - ${opt:stage, 'local'}
+          - test
+
+      IsTest:
+        Fn::Not:
+          - Condition: IsProd
+
   - ${file(src/main/resources/api-gateway-errors.yml)}
-  - ${file(src/main/resources/mex.yml)}
+  - ${file(src/main/resources/prod-table-config.yml)}
+  - ${file(src/main/resources/test-table-config.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}

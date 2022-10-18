@@ -538,9 +538,9 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-      path: /shared/namespace
-      method: post
-      authorizer: mexAuthorizer
+        path: /shared/namespace
+        method: post
+        authorizer: mexAuthorizer
 
     - httpApi:
         path: /shared/namespace
