@@ -61,10 +61,11 @@ fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
     )
 }
 
-fun NamespaceRequest.toNamespace(workspaceID: String) : Namespace {
+fun NamespaceRequest.toNamespace(workspaceID: String, ownerUserID: String?) : Namespace {
     return Namespace(
             id = this.id,
             name = this.name,
+            createdBy = ownerUserID,
             namespaceMetadata = this.namespaceMetadata,
             workspaceIdentifier = WorkspaceIdentifier(workspaceID))
 

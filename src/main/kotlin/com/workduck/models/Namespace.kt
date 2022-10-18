@@ -14,13 +14,6 @@ import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
 import com.workduck.utils.Helper
 
-/**
- * namespace status
- */
-enum class NamespaceStatus {
-    ACTIVE,
-    INACTIVE
-}
 
 /**
  * class for namespace
@@ -53,6 +46,10 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "createdAt")
     var createdAt: Long? = Constants.getCurrentTime(),
 
+    @JsonProperty("createdBy")
+    @DynamoDBAttribute(attributeName = "createdBy")
+    var createdBy: String? = null,
+
     @JsonProperty("metadata")
     @DynamoDBTypeConverted(converter = NamespaceMetadataConverter::class)
     @DynamoDBAttribute(attributeName = "metadata")
@@ -72,7 +69,6 @@ class Namespace(
     @DynamoDBAttribute(attributeName = "publicAccess")
     var publicAccess: Boolean = false,
 
-    // val status: NamespaceStatus = NamespaceStatus.ACTIVE
 
     @JsonProperty("archivedNodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "archivedNodeHierarchyInformation")

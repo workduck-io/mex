@@ -12,12 +12,7 @@ import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NodeIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 
-enum class AccessType {
-    WRITE,
-    READ,
-    MANAGE,
-    NO_ACCESS
-}
+
 
 @DynamoDBTable(tableName = "local-mex")
 class NodeAccess(

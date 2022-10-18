@@ -174,6 +174,22 @@ class NamespaceRepository(
         }
     }
 
+    fun getOwnerDetailsFromNamespaceID(namespaceID: String) : Map<String, String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+
+        return DynamoDBQueryExpression<Namespace>().queryWithIndex(
+                index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+                projectionExpression = "PK, SK, createdBy", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).firstOrNull()?.let { namespace ->
+                mapOf((namespace.createdBy ?: "" ) to AccessType.OWNER.name)
+            } ?: throw IllegalArgumentException(Messages.INVALID_NAMESPACE_ID)
+        }
+    }
+
+
 
 
     fun getPublicNamespace(namespaceID: String) : Namespace {
