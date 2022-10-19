@@ -1,0 +1,106 @@
+Resources:
+  mexDataTest:
+    Type: AWS::DynamoDB::Table
+    Condition: IsTest
+    Properties:
+      TableName: "${opt:stage, 'local'}-mex"
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: AK
+          AttributeType: S
+        - AttributeName: itemType
+          AttributeType: S
+        - AttributeName: createdBy
+          AttributeType: S
+        - AttributeName: workspaceIdentifier
+          AttributeType: S
+        - AttributeName: itemStatus
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        - IndexName: SK-PK-Index
+          KeySchema:
+            - AttributeName: SK
+              KeyType: HASH
+            - AttributeName: PK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: PK-itemType-index
+          KeySchema:
+            - AttributeName: PK
+              KeyType: HASH
+            - AttributeName: itemType
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - metadata
+              - updatedAt
+              - createdAt
+            ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: itemType-AK-index
+          KeySchema:
+            - AttributeName: itemType
+              KeyType: HASH
+            - AttributeName: AK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: WS-itemStatus-index
+          KeySchema:
+            - AttributeName: workspaceIdentifier
+              KeyType: HASH
+            - AttributeName: itemStatus
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: WS-itemType-index
+          KeySchema:
+            - AttributeName: workspaceIdentifier
+              KeyType: HASH
+            - AttributeName: itemType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: createdBy-itemType-index
+          KeySchema:
+            - AttributeName: createdBy
+              KeyType: HASH
+            - AttributeName: itemType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      TimeToLiveSpecification:
+        AttributeName: expireAt
+        Enabled: true
+
