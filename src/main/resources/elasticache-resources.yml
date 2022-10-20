@@ -8,7 +8,7 @@ Resources:
       AutomaticFailoverEnabled: true
       AutoMinorVersionUpgrade: true
       Engine: redis
-      CacheNodeType: cache.t3.small
+      CacheNodeType: cache.t3.micro
       NumCacheClusters: 3
       SecurityGroupIds:
         - sg-51d4667f
