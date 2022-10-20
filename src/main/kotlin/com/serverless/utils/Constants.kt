@@ -22,7 +22,7 @@ object Constants {
     const val MAX_NODE_IDS_FOR_BATCH_GET = 25
     const val DDB_MAX_ITEM_SIZE = 350000
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
-    const val PUBLIC_NOTE_EXP_TIME_IN_SECONDS: Long = 900
+    const val PUBLIC_NOTE_EXP_TIME_IN_SECONDS: Long = 86400
     const val DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
     const val NODE = "node"
     const val CHANGED_PATHS = "changedPaths"
