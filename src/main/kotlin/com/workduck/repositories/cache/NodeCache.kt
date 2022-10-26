@@ -14,11 +14,7 @@ class NodeCache(host: String = "localhost", port: Int = 6379) : Cache(host, port
         super.setItem(key, Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS, value)
     }
 
-    fun deleteNode(key: String): Boolean? {
-        return this.getNode(key)?.let {
-            super.deleteItem(key)?.let {
-                if (it.toInt() == 1) true else false
-            }
-        }
+    fun deleteNode(key: String) {
+        super.deleteItem(key)
     }
 }
