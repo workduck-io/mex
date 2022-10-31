@@ -351,6 +351,18 @@ class NamespaceRepository(
         }
     }
 
+    fun getUserNamespaceAccessType(namespaceID: String, userID: String) : AccessType {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNamespaceAccessItemPK(namespaceID))
+        expressionAttributeValues[":SK"] = AttributeValue(userID)
+        expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NamespaceAccess.name)
+
+        return DynamoDBQueryExpression<NamespaceAccess>().query(keyConditionExpression = "PK = :PK and SK = :SK", filterExpression = "itemType = :itemType",
+            projectionExpression = "SK, accessType", expressionAttributeValues = expressionAttributeValues).let {
+            mapper.query(NamespaceAccess::class.java, it, dynamoDBMapperConfig)
+        }.firstOrNull()?.accessType ?: AccessType.NO_ACCESS
+    }
+
 
 
 //

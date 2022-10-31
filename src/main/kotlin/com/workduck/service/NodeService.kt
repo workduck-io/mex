@@ -1210,14 +1210,14 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking deletedNodesList
     }
 
-    fun makeNodePublic(nodeID: String, workspaceID: String, userID: String) {
-        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.MANAGE))
-        pageRepository.togglePagePublicAccess(nodeID, workspaceID, 1)
+    fun makeNodePublic(nodeID: String, userWorkspaceID: String, userID: String) {
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
+        pageRepository.togglePagePublicAccess(nodeID, nodeWorkspaceID, 1)
     }
 
-    fun makeNodePrivate(nodeID: String, workspaceID: String, userID: String) {
-        require(nodeAccessService.getNamespaceIDAndCheckIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.MANAGE))
-        pageRepository.togglePagePublicAccess(nodeID, workspaceID, 0)
+    fun makeNodePrivate(nodeID: String, userWorkspaceID: String, userID: String) {
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
+        pageRepository.togglePagePublicAccess(nodeID, nodeWorkspaceID, 0)
     }
 
     fun getPublicNode(nodeID: String): Node {
@@ -1334,9 +1334,21 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getSharedUserInformation(nodeID)
     }
 
-    fun getAccessDataForUser(nodeID: String, userID: String, workspaceID: String): String {
-        if (nodeAccessService.checkIfNodeExistsForWorkspace(nodeID, workspaceID)) return AccessType.MANAGE.name
-        return nodeRepository.getUserNodeAccessRecord(nodeID, userID)
+    fun getAccessDataForUser(nodeID: String, userID: String, userWorkspaceID: String): String = runBlocking {
+        val nodeWorkspaceNamespacePair = nodeRepository.getNodeWorkspaceAndNamespace(nodeID)
+        require(nodeWorkspaceNamespacePair != null) { Messages.INVALID_NODE_ID }
+
+        if (nodeWorkspaceNamespacePair.first == userWorkspaceID) return@runBlocking AccessType.MANAGE.name
+
+        val getNodeAccessTypeJob = async { nodeAccessService.getUserNodeAccessType(nodeID, userID) }
+        val getNamespaceAccessTypeJob = async { namespaceService.namespaceAccessService.getUserNamespaceAccessType(nodeWorkspaceNamespacePair.second, userID)}
+        val nodeAccessLevel = getNodeAccessTypeJob.await()
+        val namespaceAccessLevel = getNamespaceAccessTypeJob.await()
+
+        return@runBlocking when(namespaceAccessLevel.ordinal > nodeAccessLevel.ordinal){
+            true -> namespaceAccessLevel.name
+            false -> nodeAccessLevel.name
+        }
     }
 
     fun getAllSharedNodesWithUser(userID: String): List<Map<String, String>> {
