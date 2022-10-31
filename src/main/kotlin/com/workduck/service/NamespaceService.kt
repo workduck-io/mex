@@ -93,21 +93,21 @@ class NamespaceService (
     }
 
 
-    fun makeNamespacePublic(namespaceID: String, workspaceID: String, userID: String) {
-        require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NAMESPACE_PERMISSION }
-        require( !namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) { Messages.ERROR_NAMESPACE_PUBLIC }
-        val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 0) /* get all private nodes */
-        nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 1)
-        namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 1)
+    fun makeNamespacePublic(namespaceID: String, userWorkspaceID: String, userID: String) {
+        val namespaceWorkspaceID = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID] ?: throw IllegalArgumentException(Messages.ERROR_GETTING_WORKSPACE)
+        require( !namespaceRepository.isNamespacePublic(namespaceID, namespaceWorkspaceID) ) { Messages.ERROR_NAMESPACE_PUBLIC }
+        val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, namespaceWorkspaceID, 0) /* get all private nodes */
+        nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, namespaceWorkspaceID, 1)
+        namespaceRepository.setPublicAccessValue(namespaceID, namespaceWorkspaceID, 1)
 
     }
 
-    fun makeNamespacePrivate(namespaceID: String, workspaceID: String, userID: String) {
-        require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NAMESPACE_PERMISSION }
-        require( namespaceRepository.isNamespacePublic(namespaceID, workspaceID) ) { Messages.ERROR_NAMESPACE_PRIVATE }
-        val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, workspaceID, 1) /* get all public nodes */
-        nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, workspaceID, 0)
-        namespaceRepository.setPublicAccessValue(namespaceID, workspaceID, 0)
+    fun makeNamespacePrivate(namespaceID: String, userWorkspaceID: String, userID: String) {
+        val namespaceWorkspaceID = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID] ?: throw IllegalArgumentException(Messages.ERROR_GETTING_WORKSPACE)
+        require( namespaceRepository.isNamespacePublic(namespaceID, namespaceWorkspaceID) ) { Messages.ERROR_NAMESPACE_PRIVATE }
+        val nodeIDList = nodeService.getAllNodesWithNamespaceIDAndAccess(namespaceID, namespaceWorkspaceID, 1) /* get all public nodes */
+        nodeService.makeNodesPublicOrPrivateInParallel(nodeIDList, namespaceWorkspaceID, 0)
+        namespaceRepository.setPublicAccessValue(namespaceID, namespaceWorkspaceID, 0)
 
     }
 

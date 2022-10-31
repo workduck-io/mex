@@ -198,10 +198,10 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
-    - httpApi:
-        path: /shared/node/{id}/access
-        method: get
-        authorizer: mexAuthorizer
+#    - httpApi:
+#        path: /shared/node/{id}/access
+#        method: get
+#        authorizer: mexAuthorizer
 
     - httpApi:
         path: /shared/node/all
@@ -339,15 +339,17 @@ Node:
         method: post
         authorizer: mexAuthorizer
 
+    # shared users for a node
     - httpApi:
         path: /v1/shared/node/{id}/users
         method: get
         authorizer: mexAuthorizer
 
-    - httpApi:
-        path: /v1/shared/node/{id}/access
-        method: get
-        authorizer: mexAuthorizer
+#    check access level for a user
+#    - httpApi:
+#        path: /v1/shared/node/{id}/access
+#        method: get
+#        authorizer: mexAuthorizer
 
     - httpApi:
         path: /v1/shared/node/all
