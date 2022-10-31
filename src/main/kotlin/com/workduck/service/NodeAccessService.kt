@@ -52,21 +52,6 @@ class NodeAccessService(
 
         }
 
-//        when (jobToCheckIfNodeExistsForWorkspace.await()) {
-//            true -> {
-//                jobToGetNodeAccessItem.cancel()
-//                workspaceDetailsMap[Constants.WORKSPACE_ID] = userWorkspaceID
-//                workspaceDetailsMap[Constants.WORKSPACE_OWNER] = userID
-//
-//            }
-//            false -> { /* if node does not exist in user's workspace, it means that the node has been shared with the user */
-//                val nodeAccessItem = jobToGetNodeAccessItem.await()
-//                        ?: throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
-//
-//                workspaceDetailsMap[Constants.WORKSPACE_ID] = nodeAccessItem.workspace.id
-//                workspaceDetailsMap[Constants.WORKSPACE_OWNER] = nodeAccessItem.ownerID
-//            }
-//        }
         return@runBlocking workspaceDetailsMap
     }
 
@@ -128,6 +113,11 @@ class NodeAccessService(
             }
         }
 
+    }
+
+
+    fun getUserNodeAccessType(nodeID: String, userID: String): AccessType {
+        return nodeRepository.getUserNodeAccessType(nodeID, userID)
     }
 
 }

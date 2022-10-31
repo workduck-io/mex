@@ -49,6 +49,11 @@ class NamespaceAccessService(
     }
 
 
+    fun getUserNamespaceAccessType(namespaceID: String, userID: String): AccessType {
+        return namespaceRepository.getUserNamespaceAccessType(namespaceID, userID)
+    }
+
+
 
 
 }
