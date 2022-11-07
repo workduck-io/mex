@@ -561,17 +561,19 @@ class NodeService( // Todo: Inject them from handlers
         val nodeRequest: NodeBulkRequest = request as NodeBulkRequest
 
         val nodePath: NodePath = nodeRequest.nodePath
-        val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, nodePath.allNodesNames.last(), nodePath.allNodesIDs.last(), workspaceID, userID)
 
-        require(namespaceService.namespaceAccessService.checkIfUserHasAccess(workspaceID, node.namespaceIdentifier.id, userID, EntityOperationType.READ)) {
-            Messages.ERROR_NAMESPACE_PERMISSION
-        }
+        /* this call internally checks user access and throw error */
+        val nodeWorkspaceID = namespaceService
+            .namespaceAccessService
+            .checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.nodePath.namespaceID, workspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID]!!
+
+        val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, nodePath.allNodesNames.last(), nodePath.allNodesIDs.last(), nodeWorkspaceID, userID)
 
 
         val jobToGetNamespace = async {
             node.namespaceIdentifier.id.let { namespaceID ->
                 namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
-                    require(namespace != null) { "Invalid NamespaceID" }
+                    require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
                     namespace
                 }
             }
@@ -1211,12 +1213,12 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     fun makeNodePublic(nodeID: String, userWorkspaceID: String, userID: String) {
-        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
         pageRepository.togglePagePublicAccess(nodeID, nodeWorkspaceID, 1)
     }
 
     fun makeNodePrivate(nodeID: String, userWorkspaceID: String, userID: String) {
-        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
         pageRepository.togglePagePublicAccess(nodeID, nodeWorkspaceID, 0)
     }
 
@@ -1290,7 +1292,7 @@ class NodeService( // Todo: Inject them from handlers
 
         if (userIDs.isEmpty()) return
 
-        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(granterWorkspaceID, sharedNodeRequest.nodeID, granterID, EntityOperationType.MANAGE)
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(granterWorkspaceID, sharedNodeRequest.nodeID, granterID, EntityOperationType.MANAGE)
         val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, nodeWorkspaceID, granterID, userIDs, sharedNodeRequest.accessType)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
@@ -1305,7 +1307,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun changeAccessType(wdRequest: WDRequest, granterID: String, granterWorkspaceID: String) {
         val updateAccessRequest = wdRequest as UpdateAccessTypesRequest
-        val nodeWorkspaceID = nodeAccessService.checkUserAccessAndReturnWorkspace(granterWorkspaceID, updateAccessRequest.nodeID, granterID, EntityOperationType.MANAGE)
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(granterWorkspaceID, updateAccessRequest.nodeID, granterID, EntityOperationType.MANAGE)
         val nodeAccessItems = getNodeAccessItemsFromAccessMap(updateAccessRequest.nodeID, nodeWorkspaceID, granterID, updateAccessRequest.userIDToAccessTypeMap)
         nodeRepository.createBatchNodeAccessItem(nodeAccessItems)
     }
@@ -1329,8 +1331,9 @@ class NodeService( // Todo: Inject them from handlers
         nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
     }
 
-    fun getAllSharedUsersOfNode(nodeID: String, userID: String, workspaceID: String): Map<String, String> {
-        require(nodeAccessService.checkIfUserHasAccess(workspaceID, nodeID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
+    /* will return information only if user has MANAGE access to the node or the namespace of the node */
+    fun getAllSharedUsersOfNode(nodeID: String, userID: String, userWorkspaceID: String): Map<String, String> {
+        require(nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE).isNotEmpty()) { Messages.ERROR_NODE_PERMISSION }
         return nodeRepository.getSharedUserInformation(nodeID)
     }
 
