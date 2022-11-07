@@ -65,7 +65,7 @@ class NodeAccessService(
         return checkForNodeAndNamespaceAccess(nodeWorkspaceNamespacePair, userWorkspaceID, nodeID, userID, operationType)
     }
 
-    fun checkUserAccessAndReturnWorkspace(userWorkspaceID: String, nodeID: String, userID: String, operationType: EntityOperationType) : String {
+    fun checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID: String, nodeID: String, userID: String, operationType: EntityOperationType) : String {
         val nodeWorkspaceNamespacePair = nodeRepository.getNodeWorkspaceAndNamespace(nodeID)
         require(checkForNodeAndNamespaceAccess(nodeWorkspaceNamespacePair, userWorkspaceID, nodeID, userID, operationType)) {Messages.ERROR_NODE_PERMISSION}
         return nodeWorkspaceNamespacePair!!.first /* null check already present in the above function*/
