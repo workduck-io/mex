@@ -104,7 +104,7 @@ class NodeAccessService(
             }
             false -> {
                 /* for same namespace refactor, either the user can be workspace owner or should have EDIT access */
-                val accessTypeList = AccessItemHelper.getAccessTypesForOperation(EntityOperationType.EDIT)
+                val accessTypeList = AccessItemHelper.getAccessTypesForOperation(EntityOperationType.WRITE)
                 when(isWorkspaceOwner || namespaceAccessService.checkIfNamespaceSharedWithUser(nodeWorkspaceNamespacePair.second, userID, accessTypeList)){
                     true -> nodeWorkspaceNamespacePair.first
                     false -> throw IllegalArgumentException(Messages.ERROR_NAMESPACE_PERMISSION)
