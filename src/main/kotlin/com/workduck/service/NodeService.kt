@@ -140,7 +140,7 @@ class NodeService( // Todo: Inject them from handlers
             val nodeRequest: NodeRequest = request as NodeRequest
 
             val nodeWorkspaceID = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.id, userWorkspaceID,
-                    nodeRequest.namespaceIdentifier.id, userID, EntityOperationType.EDIT).let { workspaceDetails ->
+                    nodeRequest.namespaceIdentifier.id, userID, EntityOperationType.WRITE).let { workspaceDetails ->
                         require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
                         workspaceDetails[Constants.WORKSPACE_ID]!!
             }
@@ -180,7 +180,7 @@ class NodeService( // Todo: Inject them from handlers
                 val nodeRequest: NodeRequest = request as NodeRequest
 
                 val nodeWorkspaceID = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.id, userWorkspaceID,
-                        nodeRequest.namespaceIdentifier.id, userID, EntityOperationType.EDIT).let { workspaceDetails ->
+                        nodeRequest.namespaceIdentifier.id, userID, EntityOperationType.WRITE).let { workspaceDetails ->
                     require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
                     workspaceDetails[Constants.WORKSPACE_ID]!!
                 }
@@ -565,7 +565,7 @@ class NodeService( // Todo: Inject them from handlers
         /* this call internally checks user access and throw error */
         val nodeWorkspaceID = namespaceService
             .namespaceAccessService
-            .checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.nodePath.namespaceID, workspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID]!!
+            .checkIfUserHasAccessAndGetWorkspaceDetails(nodeRequest.nodePath.namespaceID, workspaceID, userID, EntityOperationType.WRITE)[Constants.WORKSPACE_ID]!!
 
         val node: Node = createNodeObjectFromNodeBulkRequest(nodeRequest, nodePath.allNodesNames.last(), nodePath.allNodesIDs.last(), nodeWorkspaceID, userID)
 

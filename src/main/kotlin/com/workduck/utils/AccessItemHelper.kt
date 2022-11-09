@@ -13,7 +13,7 @@ import com.workduck.models.WorkspaceIdentifier
 object AccessItemHelper {
 
 
-    private val mapOfOperationToAccessTypes = mapOf(EntityOperationType.EDIT to listOf(AccessType.MANAGE, AccessType.WRITE),
+    private val mapOfOperationToAccessTypes = mapOf(EntityOperationType.WRITE to listOf(AccessType.MANAGE, AccessType.WRITE),
             EntityOperationType.READ to listOf(AccessType.MANAGE, AccessType.WRITE, AccessType.READ),
             EntityOperationType.MANAGE to listOf(AccessType.MANAGE))
 

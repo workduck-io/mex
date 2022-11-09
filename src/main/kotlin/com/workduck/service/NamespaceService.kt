@@ -72,7 +72,7 @@ class NamespaceService (
 
     fun updateNamespace(namespaceRequest: WDRequest, userWorkspaceID: String, userID: String) {
         val namespace = (namespaceRequest as NamespaceRequest).toNamespace(userWorkspaceID, null)
-        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespace.id, userWorkspaceID, userID, EntityOperationType.EDIT)[Constants.WORKSPACE_ID]!!
+        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespace.id, userWorkspaceID, userID, EntityOperationType.WRITE)[Constants.WORKSPACE_ID]!!
         namespaceRepository.updateNamespace(workspaceIDOfNamespace, namespace.id, namespace)
     }
 

@@ -2,7 +2,7 @@ package com.workduck.models
 
 
 enum class EntityOperationType {
-    EDIT,
+    WRITE,
     READ,
     MANAGE
 }
