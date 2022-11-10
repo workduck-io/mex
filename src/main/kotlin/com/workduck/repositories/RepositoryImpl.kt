@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 
 class RepositoryImpl<T : Entity>(
@@ -16,10 +17,7 @@ class RepositoryImpl<T : Entity>(
     private val dynamoDBMapperConfig: DynamoDBMapperConfig
 ) : Repository<T> {
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    }
+    private val tableName: String = DDBHelper.getTableName()
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<T>): T? {
         return mapper.load(clazz, pkIdentifier.id, skIdentifier.id, dynamoDBMapperConfig)

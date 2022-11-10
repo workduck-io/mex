@@ -18,10 +18,7 @@ class RelationshipService (
         val dynamoDB: DynamoDB = DynamoDB(client),
         val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-        var tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    },
+        var tableName: String = DDBHelper.getTableName(),
 
         var dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
             .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
