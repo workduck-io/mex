@@ -20,7 +20,7 @@ object DDBHelper {
     fun getTableName() : String {
         return when (System.getenv("STAGE")) {
             null -> "local-mex" /* for local testing without serverless offline */
-            "staging" -> "test-mex"
+            "test" -> "staging-mex"
             else -> System.getenv("TABLE_NAME")
         }
     }
