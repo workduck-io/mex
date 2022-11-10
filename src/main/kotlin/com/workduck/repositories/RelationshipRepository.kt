@@ -14,7 +14,6 @@ import com.workduck.models.Relationship
 import com.workduck.models.RelationshipType
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
-import kotlin.math.exp
 
 class RelationshipRepository(
     private val mapper: DynamoDBMapper,

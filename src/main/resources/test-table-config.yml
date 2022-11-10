@@ -1,7 +1,7 @@
 Resources:
   mexDataTest:
     Type: AWS::DynamoDB::Table
-    Condition: IsTest
+#    Condition: IsTest
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
       AttributeDefinitions:

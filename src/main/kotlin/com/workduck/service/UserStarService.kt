@@ -21,10 +21,7 @@ class UserStarService(
     private val dynamoDB: DynamoDB = DynamoDB(client),
     private val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    },
+    private val tableName: String = DDBHelper.getTableName(),
 
     val table: Table = dynamoDB.getTable(tableName),
 

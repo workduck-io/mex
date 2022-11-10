@@ -23,9 +23,7 @@ class TagService(
         private val dynamoDB: DynamoDB = DynamoDB(client),
         private val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-        private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME") },
+        private val tableName: String = DDBHelper.getTableName(),
 
         var dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))

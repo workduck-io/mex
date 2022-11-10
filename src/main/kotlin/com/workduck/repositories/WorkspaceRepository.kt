@@ -11,6 +11,7 @@ import com.workduck.models.Element
 import com.workduck.models.Workspace
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import com.workduck.utils.DDBHelper
 import org.apache.logging.log4j.LogManager
 import kotlin.math.exp
 
@@ -21,10 +22,7 @@ class WorkspaceRepository(
 
 ) : Repository<Workspace> {
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    }
+    private val tableName: String = DDBHelper.getTableName()
 
 
     override fun get(pkIdentifier: Identifier, skIdentifier: Identifier, clazz: Class<Workspace>): Workspace? {

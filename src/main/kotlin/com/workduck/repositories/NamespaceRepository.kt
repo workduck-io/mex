@@ -22,6 +22,7 @@ import com.workduck.models.NamespaceAccess
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.utils.AccessItemHelper
+import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 
@@ -33,10 +34,7 @@ class NamespaceRepository(
 
 ) : Repository<Namespace> {
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    }
+    private val tableName: String = DDBHelper.getTableName()
 
     private val projectionExpressionForNamespaceMetadata = "PK, SK, namespaceName, metadata, createdAt, updatedAt"
 

@@ -186,29 +186,7 @@ class NodeRepository(
         }
     }
 
-    fun updateNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
-        val dynamoDBMapperUpdateConfig = DynamoDBMapperConfig.Builder()
-            .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.CONSISTENT)
-            .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
-            .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-            .build()
 
-        return try {
-            val transactionWriteRequest = TransactionWriteRequest()
-            transactionWriteRequest.addUpdate(node)
-            transactionWriteRequest.addPut(nodeVersion)
-            DDBTransactionHelper(mapper).transactionWrite(transactionWriteRequest, dynamoDBMapperUpdateConfig, client)
-            node
-        } catch (e: ConditionalCheckFailedException) {
-            /* Will happen only in race condition because we're making the versions same in the service */
-            /* What should be the flow from here on? Call NodeService().update()? */
-            LOG.debug("Version mismatch!!")
-            null
-        } catch (e: java.lang.Exception) {
-            LOG.error(e)
-            null
-        }
-    }
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
         val table = dynamoDB.getTable(tableName)

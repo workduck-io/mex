@@ -25,6 +25,7 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
@@ -38,10 +39,7 @@ class NamespaceService (
     private val dynamoDB: DynamoDB = DynamoDB(client),
     private val mapper: DynamoDBMapper = DynamoDBMapper(client),
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    },
+    private val tableName: String = DDBHelper.getTableName(),
 
     private val dynamoDBMapperConfig: DynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
