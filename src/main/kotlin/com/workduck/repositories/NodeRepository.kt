@@ -30,6 +30,7 @@ import com.workduck.models.Element
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
+import com.workduck.models.Namespace
 import com.workduck.models.NamespaceAccess
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
@@ -700,6 +701,22 @@ class NodeRepository(
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
                 node.id to mapOf("metadata" to node.nodeMetaData, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
             }
+        }
+    }
+
+
+    fun getOwnerDetailsFromNodeID(nodeID: String) : Map<String, String> {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":SK"] = AttributeValue(nodeID)
+        expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+
+        return DynamoDBQueryExpression<Node>().queryWithIndex(
+            index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
+            projectionExpression = "PK, SK, createdBy", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).firstOrNull()?.let { node ->
+                mapOf((node.createdBy ?: "" ) to AccessType.OWNER.name)
+            } ?: throw IllegalArgumentException(Messages.INVALID_NAMESPACE_ID)
         }
     }
 
