@@ -1329,9 +1329,17 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     /* will return information only if user has MANAGE access to the node or the namespace of the node */
-    fun getAllSharedUsersOfNode(nodeID: String, userID: String, userWorkspaceID: String): Map<String, String> {
+    fun getAllSharedUsersOfNode(nodeID: String, userID: String, userWorkspaceID: String): Map<String, String> = runBlocking {
         require(nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE).isNotEmpty()) { Messages.ERROR_NODE_PERMISSION }
-        return nodeRepository.getSharedUserInformation(nodeID)
+
+        val jobToGetInvitedUsers = async { nodeRepository.getSharedUserInformation(nodeID) }
+        val jobToGetNodeOwnerDetails = async { nodeRepository.getOwnerDetailsFromNodeID(nodeID) }
+
+        val mapOfSharedUserDetails = jobToGetInvitedUsers.await().toMutableMap().also {
+            it.putAll(jobToGetNodeOwnerDetails.await())
+        }
+
+        return@runBlocking mapOfSharedUserDetails
     }
 
     fun getAccessDataForUser(nodeID: String, userID: String, userWorkspaceID: String): String = runBlocking {

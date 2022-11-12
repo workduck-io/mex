@@ -273,10 +273,10 @@ class NamespaceService (
 
     fun getAllSharedUsersOfNamespace(workspaceID: String, namespaceID: String, userID: String): Map<String, String> = runBlocking {
         require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.MANAGE)) { Messages.ERROR_NAMESPACE_PERMISSION }
-        val jobToGetInvitedUsersWithAccessType = async { namespaceRepository.getSharedUserInformation(namespaceID) }
+        val jobToGetInvitedUsers = async { namespaceRepository.getSharedUserInformation(namespaceID) }
         val jobToGetNamespaceOwnerDetails = async { namespaceRepository.getOwnerDetailsFromNamespaceID(namespaceID) }
 
-        val mapOfSharedUserDetails = jobToGetInvitedUsersWithAccessType.await().toMutableMap().also {
+        val mapOfSharedUserDetails = jobToGetInvitedUsers.await().toMutableMap().also {
             it.putAll(jobToGetNamespaceOwnerDetails.await())
         }
 
