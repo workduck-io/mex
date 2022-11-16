@@ -749,8 +749,21 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun getNodesInBatch(nodeIDRequest: WDRequest, workspaceID: String): List<Node> {
+    /* This endpoint will be used either in a user's own namespace or in a shared namespace */
+    fun getNodesInBatch(nodeIDRequest: WDRequest, userWorkspaceID: String, userID: String, namespaceID: String?): List<Node> {
         val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
+        val workspaceID = when(namespaceID != null){
+            true -> {
+                    namespaceService.namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(
+                        namespaceID,
+                        userWorkspaceID,
+                        userID,
+                        EntityOperationType.READ
+                    )[Constants.WORKSPACE_ID]!!
+            }
+            false -> userWorkspaceID
+        }
+
         require(nodeIDList.size < Constants.MAX_NODE_IDS_FOR_BATCH_GET) { "Number of NodeIDs should be lesser than ${Constants.MAX_NODE_IDS_FOR_BATCH_GET}" }
         return nodeRepository.batchGetNodes(nodeIDList, workspaceID)
     }
