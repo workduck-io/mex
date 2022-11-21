@@ -2,6 +2,7 @@ package com.workduck.models
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.workduck.utils.Helper
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -14,7 +15,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 sealed class ElementMetadata
 
 data class HighlightMetadata(
-    var saveableRange: SaveableRange ? = null,
-
-    var sourceUrl: String ? = null
+    val id : String = Helper.generateNanoID(IdentifierType.HIGHLIGHT.name)
 ) : ElementMetadata()
