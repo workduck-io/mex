@@ -18,7 +18,9 @@ enum class IdentifierType(s: String) {
     USER("USER"),
     BOOKMARK("BOOKMARK"),
     COMMENT("COMMENT"),
-    SNIPPET("SNIPPET")
+    SNIPPET("SNIPPET"),
+    HIGHLIGHT("HIGHLIGHT"),
+
 }
 
 @JsonTypeInfo(
