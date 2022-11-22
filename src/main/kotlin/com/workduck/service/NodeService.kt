@@ -1239,7 +1239,7 @@ class NodeService( // Todo: Inject them from handlers
         try {
             val node = publicNodeReadCache.getNode(nodeID) ?: let {
                 val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
-                publicNodeWriteCache.setNode(nodeID, nodeFromDB)
+                publicNodeWriteCache.setNode(nodeID, Helper.objectMapper.writeValueAsString(nodeFromDB))
                 return nodeFromDB
             }
             return orderBlocks(node) as Node
