@@ -346,10 +346,10 @@ Node:
         authorizer: mexAuthorizer
 
     #check access level for a user
-    - httpApi:
-        path: /v1/shared/node/{id}/access
-        method: get
-        authorizer: mexAuthorizer
+#    - httpApi:
+#        path: /v1/shared/node/{id}/access
+#        method: get
+#        authorizer: mexAuthorizer
 
     - httpApi:
         path: /v1/shared/node/all
@@ -618,10 +618,10 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
-    - httpApi:
-        path: /v1/shared/namespace/{id}/access
-        method: get
-        authorizer: mexAuthorizer
+#    - httpApi:
+#        path: /v1/shared/namespace/{id}/access
+#        method: get
+#        authorizer: mexAuthorizer
 
 
     - httpApi:
