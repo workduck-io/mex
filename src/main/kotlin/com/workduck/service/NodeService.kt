@@ -1360,7 +1360,7 @@ class NodeService( // Todo: Inject them from handlers
         val nodeWorkspaceNamespacePair = nodeRepository.getNodeWorkspaceAndNamespace(nodeID)
         require(nodeWorkspaceNamespacePair != null) { Messages.INVALID_NODE_ID }
 
-        if (nodeWorkspaceNamespacePair.first == userWorkspaceID) return@runBlocking AccessType.MANAGE.name
+        if (nodeWorkspaceNamespacePair.first == userWorkspaceID) return@runBlocking AccessType.OWNER.name
 
         val getNodeAccessTypeJob = async { nodeAccessService.getUserNodeAccessType(nodeID, userID) }
         val getNamespaceAccessTypeJob = async { namespaceService.namespaceAccessService.getUserNamespaceAccessType(nodeWorkspaceNamespacePair.second, userID)}

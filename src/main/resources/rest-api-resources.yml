@@ -345,11 +345,11 @@ Node:
         method: get
         authorizer: mexAuthorizer
 
-#    check access level for a user
-#    - httpApi:
-#        path: /v1/shared/node/{id}/access
-#        method: get
-#        authorizer: mexAuthorizer
+    #check access level for a user
+    - httpApi:
+        path: /v1/shared/node/{id}/access
+        method: get
+        authorizer: mexAuthorizer
 
     - httpApi:
         path: /v1/shared/node/all
@@ -615,6 +615,11 @@ Namespace:
     ## Get all users with whom the namespace has been shared
     - httpApi:
         path: /v1/shared/namespace/{id}/users
+        method: get
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/shared/namespace/{id}/access
         method: get
         authorizer: mexAuthorizer
 

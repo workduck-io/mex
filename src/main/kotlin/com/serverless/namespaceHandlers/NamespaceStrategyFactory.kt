@@ -1,5 +1,6 @@
 package com.serverless.namespaceHandlers
 
+
 class NamespaceStrategyFactory {
 
     companion object {
@@ -30,6 +31,8 @@ class NamespaceStrategyFactory {
 
         const val getAllSharedUsers = "GET /shared/namespace/{id}/users"
 
+        const val getAccessDataForUser = "GET /shared/namespace/{id}/access"
+
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),
@@ -43,7 +46,8 @@ class NamespaceStrategyFactory {
             getNodeHierarchyObject to GetHierarchyStrategy(),
             shareNamespace to ShareNamespaceStrategy(),
             revokeNamespaceAccess to RevokeNamespaceAccessStrategy(),
-            getAllSharedUsers to GetAllSharedUsersStrategy()
+            getAllSharedUsers to GetAllSharedUsersStrategy(),
+            getAccessDataForUser to GetAccessDataForUserStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {

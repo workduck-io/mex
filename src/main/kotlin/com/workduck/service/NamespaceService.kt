@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.SharedNamespaceRequest
 import com.serverless.models.requests.WDRequest
@@ -25,7 +24,6 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
@@ -282,6 +280,17 @@ class NamespaceService (
 
         return@runBlocking mapOfSharedUserDetails
     }
+
+
+    fun getAccessDataForUser(namespaceID: String, userID: String, userWorkspaceID: String): String {
+        val workspaceIDOfNamespace : String? = namespaceRepository.getWorkspaceIDOfNamespace(namespaceID)
+        require(!workspaceIDOfNamespace.isNullOrEmpty()) { Messages.INVALID_NAMESPACE_ID }
+
+        if (workspaceIDOfNamespace == userWorkspaceID) return AccessType.OWNER.name
+
+        return namespaceAccessService.getUserNamespaceAccessType(namespaceID, userID).name
+    }
+
 
 
     companion object {
