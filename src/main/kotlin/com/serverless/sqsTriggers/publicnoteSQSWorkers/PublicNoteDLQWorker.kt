@@ -28,12 +28,12 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
                                     if (existingNode.isOlderVariant(node)) {
                                         publicNodeCache.setNode(
                                             node.id,
-                                            node
+                                            nodeJSON
                                         )
                                     }
                                 } ?: publicNodeCache.setNode(
                                 node.id,
-                                node
+                                nodeJSON
                             )
                         } else {
                             //Remove the node from the cache if it is made private

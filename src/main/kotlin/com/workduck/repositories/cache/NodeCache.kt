@@ -10,7 +10,7 @@ class NodeCache(host: String = "localhost", port: Int = 6379) : Cache(host, port
             return Helper.objectMapper.readValue(node, Node::class.java) }
     }
 
-    fun setNode(key: String, value: Node) {
+    fun setNode(key: String, value: String) {
         super.setItem(key, Constants.PUBLIC_NOTE_EXP_TIME_IN_SECONDS, value)
     }
 
