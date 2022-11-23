@@ -1,5 +1,6 @@
 package com.workduck.models
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.workduck.utils.Helper
@@ -15,11 +16,14 @@ import com.workduck.utils.Helper
 )
 sealed class ElementMetadata
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class HighlightMetadata(
-    val id : String = Helper.generateNanoID(IdentifierType.HIGHLIGHT.name)
+    var saveableRange: SaveableRange ? = null,
+    var sourceUrl: String ? = null
 ) : ElementMetadata()
 
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class HighlightMetadataV1(
     val id : String = Helper.generateNanoID(IdentifierType.HIGHLIGHT.name)
 ) : ElementMetadata()
