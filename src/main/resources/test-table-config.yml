@@ -2,6 +2,7 @@ Resources:
   mexDataTest:
     Type: AWS::DynamoDB::Table
 #    Condition: IsTest
+    DeletionPolicy: Retain
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
       AttributeDefinitions:

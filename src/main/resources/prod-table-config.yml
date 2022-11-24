@@ -2,6 +2,7 @@ Resources:
   mexData:
     Type: AWS::DynamoDB::Table
     Condition: IsProd
+    DeletionPolicy: Retain
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
       AttributeDefinitions:

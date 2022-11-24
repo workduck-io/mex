@@ -1,6 +1,7 @@
 Resources:
   mexData:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
       AttributeDefinitions:
