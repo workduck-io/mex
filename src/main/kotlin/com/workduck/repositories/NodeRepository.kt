@@ -314,25 +314,22 @@ class NodeRepository(
 
     fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, userID: String, dataOrder: MutableList<String>) {
         val table = dynamoDB.getTable(tableName)
-        val nodeKey = HashMap<String, AttributeValue>()
-        nodeKey["PK"] = AttributeValue(workspaceID)
-        nodeKey["SK"] = AttributeValue(nodeID)
 
         val expressionAttributeValues: MutableMap<String, Any> = mutableMapOf()
 
-        val dataOrderList: MutableList<AttributeValue> = mutableListOf()
+        val dataOrderList: MutableList<String> = mutableListOf()
         var blockIdExpression = ""
         dataOrder.map {
             for (blockId in blockIdList){
-                if(!it.equals(blockId)) dataOrderList.add(AttributeValue().withS(it))
+                if(it != blockId) dataOrderList.add(it)
                 else blockIdExpression += "nodeData.${blockId} "
             }
 
         }
 
-        expressionAttributeValues[":updatedDataOrder"] = AttributeValue().withL(dataOrderList)
-        expressionAttributeValues[":updatedAt"] = AttributeValue().withN(Constants.getCurrentTime().toString())
-        expressionAttributeValues[":lastEditedBy"] = AttributeValue().withS(userID)
+        expressionAttributeValues[":updatedDataOrder"] = dataOrderList
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":lastEditedBy"] = userID
 
         val updateExpression = "remove $blockIdExpression " +
                 "set dataOrder = :updatedDataOrder, " +
