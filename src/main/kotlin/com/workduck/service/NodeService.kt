@@ -35,6 +35,8 @@ import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
+import com.workduck.models.BlockMovementAction
+import com.workduck.models.Element
 import com.workduck.models.Entity
 import com.workduck.models.EntityOperationType
 import com.workduck.models.HierarchyUpdateSource
@@ -75,6 +77,7 @@ import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
+import com.workduck.utils.extensions.toIDList
 import com.workduck.utils.extensions.toInt
 import com.workduck.utils.extensions.toNode
 import com.workduck.utils.extensions.toNodeIDList
@@ -114,10 +117,11 @@ class NodeService( // Todo: Inject them from handlers
     private val namespaceService: NamespaceService = NamespaceService(nodeService = this)
     private val nodeAccessService: NodeAccessService = NodeAccessService(nodeRepository, namespaceService.namespaceAccessService)
 
-    fun deleteBlockFromNode(blockIDRequest: WDRequest, workspaceID: String, nodeID: String, userID: String) {
-        val blockIDList = (blockIDRequest as GenericListRequest).toNodeIDList()
-        nodeRepository.getNodeDataOrderByNodeID(nodeID, workspaceID).let {
-            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, workspaceID, nodeID, userID, it)
+    fun deleteBlockFromNode(blockIDRequest: WDRequest, userWorkspaceID: String, nodeID: String, userID: String) {
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.WRITE)
+        val blockIDList = (blockIDRequest as GenericListRequest).toIDList()
+        nodeRepository.getNodeDataOrderByNodeID(nodeID, nodeWorkspaceID).let {
+            nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, nodeWorkspaceID, nodeID, userID, it)
         }
     }
 
@@ -1014,8 +1018,9 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodeIDToNodeNameMap(workspaceID, itemStatus)
     }
 
-    fun append(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): Map<String, Any>? {
+    fun append(nodeID: String, userWorkspaceID: String, userID: String, elementsListRequest: WDRequest): Map<String, Any>? {
 
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.WRITE)
         val elementsListRequestConverted = elementsListRequest as ElementRequest
         val elements = elementsListRequestConverted.elements
 
@@ -1027,7 +1032,7 @@ class NodeService( // Todo: Inject them from handlers
             e.createdAt = Constants.getCurrentTime()
             e.updatedAt = e.createdAt
         }
-        return nodeRepository.append(nodeID, workspaceID, userID, elements, orderList)
+        return nodeRepository.append(nodeID, nodeWorkspaceID, userID, elements, orderList)
     }
 
     fun updateNode(node: Node, storedNode: Node) : Node = runBlocking {
@@ -1249,52 +1254,41 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun copyOrMoveBlock(wdRequest: WDRequest, workspaceID: String) {
+    fun copyOrMoveBlock(wdRequest: WDRequest, userWorkspaceID: String, userID: String) {
 
         val copyOrMoveBlockRequest = wdRequest as BlockMovementRequest
         val destinationNodeID = copyOrMoveBlockRequest.destinationNodeID
         val sourceNodeID = copyOrMoveBlockRequest.sourceNodeID
+
+        val destinationNamespaceID = copyOrMoveBlockRequest.destinationNamespaceID
+        val sourceNamespaceID = copyOrMoveBlockRequest.sourceNamespaceID
         val blockID = copyOrMoveBlockRequest.blockID
 
-        workspaceLevelChecksForMovement(destinationNodeID, sourceNodeID, workspaceID)
+        val workspaceIDOfSourceNode = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(sourceNodeID, userWorkspaceID, sourceNamespaceID, userID, EntityOperationType.WRITE)[Constants.WORKSPACE_ID] ?: throw IllegalArgumentException(Messages.INVALID_PARAMETERS)
 
-        when (copyOrMoveBlockRequest.action.lowercase()) {
-            "copy" -> copyBlock(blockID, workspaceID, sourceNodeID, destinationNodeID)
-            "move" -> moveBlock(blockID, workspaceID, sourceNodeID, destinationNodeID)
-            else -> throw IllegalArgumentException("Invalid action")
-        }
-    }
+        val workspaceIDOfDestinationNode = nodeAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(destinationNodeID, userWorkspaceID, destinationNamespaceID, userID, EntityOperationType.WRITE)[Constants.WORKSPACE_ID] ?: throw IllegalArgumentException(Messages.INVALID_PARAMETERS)
 
-    private fun workspaceLevelChecksForMovement(destinationNodeID: String, sourceNodeID: String, workspaceID: String) = runBlocking {
-        require(destinationNodeID != sourceNodeID) {
-            Messages.SOURCE_ID_DESTINATION_ID_SAME
+        val sourceNodeWithBlockAndDataOrder: Node = nodeRepository.getNodeWithBlockAndDataOrder(sourceNodeID, blockID, workspaceIDOfSourceNode).let{ node ->
+            require(node != null) { Messages.INVALID_NODE_ID }
+            require(node.data?.get(0) != null ) { Messages.INVALID_BLOCK_ID }
+            check(!node.dataOrder.isNullOrEmpty()) {Messages.INVALID_NODE_STATE}
+            node
         }
 
-        val jobToGetSourceNodeWorkspaceID = async { nodeAccessService.checkIfNodeExistsForWorkspace(sourceNodeID, workspaceID) }
-        val jobToGetDestinationNodeWorkspaceID = async { nodeAccessService.checkIfNodeExistsForWorkspace(destinationNodeID, workspaceID) }
+        when(copyOrMoveBlockRequest.action){
 
-        jobToGetSourceNodeWorkspaceID.awaitAndThrowExceptionIfFalse(jobToGetDestinationNodeWorkspaceID, Messages.NODE_IDS_DO_NOT_EXIST)
-    }
+            BlockMovementAction.COPY -> { sourceNodeWithBlockAndDataOrder.data!![0].also { block ->
+                    nodeRepository.append(destinationNodeID, workspaceIDOfDestinationNode, userID, listOf(block), mutableListOf(block.id))
+                }
+            }
 
-    private fun copyBlock(blockID: String, workspaceID: String, sourceNodeID: String, destinationNodeID: String) {
-        /* this node contains only valid block info and dataOrder info */
-        val sourceNode: Node? = nodeRepository.getBlock(sourceNodeID, blockID, workspaceID)
-
-        val block = sourceNode?.data?.get(0)
-        val userID = block?.createdBy as String
-
-        nodeRepository.append(destinationNodeID, workspaceID, userID, listOf(block), mutableListOf(block.id))
-    }
-
-    private fun moveBlock(blockID: String, workspaceID: String, sourceNodeID: String, destinationNodeID: String) {
-        /* this node contains only valid block info and dataOrder info  */
-        val sourceNode: Node? = nodeRepository.getBlock(sourceNodeID, blockID, workspaceID)
-
-        // TODO(list remove changes order of the original elements )
-        sourceNode?.dataOrder?.let {
-            it.remove(blockID)
-            nodeRepository.moveBlock(sourceNode.data?.get(0), workspaceID, sourceNodeID, destinationNodeID, it)
+            BlockMovementAction.MOVE -> { sourceNodeWithBlockAndDataOrder.dataOrder!!.also { dataOrder ->
+                    dataOrder.remove(blockID)
+                    nodeRepository.moveBlock(sourceNodeWithBlockAndDataOrder.data!![0], workspaceIDOfSourceNode, sourceNodeID, workspaceIDOfDestinationNode, destinationNodeID, dataOrder)
+                }
+            }
         }
+
     }
 
     fun shareNode(wdRequest: WDRequest, granterID: String, granterWorkspaceID: String) {

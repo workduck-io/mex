@@ -8,17 +8,11 @@ import com.workduck.service.NodeService
 
 class CopyOrMoveBlockStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
-        val copyOrMoveRequest = input.payload
-
-        if(copyOrMoveRequest != null){
-            nodeService.copyOrMoveBlock(copyOrMoveRequest, input.headers.workspaceID)
-        }
-        else{
-            ApiResponseHelper.generateStandardErrorResponse("Invalid Parameters", 400)
-        }
-        return ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_MOVING_BLOCK)
-
+        return input.payload?.let {
+            nodeService.copyOrMoveBlock(it, input.headers.workspaceID, input.tokenBody.userID)
+            ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_MOVING_BLOCK)
+        } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
     }
-
-
 }
+
+

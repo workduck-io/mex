@@ -9,6 +9,8 @@ object Messages {
     const val ERROR_GETTING_NODES = "Error getting nodes"
     const val ERROR_NODE_PERMISSION = "Either the node does not exist or you do not have permissions"
     const val INVALID_NODE_ID  = "Invalid NodeID"
+    const val INVALID_BLOCK_ID  = "Invalid BlockID"
+    const val INVALID_NODE_STATE  = "Invalid Node state"
 
     const val ERROR_MOVING_BLOCK = "Error moving node"
 
