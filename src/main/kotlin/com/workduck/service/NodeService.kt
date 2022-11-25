@@ -19,20 +19,7 @@ import com.serverless.models.requests.SharedNodeRequest
 import com.serverless.models.requests.UpdateAccessTypesRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.Constants
-import com.serverless.utils.Messages
-import com.serverless.utils.addAlphanumericStringToTitle
-import com.serverless.utils.addIfNotEmpty
-import com.serverless.utils.awaitAndThrowExceptionIfFalse
-import com.serverless.utils.commonPrefixList
-import com.serverless.utils.convertToPathString
-import com.serverless.utils.createNodePath
-import com.serverless.utils.getDifferenceWithOldHierarchy
-import com.serverless.utils.getListOfNodes
-import com.serverless.utils.getRoughSizeOfEntity
-import com.serverless.utils.isNodeUnchanged
-import com.serverless.utils.mix
-import com.serverless.utils.removePrefixList
+import com.serverless.utils.*
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
@@ -1241,10 +1228,11 @@ class NodeService( // Todo: Inject them from handlers
     fun getPublicNode(nodeID: String): Node {
         val publicNodeWriteCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
         val publicNodeReadCache = NodeCache(System.getenv("PUBLIC_NOTE_CACHE_READER_ENDPOINT") ?: Constants.DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT)
+        val encodedKey = CacheHelper.encodePublicCacheKey(nodeID)
         try {
-            val node = publicNodeReadCache.getNode(nodeID) ?: let {
+            val node = publicNodeReadCache.getNode(encodedKey) ?: let {
                 val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
-                publicNodeWriteCache.setNode(nodeID, nodeFromDB)
+                publicNodeWriteCache.setNode(encodedKey, nodeFromDB)
                 return nodeFromDB
             }
             return orderBlocks(node) as Node
