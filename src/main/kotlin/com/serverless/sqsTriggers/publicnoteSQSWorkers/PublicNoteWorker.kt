@@ -8,6 +8,7 @@ import com.workduck.models.Node
 import com.workduck.repositories.cache.NodeCache
 import com.workduck.utils.Helper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.utils.CacheHelper
 
 
 // PublicNoteWorker Lambda is triggered via DDB Streams attached to the node entity.
@@ -21,25 +22,25 @@ class PublicNoteWorker : RequestHandler<SQSEvent, Void> {
                     val message: MutableMap<String, Any?> = Helper.objectMapper.readValue(sqsPayload)
                     val nodeJSON = Helper.objectMapper.writeValueAsString(message.get("NewImage"))
                     val node = nodeJSON.toNode()
-
+                    val encodedKey = CacheHelper.encodePublicCacheKey(node.id)
                     try {
                         if(node.hasPublicAccess()) {
                             //checked for value existing in cache
-                            publicNodeCache.getNode(node.id)
+                            publicNodeCache.getNode(encodedKey)
                                 ?.also { existingNode ->
                                     if (existingNode.isOlderVariant(node)) {
                                         publicNodeCache.setNode(
-                                            node.id,
+                                            encodedKey,
                                             node
                                         )
                                     }
                                 } ?: publicNodeCache.setNode(
-                                node.id,
+                                encodedKey,
                                 node
                             )
                         } else {
                             //Remove the node from the cache if it is made private
-                            publicNodeCache.deleteNode(node.id)
+                            publicNodeCache.deleteNode(encodedKey)
                         }
                     } finally {
                         publicNodeCache.closeConnection()
