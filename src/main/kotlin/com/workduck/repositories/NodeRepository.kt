@@ -282,7 +282,7 @@ class NodeRepository(
         return nodesProcessedList
     }
 
-    fun getBlock(nodeID: String, blockID: String, workspaceID: String): Node? {
+    fun getNodeWithBlockAndDataOrder(nodeID: String, blockID: String, workspaceID: String): Node? {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
@@ -295,12 +295,12 @@ class NodeRepository(
         }.firstOrNull()
     }
 
-    fun moveBlock(block: AdvancedElement?, workspaceID: String, sourceNodeID: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
+    fun moveBlock(block: AdvancedElement?, workspaceIDOfSourceNode: String, sourceNodeID: String, workspaceIDOfDestinationNode: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
 
         val currentTime = getCurrentTime()
 
-        val deleteBlock = getUpdateToDeleteBlockFromNode(block, workspaceID, sourceNodeID, dataOrderSourceNode, currentTime)
-        val addBlock = getUpdateToAddBlockToNode(block, workspaceID, destinationNodeID, currentTime)
+        val deleteBlock = getUpdateToDeleteBlockFromNode(block, workspaceIDOfSourceNode, sourceNodeID, dataOrderSourceNode, currentTime)
+        val addBlock = getUpdateToAddBlockToNode(block, workspaceIDOfDestinationNode, destinationNodeID, currentTime)
 
         val actions: Collection<TransactWriteItem> = listOf(
             TransactWriteItem().withUpdate(deleteBlock),
