@@ -218,7 +218,7 @@ resources:
           - staging
       IsDefault:
         Fn::Not:
-          - Fn::Or: [ Condition: IsTest, Condition: IsStaging ]
+          - Fn::Or: [ Condition: IsStaging ]
 
   - ${file(src/main/resources/api-gateway-errors.yml)}
 #  - ${file(src/main/resources/prod-table-config.yml)}
