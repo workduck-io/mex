@@ -208,10 +208,10 @@ resources:
 #        Fn::Equals:
 #          - ${opt:stage, 'local'}
 #          - prod
-      IsTest:
-        Fn::Equals:
-          - ${opt:stage, 'local'}
-          - test
+#      IsTest:
+#        Fn::Equals:
+#          - ${opt:stage, 'local'}
+#          - test
       IsStaging:
         Fn::Equals:
           - ${opt:stage, 'local'}
@@ -222,7 +222,7 @@ resources:
 
   - ${file(src/main/resources/api-gateway-errors.yml)}
 #  - ${file(src/main/resources/prod-table-config.yml)}
-  - ${file(src/main/resources/test-table-config.yml)}
+#  - ${file(src/main/resources/test-table-config.yml)}
   - ${file(src/main/resources/staging-table-config.yml)}
   - ${file(src/main/resources/default-table-config.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
