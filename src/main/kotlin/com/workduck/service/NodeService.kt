@@ -92,6 +92,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
  * contains all node related logic
@@ -122,6 +123,7 @@ class NodeService( // Todo: Inject them from handlers
         val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.WRITE)
         val blockIDList = (blockIDRequest as GenericListRequest).toIDList()
         nodeRepository.getNodeDataOrderByNodeID(nodeID, nodeWorkspaceID).let {
+            require(it.containsAll(blockIDList)) { "BlockID(s) Invalid" }
             nodeRepository.deleteBlockAndDataOrderFromNode(blockIDList, nodeWorkspaceID, nodeID, userID, it)
         }
     }
