@@ -23,7 +23,6 @@ import com.serverless.utils.Constants
 import com.serverless.utils.Messages
 import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
-import com.serverless.utils.awaitAndThrowExceptionIfFalse
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
@@ -37,7 +36,6 @@ import com.serverless.utils.CacheHelper
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
-import com.workduck.models.Element
 import com.workduck.models.Entity
 import com.workduck.models.EntityOperationType
 import com.workduck.models.HierarchyUpdateSource
@@ -50,7 +48,6 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeIdentifier
-import com.workduck.models.NodeVersion
 import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -92,7 +89,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.core.tools.picocli.CommandLine
 
 /**
  * contains all node related logic
