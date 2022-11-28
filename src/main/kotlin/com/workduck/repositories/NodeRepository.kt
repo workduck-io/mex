@@ -30,13 +30,10 @@ import com.workduck.models.Element
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
-import com.workduck.models.Namespace
-import com.workduck.models.NamespaceAccess
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper
-import com.workduck.utils.DDBTransactionHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 import java.time.Instant
@@ -312,22 +309,21 @@ class NodeRepository(
         client.transactWriteItems(moveBlockTransaction)
     }
 
-    fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, userID: String, dataOrder: MutableList<String>) {
+    fun deleteBlockAndDataOrderFromNode(blockIdList: List<String>, workspaceID: String, nodeID: String, userID: String, existingDataOrder: MutableList<String>) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = mutableMapOf()
 
-        val dataOrderList: MutableList<String> = mutableListOf()
         var blockIdExpression = ""
-        dataOrder.map {
-            for (blockId in blockIdList){
-                if(it != blockId) dataOrderList.add(it)
-                else blockIdExpression += "nodeData.${blockId} "
-            }
 
+        blockIdList.map { blockIDToDelete ->
+            blockIdExpression += "nodeData.${blockIDToDelete} ,"
         }
 
-        expressionAttributeValues[":updatedDataOrder"] = dataOrderList
+        existingDataOrder.removeAll(blockIdList)
+        blockIdExpression = blockIdExpression.dropLast(1)
+
+        expressionAttributeValues[":updatedDataOrder"] = existingDataOrder
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":lastEditedBy"] = userID
 
