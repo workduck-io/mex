@@ -1,5 +1,5 @@
 Resources:
-  mexData:
+  mexDataProd:
     Type: AWS::DynamoDB::Table
     Condition: IsProd
     DeletionPolicy: Retain
