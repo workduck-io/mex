@@ -1,8 +1,7 @@
 Resources:
-  mexDataStaging:
+  mexDataTest:
     Type: AWS::DynamoDB::Table
     Condition: IsStaging
-    DeletionPolicy: Retain
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
       AttributeDefinitions:

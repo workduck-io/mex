@@ -218,11 +218,13 @@ resources:
           - staging
       IsDefault:
         Fn::Not:
-          - Fn::Or: [ Condition: IsStaging ]
+          - Condition: IsStaging
+#      IsDefault:
+#        Fn::Not:
+#          - Fn::Or: [ Condition: IsStaging ]
 
   - ${file(src/main/resources/api-gateway-errors.yml)}
 #  - ${file(src/main/resources/prod-table-config.yml)}
-#  - ${file(src/main/resources/test-table-config.yml)}
   - ${file(src/main/resources/staging-table-config.yml)}
   - ${file(src/main/resources/default-table-config.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
