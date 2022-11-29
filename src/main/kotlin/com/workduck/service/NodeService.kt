@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.Gson
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -69,12 +70,12 @@ import com.workduck.utils.NodeHelper.getNodeIDsFromHierarchy
 import com.workduck.utils.NodeHelper.updateNodePath
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
-import com.workduck.utils.PageHelper.orderBlocks
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
 import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
+import com.workduck.utils.extensions.orderPage
 import com.workduck.utils.extensions.toIDList
 import com.workduck.utils.extensions.toInt
 import com.workduck.utils.extensions.toNode
@@ -746,8 +747,9 @@ class NodeService( // Todo: Inject them from handlers
             }
         }
 
+
         return@runBlocking node?.let { it ->
-            (orderBlocks(it) as Node).also { orderedNode ->
+            (it.orderPage() as Node).also { orderedNode ->
                 orderedNode.starred = jobToGetStarredStatus.await()
             }
         }
@@ -756,7 +758,7 @@ class NodeService( // Todo: Inject them from handlers
     /* This endpoint will be used either in a user's own namespace or in a shared namespace */
     fun getNodesInBatch(nodeIDRequest: WDRequest, userWorkspaceID: String, userID: String, namespaceID: String?): List<Node> {
         val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-        val workspaceID = when(namespaceID != null){
+        val workspaceID = when(namespaceID != null){ /*if namespaceID is null, assume user is making the call in own workspace so no need to check for permission */
             true -> {
                     namespaceService.namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(
                         namespaceID,
@@ -769,7 +771,9 @@ class NodeService( // Todo: Inject them from handlers
         }
 
         require(nodeIDList.size < Constants.MAX_NODE_IDS_FOR_BATCH_GET) { "Number of NodeIDs should be lesser than ${Constants.MAX_NODE_IDS_FOR_BATCH_GET}" }
-        return nodeRepository.batchGetNodes(nodeIDList, workspaceID)
+        return nodeRepository.batchGetNodes(nodeIDList, workspaceID).map { unorderedNode ->
+            unorderedNode.orderPage() as Node
+        }
     }
 
     fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
@@ -1243,11 +1247,11 @@ class NodeService( // Todo: Inject them from handlers
         val encodedKey = CacheHelper.encodePublicCacheKey(nodeID)
         try {
             val node = publicNodeReadCache.getNode(encodedKey) ?: let {
-                val nodeFromDB = orderBlocks(pageRepository.getPublicPage(nodeID, Node::class.java)) as Node
+                val nodeFromDB = pageRepository.getPublicPage(nodeID, Node::class.java).orderPage() as Node
                 publicNodeWriteCache.setNode(encodedKey, nodeFromDB)
                 return nodeFromDB
             }
-            return orderBlocks(node) as Node
+            return node.orderPage() as Node
         } finally {
             publicNodeReadCache.closeConnection()
             publicNodeWriteCache.closeConnection()
@@ -1304,9 +1308,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun getSharedNode(nodeID: String, userID: String): Entity {
         require(nodeRepository.checkIfAccessRecordExists(nodeID, userID)) { Messages.ERROR_NODE_PERMISSION }
-        return nodeRepository.getNodeByNodeID(nodeID, ItemStatus.ACTIVE)?.let {
-            orderBlocks(it)
-        } ?: throw NoSuchElementException(Messages.INVALID_NODE_ID)
+        return nodeRepository.getNodeByNodeID(nodeID, ItemStatus.ACTIVE)?.orderPage() ?: throw NoSuchElementException(Messages.INVALID_NODE_ID)
 
     }
 

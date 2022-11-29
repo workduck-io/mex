@@ -11,8 +11,10 @@ import com.serverless.utils.isValidID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
+import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.PageHelper
 
 fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
         Node(
@@ -52,6 +54,10 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
     )
     node.namespaceIdentifier = this.nodePath.namespaceID.let { NamespaceIdentifier(it) }
     return node
+}
+
+fun Page.orderPage() : Page {
+    return PageHelper.orderBlocks(this)
 }
 
 fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
