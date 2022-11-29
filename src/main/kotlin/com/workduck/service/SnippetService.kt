@@ -24,11 +24,10 @@ import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.SnippetRepository
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
-import com.workduck.utils.PageHelper.convertGenericRequestToList
 import com.workduck.utils.PageHelper.createDataOrderForPage
-import com.workduck.utils.PageHelper.orderBlocks
 import com.workduck.utils.SnippetHelper.getSnippetSK
 import com.workduck.utils.SnippetHelper.isCreatePossible
+import com.workduck.utils.extensions.orderPage
 import org.apache.logging.log4j.LogManager
 
 class SnippetService {
@@ -116,7 +115,7 @@ class SnippetService {
             null -> getLatestSnippet(snippetID, workspaceID)
             else -> getSnippetByVersion(snippetID, workspaceID, version)
         }?.let {
-            snippet -> orderBlocks(snippet) as Snippet?
+            snippet -> snippet.orderPage() as Snippet
         }
     }
 
