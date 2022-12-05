@@ -778,9 +778,9 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    private fun validateAndGetNamespaceForUser(workspaceID: String, namespaceID: String, userID: String) : Namespace =
+    private fun validateAndGetNamespaceForUser(workspaceID: String, namespaceID: String, userID: String, operationType: EntityOperationType) : Namespace =
         /* permission for the user would be checked when fetching the namespace */
-        namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+        namespaceService.getNamespace(workspaceID, namespaceID, userID, operationType).let { namespace ->
             require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
             namespace
         }
@@ -788,7 +788,7 @@ class NodeService( // Todo: Inject them from handlers
     fun archiveNodes(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String): List<String> = runBlocking {
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
 
-        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID, EntityOperationType.MANAGE)
 
         val currentActiveHierarchy = namespace.nodeHierarchyInformation
 
@@ -806,7 +806,7 @@ class NodeService( // Todo: Inject them from handlers
 
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
 
-        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID, EntityOperationType.MANAGE)
 
         val currentActiveHierarchy = namespace.nodeHierarchyInformation
 
@@ -828,7 +828,7 @@ class NodeService( // Todo: Inject them from handlers
     fun unarchiveNodesNew(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> = runBlocking {
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
 
-        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID, EntityOperationType.MANAGE)
 
         val currentActiveHierarchy = namespace.nodeHierarchyInformation /* destinationHierarchy */
         val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation /* sourceHierarchy */
@@ -851,7 +851,7 @@ class NodeService( // Todo: Inject them from handlers
     fun deleteArchivedNodes(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String) : List<String> = runBlocking {
 
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID, EntityOperationType.MANAGE)
         val workspaceID = namespace.workspaceIdentifier.id
 
         val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation

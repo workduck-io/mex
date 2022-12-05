@@ -30,6 +30,7 @@ import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
 import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
+import kotlin.math.E
 
 class NamespaceService (
 
@@ -57,8 +58,8 @@ class NamespaceService (
         repository.create(namespace)
     }
 
-    fun getNamespace(workspaceID: String, namespaceID: String, userID: String): Namespace? {
-        require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, EntityOperationType.READ)) { Messages.ERROR_NAMESPACE_PERMISSION }
+    fun getNamespace(workspaceID: String, namespaceID: String, userID: String, operationType: EntityOperationType = EntityOperationType.READ): Namespace? {
+        require(namespaceAccessService.checkIfUserHasAccess(workspaceID, namespaceID, userID, operationType)) { Messages.ERROR_NAMESPACE_PERMISSION }
         return getNamespaceAfterPermissionCheck(namespaceID)
     }
 
