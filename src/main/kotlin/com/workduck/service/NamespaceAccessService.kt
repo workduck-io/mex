@@ -23,8 +23,8 @@ class NamespaceAccessService(
         return namespaceRepository.checkIfUserHasAccess(namespaceID, userID, accessTypeList)
     }
 
-    private fun checkIfNamespaceExistsForWorkspace(nodeID: String, workspaceID: String): Boolean {
-        return namespaceRepository.checkIfNamespaceExistsForWorkspace(nodeID, workspaceID)
+    fun checkIfNamespaceExistsForWorkspace(namespaceID: String, workspaceID: String): Boolean {
+        return namespaceRepository.checkIfNamespaceExistsForWorkspace(namespaceID, workspaceID)
     }
 
     fun checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID: String, userWorkspaceID: String, userID: String, operationType: EntityOperationType): Map<String, String> = runBlocking {

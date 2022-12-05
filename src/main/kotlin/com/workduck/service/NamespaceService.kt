@@ -78,16 +78,15 @@ class NamespaceService (
         repository.update(namespace)
     }
 
-    fun deleteNamespace(namespaceID: String, userWorkspaceID: String, userID: String) = runBlocking {
+    fun deleteNamespace(namespaceID: String, userWorkspaceID: String) = runBlocking {
 
-        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID]
-                ?: throw IllegalArgumentException("Invalid Parameters")
+        /* only owner can delete a workspace */
+        require(namespaceAccessService.checkIfNamespaceExistsForWorkspace(namespaceID, userWorkspaceID)) { Messages.ERROR_NAMESPACE_PERMISSION }
 
-        val jobToGetListOfNodeIDsToDelete = async { nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceIDOfNamespace) }
-        launch { nodeService.batchDeleteNodes(jobToGetListOfNodeIDsToDelete.await(), workspaceIDOfNamespace) }
-        launch { repository.delete(WorkspaceIdentifier(workspaceIDOfNamespace), NamespaceIdentifier(namespaceID)) }
-
-
+        val jobToGetListOfNodeIDsToDelete = async { nodeService.getAllNodesWithNamespaceID(namespaceID, userWorkspaceID) }
+        launch { nodeService.deleteNodesInParallel(jobToGetListOfNodeIDsToDelete.await(), userWorkspaceID) }
+        launch { repository.delete(WorkspaceIdentifier(userWorkspaceID), NamespaceIdentifier(namespaceID)) }
+        
     }
 
 

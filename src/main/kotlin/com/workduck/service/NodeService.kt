@@ -881,7 +881,7 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    private fun deleteNodesInParallel(nodeIDList: List<String>, workspaceID: String) = runBlocking {
+    fun deleteNodesInParallel(nodeIDList: List<String>, workspaceID: String) = runBlocking {
 
         val jobToDelete = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
