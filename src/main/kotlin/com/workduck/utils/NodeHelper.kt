@@ -4,12 +4,15 @@ import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
 import com.serverless.utils.Constants
 import com.serverless.utils.addAlphanumericStringToTitle
+import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.getListOfNodes
 import com.serverless.utils.splitIgnoreEmpty
+import com.workduck.models.MatchType
 import com.workduck.models.Namespace
 import com.workduck.models.Node
+import com.workduck.models.NodeOperationType
 import org.apache.logging.log4j.LogManager
 
 object NodeHelper {
@@ -84,6 +87,118 @@ object NodeHelper {
 
         return if(indexTillActualCommonNode == -1) ""
         else longestExistingPathBasedOnNames.getListOfNodes().take(indexTillActualCommonNode + 1).convertToPathString()
+    }
+
+
+
+
+    fun updateHierarchiesInNamespace(namespace: Namespace, passedNodeIDList: List<String>, operationType : NodeOperationType) {
+        val sourceHierarchy = when(operationType){
+            NodeOperationType.ARCHIVE -> namespace.nodeHierarchyInformation /* move from active to archived hierarchy */
+            NodeOperationType.UNARCHIVE -> namespace.archivedNodeHierarchyInformation /* move from archived to active hierarchy */
+            NodeOperationType.DELETE -> namespace.archivedNodeHierarchyInformation /* delete from archived hierarchy */
+        }
+
+        val newSourceHierarchy = mutableListOf<String>()
+
+        val newDestinationHierarchy = when(operationType){
+            NodeOperationType.ARCHIVE -> namespace.archivedNodeHierarchyInformation.toMutableList() /* move from active to archived hierarchy */
+            NodeOperationType.UNARCHIVE -> namespace.nodeHierarchyInformation.toMutableList() /* move from archived to active hierarchy */
+            NodeOperationType.DELETE -> null /* delete from archived hierarchy */
+        }
+
+        updateHierarchiesInArchiveUnarchive(sourceHierarchy, newSourceHierarchy, newDestinationHierarchy, passedNodeIDList)
+
+        when(operationType){
+            NodeOperationType.ARCHIVE -> Namespace.populateHierarchiesAndUpdatedAt(namespace, activeHierarchy = newSourceHierarchy, archivedHierarchy = newDestinationHierarchy)
+            NodeOperationType.UNARCHIVE -> Namespace.populateHierarchiesAndUpdatedAt(namespace, activeHierarchy = newDestinationHierarchy , archivedHierarchy = newSourceHierarchy)
+            NodeOperationType.DELETE -> Namespace.populateHierarchiesAndUpdatedAt(namespace, activeHierarchy = newDestinationHierarchy, archivedHierarchy = newSourceHierarchy)
+        }
+
+    }
+
+//
+//    private fun updateHierarchiesInArchive(namespace: Namespace, passedNodeIDList: List<String>) {
+//
+//        val activeHierarchy = namespace.nodeHierarchyInformation
+//        require(activeHierarchy.isNotEmpty()) { "Hierarchy does not exist" }
+//
+//        val newArchivedHierarchy = namespace.archivedNodeHierarchyInformation.toMutableList()
+//        val newActiveHierarchy = mutableListOf<String>() /* new source */
+//
+//        updateHierarchiesInArchiveUnarchive(activeHierarchy, newActiveHierarchy, newArchivedHierarchy, passedNodeIDList)
+//
+//
+//        Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
+//        namespaceService.updateNamespace(namespace)
+//    }
+//
+//    private fun updateHierarchiesInUnarchive(namespace: Namespace, passedNodeIDList: List<String>) {
+//
+//        val archivedHierarchy = namespace.archivedNodeHierarchyInformation
+//        require(archivedHierarchy.isNotEmpty()) { "Archived hierarchy does not exist" }
+//
+//        val newActiveHierarchy = namespace.nodeHierarchyInformation.toMutableList() /* new dest */
+//        val newArchivedHierarchy = mutableListOf<String>()  /* new source */
+//
+//        updateHierarchiesInArchiveUnarchive(archivedHierarchy, newArchivedHierarchy, newActiveHierarchy, passedNodeIDList)
+//
+//        Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
+//        namespaceService.updateNamespace(namespace)
+//    }
+
+    /* sourceHierarchy : Hierarchy to move nodes from.
+       In case of archiving, sourceHierarchy will be active hierarchy
+       In case of unarchiving, sourceHierarchy will be archived hierarchy
+
+       newSourceHierarchy : Updated Hierarchy from which nodes were moved.
+       In case of archiving, newSourceHierarchy will be newActiveHierarchy hierarchy
+       In case of unarchiving, newSourceHierarchy will be newArchivedHierarchy hierarchy
+
+
+       newDestinationHierarchy : Updated Hierarchy to which nodes were moved.
+       In case of archiving, newDestinationHierarchy will be newArchivedHierarchy hierarchy
+       In case of unarchiving, newDestinationHierarchy will be newActiveHierarchy hierarchy
+
+       Can also use this to delete nodes from archivedHierarchy.
+       In that case :
+       sourceHierarchy will be archived hierarchy
+       newSourceHierarchy will be newArchivedHierarchy hierarchy
+       newDestinationHierarchy will be null
+
+     */
+    private fun updateHierarchiesInArchiveUnarchive(
+        sourceHierarchy: List<String>,
+        newSourceHierarchy: MutableList<String>,
+        newDestinationHierarchy: MutableList<String>?,
+        passedNodeIDList: List<String>
+    ) {
+
+        for (nodePath in sourceHierarchy) {
+            var isNodePresentInPath = false
+            val pathsListForSinglePath = mutableListOf<String>() /* more than one node ids from a single path could be passed */
+            for (nodeID in passedNodeIDList) {
+                if (nodePath.contains(nodeID)) {
+                    isNodePresentInPath = true
+                    pathsListForSinglePath.add(
+                        nodePath.getListOfNodes().let {
+                            it.subList(it.indexOf(nodeID) - 1, it.size)
+                        }.convertToPathString()
+                    )
+                }
+            }
+            if (isNodePresentInPath) {
+                val finalPathToArchive = WorkspaceHelper.removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
+                newDestinationHierarchy?.add(finalPathToArchive)
+                /* active hierarchy is nodePath minus the archived path */
+                newSourceHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
+            } else { /* this path will remain unchanged */
+                newSourceHierarchy.add(nodePath)
+            }
+        }
+
+        newDestinationHierarchy?.let { WorkspaceHelper.removeRedundantPaths(it) }
+        WorkspaceHelper.removeRedundantPaths(newSourceHierarchy)
     }
 
 

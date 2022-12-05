@@ -82,9 +82,9 @@ class Namespace(
 ) : Entity {
 
     companion object {
-        fun populateHierarchiesAndUpdatedAt(namespace: Namespace, activeHierarchy : List<String>, archivedHierarchy : List<String>, updatedAt: Long = Constants.getCurrentTime()){
-            namespace.nodeHierarchyInformation = activeHierarchy
-            namespace.archivedNodeHierarchyInformation = archivedHierarchy
+        fun populateHierarchiesAndUpdatedAt(namespace: Namespace, activeHierarchy : List<String>?, archivedHierarchy : List<String>?, updatedAt: Long = Constants.getCurrentTime()){
+            activeHierarchy?.let { namespace.nodeHierarchyInformation = it }
+            archivedHierarchy?.let { namespace.archivedNodeHierarchyInformation = it }
             namespace.updatedAt = updatedAt
         }
     }

@@ -14,6 +14,7 @@ import com.workduck.models.AccessType
 
 import com.workduck.models.EntityOperationType
 import com.workduck.models.HierarchyUpdateSource
+import com.workduck.models.ItemType
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceAccess
 import com.workduck.models.NamespaceIdentifier

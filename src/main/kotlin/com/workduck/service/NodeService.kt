@@ -34,6 +34,7 @@ import com.serverless.utils.isNodeUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.serverless.utils.CacheHelper
+import com.serverless.utils.NamespaceHelper
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
@@ -49,6 +50,7 @@ import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
 import com.workduck.models.NodeIdentifier
+import com.workduck.models.NodeOperationType
 import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -776,91 +778,94 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun archiveNodesSupportedByStreams(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
-
-        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-
-        val jobToGetWorkspace = async { workspaceService.getWorkspace(workspaceID) as Workspace }
-        val jobToChangeNodeStatus =
-            async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ARCHIVED) }
-
-        val workspace = jobToGetWorkspace.await()
-
-        // TODO(start using coroutines here if requests contain a lot of node ids)
-        for (nodeID in nodeIDList) {
-            workspaceService.updateNodeHierarchyOnArchivingNode(workspace, nodeID)
-        }
-        return@runBlocking jobToChangeNodeStatus.await()
-    }
-
-    fun archiveNodes(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): List<String> {
-        val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-
-        // permission for the user would be checked when fetching the namespace
-        val namespace = namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
+    private fun validateAndGetNamespaceForUser(workspaceID: String, namespaceID: String, userID: String) : Namespace =
+        /* permission for the user would be checked when fetching the namespace */
+        namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
             require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
             namespace
         }
 
+    fun archiveNodes(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String): List<String> = runBlocking {
+        val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
+
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
+
         val currentActiveHierarchy = namespace.nodeHierarchyInformation
 
-        updateHierarchiesInArchive(namespace, passedNodeIDList)
+        /* compare old and new active hierarchies */
+        NodeHelper.updateHierarchiesInNamespace(namespace, passedNodeIDList, NodeOperationType.ARCHIVE)
+        launch { namespaceService.updateNamespace(namespace) }
 
         val nodeIDsToArchive = getRemovedNodeIDs(currentActiveHierarchy, namespace.nodeHierarchyInformation)
-        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID, ItemStatus.ARCHIVED)
+        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, namespace.workspaceIdentifier.id, ItemStatus.ARCHIVED)
 
-        return nodeIDsToArchive
+        return@runBlocking nodeIDsToArchive
     }
 
-    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> {
+    fun archiveNodesMiddleware(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> = runBlocking {
 
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
 
-        // permission for the user would be checked when fetching the namespace
-        val namespace = namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
-            require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
-            namespace
-        }
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
 
         val currentActiveHierarchy = namespace.nodeHierarchyInformation
 
-        updateHierarchiesInArchive(namespace, passedNodeIDList)
+        NodeHelper.updateHierarchiesInNamespace(namespace, passedNodeIDList, NodeOperationType.ARCHIVE)
+        launch { namespaceService.updateNamespace(namespace) }
 
+        /* compare old and new active hierarchies */
         val nodeIDsToArchive = getRemovedNodeIDs(currentActiveHierarchy, namespace.nodeHierarchyInformation)
 
-        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, workspaceID, ItemStatus.ARCHIVED)
+        unarchiveOrArchiveNodesInParallel(nodeIDsToArchive, namespace.workspaceIdentifier.id, ItemStatus.ARCHIVED)
 
         /* mapOfArchivedHierarchyAndActiveHierarchyDiff */
-        return mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
+        return@runBlocking mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
             it.putAll(namespace.nodeHierarchyInformation.getDifferenceWithOldHierarchy(currentActiveHierarchy))
         }
     }
 
     // TODO( implement the behavior for renaming of nodes while un-archiving in case of clashing names at topmost level )
-    fun unarchiveNodesNew(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> {
+    fun unarchiveNodesNew(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String): MutableMap<String, List<String>> = runBlocking {
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
 
-        // permission for the user would be checked when fetching the namespace
-        val namespace = namespaceService.getNamespace(workspaceID, namespaceID, userID).let { namespace ->
-            require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
-            namespace
-        }
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
 
-        val currentActiveHierarchy = namespace.nodeHierarchyInformation
-        val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation
+        val currentActiveHierarchy = namespace.nodeHierarchyInformation /* destinationHierarchy */
+        val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation /* sourceHierarchy */
 
-        updateHierarchiesInUnarchive(namespace, passedNodeIDList)
+        NodeHelper.updateHierarchiesInNamespace(namespace, passedNodeIDList, NodeOperationType.UNARCHIVE)
+        launch { namespaceService.updateNamespace(namespace) }
 
         /* compare old and new archived hierarchies */
         val nodeIDsToUnarchive = getRemovedNodeIDs(currentArchivedHierarchy, namespace.archivedNodeHierarchyInformation)
 
-        unarchiveOrArchiveNodesInParallel(nodeIDsToUnarchive, workspaceID, ItemStatus.ACTIVE)
+        unarchiveOrArchiveNodesInParallel(nodeIDsToUnarchive, namespace.workspaceIdentifier.id, ItemStatus.ACTIVE)
 
         /* mapOfArchivedHierarchyAndActiveHierarchyDiff */
-        return mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
+        return@runBlocking mutableMapOf(Constants.ARCHIVED_HIERARCHY to namespace.archivedNodeHierarchyInformation).also {
             it.putAll(namespace.nodeHierarchyInformation.getDifferenceWithOldHierarchy(currentActiveHierarchy))
         }
     }
+
+
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String) = runBlocking {
+
+        val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
+        val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
+        val workspaceID = namespace.workspaceIdentifier.id
+
+        val currentArchivedHierarchy = namespace.archivedNodeHierarchyInformation
+
+        NodeHelper.updateHierarchiesInNamespace(namespace, passedNodeIDList, NodeOperationType.DELETE)
+        launch { namespaceService.updateNamespace(namespace) }
+
+        /* compare old and new archived hierarchies */
+        val nodeIDsToDelete = getRemovedNodeIDs(currentArchivedHierarchy, namespace.archivedNodeHierarchyInformation)
+
+
+        deleteNodesInParallel(nodeIDsToDelete, workspaceID)
+    }
+
 
     fun getRemovedNodeIDs(oldHierarchy: List<String>, newHierarchy: List<String>): List<String> {
         val oldNodeIDs = getNodeIDsFromHierarchy(oldHierarchy)
@@ -870,22 +875,26 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun unarchiveNodesOld(nodeIDRequest: WDRequest, workspaceID: String, namespaceID: String, userID: String): List<String> = runBlocking {
-        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList().toMutableList()
-        val mapOfNodeIDToName = getArchivedNodesToRename(nodeIDList, workspaceID, namespaceID, userID)
+    private fun deleteNodesInParallel(nodeIDList: List<String>, workspaceID: String) = runBlocking {
 
-        LOG.debug(mapOfNodeIDToName)
-        for ((nodeID, _) in mapOfNodeIDToName) {
-            nodeIDList.remove(nodeID)
+        val jobToDelete = CoroutineScope(Dispatchers.IO + Job()).async {
+            supervisorScope {
+                val deferredList = ArrayList<Deferred<*>>()
+                for (nodeID in nodeIDList) {
+                    deferredList.add(
+                        async {
+                            val tags = nodeRepository.getTags(nodeID, workspaceID)
+                            if (!tags.isNullOrEmpty()) deleteTags(tags, nodeID, workspaceID)
+                            repository.delete(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID))
+                        })
+                    deferredList.joinAll()
+                }
+            }
         }
 
-        val jobToUnarchiveAndRenameNodes = async { nodeRepository.unarchiveAndRenameNodes(mapOfNodeIDToName, workspaceID) }
-
-        val jobToUnarchiveNodes =
-            async { pageRepository.unarchiveOrArchivePages(nodeIDList, workspaceID, ItemStatus.ACTIVE) }
-
-        return@runBlocking jobToUnarchiveAndRenameNodes.await() + jobToUnarchiveNodes.await()
+        jobToDelete.await()
     }
+
 
     private fun unarchiveOrArchiveNodesInParallel(nodeIDList: List<String>, workspaceID: String, itemStatus: ItemStatus) = runBlocking {
 
@@ -936,81 +945,7 @@ class NodeService( // Todo: Inject them from handlers
         jobToUpdateNamespace.await()
     }
 
-    private fun updateHierarchiesInArchive(namespace: Namespace, passedNodeIDList: List<String>) {
 
-        val activeHierarchy = namespace.nodeHierarchyInformation
-        require(activeHierarchy.isNotEmpty()) { "Hierarchy does not exist" }
-
-        val newArchivedHierarchy = namespace.archivedNodeHierarchyInformation.toMutableList()
-        val newActiveHierarchy = mutableListOf<String>()
-
-        updateHierarchiesInArchiveUnarchive(activeHierarchy, newActiveHierarchy, newArchivedHierarchy, passedNodeIDList)
-
-        Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
-        namespaceService.updateNamespace(namespace)
-    }
-
-    private fun updateHierarchiesInUnarchive(namespace: Namespace, passedNodeIDList: List<String>) {
-
-        val archivedHierarchy = namespace.archivedNodeHierarchyInformation
-        require(archivedHierarchy.isNotEmpty()) { "Archived hierarchy does not exist" }
-
-        val newActiveHierarchy = namespace.nodeHierarchyInformation.toMutableList()
-        val newArchivedHierarchy = mutableListOf<String>()
-
-        updateHierarchiesInArchiveUnarchive(archivedHierarchy, newArchivedHierarchy, newActiveHierarchy, passedNodeIDList)
-
-        Namespace.populateHierarchiesAndUpdatedAt(namespace, newActiveHierarchy, newArchivedHierarchy)
-        namespaceService.updateNamespace(namespace)
-    }
-
-    /* sourceHierarchy : Hierarchy to move nodes from.
-       In case of archiving, sourceHierarchy will be active hierarchy
-       In case of unarchiving, sourceHierarchy will be archived hierarchy
-
-       newSourceHierarchy : Updated Hierarchy from which nodes were moved.
-       In case of archiving, newSourceHierarchy will be newActiveHierarchy hierarchy
-       In case of unarchiving, newSourceHierarchy will be newArchivedHierarchy hierarchy
-
-
-       newDestinationHierarchy : Updated Hierarchy to which nodes were moved.
-       In case of archiving, newDestinationHierarchy will be newArchivedHierarchy hierarchy
-       In case of unarchiving, newDestinationHierarchy will be newActiveHierarchy hierarchy
-
-     */
-    private fun updateHierarchiesInArchiveUnarchive(
-        sourceHierarchy: List<String>,
-        newSourceHierarchy: MutableList<String>,
-        newDestinationHierarchy: MutableList<String>,
-        passedNodeIDList: List<String>
-    ) {
-
-        for (nodePath in sourceHierarchy) {
-            var isNodePresentInPath = false
-            val pathsListForSinglePath = mutableListOf<String>() /* more than one node ids from a single path could be passed */
-            for (nodeID in passedNodeIDList) {
-                if (nodePath.contains(nodeID)) {
-                    isNodePresentInPath = true
-                    pathsListForSinglePath.add(
-                        nodePath.getListOfNodes().let {
-                            it.subList(it.indexOf(nodeID) - 1, it.size)
-                        }.convertToPathString()
-                    )
-                }
-            }
-            if (isNodePresentInPath) {
-                val finalPathToArchive = removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
-                newDestinationHierarchy.add(finalPathToArchive)
-                /* active hierarchy is nodePath minus the archived path */
-                newSourceHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
-            } else { /* this path will remain unchanged */
-                newSourceHierarchy.add(nodePath)
-            }
-        }
-
-        removeRedundantPaths(newDestinationHierarchy)
-        removeRedundantPaths(newSourceHierarchy)
-    }
 
     /* Getting called Internally via trigger. No need to update hierarchy */
     fun archiveNodes(nodeIDList: List<String>, workspaceID: String) = runBlocking {
@@ -1215,21 +1150,6 @@ class NodeService( // Todo: Inject them from handlers
             }
             return@runBlocking mapOfNodeIDToNodeName
         }
-
-    fun deleteArchivedNodes(nodeIDRequest: WDRequest, workspaceID: String): MutableList<String> = runBlocking {
-
-        val nodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
-        require(getAllArchivedNodeIDsOfWorkspace(workspaceID).containsAll(nodeIDList)) { "The passed IDs should be present and archived" }
-        val deletedNodesList: MutableList<String> = mutableListOf()
-        for (nodeID in nodeIDList) {
-            val tags = nodeRepository.getTags(nodeID, workspaceID)
-            if (!tags.isNullOrEmpty()) launch { deleteTags(tags, nodeID, workspaceID) }
-            repository.delete(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID)).also {
-                deletedNodesList.add(it.id)
-            }
-        }
-        return@runBlocking deletedNodesList
-    }
 
     fun makeNodePublic(nodeID: String, userWorkspaceID: String, userID: String) {
         val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.MANAGE)
