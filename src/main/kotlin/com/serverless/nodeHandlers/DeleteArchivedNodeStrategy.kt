@@ -18,8 +18,9 @@ class DeleteArchivedNodeStrategy : NodeStrategy {
         } ?: throw IllegalArgumentException(Messages.INVALID_NAMESPACE_ID)
 
         return input.payload?.let {
-            nodeService.deleteArchivedNodes(it, input.headers.workspaceID, namespaceID, input.tokenBody.userID)
-            ApiResponseHelper.generateStandardResponse(null, 204,  Messages.ERROR_DELETING_NODE)
+            nodeService.deleteArchivedNodes(it, input.headers.workspaceID, namespaceID, input.tokenBody.userID).let { nodeIDList ->
+                ApiResponseHelper.generateStandardResponse(nodeIDList,  Messages.ERROR_DELETING_NODE)
+            }
         } ?: ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST)
 
     }

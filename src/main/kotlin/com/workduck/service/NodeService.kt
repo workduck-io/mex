@@ -848,7 +848,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
 
-    fun deleteArchivedNodes(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String) = runBlocking {
+    fun deleteArchivedNodes(nodeIDRequest: WDRequest, userWorkspaceID: String, namespaceID: String, userID: String) : List<String> = runBlocking {
 
         val passedNodeIDList = (nodeIDRequest as GenericListRequest).toNodeIDList()
         val namespace: Namespace = validateAndGetNamespaceForUser(userWorkspaceID, namespaceID, userID)
@@ -864,6 +864,7 @@ class NodeService( // Todo: Inject them from handlers
 
 
         deleteNodesInParallel(nodeIDsToDelete, workspaceID)
+        return@runBlocking nodeIDsToDelete
     }
 
 
