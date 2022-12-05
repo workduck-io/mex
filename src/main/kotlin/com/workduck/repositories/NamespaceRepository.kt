@@ -12,6 +12,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
+import com.serverless.utils.getListOfNodes
 import com.workduck.models.AccessType
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
@@ -374,7 +375,6 @@ class NamespaceRepository(
         }
 
     }
-
 
 
 //

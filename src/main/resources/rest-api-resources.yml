@@ -88,17 +88,17 @@ Node:
 
       #deleteNodes( archive them )
     - httpApi:
-        path: /node/archive/{id}
+        path: /node/archive
         method: put
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/archive/middleware/{id}
+        path: /node/archive/middleware
         method: put
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/unarchive/{id}
+        path: /node/unarchive
         method: put
         authorizer: mexAuthorizer
 
@@ -234,17 +234,17 @@ Node:
 
       #deleteNodes( archive them )
     - httpApi:
-        path: /v1/node/archive/{id}
+        path: /v1/node/archive
         method: put
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /v1/node/archive/middleware/{id}
+        path: /v1/node/archive/middleware
         method: put
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /v1/node/unarchive/{id}
+        path: /v1/node/unarchive
         method: put
         authorizer: mexAuthorizer
 

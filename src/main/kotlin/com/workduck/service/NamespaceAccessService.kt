@@ -13,9 +13,9 @@ class NamespaceAccessService(
         val namespaceRepository: NamespaceRepository
 ) {
 
-    fun checkIfUserHasAccess(workspaceID: String, namespaceID: String, userID: String, operationType: EntityOperationType) : Boolean{
+    fun checkIfUserHasAccess(userWorkspaceID: String, namespaceID: String, userID: String, operationType: EntityOperationType) : Boolean{
         val accessTypeList = AccessItemHelper.getAccessTypesForOperation(operationType)
-        return checkIfNamespaceExistsForWorkspace(namespaceID, workspaceID) || checkIfNamespaceSharedWithUser(namespaceID, userID, accessTypeList)
+        return checkIfNamespaceExistsForWorkspace(namespaceID, userWorkspaceID) || checkIfNamespaceSharedWithUser(namespaceID, userID, accessTypeList)
     }
 
 
