@@ -390,42 +390,63 @@ class NodeRepository(
             .withExpressionAttributeValues(expressionAttributeValues)
     }
 
-    fun renameNodeInNamespaceWithAccessValue(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String, publicAccess: Int) {
+    fun updateNodeNamespaceAndPublicAccess(nodeID: String, workspaceID: String, namespaceID: String, publicAccess: Int?) {
         val table = dynamoDB.getTable(tableName)
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+
+        val updateExpression = when(publicAccess != null){
+            true -> {
+                expressionAttributeValues[":publicAccess"] = publicAccess
+                "SET updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :AK, publicAccess = :publicAccess"
+            }
+            false -> {
+                "SET updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :AK"
+            }
+        }
+
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":AK"] = namespaceID
+
+
+        UpdateItemSpec().update(
+            pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
+            expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        ).also {
+            table.updateItem(it)
+        }
+    }
+
+    fun renameNodeInNamespaceWithAccessValue(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String, publicAccess: Int?) {
+        val table = dynamoDB.getTable(tableName)
+
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+
+        val updateExpression = when(publicAccess != null){
+            true -> {
+                expressionAttributeValues[":publicAccess"] = publicAccess
+                "SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :AK, publicAccess = :publicAccess"
+            }
+            false -> {
+                "SET title = :title, updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :AK"
+            }
+        }
+
         expressionAttributeValues[":title"] = newName
         expressionAttributeValues[":lastEditedBy"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":AK"] = namespaceID
-        expressionAttributeValues[":publicAccess"] = publicAccess
+
 
         try {
             UpdateItemSpec().update(
-                pk = workspaceID, sk = nodeID, updateExpression = "SET title = :title, updatedAt = :updatedAt, " +
-                    "lastEditedBy = :lastEditedBy, AK = :AK, publicAccess = :publicAccess",
+                pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
                 expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
             ).also {
                 table.updateItem(it)
             }
         } catch (e: ConditionalCheckFailedException) {
             throw ConditionalCheckFailedException("Cannot Rename node since $nodeID does not exist")
-        }
-    }
-
-    fun updateNodeNamespaceAndPublicAccess(nodeID: String, workspaceID: String, namespaceID: String, publicAccess: Int) {
-        val table = dynamoDB.getTable(tableName)
-
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":updatedAt"] = getCurrentTime()
-        expressionAttributeValues[":AK"] = namespaceID
-        expressionAttributeValues[":publicAccess"] = publicAccess
-
-        UpdateItemSpec().update(
-                pk = workspaceID, sk = nodeID, updateExpression = "SET AK = :AK, updatedAt = :updatedAt, publicAccess = :publicAccess",
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
-        ).also {
-            table.updateItem(it)
         }
     }
 
