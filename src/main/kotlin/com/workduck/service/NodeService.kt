@@ -363,8 +363,12 @@ class NodeService( // Todo: Inject them from handlers
         when(sourceNamespace.id == targetNamespace.id) {
             true -> return /* no need to update public access field or namespace for the nodes */
             false -> {
+                val nodePublicAccessValue = when(targetNamespace.publicAccess){
+                    true -> 1
+                    false -> null
+                }
                 /* update namespace for the nodes in lastNodeHierarchy and set public access value of targetNamespace */
-                updateNamespaceAndPublicAccessForSuccessorNodes(targetNamespace.id, workspaceID, lastNodeHierarchy, targetNamespace.publicAccess.toInt())
+                updateNamespaceAndPublicAccessForSuccessorNodes(targetNamespace.id, workspaceID, lastNodeHierarchy, nodePublicAccessValue)
             }
 
         }
@@ -385,7 +389,11 @@ class NodeService( // Todo: Inject them from handlers
         /* if the last node has been renamed or moved across namespaces, update it */
         when (NodeHelper.isRename(existingNodes, newNodes) || (existingNamespaceID != newNamespaceID)) {
             true -> { /* need to rename last node from existing path to last node from new path */
-                renameNodeInNamespaceWithAccessValue(lastNodeID, newNodes.allNodes.last(), userID, workspaceID, newNamespaceID, targetNamespace.publicAccess.toInt())
+                val nodePublicAccessValue = when(targetNamespace.publicAccess){
+                    true -> 1
+                    false -> null
+                }
+                renameNodeInNamespaceWithAccessValue(lastNodeID, newNodes.allNodes.last(), userID, workspaceID, newNamespaceID, nodePublicAccessValue)
             }
         }
     }
@@ -434,7 +442,7 @@ class NodeService( // Todo: Inject them from handlers
         return@runBlocking mapOfDifferenceOfPaths
     }
 
-    private fun updateNamespaceAndPublicAccessForSuccessorNodes(namespaceID: String, workspaceID: String, lastNodeHierarchy: List<String>, publicAccess: Int){
+    private fun updateNamespaceAndPublicAccessForSuccessorNodes(namespaceID: String, workspaceID: String, lastNodeHierarchy: List<String>, publicAccess: Int?){
         val listOfNodeIDs = getNodeIDsFromHierarchy(lastNodeHierarchy)
         updateNamespaceAndPublicAccessOfNodesInParallel(listOfNodeIDs, workspaceID, namespaceID, publicAccess)
     }
@@ -532,7 +540,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodePath.getListOfNodes().subList(nodePath.getListOfNodes(Constants.DELIMITER).indexOf(nodeID) + 1, nodePath.getListOfNodes().size).convertToPathString()
     }
 
-    private fun renameNodeInNamespaceWithAccessValue(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String, publicAccess: Int) {
+    private fun renameNodeInNamespaceWithAccessValue(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String, publicAccess: Int?) {
         nodeRepository.renameNodeInNamespaceWithAccessValue(nodeID, newName, userID, workspaceID, namespaceID, publicAccess)
     }
 
@@ -929,7 +937,7 @@ class NodeService( // Todo: Inject them from handlers
         jobToArchive.await()
     }
 
-    private fun updateNamespaceAndPublicAccessOfNodesInParallel(nodeIDList: List<String>, workspaceID: String, namespaceID: String, publicAccess: Int)  = runBlocking{
+    private fun updateNamespaceAndPublicAccessOfNodesInParallel(nodeIDList: List<String>, workspaceID: String, namespaceID: String, publicAccess: Int?)  = runBlocking{
 
         val jobToUpdateNamespace = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
