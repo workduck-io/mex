@@ -4,6 +4,7 @@ import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
@@ -12,6 +13,7 @@ import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.Page
+import com.workduck.models.Snippet
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.PageHelper
@@ -56,9 +58,20 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
     return node
 }
 
-fun Page.orderPage() : Page {
-    return PageHelper.orderBlocks(this)
-}
+
+fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
+    Snippet(
+        id = this.id,
+        workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+        lastEditedBy = userID,
+        data = this.data,
+        title = this.title,
+        version = this.version,
+        template = this.template,
+        metadata = this.pageMetadata
+    )
+
+
 
 fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
     return Workspace(

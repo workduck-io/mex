@@ -34,6 +34,7 @@ import com.serverless.utils.isNodeUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.serverless.utils.CacheHelper
+import com.serverless.utils.orderPage
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
@@ -75,7 +76,6 @@ import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
-import com.workduck.utils.extensions.orderPage
 import com.workduck.utils.extensions.toIDList
 import com.workduck.utils.extensions.toNode
 import com.workduck.utils.extensions.toNodeIDList
@@ -1355,70 +1355,4 @@ class NodeService( // Todo: Inject them from handlers
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
-}
-
-fun main(){
-    val json = """
-        {
-          "type": "NodeRequest",
-          "title": "Test Node",
-          "id": "NODE_gqGAUxbbDYjVabhXENYVd",
-          "namespaceID": "NAMESPACE_aRmtqjcrhKQ9WXXzqbUEJ",
-          "data": [
-            {
-              "id": "sampleParentID",
-              "elementType": "paragraph",
-              "children": [
-                {
-                  "id": "sampleChildID",
-                  "content": "sample child content 1",
-                  "elementType": "paragraph",
-                  "properties": {
-                    "bold": true,
-                    "italic": true
-                  }
-                }
-              ]
-            },
-            {
-              "id": "1234",
-              "elementType": "paragraph",
-              "children": [
-                {
-                  "id": "sampleChildID",
-                  "content": "sample child content",
-                  "elementType": "paragraph",
-                  "properties": {
-                    "bold": true,
-                    "italic": true
-                  }
-                }
-              ]
-            }
-          ]
-        }
-    """.trimIndent()
-    val r = Helper.objectMapper.readValue<WDRequest>(json)
-
-    /*
-     "metadata" : {
-            "templateID" : "SNIPPET_gqGAUxbbDYjVabhXENYVd"
-          }
-     */
-
-    val n = NodeService().getNode("NODE_8ERiz93cieDWhjbMbHmT9", "WORKSPACE_rfTyaEPeTKB6B3jaq6Vxj", "0f8fba62-ebc4-43be-b41e-424a8fc0a5b9")
-
-    println(n)
-    //NodeService().createAndUpdateNodeV2(r, "WORKSPACE_rfTyaEPeTKB6B3jaq6Vxj", "0f8fba62-ebc4-43be-b41e-424a8fc0a5b9")
-    val json1 = """
-        {
-            "type" : "MetadataRequest",
-            "metadata" : {
-                "templateID" : "SNIPPET_gqGAUxbbDYjVabhXENYVd"
-             }
-        }
-    """.trimIndent()
-
-    val r1 = Helper.objectMapper.readValue<WDRequest>(json1)
-    NodeService().updateMetadataOfNode(r1, "NODE_gqGAUxbbDYjVabhXENYVd", "WORKSPACE_rfTyaEPeTKB6B3jaq6Vxj", "0f8fba62-ebc4-43be-b41e-424a8fc0a5b9")
 }

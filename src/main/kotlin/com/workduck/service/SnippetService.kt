@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.models.requests.MetadataRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.createSnippetObjectFromSnippetRequest
+import com.serverless.utils.orderPage
 import com.serverless.utils.setVersion
 import com.workduck.models.Entity
 import com.workduck.models.Snippet
@@ -23,7 +23,7 @@ import com.workduck.utils.Helper
 import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.SnippetHelper.getSnippetSK
 import com.workduck.utils.SnippetHelper.isCreatePossible
-import com.workduck.utils.extensions.orderPage
+import com.workduck.utils.extensions.createSnippetObjectFromSnippetRequest
 import org.apache.logging.log4j.LogManager
 
 class SnippetService {
