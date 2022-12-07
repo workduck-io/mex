@@ -4,6 +4,7 @@ import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodeRequest
+import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
@@ -12,6 +13,7 @@ import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.Page
+import com.workduck.models.Snippet
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.PageHelper
@@ -25,7 +27,7 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
                 lastEditedBy = userID,
                 tags = this.tags ,
                 data = this.data,
-                nodeMetaData = this.nodeMetadata
+                metadata = this.pageMetadata
         )
 
 fun UpdateSharedNodeRequest.toNode(workspaceID: String, namespaceID: String, userID: String): Node =
@@ -37,7 +39,7 @@ fun UpdateSharedNodeRequest.toNode(workspaceID: String, namespaceID: String, use
                 lastEditedBy = userID,
                 tags = this.tags ,
                 data = this.data,
-                nodeMetaData = this.nodeMetadata
+                metadata = this.pageMetadata
         )
 
 
@@ -50,15 +52,26 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
             lastEditedBy = userID,
             tags = this.tags,
             data = this.data,
-            nodeMetaData = this.nodeMetadata
+            metadata = this.pageMetadata
     )
     node.namespaceIdentifier = this.nodePath.namespaceID.let { NamespaceIdentifier(it) }
     return node
 }
 
-fun Page.orderPage() : Page {
-    return PageHelper.orderBlocks(this)
-}
+
+fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
+    Snippet(
+        id = this.id,
+        workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+        lastEditedBy = userID,
+        data = this.data,
+        title = this.title,
+        version = this.version,
+        template = this.template,
+        metadata = this.pageMetadata
+    )
+
+
 
 fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
     return Workspace(

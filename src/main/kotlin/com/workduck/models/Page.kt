@@ -1,7 +1,5 @@
 package com.workduck.models
 
-import com.serverless.utils.Constants
-
 interface Page : Entity {
 
     var data: List<AdvancedElement>?
@@ -23,6 +21,8 @@ interface Page : Entity {
     val updatedAt: Long
 
     var version: Int?
+
+    var metadata : PageMetadata?
 
     companion object {
         fun populatePageWithCreatedAndPublicFields(page: Page, storedPage: Page) {

@@ -18,6 +18,7 @@ object Messages {
 
     const val ERROR_APPENDING_NODE = "Error appending to node"
     const val ERROR_UPDATING_NODE_BLOCK = "Error updating node block"
+    const val ERROR_UPDATING_NODE_METADATA = "Error updating node metadata"
 
 
     const val ERROR_DELETING_NODE = "Error deleting node"
@@ -72,6 +73,7 @@ object Messages {
     const val ERROR_SNIPPET_PRIVATE = "Error making snippet private"
     const val INVALID_SNIPPET_ID = "Invalid SnippetID"
     const val ERROR_CLONING_SNIPPET = "Error cloning snippet"
+    const val ERROR_UPDATING_SNIPPET_METADATA = "Error updating snippet metadata"
 
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"

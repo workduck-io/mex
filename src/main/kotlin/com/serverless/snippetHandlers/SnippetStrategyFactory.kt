@@ -27,6 +27,7 @@ class SnippetStrategyFactory {
 
         const val getAllSnippetsOfWorkspace = "GET /snippet/all"
 
+        const val updateMetadata = "PATCH /snippet/metadata/{id}"
 
         private val snippetRegistry: Map<String, SnippetStrategy> = mapOf(
                 getSnippet to GetSnippetStrategy(),
@@ -38,7 +39,8 @@ class SnippetStrategyFactory {
                 getPublicSnippet to GetPublicSnippetStrategy(),
                 clonePublicSnippet to ClonePublicSnippetStrategy(),
                 getAllSnippetVersions to GetAllSnippetVersionsStrategy(),
-                getAllSnippetsOfWorkspace to GetAllSnippetsOfWorkspaceStrategy()
+                getAllSnippetsOfWorkspace to GetAllSnippetsOfWorkspaceStrategy(),
+                updateMetadata to UpdateMetadataStrategy()
         )
 
         fun getSnippetStrategy(routeKey: String): SnippetStrategy? {

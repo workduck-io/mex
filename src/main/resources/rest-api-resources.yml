@@ -315,6 +315,11 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
+        path: /v1/node/metadata/{id}
+        method: patch
+        authorizer: mexAuthorizer
+
+    - httpApi:
         path: /v1/shared/node/{nodeID}
         method: get
         authorizer: mexAuthorizer
@@ -449,6 +454,11 @@ Snippet:
     - httpApi:
         path: /v1/snippet/{id}/all
         method: delete
+        authorizer: mexAuthorizer
+
+    - httpApi:
+        path: /v1/snippet/metadata/{id}
+        method: patch
         authorizer: mexAuthorizer
 
     #get all archived snippets for a given workspaceID

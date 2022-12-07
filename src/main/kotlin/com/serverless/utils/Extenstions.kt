@@ -6,6 +6,7 @@ import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.SnippetRequest
 import com.workduck.models.Entity
 import com.workduck.models.Node
+import com.workduck.models.Page
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
 import com.workduck.utils.Helper
@@ -17,19 +18,8 @@ import com.workduck.utils.Helper.objectMapper
 fun Node.isNodeUnchanged(storedNode: Node): Boolean {
     /* also updated block level metadata */
     return !PageHelper.comparePageDataWithStoredPage(this, storedNode)
-            && this.tags.sorted() == storedNode.tags.sorted() && this.nodeMetaData == storedNode.nodeMetaData
+            && this.tags.sorted() == storedNode.tags.sorted() && this.metadata == storedNode.metadata
 }
-
-fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
-    Snippet(
-        id = this.id,
-        workspaceIdentifier = WorkspaceIdentifier(workspaceID),
-        lastEditedBy = userID,
-        data = this.data,
-        title = this.title,
-        version = this.version,
-        template = this.template
-    )
 
 fun Snippet.setVersion(version: Int) {
     this.version = version
@@ -176,4 +166,9 @@ suspend fun Deferred<Boolean>.awaitAndThrowExceptionIfFalse(booleanJob: Deferred
 
 fun Entity.getRoughSizeOfEntity() : Int{
     return objectMapper.writeValueAsString(this).length
+}
+
+
+fun Page.orderPage() : Page {
+    return PageHelper.orderBlocks(this)
 }

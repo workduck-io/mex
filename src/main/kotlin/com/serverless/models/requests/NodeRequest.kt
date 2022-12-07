@@ -12,7 +12,7 @@ import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement
 import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.NodeMetadata
+import com.workduck.models.PageMetadata
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeRequest")
@@ -36,7 +36,7 @@ open class NodeRequest(
     val data: List<AdvancedElement>? = null,
 
     @JsonProperty("metadata")
-    val nodeMetadata: NodeMetadata? = null,
+    val pageMetadata: PageMetadata? = null,
 
     @JsonProperty("tags")
     var tags: MutableList<String> = mutableListOf(),

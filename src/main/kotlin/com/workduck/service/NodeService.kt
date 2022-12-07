@@ -7,10 +7,10 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.Gson
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
+import com.serverless.models.requests.MetadataRequest
 import com.serverless.models.requests.NodeBulkRequest
 import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
@@ -34,7 +34,7 @@ import com.serverless.utils.isNodeUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.serverless.utils.CacheHelper
-import com.serverless.utils.NamespaceHelper
+import com.serverless.utils.orderPage
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
@@ -44,7 +44,6 @@ import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
-import com.workduck.models.MatchType
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
@@ -77,9 +76,7 @@ import com.workduck.utils.TagHelper.createTags
 import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
-import com.workduck.utils.extensions.orderPage
 import com.workduck.utils.extensions.toIDList
-import com.workduck.utils.extensions.toInt
 import com.workduck.utils.extensions.toNode
 import com.workduck.utils.extensions.toNodeIDList
 import kotlinx.coroutines.CoroutineScope
@@ -1343,6 +1340,13 @@ class NodeService( // Todo: Inject them from handlers
 
         return map
     }
+
+    fun updateMetadataOfNode(wdRequest: WDRequest, nodeID: String, userWorkspaceID: String, userID: String){
+        val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.WRITE)
+        val metadata = (wdRequest as MetadataRequest).pageMetadata
+        pageRepository.updateMetadataOfPage(nodeID, nodeWorkspaceID, metadata, userID)
+    }
+
 
     fun getMetadataForNodesOfWorkspace(workspaceID: String): Map<String, Map<String, Any?>> {
         return nodeRepository.getMetadataForNodesOfWorkspace(workspaceID)

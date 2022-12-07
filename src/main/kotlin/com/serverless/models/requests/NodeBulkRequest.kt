@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.workduck.models.AdvancedElement
-import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.NodeMetadata
+import com.workduck.models.PageMetadata
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("NodeBulkRequest")
@@ -18,6 +17,6 @@ data class NodeBulkRequest(
     var tags: MutableList<String> = mutableListOf(),
 
     @JsonProperty("metadata")
-    val nodeMetadata: NodeMetadata? = null,
+    val pageMetadata: PageMetadata? = null,
 
-) : WDRequest
+    ) : WDRequest

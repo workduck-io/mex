@@ -1,6 +1,7 @@
 package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
+import com.workduck.models.PageMetadata
 
 data class SnippetResponse(
     val id: String?,
@@ -19,7 +20,8 @@ data class SnippetResponse(
 
     var version: Int?,
 
-    var template: Boolean?
+    var template: Boolean?,
 
+    var metadata: PageMetadata?
 
 ) : Response, TimestampAdhereResponse

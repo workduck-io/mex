@@ -7,7 +7,7 @@ import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
 import com.serverless.utils.isValidTitle
 import com.workduck.models.AdvancedElement
-import com.workduck.models.NodeMetadata
+import com.workduck.models.PageMetadata
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -23,7 +23,7 @@ data class UpdateSharedNodeRequest (
     val data: List<AdvancedElement>? = null,
 
     @JsonProperty("metadata")
-    val nodeMetadata: NodeMetadata? = null,
+    val pageMetadata: PageMetadata? = null,
 
     @JsonProperty("tags")
     var tags: MutableList<String> = mutableListOf()
