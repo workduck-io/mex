@@ -25,7 +25,7 @@ fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
                 lastEditedBy = userID,
                 tags = this.tags ,
                 data = this.data,
-                nodeMetaData = this.nodeMetadata
+                metadata = this.pageMetadata
         )
 
 fun UpdateSharedNodeRequest.toNode(workspaceID: String, namespaceID: String, userID: String): Node =
@@ -37,7 +37,7 @@ fun UpdateSharedNodeRequest.toNode(workspaceID: String, namespaceID: String, use
                 lastEditedBy = userID,
                 tags = this.tags ,
                 data = this.data,
-                nodeMetaData = this.nodeMetadata
+                metadata = this.pageMetadata
         )
 
 
@@ -50,7 +50,7 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
             lastEditedBy = userID,
             tags = this.tags,
             data = this.data,
-            nodeMetaData = this.nodeMetadata
+            metadata = this.pageMetadata
     )
     node.namespaceIdentifier = this.nodePath.namespaceID.let { NamespaceIdentifier(it) }
     return node

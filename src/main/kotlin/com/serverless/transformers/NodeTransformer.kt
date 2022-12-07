@@ -20,7 +20,7 @@ class NodeTransformer : Transformer<Node> {
             namespaceID = t.namespaceIdentifier.id,
             starred = t.starred,
             publicAccess = t.publicAccess,
-            metadata = t.nodeMetaData
+            metadata = t.metadata
 //            saveableRange = t.saveableRange,
 //            sourceUrl = t.sourceUrl
        )

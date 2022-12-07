@@ -1,7 +1,7 @@
 package com.serverless.models.responses
 
 import com.workduck.models.AdvancedElement
-import com.workduck.models.NodeMetadata
+import com.workduck.models.PageMetadata
 
 data class NodeResponse(
     val id: String? = null,
@@ -30,5 +30,5 @@ data class NodeResponse(
 
     var publicAccess: Boolean,
 
-    var metadata: NodeMetadata?
+    var metadata: PageMetadata?
 ) : Response, TimestampAdhereResponse

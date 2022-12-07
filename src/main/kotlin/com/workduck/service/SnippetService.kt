@@ -5,16 +5,12 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.requests.GenericListRequest
+import com.serverless.models.requests.MetadataRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.SnippetHelper
 import com.serverless.utils.createSnippetObjectFromSnippetRequest
 import com.serverless.utils.setVersion
 import com.workduck.models.Entity
-import com.workduck.models.ItemStatus
-import com.workduck.models.ItemType
 import com.workduck.models.Snippet
 import com.workduck.models.SnippetIdentifier
 import com.workduck.models.WorkspaceIdentifier
@@ -209,6 +205,11 @@ class SnippetService {
                 referenceSnippet = SnippetIdentifier(publicSnippet.id),
                 title = publicSnippet.title
         )
+    }
+
+    fun updateMetadataOfNode(wdRequest: WDRequest, snippetID: String, userWorkspaceID: String, userID: String){
+        val metadata = (wdRequest as MetadataRequest).pageMetadata
+        pageRepository.updateMetadataOfPage(snippetID, userWorkspaceID, metadata, userID)
     }
 
     companion object {

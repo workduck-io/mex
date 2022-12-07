@@ -5,7 +5,7 @@ import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class NodeMetadata(
+data class PageMetadata(
     var icon: Icon? = null,
 
     // TODO(Add validation to check if the id exists)

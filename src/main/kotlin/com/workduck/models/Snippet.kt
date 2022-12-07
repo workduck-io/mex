@@ -13,6 +13,9 @@ import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemStatusConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NodeDataConverter
+import com.workduck.converters.PageMetadataConverter
+import com.workduck.converters.PageMetadataDeserializer
+import com.workduck.converters.PageMetadataSerializer
 import com.workduck.converters.SnippetIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
@@ -53,6 +56,13 @@ data class Snippet(
     @DynamoDBTypeConverted(converter = NodeDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
+
+    @JsonProperty("metadata")
+    @JsonSerialize(converter = PageMetadataSerializer::class)
+    @JsonDeserialize(converter = PageMetadataDeserializer::class)
+    @DynamoDBTypeConverted(converter = PageMetadataConverter::class)
+    @DynamoDBAttribute(attributeName = "metadata")
+    override var metadata: PageMetadata?= null,
 
     @DynamoDBAttribute(attributeName = "dataOrder")
     override var dataOrder: MutableList<String>? = null,

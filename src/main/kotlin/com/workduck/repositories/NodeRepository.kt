@@ -32,6 +32,7 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
+import com.workduck.models.PageMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.Helper
@@ -713,7 +714,7 @@ class NodeRepository(
             expressionAttributeValues = expressionAttributeValues
         ).let { it ->
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
-                node.id to mapOf("metadata" to node.nodeMetaData, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
+                node.id to mapOf("metadata" to node.metadata, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
             }
         }
     }

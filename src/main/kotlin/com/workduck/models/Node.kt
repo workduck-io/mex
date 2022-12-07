@@ -19,9 +19,9 @@ import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.converters.NodeDataConverter
 import com.workduck.converters.NodeDataDeserializer
 import com.workduck.converters.NodeDataSerializer
-import com.workduck.converters.NodeMetadataConverter
-import com.workduck.converters.NodeMetadataDeserializer
-import com.workduck.converters.NodeMetadataSerializer
+import com.workduck.converters.PageMetadataConverter
+import com.workduck.converters.PageMetadataDeserializer
+import com.workduck.converters.PageMetadataSerializer
 import com.workduck.converters.NodeSchemaIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierConverter
 import com.workduck.converters.WorkspaceIdentifierDeserializer
@@ -64,13 +64,12 @@ data class Node(
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<AdvancedElement>? = null,
 
-
     @JsonProperty("metadata")
-    @JsonSerialize(converter = NodeMetadataSerializer::class)
-    @JsonDeserialize(converter = NodeMetadataDeserializer::class)
-    @DynamoDBTypeConverted(converter = NodeMetadataConverter::class)
+    @JsonSerialize(converter = PageMetadataSerializer::class)
+    @JsonDeserialize(converter = PageMetadataDeserializer::class)
+    @DynamoDBTypeConverted(converter = PageMetadataConverter::class)
     @DynamoDBAttribute(attributeName = "metadata")
-    var nodeMetaData : NodeMetadata ?= null,
+    override var metadata: PageMetadata?= null,
 
     // TODO(write converter to store as map in DDB. And create Tag class)
     @JsonProperty("tags")

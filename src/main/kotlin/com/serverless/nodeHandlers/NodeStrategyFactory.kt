@@ -64,6 +64,8 @@ class NodeStrategyFactory {
 
         const val deleteBlockObject = "PATCH /node/{id}/delete/block"
 
+        const val updateMetadata = "PATCH /node/metadata/{id}"
+
         private val nodeRegistry: Map<String, NodeStrategy> = mapOf(
             deleteBlockObject to DeleteBlockStrategy(),
             getNodeObject to GetNodeStrategy(),
@@ -94,7 +96,8 @@ class NodeStrategyFactory {
             updateSharedNode to UpdateSharedNodeStrategy(),
             getAllSharedUsers to GetAllSharedUsersStrategy(),
             getAccessDataForUser to GetAccessDataForUserStrategy(),
-            getAllSharedNodes to GetAllSharedNodesStrategy()
+            getAllSharedNodes to GetAllSharedNodesStrategy(),
+            updateMetadata to UpdateMetadataStrategy()
         )
 
         fun getNodeStrategy(routeKey: String): NodeStrategy? {

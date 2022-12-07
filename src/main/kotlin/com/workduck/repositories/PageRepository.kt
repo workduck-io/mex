@@ -22,9 +22,11 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.Page
+import com.workduck.models.PageMetadata
 import com.workduck.models.Relationship
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.Helper
 import com.workduck.utils.PageHelper
 import com.workduck.utils.SnippetHelper
 import org.apache.logging.log4j.LogManager
@@ -143,6 +145,30 @@ class PageRepository <T : Page> (
             pageIDList = (pageIDList + (item["SK"] as String)).toMutableList()
         }
         return pageIDList
+
+    }
+
+
+    fun updateMetadataOfPage(pageID: String, workspaceID: String, metadata: PageMetadata?, userID: String){
+        val table = dynamoDB.getTable(tableName)
+
+        val expressionAttributeValues: MutableMap<String, Any?> = HashMap()
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":lastEditedBy"] = userID
+        expressionAttributeValues[":metadata"] = metadata?.let { Helper.objectMapper.writeValueAsString(it) }
+
+        val updateExpression = "SET updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, metadata = :metadata"
+
+        try {
+            UpdateItemSpec().updateWithNullAttributes(
+                pk = workspaceID, sk = pageID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+            ).also {
+                table.updateItem(it)
+            }
+        } catch (e: ConditionalCheckFailedException) {
+            throw ConditionalCheckFailedException("Cannot update $pageID")
+        }
 
     }
 

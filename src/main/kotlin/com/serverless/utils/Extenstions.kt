@@ -17,7 +17,7 @@ import com.workduck.utils.Helper.objectMapper
 fun Node.isNodeUnchanged(storedNode: Node): Boolean {
     /* also updated block level metadata */
     return !PageHelper.comparePageDataWithStoredPage(this, storedNode)
-            && this.tags.sorted() == storedNode.tags.sorted() && this.nodeMetaData == storedNode.nodeMetaData
+            && this.tags.sorted() == storedNode.tags.sorted() && this.metadata == storedNode.metadata
 }
 
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =

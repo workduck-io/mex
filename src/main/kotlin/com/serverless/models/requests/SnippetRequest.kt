@@ -7,6 +7,7 @@ import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
 import com.serverless.utils.isValidTitle
 import com.workduck.models.AdvancedElement
+import com.workduck.models.PageMetadata
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("SnippetRequest")
@@ -25,7 +26,10 @@ data class SnippetRequest(
     val version: Int = 1,
 
     @JsonProperty("template")
-    val template: Boolean?
+    val template: Boolean?,
+
+    @JsonProperty("metadata")
+    val pageMetadata: PageMetadata? = null,
 
 ) : WDRequest {
 
