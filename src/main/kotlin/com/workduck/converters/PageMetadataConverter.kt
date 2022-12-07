@@ -10,8 +10,8 @@ class PageMetadataConverter : DynamoDBTypeConverter<String, PageMetadata?> {
         return pageMetadata?.let {  Helper.objectMapper.writeValueAsString(it) }
     }
 
-    override fun unconvert(nodeMetadata: String?): PageMetadata? {
-        return nodeMetadata?.let {  Helper.objectMapper.readValue(it) }
+    override fun unconvert(pageMetadata: String?): PageMetadata? {
+        return pageMetadata?.let {  Helper.objectMapper.readValue(it) }
     }
 
 

@@ -7,8 +7,8 @@ import com.workduck.utils.Helper
 
 class PageMetadataDeserializer : StdConverter<String, PageMetadata>() {
 
-    override fun convert(metadataString: String): PageMetadata {
-        return Helper.objectMapper.readValue(metadataString)
+    override fun convert(pageMetadataString: String?): PageMetadata? {
+        return pageMetadataString?.let {  Helper.objectMapper.readValue(it) }
     }
 
 
