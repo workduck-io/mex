@@ -17,3 +17,39 @@ Resources:
     Properties:
       QueueName: public-note-dlq-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true
+  NamespaceDelete:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: namespace-delete-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "NamespaceDeleteDLQ"
+            - "Arn"
+        maxReceiveCount: 5
+      # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
+      VisibilityTimeout: 180
+  NamespaceDeleteDLQ:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: namespace-delete-dlq-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true
+  NodeDelete:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: node-delete-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "NodeDeleteDLQ"
+            - "Arn"
+        maxReceiveCount: 5
+      # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
+      VisibilityTimeout: 180
+  NodeDeleteDLQ:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: node-delete-dlq-${opt:stage, self:provider.stage}.fifo
+      FifoQueue: true

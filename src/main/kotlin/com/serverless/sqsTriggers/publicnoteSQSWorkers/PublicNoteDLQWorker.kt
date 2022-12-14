@@ -6,9 +6,9 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.CacheHelper
 import com.serverless.utils.Constants
-import com.workduck.models.Node
 import com.workduck.repositories.cache.NodeCache
 import com.workduck.utils.Helper
+import com.workduck.utils.extensions.toNode
 
 class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
     override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
@@ -50,5 +50,3 @@ class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
         return null
     }
 }
-
-private fun String.toNode(): Node = Helper.objectMapper.readValue(this, Node::class.java)

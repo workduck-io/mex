@@ -27,6 +27,24 @@ PublicNoteSQSWorker:
       - "sg-0fad68a531aa4fea5"
       - "sg-51d4667f"
 
+NamespaceDeleteWorker:
+  handler: com.serverless.sqsTriggers.namespaceDeleteSQSWorkers.NamespaceDeleteWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - NamespaceDelete
+            - Arn
+
+NodeDeleteWorker:
+  handler: com.serverless.sqsTriggers.nodeDeleteSQSWorkers.NodeDeleteWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - NodeDelete
+            - Arn
+
 PublicNoteWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteWorker
   events:

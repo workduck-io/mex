@@ -7,16 +7,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.serverless.utils.Constants
-import com.workduck.converters.HierarchyUpdateSourceConverter
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.utils.Helper
-
-enum class HierarchyUpdateSource {
-    REFRESH, /* when refresh endpoint is used or would be used */
-    NODE, /* when nodes are added */
-    ARCHIVE, /* when a node is archived, we first update the hierarchy */
-    RENAME
-}
 
 @DynamoDBTable(tableName = "sampleData")
 class Workspace(
@@ -50,11 +42,6 @@ class Workspace(
     @JsonProperty("archivedNodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "archivedNodeHierarchyInformation")
     var archivedNodeHierarchyInformation: List<String> ? = null,
-
-    @JsonProperty("hierarchyUpdateSource")
-    @DynamoDBAttribute(attributeName = "hierarchyUpdateSource")
-    @DynamoDBTypeConverted(converter = HierarchyUpdateSourceConverter::class)
-    var hierarchyUpdateSource: HierarchyUpdateSource = HierarchyUpdateSource.REFRESH
 
 ) : Entity {
 

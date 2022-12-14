@@ -1,5 +1,8 @@
 package com.workduck.utils.extensions
 
+import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
@@ -12,11 +15,10 @@ import com.serverless.utils.isValidID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
-import com.workduck.models.Page
 import com.workduck.models.Snippet
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
-import com.workduck.utils.PageHelper
+import com.workduck.utils.Helper
 
 fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
         Node(
@@ -58,6 +60,13 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
     return node
 }
 
+fun String.toNode(): Node = Helper.objectMapper.readValue(this, Node::class.java)
+
+fun Any.toNode() : Node = Helper.objectMapper.convertValue(this)
+
+fun Any.toNamespace() : Namespace = Helper.objectMapper.convertValue(this)
+
+fun String.toMap() : MutableMap<String, Any?> = Helper.objectMapper.readValue(this)
 
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
     Snippet(

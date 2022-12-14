@@ -36,6 +36,7 @@ import com.workduck.models.PageMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.Helper
+import com.workduck.utils.extensions.toInt
 import org.apache.logging.log4j.LogManager
 import java.time.Instant
 
@@ -79,15 +80,78 @@ class NodeRepository(
         }
     }
 
+    /* when a namespace gets deleted, all the non-deleted nodes of the namespace should get deleted.
+       when a user tries to delete a node, only an archived node should be deleted. ( active nodes -> archived -> deleted )
+     */
+    fun softDeleteNode(nodeID: String, workspaceID: String, userID: String) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":deleted"] = 1
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":expireAt"] = Helper.getTTLForNode()
+        expressionAttributeValues[":lastEditedBy"] = userID
+
+        val updateExpression = "SET deleted = :deleted, updatedAt = :updatedAt, expireAt = :expireAt, lastEditedBy = " +
+                ":lastEditedBy"
+
+        /* the node should not be deleted already ( 0/null != 1 ) */
+        val conditionExpression = "deleted <> :deleted and attribute_exists(SK) and attribute_exists(PK)"
+
+        try {
+            return UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
+            ).let {
+                table.updateItem(it)
+            }
+        } catch(e: ConditionalCheckFailedException){
+            LOG.warn("Failed to delete $nodeID")
+            throw IllegalStateException(Messages.ERROR_NAMESPACE_DELETED)
+        }
+
+
+    }
+
+    fun changeNamespace(nodeID: String, workspaceID: String, sourceNamespaceID: String, targetNamespaceID: String, userID: String){
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":targetNamespace"] = targetNamespaceID
+        expressionAttributeValues[":sourceNamespace"] = sourceNamespaceID
+        expressionAttributeValues[":lastEditedBy"] = userID
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":deleted"] = 1 /* no need to change namespace of a deleted node */
+
+
+        val updateExpression = "SET updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :targetNamespace"
+
+        val conditionExpression = "AK = :sourceNamespace and attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
+
+        try {
+            return UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
+            ).let {
+                table.updateItem(it)
+            }
+        } catch(e: ConditionalCheckFailedException){
+            LOG.warn("Failed to change namespace of $nodeID from $sourceNamespaceID to $targetNamespaceID")
+            throw IllegalStateException(Messages.ERROR_NAMESPACE_DELETED)
+        }
+
+    }
+
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): List<String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
         expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
+
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
-            filterExpression = "AK = :AK", expressionAttributeValues = expressionAttributeValues
+            filterExpression = "AK = :AK and  NOT deleted = :deleted", expressionAttributeValues =
+            expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
@@ -112,22 +176,6 @@ class NodeRepository(
         }
     }
 
-    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus): List<String> {
-        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
-        expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
-        expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
-        expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
-
-        return DynamoDBQueryExpression<Node>().query(
-                keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
-                filterExpression = "AK = :AK and itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
-        ).let {
-            mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
-                node.id
-            }
-        }
-    }
 
     fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
@@ -171,20 +219,6 @@ class NodeRepository(
         val failedBatches = mapper.batchWrite(listOfNodes, emptyList<Any>(), dynamoDBMapperConfig)
         Helper.logFailureForBatchOperation(failedBatches)
     }
-
-    fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
-        return try {
-            val transactionWriteRequest = TransactionWriteRequest()
-            transactionWriteRequest.addPut(node)
-            transactionWriteRequest.addPut(nodeVersion)
-            mapper.transactionWrite(transactionWriteRequest, dynamoDBMapperConfig)
-            node
-        } catch (e: Exception) {
-            println(e)
-            null
-        }
-    }
-
 
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
@@ -233,24 +267,6 @@ class NodeRepository(
         }
     }
 
-    fun setTTLForOldestVersion(nodeID: String, oldestUpdatedAt: String) {
-
-        val table: Table = dynamoDB.getTable(tableName)
-
-        val now: Long = Instant.now().epochSecond // unix time
-        val ttl = (60).toLong()
-
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":ttl"] = (now + ttl)
-        expressionAttributeValues[":status"] = "INACTIVE"
-
-        UpdateItemSpec().update(
-            pk = "$nodeID${Constants.DELIMITER}VERSION", sk = oldestUpdatedAt, updateExpression = "SET timeToLive = :ttl, versionStatus = :status",
-            expressionAttributeValues = expressionAttributeValues
-        ).also {
-            table.updateItem(it)
-        }
-    }
 
     fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>, workspaceID: String): MutableList<String> {
         if (mapOfNodeIDToName.isEmpty()) return mutableListOf()
@@ -478,10 +494,6 @@ class NodeRepository(
             Pair(node.workspaceIdentifier.id, node.namespaceIdentifier.id)
         }
     }
-
-
-
-
 
 
     fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus): Map<String, String> {

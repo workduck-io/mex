@@ -62,6 +62,17 @@ object Helper {
         }
     }
 
+
+    fun getTTLForNode() : Long{
+        return Constants.getCurrentTimeInSeconds() + 60*24*60*60 /* number of days * hours in a day *  minutes in hour * seconds in hour */
+    }
+
+
+    fun getTTLForNamespace() : Long{
+        return Constants.getCurrentTimeInSeconds() + 61*24*60*60 /* number of days * hours in a day *  minutes in hour * seconds in hour */
+    }
+
+
     fun mapToJson(keyValueMap: Map<String, AttributeValue>): Map<String, Any?> {
         val finalKeyValueMap: MutableMap<String, Any?> = mutableMapOf()
         for ((key, value) in keyValueMap.entries) {

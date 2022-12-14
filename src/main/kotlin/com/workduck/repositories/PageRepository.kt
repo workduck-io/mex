@@ -100,7 +100,7 @@ class PageRepository <T : Page> (
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
 
         expressionAttributeValues[":expireAt"] = when(itemStatus){
-            ItemStatus.ARCHIVED -> { PageHelper.getTTLForArchivedNode() }
+            ItemStatus.ARCHIVED -> { Helper.getTTLForNode() }
             ItemStatus.ACTIVE -> { null }
         }
 

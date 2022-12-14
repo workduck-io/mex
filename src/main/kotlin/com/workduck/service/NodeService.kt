@@ -40,7 +40,6 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
 import com.workduck.models.Entity
 import com.workduck.models.EntityOperationType
-import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
@@ -107,12 +106,12 @@ class NodeService( // Todo: Inject them from handlers
 
     private val pageRepository: PageRepository<Node> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
 
-    private val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
+    val nodeRepository: NodeRepository = NodeRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName),
     private val repository: Repository<Node> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig),
 
 ) {
     private val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
-    private val namespaceService: NamespaceService = NamespaceService(nodeService = this)
+    val namespaceService: NamespaceService = NamespaceService(nodeService = this)
     private val nodeAccessService: NodeAccessService = NodeAccessService(nodeRepository, namespaceService.namespaceAccessService)
 
     fun deleteBlockFromNode(blockIDRequest: WDRequest, userWorkspaceID: String, nodeID: String, userID: String) {
@@ -286,7 +285,7 @@ class NodeService( // Todo: Inject them from handlers
                 for (pathToAdd in nodePathsToAdd) {
                     nodeHierarchy.add(pathToAdd)
                 }
-                namespaceService.updateNamespaceHierarchy(namespace, nodeHierarchy, HierarchyUpdateSource.NODE)
+                namespaceService.updateNamespaceHierarchy(namespace, nodeHierarchy)
             }
         }
         return nodeTitle
@@ -419,17 +418,17 @@ class NodeService( // Todo: Inject them from handlers
         when (sourceNamespace == targetNamespace) {
             true -> { /* need to update only one hierarchy */
                 val newHierarchyOfSourceNamespace = createNewHierarchyInRefactor(lastNodeHierarchy, hierarchyOfSourceNamespace, newPathTillLastNode, existingNodes)
-                launch { updateNamespaceHierarchy(targetNamespace, newHierarchyOfSourceNamespace, HierarchyUpdateSource.NODE) }
+                launch { updateNamespaceHierarchy(targetNamespace, newHierarchyOfSourceNamespace) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(newHierarchyOfSourceNamespace, hierarchyOfSourceNamespace, sourceNamespace.id))
             }
             false -> { /* two hierarchies gets affected in this case */
 
                 val updatedSourceNamespaceHierarchy = getUpdatedExistingHierarchy(hierarchyOfSourceNamespace, existingNodes)
-                launch { updateNamespaceHierarchy(sourceNamespace, updatedSourceNamespaceHierarchy, HierarchyUpdateSource.NODE) }
+                launch { updateNamespaceHierarchy(sourceNamespace, updatedSourceNamespaceHierarchy) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedSourceNamespaceHierarchy, hierarchyOfSourceNamespace, sourceNamespace.id))
 
                 val updatedTargetNamespaceHierarchy = getNewHierarchyByAddingRefactoredPath(hierarchyOfTargetNamespace, lastNodeHierarchy, newPathTillLastNode)
-                launch { updateNamespaceHierarchy(targetNamespace, updatedTargetNamespaceHierarchy, HierarchyUpdateSource.NODE) }
+                launch { updateNamespaceHierarchy(targetNamespace, updatedTargetNamespaceHierarchy) }
                 listOfChangedPaths.add(getMapOfDifferenceOfPaths(updatedTargetNamespaceHierarchy, hierarchyOfTargetNamespace, targetNamespace.id))
             }
         }
@@ -605,7 +604,7 @@ class NodeService( // Todo: Inject them from handlers
 
         launch { nodeRepository.createMultipleNodes(listOfNodes) }
 
-        launch { updateNamespaceHierarchy(namespace, updatedNodeHierarchy, HierarchyUpdateSource.NODE) }
+        launch { updateNamespaceHierarchy(namespace, updatedNodeHierarchy) }
 
         val mapOfNodeAndDifference = mutableMapOf(Constants.NODE to (node as Any)) /* requirement of middleware */
 
@@ -620,11 +619,10 @@ class NodeService( // Todo: Inject them from handlers
         return mapOfChangedPaths
     }
 
-    private fun updateNamespaceHierarchy(namespace: Namespace, updatedNodeHierarchy: List<String>, updateSource: HierarchyUpdateSource) {
+    private fun updateNamespaceHierarchy(namespace: Namespace, updatedNodeHierarchy: List<String>) {
         namespaceService.updateNamespaceHierarchy(
             namespace,
             updatedNodeHierarchy,
-            updateSource
         )
     }
 
@@ -867,8 +865,8 @@ class NodeService( // Todo: Inject them from handlers
         /* compare old and new archived hierarchies */
         val nodeIDsToDelete = getRemovedNodeIDs(currentArchivedHierarchy, namespace.archivedNodeHierarchyInformation)
 
-
-        deleteNodesInParallel(nodeIDsToDelete, workspaceID)
+        /* only archived nodes are passed */
+        softDeleteNodesInParallel(nodeIDsToDelete, workspaceID, userID)
         return@runBlocking nodeIDsToDelete
     }
 
@@ -881,7 +879,7 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-    fun deleteNodesInParallel(nodeIDList: List<String>, workspaceID: String) = runBlocking {
+    fun softDeleteNodesInParallel(nodeIDList: List<String>, workspaceID: String, userID: String)  = runBlocking {
 
         val jobToDelete = CoroutineScope(Dispatchers.IO + Job()).async {
             supervisorScope {
@@ -889,9 +887,26 @@ class NodeService( // Todo: Inject them from handlers
                 for (nodeID in nodeIDList) {
                     deferredList.add(
                         async {
-                            val tags = nodeRepository.getTags(nodeID, workspaceID)
-                            if (!tags.isNullOrEmpty()) deleteTags(tags, nodeID, workspaceID)
-                            repository.delete(WorkspaceIdentifier(workspaceID), NodeIdentifier(nodeID))
+                            nodeRepository.softDeleteNode(nodeID, workspaceID, userID)
+                        })
+                    deferredList.joinAll()
+                }
+            }
+        }
+
+        jobToDelete.await()
+    }
+
+
+    fun changeNamespaceOfNodesInParallel(nodeIDList: List<String>, workspaceID: String, sourceNamespaceID: String, targetNamespaceID : String, userID: String)  = runBlocking {
+
+        val jobToDelete = CoroutineScope(Dispatchers.IO + Job()).async {
+            supervisorScope {
+                val deferredList = ArrayList<Deferred<*>>()
+                for (nodeID in nodeIDList) {
+                    deferredList.add(
+                        async {
+                            nodeRepository.changeNamespace(nodeID, workspaceID, sourceNamespaceID, targetNamespaceID, userID)
                         })
                     deferredList.joinAll()
                 }
@@ -1017,30 +1032,10 @@ class NodeService( // Todo: Inject them from handlers
                     newHierarchy.add(nodePath)
                 }
             }
-            workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy, HierarchyUpdateSource.RENAME)
+            workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy)
         }
     }
 
-    fun checkNodeVersionCount(node: Node, storedNodeVersionCount: Long) {
-        if (storedNodeVersionCount < 25) {
-            node.nodeVersionCount = storedNodeVersionCount + 1
-            println(Thread.currentThread().id)
-        } else {
-            node.nodeVersionCount = storedNodeVersionCount + 1
-            setTTLForOldestVersion(node.id)
-        }
-    }
-
-    private fun setTTLForOldestVersion(nodeID: String) {
-
-        /*returns first element from sorted updatedAts in ascending order */
-        val oldestUpdatedAt = getMetaDataForActiveVersions(nodeID)?.get(0)
-
-        println(oldestUpdatedAt)
-
-        if (oldestUpdatedAt != null)
-            nodeRepository.setTTLForOldestVersion(nodeID, oldestUpdatedAt)
-    }
 
     fun getMetaDataForActiveVersions(nodeID: String): MutableList<String>? {
         return nodeRepository.getMetaDataForActiveVersions(nodeID)
@@ -1055,6 +1050,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeRepository.getAllNodesWithUserID(userID)
     }
 
+    /* by default get non deleted nodes only */
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): List<String> {
         return nodeRepository.getAllNodesWithNamespaceID(namespaceID, workspaceID)
     }
@@ -1355,4 +1351,8 @@ class NodeService( // Todo: Inject them from handlers
     companion object {
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
+}
+
+fun main(){
+    NodeService().softDeleteNodesInParallel(listOf("NODE_MYa6ctwix9haCUqndzjW4"), "WORKSPACE_rfTyaEPeTKB6B3jaq6Vxj", "45135611-f861-4de2-9e1f-782e4c69ec3b")
 }
