@@ -1036,13 +1036,7 @@ class NodeService( // Todo: Inject them from handlers
         }
     }
 
-
-    fun getMetaDataForActiveVersions(nodeID: String): MutableList<String>? {
-        return nodeRepository.getMetaDataForActiveVersions(nodeID)
-    }
-
-    fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
-
+    fun getAllNodesWithWorkspaceID(workspaceID: String): List<String> {
         return nodeRepository.getAllNodesWithWorkspaceID(workspaceID)
     }
 
