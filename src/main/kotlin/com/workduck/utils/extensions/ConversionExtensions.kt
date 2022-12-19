@@ -10,6 +10,8 @@ import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
+import com.serverless.sqsNodeEventHandlers.DDBPayload
+import com.serverless.sqsNodeEventHandlers.SQSPayload
 import com.serverless.utils.Constants
 import com.serverless.utils.isValidID
 import com.workduck.models.Namespace
@@ -66,7 +68,9 @@ fun Any.toNode() : Node = Helper.objectMapper.convertValue(this)
 
 fun Any.toNamespace() : Namespace = Helper.objectMapper.convertValue(this)
 
-fun String.toMap() : MutableMap<String, Any?> = Helper.objectMapper.readValue(this)
+fun String.toSQSPayload() : SQSPayload = Helper.objectMapper.readValue(this)
+
+fun String.toDDBPayload() : DDBPayload = Helper.objectMapper.readValue(this)
 
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
     Snippet(

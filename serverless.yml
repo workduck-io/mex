@@ -76,6 +76,10 @@ provider:
             - dynamodb:GetShardIterator
             - dynamodb:ListStreams
           Resource: 'arn:aws:dynamodb:us-east-1:*:table/*'
+        - Effect: "Allow"
+          Action:
+            - "s3:*"
+          Resource: { "Fn::Join": [ "", [ "arn:aws:s3:::mex", "/*" ] ] }
         - Effect: Allow
           Action:
             - 'cognito-idp:AdminGetUser'

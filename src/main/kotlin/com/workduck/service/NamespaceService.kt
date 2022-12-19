@@ -301,7 +301,3 @@ class NamespaceService (
         private val LOG = LogManager.getLogger(NamespaceService::class.java)
     }
 }
-
-fun main(){
-    NamespaceService().deleteNamespace("NAMESPACE_aRmtqjcrhKQ9WXXzqbUEJ","WORKSPACE_rfTyaEPeTKB6B3jaq6Vxj", null)
-}

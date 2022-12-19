@@ -121,7 +121,8 @@ class NodeRepository(
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":deleted"] = 1 /* no need to change namespace of a deleted node */
 
-
+        // TODO ( remove when the feature is stable )
+        LOG.info("change namespace from $sourceNamespaceID to $targetNamespaceID")
         val updateExpression = "SET updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :targetNamespace"
 
         val conditionExpression = "AK = :sourceNamespace and attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"

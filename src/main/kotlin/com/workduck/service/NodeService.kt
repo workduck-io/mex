@@ -1352,7 +1352,3 @@ class NodeService( // Todo: Inject them from handlers
         private val LOG = LogManager.getLogger(NodeService::class.java)
     }
 }
-
-fun main(){
-    NodeService().softDeleteNodesInParallel(listOf("NODE_MYa6ctwix9haCUqndzjW4"), "WORKSPACE_rfTyaEPeTKB6B3jaq6Vxj", "45135611-f861-4de2-9e1f-782e4c69ec3b")
-}

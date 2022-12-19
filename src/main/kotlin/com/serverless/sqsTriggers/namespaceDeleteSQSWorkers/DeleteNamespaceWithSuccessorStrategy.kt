@@ -11,6 +11,8 @@ import org.apache.logging.log4j.LogManager
 class DeleteNamespaceWithSuccessorStrategy : NamespaceDelete {
     override fun deleteNamespace(namespace: Namespace, nodeService: NodeService) = runBlocking {
         val nodeIDs = nodeService.getAllNodesWithNamespaceID(namespace.id, namespace.workspaceIdentifier.id)
+        // TODO ( remove when the feature is stable )
+        LOG.info("nodes to be moved : $nodeIDs")
 
         val successorNamespace = nodeService.namespaceService.getNamespaceAfterPermissionCheck(namespace.successorNamespace!!.id).let {
             if(it == null){
