@@ -1,12 +1,12 @@
-package com.serverless.sqsTriggers.publicnoteSQSWorkers
+package com.serverless.sqsTriggers.namespaceDeleteSQSWorkers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 
-class PublicNoteSQSWorker: RequestHandler<SQSEvent, Void> {
+class NamespaceDeleteDLQWorker: RequestHandler<SQSEvent, Void> {
     override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
-        return PublicNoteWorker().handleRequest(sqsEvent, context)
+        return NamespaceDeleteWorker().handleRequest(sqsEvent, context)
     }
 
 }

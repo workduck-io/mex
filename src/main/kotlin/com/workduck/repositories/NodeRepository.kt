@@ -85,7 +85,7 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":deleted"] = 1
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
-        expressionAttributeValues[":expireAt"] = Helper.getTTLForNode()
+        expressionAttributeValues[":expireAt"] = Helper.getTTLForDeletingNode()
         expressionAttributeValues[":lastEditedBy"] = userID
 
         val updateExpression = "SET deleted = :deleted, updatedAt = :updatedAt, expireAt = :expireAt, lastEditedBy = " +

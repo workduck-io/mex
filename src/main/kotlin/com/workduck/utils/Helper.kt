@@ -63,8 +63,12 @@ object Helper {
     }
 
 
-    fun getTTLForNode() : Long{
+    fun getTTLForArchiving() : Long{
         return Constants.getCurrentTimeInSeconds() + 60*24*60*60 /* number of days * hours in a day *  minutes in hour * seconds in hour */
+    }
+
+    fun getTTLForDeletingNode() : Long{
+        return Constants.getCurrentTimeInSeconds() + 10*24*60*60 /* number of days * hours in a day *  minutes in hour * seconds in hour */
     }
 
 
