@@ -6,6 +6,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.google.gson.Gson
 import com.serverless.sqsNodeEventHandlers.DDBPayload
 import com.serverless.sqsTriggers.nodeDeleteSQSWorkers.NodeDeleteWorker
+import com.serverless.sqsTriggers.utils.Constants
+import com.serverless.sqsTriggers.utils.Helper
 import com.serverless.sqsTriggers.utils.PayloadProcessor
 import com.workduck.models.Namespace
 import com.workduck.service.NodeService
@@ -17,8 +19,8 @@ class NamespaceDeleteWorker: RequestHandler<SQSEvent, Void> {
 
     companion object {
         private val LOG = LogManager.getLogger(NamespaceDeleteWorker::class.java)
-
         val nodeService = NodeService()
+        val sqs = Helper.createSQSConnection()
     }
 
     override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
@@ -30,6 +32,8 @@ class NamespaceDeleteWorker: RequestHandler<SQSEvent, Void> {
                     // TODO ( remove when the feature is stable )
                     LOG.info("${namespace.id} has been softDeleted")
                     NamespaceDeleteStrategyFactory.getNamespaceDeleteStrategy(namespace).deleteNamespace(namespace, nodeService)
+
+                    sqs.deleteMessage(Constants.namespaceDeleteSQSURL, record.receiptHandle)
                 }
             }
         }

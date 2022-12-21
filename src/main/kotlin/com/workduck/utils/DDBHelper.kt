@@ -18,11 +18,16 @@ object DDBHelper {
         .build()
 
     fun getTableName() : String {
+        return "${getStage()}-mex"
+    }
+
+    fun getStage() : String {
         return when (System.getenv("STAGE")) {
-            null -> "local-mex" /* for local testing without serverless offline */
-            "test" -> "staging-mex"
-            else -> System.getenv("TABLE_NAME")
+            null -> "local" /* for local testing without serverless offline */
+            "test" -> "staging"
+            else -> System.getenv("STAGE")
         }
+
     }
 
 }
