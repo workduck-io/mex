@@ -15,6 +15,7 @@ NamespaceDeleteWorker:
           Fn::GetAtt:
             - NamespaceDelete
             - Arn
+        batchSize: 1
 
 NamespaceDeleteDLQWorker:
   handler: com.serverless.sqsTriggers.namespaceDeleteSQSWorkers.NamespaceDeleteDLQWorker

@@ -27,9 +27,8 @@ Resources:
           Fn::GetAtt:
             - "NamespaceDeleteDLQ"
             - "Arn"
-        maxReceiveCount: 5
-      # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
-      VisibilityTimeout: 180
+        maxReceiveCount: 3
+      VisibilityTimeout: 120
   NamespaceDeleteDLQ:
     Type: "AWS::SQS::Queue"
     Properties:
@@ -45,9 +44,8 @@ Resources:
           Fn::GetAtt:
             - "NodeDeleteDLQ"
             - "Arn"
-        maxReceiveCount: 5
-      # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
-      VisibilityTimeout: 180
+        maxReceiveCount: 3
+      VisibilityTimeout: 120
   NodeDeleteDLQ:
     Type: "AWS::SQS::Queue"
     Properties:
