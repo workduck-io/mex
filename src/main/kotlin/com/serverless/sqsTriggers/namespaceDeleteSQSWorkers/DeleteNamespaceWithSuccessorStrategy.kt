@@ -24,8 +24,8 @@ class DeleteNamespaceWithSuccessorStrategy : NamespaceDelete {
 
         nodeService.changeNamespaceOfNodesInParallel(nodeIDs, namespace.workspaceIdentifier.id, namespace.id, successorNamespace.id, namespace.createdBy!!)
         launch { updateHierarchiesOfSuccessorNamespace(namespace, successorNamespace, nodeService) }
-        launch { updateHierarchiesOfNamespaceToBeDeleted(namespace, nodeService) }
-
+        val jobToUpdateSourceNamespace = async { updateHierarchiesOfNamespaceToBeDeleted(namespace, nodeService) }
+        jobToUpdateSourceNamespace.await()
     }
 
 
