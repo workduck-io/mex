@@ -32,7 +32,7 @@ NodeDeleteWorker:
     - sqs:
         arn:
           Fn::GetAtt:
-            - NodeDeleteDLQ
+            - NodeDelete
             - Arn
 
 NodeDeleteDLQWorker:
@@ -41,7 +41,7 @@ NodeDeleteDLQWorker:
     - sqs:
         arn:
           Fn::GetAtt:
-            - NodeDelete
+            - NodeDeleteDLQ
             - Arn
 
 PublicNoteWorker:
