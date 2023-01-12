@@ -293,7 +293,7 @@ class NamespaceService (
         return namespaceAccessService.getUserNamespaceAccessType(namespaceID, userID).name
     }
 
-    fun updateHierarchies(workspaceID: String, namespaceID: String, activeHierarchy : List<String>, archivedHierarchy : List<String>, hierarchyUpdateAction: HierarchyUpdateAction){
+    fun updateHierarchies(workspaceID: String, namespaceID: String, hierarchyUpdateAction: HierarchyUpdateAction,  activeHierarchy : List<String> = listOf(), archivedHierarchy : List<String> = listOf()){
         namespaceRepository.updateHierarchies(workspaceID, namespaceID, activeHierarchy, archivedHierarchy, hierarchyUpdateAction)
     }
 
