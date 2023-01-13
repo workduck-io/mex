@@ -1,0 +1,9 @@
+Resources:
+  DDBStreamSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: 'dlq-sns-mex'
+      TopicName: dlq-sns-${opt:stage, self:provider.stage}
+      Subscription:
+       - Endpoint: "varun.garg@workduck.io"
+         Protocol: "email"

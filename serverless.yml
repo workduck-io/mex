@@ -82,6 +82,11 @@ provider:
           Resource: { "Fn::Join": [ "", [ "arn:aws:s3:::mex", "/*" ] ] }
         - Effect: Allow
           Action:
+            - "sns:*"
+          Resource:
+            - { Ref: DDBStreamSNS }
+        - Effect: Allow
+          Action:
             - 'cognito-idp:AdminGetUser'
             - 'cognito-idp:AdminUpdateUserAttributes'
           Resource:
@@ -232,4 +237,5 @@ resources:
   - ${file(src/main/resources/staging-table-config.yml)}
   - ${file(src/main/resources/default-table-config.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
+  - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}

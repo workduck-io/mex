@@ -85,9 +85,6 @@ class NamespaceService (
             require(namespaceAccessService.checkIfNamespaceExistsForWorkspace(successorNamespaceID, userWorkspaceID)) { Messages.ERROR_NAMESPACE_PERMISSION }
         }
 
-        //val jobToGetListOfNodeIDsToDelete = async { nodeService.getAllNodesWithNamespaceID(namespaceID, userWorkspaceID) }
-        //launch { nodeService.deleteNodesInParallel(jobToGetListOfNodeIDsToDelete.await(), userWorkspaceID) }
-        //launch { repository.delete(WorkspaceIdentifier(userWorkspaceID), NamespaceIdentifier(namespaceID)) }
         namespaceRepository.softDeleteNamespace(namespaceID, userWorkspaceID, successorNamespaceID)
         
     }

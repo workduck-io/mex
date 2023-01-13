@@ -430,8 +430,6 @@ class NamespaceRepository(
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
         expressionAttributeValues[":activeHierarchy"] = activeHierarchy
         expressionAttributeValues[":archivedHierarchy"] = archivedHierarchy
-        expressionAttributeValues[":deleted"] = 1
-
 
         val updateExpression = when(hierarchyUpdateAction){
             HierarchyUpdateAction.REPLACE -> {
@@ -448,7 +446,7 @@ class NamespaceRepository(
 
         try {
             UpdateItemSpec().update(pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
-                conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted", expressionAttributeValues = expressionAttributeValues).let {
+                conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
                 table.updateItem(it)
             }
 

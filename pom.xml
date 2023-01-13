@@ -25,6 +25,7 @@
         <jnanoid.version>2.0.0</jnanoid.version>
         <jedis.version>4.2.0</jedis.version>
         <awsjavasdk.version>1.12.197</awsjavasdk.version>
+        <awssdksns.version>2.19.15</awssdksns.version>
     </properties>
 
     <dependencyManagement>
@@ -91,6 +92,14 @@
             <artifactId>aws-java-sdk-sqs</artifactId>
             <version>${awsjavasdk.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sns</artifactId>
+            <version>${awssdksns.version}</version>
+        </dependency>
+
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
