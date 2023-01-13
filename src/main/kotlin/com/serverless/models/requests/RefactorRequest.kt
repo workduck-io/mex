@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.Messages
+import com.serverless.utils.isValidNodeID
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -30,8 +31,8 @@ data class RefactorRequest(
         }
 
 
-        require(nodeID.isValidID(Constants.NODE_ID_PREFIX)) {
-            "Invalid NodeID"
+        require(nodeID.isValidNodeID()) {
+            Messages.INVALID_NODE_ID
         }
     }
     

@@ -5,7 +5,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNamespaceID
 import com.workduck.service.NamespaceService
 import java.lang.IllegalArgumentException
 
@@ -30,8 +30,8 @@ private fun Input.getSuccessorNamespaceID():String? = this.queryStringParameters
 }
 
 /*
-Could be move to generic extensions, on need basis
+Could be moved to generic extensions, on need basis
  */
 private fun String?.checkForValidNamespace() = this?.let { namespaceID ->
-    require(namespaceID.isValidID(Constants.NAMESPACE_ID_PREFIX)) { Messages.INVALID_NAMESPACE_ID }
+    require(namespaceID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }
 }

@@ -13,7 +13,7 @@ import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.sqsNodeEventHandlers.DDBPayload
 import com.serverless.sqsNodeEventHandlers.SQSPayload
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNodeID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
@@ -109,7 +109,7 @@ fun GenericListRequest.toIDList() : List<String> {
 
 
 fun GenericListRequest.toNodeIDList() : List<String> {
-    require( this.ids.none { nodeID -> !nodeID.isValidID(Constants.NODE_ID_PREFIX) } ) { "Invalid NodeID(s)" }
+    require( this.ids.none { nodeID -> !nodeID.isValidNodeID() } ) { "Invalid NodeID(s)" }
     return this.ids
 }
 

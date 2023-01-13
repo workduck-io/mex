@@ -5,13 +5,13 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNodeID
 import com.workduck.service.NodeService
 
 class UpdateMetadataStrategy : NodeStrategy {
     override fun apply(input: Input, nodeService: NodeService): ApiGatewayResponse {
         val nodeID = input.pathParameters!!.id!!.let { id ->
-            require(id.isValidID(Constants.NODE_ID_PREFIX)) { Messages.INVALID_NODE_ID }
+            require(id.isValidNodeID()) { Messages.INVALID_NODE_ID }
             id
         }
         return input.payload?.let {

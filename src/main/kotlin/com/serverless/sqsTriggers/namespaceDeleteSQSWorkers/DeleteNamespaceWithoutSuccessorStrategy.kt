@@ -5,8 +5,9 @@ import com.workduck.service.NodeService
 
 class DeleteNamespaceWithoutSuccessorStrategy : NamespaceDelete {
     override fun deleteNamespace(namespace: Namespace, nodeService: NodeService) {
-        val nodeIDs = nodeService.getAllNodesWithNamespaceID(namespace.id, namespace.workspaceIdentifier.id)
-        nodeService.softDeleteNodesInParallel(nodeIDs, namespace.workspaceIdentifier.id, namespace.createdBy!!)
+        val namespaceDTO = Namespace.getNamespaceDTO(namespace)
+        val nodeIDs = nodeService.getAllNodesWithNamespaceID(namespaceDTO.id, namespaceDTO.workspaceID)
+        nodeService.softDeleteNodesInParallel(nodeIDs, namespaceDTO.workspaceID, namespaceDTO.createdBy)
     }
 
 }

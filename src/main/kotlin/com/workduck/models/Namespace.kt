@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.ItemTypeConverter
 import com.workduck.converters.NamespaceIdentifierConverter
@@ -101,6 +102,22 @@ class Namespace(
             archivedHierarchy?.let { namespace.archivedNodeHierarchyInformation = it }
             namespace.updatedAt = updatedAt
         }
+
+        fun getSuccessorNamespaceDTO(namespace: Namespace) : SuccessorNamespaceDTO{
+            check(namespace.successorNamespace != null) { Messages.SUCCESSOR_NAMESPACE_NULL }
+            return SuccessorNamespaceDTO(
+                id = namespace.successorNamespace!!.id
+            )
+        }
+
+        fun getNamespaceDTO(namespace: Namespace) : NamespaceDTO {
+            check(namespace.createdBy != null) { Messages.CREATED_BY_NULL }
+            return NamespaceDTO(
+                id = namespace.id,
+                workspaceID = namespace.workspaceIdentifier.id,
+                createdBy = namespace.createdBy!!
+            )
+        }
     }
 
     @JsonProperty("updatedAt")
@@ -113,3 +130,15 @@ class Namespace(
     var expireAt: Long? = null
 
 }
+
+data class SuccessorNamespaceDTO(
+    val id: String,
+
+)
+
+data class NamespaceDTO(
+    val id: String,
+    val workspaceID : String,
+    val createdBy: String
+
+)

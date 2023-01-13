@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.Messages
+import com.serverless.utils.isValidNodeID
 import com.serverless.utils.isValidTitle
 import com.workduck.models.AdvancedElement
 import com.workduck.models.PageMetadata
@@ -30,7 +31,7 @@ data class UpdateSharedNodeRequest (
 ) : WDRequest {
 
     init {
-        require(id.isValidID(Constants.NODE_ID_PREFIX) ) { "Invalid Node ID(s)" }
+        require(id.isValidNodeID() ) { Messages.INVALID_NODE_ID }
 
         require(title.isNotEmpty()) { "Title is required" }
 

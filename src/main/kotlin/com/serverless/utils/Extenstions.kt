@@ -104,7 +104,20 @@ fun List<String>.listsEqual(list: List<String>): Boolean{
     return this.size == list.size && this.containsAll(list)
 }
 
-fun String.isValidID(prefix: String): Boolean {
+fun String.isValidSnippetID(): Boolean {
+    return this.isValidID(Constants.SNIPPET_ID_PREFIX)
+}
+
+fun String.isValidNamespaceID(): Boolean {
+    return this.isValidID(Constants.NAMESPACE_ID_PREFIX)
+}
+
+fun String.isValidNodeID(): Boolean {
+    return this.isValidID(Constants.NODE_ID_PREFIX)
+}
+
+
+private fun String.isValidID(prefix: String): Boolean {
     return this.startsWith(prefix) &&
         this.length == prefix.length + Constants.NANO_ID_SIZE &&
         this.takeLast(Constants.NANO_ID_SIZE).isValidNanoID()

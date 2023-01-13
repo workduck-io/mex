@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNamespaceID
+import com.serverless.utils.isValidNodeID
 import com.workduck.converters.BlockMovementActionDeserializer
 import com.workduck.models.BlockMovementAction
 
@@ -31,11 +32,11 @@ class BlockMovementRequest(
 
 ) : WDRequest {
     init {
-        require(sourceNodeID.isValidID(Constants.NODE_ID_PREFIX) && destinationNodeID.isValidID(Constants.NODE_ID_PREFIX)) {
+        require(sourceNodeID.isValidNodeID() && destinationNodeID.isValidNodeID()) {
             "NodeID(s) invalid"
         }
 
-        require(sourceNamespaceID.isValidID(Constants.NAMESPACE_ID_PREFIX) && destinationNamespaceID.isValidID(Constants.NAMESPACE_ID_PREFIX)) {
+        require(sourceNamespaceID.isValidNamespaceID() && destinationNamespaceID.isValidNamespaceID()) {
             "NamespaceID(s) invalid"
         }
 

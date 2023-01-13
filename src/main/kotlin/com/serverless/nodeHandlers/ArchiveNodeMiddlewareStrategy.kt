@@ -5,7 +5,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNamespaceID
 import com.workduck.service.NodeService
 
 class ArchiveNodeMiddlewareStrategy : NodeStrategy {
@@ -13,7 +13,7 @@ class ArchiveNodeMiddlewareStrategy : NodeStrategy {
 
         val namespaceID = input.queryStringParameters?.let{
             it["namespaceID"]?.let{ namespaceID ->
-                require(namespaceID.isValidID(Constants.NAMESPACE_ID_PREFIX)) { Messages.INVALID_NAMESPACE_ID }
+                require(namespaceID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }
                 namespaceID
             }
         } ?: throw IllegalArgumentException(Messages.INVALID_NAMESPACE_ID)

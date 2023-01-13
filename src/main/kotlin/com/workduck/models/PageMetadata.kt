@@ -1,8 +1,7 @@
 package com.workduck.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidSnippetID
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PageMetadata(
@@ -13,6 +12,6 @@ data class PageMetadata(
 
 ) {
     init {
-        require(templateID?.isValidID(Constants.SNIPPET_ID_PREFIX) ?: true) { "Invalid TemplateID" }
+        require(templateID?.isValidSnippetID() ?: true) { "Invalid TemplateID" }
     }
 }

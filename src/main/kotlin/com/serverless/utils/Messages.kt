@@ -63,6 +63,8 @@ object Messages {
     const val ERROR_NAMESPACE_PUBLIC = "Namespace already public"
     const val ERROR_NAMESPACE_DELETED = "Namespace already deleted"
     const val INVALID_NAMESPACE_ID  = "Invalid NamespaceID"
+    const val SUCCESSOR_NAMESPACE_NULL = "Successor Namespace Information Unavailable"
+    const val CREATED_BY_NULL = "Created By Information Unavailable"
     const val INVALID_SUCCESSOR_NAMESPACE = "Either the successor namespace does not exist or you do not have permissions"
 
 

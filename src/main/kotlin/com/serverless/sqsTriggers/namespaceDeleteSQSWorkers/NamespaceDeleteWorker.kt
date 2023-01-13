@@ -29,8 +29,7 @@ class NamespaceDeleteWorker: RequestHandler<SQSEvent, Void> {
                 records.map { record ->
                     val ddbPayload : DDBPayload = PayloadProcessor.process(record.body.toSQSPayload())
                     val namespace : Namespace = ddbPayload.NewImage!!.toNamespace()
-                    // TODO ( remove when the feature is stable )
-                    LOG.info("${namespace.id} has been softDeleted")
+                    LOG.info("${namespace.id} has been softDeleted") // TODO ( remove when the feature is stable )
                     NamespaceDeleteStrategyFactory.getNamespaceDeleteStrategy(namespace).deleteNamespace(namespace, nodeService)
 
                     sqs.deleteMessage(Constants.namespaceDeleteSQSURL, record.receiptHandle)

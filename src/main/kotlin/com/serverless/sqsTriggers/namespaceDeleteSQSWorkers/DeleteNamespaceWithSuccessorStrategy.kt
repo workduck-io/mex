@@ -1,13 +1,10 @@
 package com.serverless.sqsTriggers.namespaceDeleteSQSWorkers
 
-import com.serverless.utils.Messages
 import com.workduck.models.HierarchyUpdateAction
 import com.workduck.models.Namespace
 import com.workduck.service.NodeService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 
 class DeleteNamespaceWithSuccessorStrategy : NamespaceDelete {
@@ -17,37 +14,25 @@ class DeleteNamespaceWithSuccessorStrategy : NamespaceDelete {
     }
 
     override fun deleteNamespace(namespace: Namespace, nodeService: NodeService) = runBlocking {
-        require(namespace.successorNamespace != null) {
-            IllegalArgumentException(Messages.INVALID_SUCCESSOR_NAMESPACE)
-        }
-        val nodeIDs = nodeService.getAllNodesWithNamespaceID(namespace.id, namespace.workspaceIdentifier.id)
-        // TODO ( remove when the feature is stable )
-        LOG.info("nodes to be moved : $nodeIDs")
+        val successorNamespaceDTO = Namespace.getSuccessorNamespaceDTO(namespace)
+        val namespaceDTO = Namespace.getNamespaceDTO(namespace)
+
+        val nodeIDs = nodeService.getAllNodesWithNamespaceID(namespaceDTO.id, namespaceDTO.workspaceID)
+
+        LOG.info("nodes to be moved : $nodeIDs") // TODO ( remove when the feature is stable )
 
         val successorNamespace = nodeService
             .namespaceService
-            .getNamespaceAfterPermissionCheck(namespace.successorNamespace!!.id)
-            ?: throw IllegalStateException(
-                "Either the successor namespace " +
-                        "${namespace.successorNamespace!!.id} is deleted or does not exist"
-            )
+            .getNamespaceAfterPermissionCheck(successorNamespaceDTO.id)
+            ?: throw IllegalStateException("Either the successor namespace ${successorNamespaceDTO.id} is deleted or does not exist")
 
-        nodeService
-            .changeNamespaceOfNodesInParallel(
-                nodeIDs,
-                namespace.workspaceIdentifier.id,
-                namespace.id,
-                successorNamespace.id,
-                namespace.createdBy!!
-            )
+        /* since the owner of namespace can delete it, when we move the nodes, lastEditedBy should be set as ownerID */
+        nodeService.changeNamespaceOfNodesInParallel(nodeIDs, namespaceDTO.workspaceID, namespaceDTO.id, successorNamespaceDTO.id, namespaceDTO.createdBy)
 
         launch { updateHierarchiesOfSuccessorNamespace(namespace, successorNamespace, nodeService) }
-        withContext(Dispatchers.Default) {
-            updateHierarchiesOfNamespaceToBeDeleted(
-                namespace,
-                nodeService
-            )
-        }
+
+        updateHierarchiesOfNamespaceToBeDeleted(namespace, nodeService)
+
     }
 
 
@@ -62,7 +47,7 @@ class DeleteNamespaceWithSuccessorStrategy : NamespaceDelete {
 
         nodeService.namespaceService.updateHierarchies(
             namespace.workspaceIdentifier.id,
-            namespace.successorNamespace!!.id,
+            successorNamespace.id,
             HierarchyUpdateAction.APPEND,
             newActiveHierarchy,
             newArchivedHierarchy

@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.Messages
+import com.serverless.utils.isValidSnippetID
 import com.serverless.utils.isValidTitle
 import com.workduck.models.AdvancedElement
 import com.workduck.models.PageMetadata
@@ -34,8 +35,8 @@ data class SnippetRequest(
 ) : WDRequest {
 
     init {
-        require(id.isValidID(Constants.SNIPPET_ID_PREFIX)) {
-            "Invalid SnippetID"
+        require(id.isValidSnippetID()) {
+            Messages.INVALID_SNIPPET_ID
         }
 
         require(title.isNotEmpty()) {
