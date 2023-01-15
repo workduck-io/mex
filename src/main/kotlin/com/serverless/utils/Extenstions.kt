@@ -149,12 +149,12 @@ fun String.isLastNodeSame(path: String, delimiter: String = Constants.DELIMITER)
     return this.split(delimiter).last() == path.split(delimiter).last()
 }
 
-fun String.getListOfNodes(delimiter: String = Constants.DELIMITER): List<String> {
+fun String.getListFromPath(delimiter: String = Constants.DELIMITER): List<String> {
     return this.split(delimiter)
 }
 
 fun String.containsExistingNodes(existingNodes: List<String>, delimiter: String = Constants.DELIMITER): Boolean {
-    return this.getListOfNodes(delimiter).commonPrefixList(existingNodes) == existingNodes
+    return this.getListFromPath(delimiter).commonPrefixList(existingNodes) == existingNodes
 }
 
 fun String.addAlphanumericStringToTitle() : String {

@@ -33,6 +33,8 @@ class NamespaceStrategyFactory {
 
         const val getAccessDataForUser = "GET /shared/namespace/{id}/access"
 
+        const val getNodeIDFromPath = "GET /namespace/{namespaceID}/path/{nodeID}/{path}"
+
         private val namespaceRegistry: Map<String, NamespaceStrategy> = mapOf(
             getNamespaceObject to GetNamespaceStrategy(),
             createNamespaceObject to CreateNamespaceStrategy(),
@@ -47,7 +49,8 @@ class NamespaceStrategyFactory {
             shareNamespace to ShareNamespaceStrategy(),
             revokeNamespaceAccess to RevokeNamespaceAccessStrategy(),
             getAllSharedUsers to GetAllSharedUsersStrategy(),
-            getAccessDataForUser to GetAccessDataForUserStrategy()
+            getAccessDataForUser to GetAccessDataForUserStrategy(),
+            getNodeIDFromPath to GetNodeIDFromPathStrategy()
         )
 
         fun getNamespaceStrategy(routeKey: String): NamespaceStrategy? {

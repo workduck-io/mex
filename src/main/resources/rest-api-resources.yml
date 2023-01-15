@@ -678,6 +678,11 @@ Namespace:
         method: get
         authorizer: mexAuthorizer
 
+    - httpApi:
+        path: /v1/namespace/{namespaceID}/path/{nodeID}/{path}
+        method: get
+        authorizer: mexAuthorizer
+
 
 Workspace:
   handler: com.serverless.workspaceHandlers.WorkspaceHandler
