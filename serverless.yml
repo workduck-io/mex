@@ -17,7 +17,7 @@ service: mex-backend
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+frameworkVersion: '3'
 
 provider:
   name: aws
@@ -76,6 +76,15 @@ provider:
             - dynamodb:GetShardIterator
             - dynamodb:ListStreams
           Resource: 'arn:aws:dynamodb:us-east-1:*:table/*'
+        - Effect: "Allow"
+          Action:
+            - "s3:*"
+          Resource: { "Fn::Join": [ "", [ "arn:aws:s3:::mex", "/*" ] ] }
+        - Effect: Allow
+          Action:
+            - "sns:*"
+          Resource:
+            - { Ref: DDBStreamSNS }
         - Effect: Allow
           Action:
             - 'cognito-idp:AdminGetUser'
@@ -228,4 +237,5 @@ resources:
   - ${file(src/main/resources/staging-table-config.yml)}
   - ${file(src/main/resources/default-table-config.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
+  - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}

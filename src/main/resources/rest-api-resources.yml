@@ -6,26 +6,43 @@ Ping:
         cors: true
         method: get
 
-PublicNoteSQSWorker:
-  handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteDLQWorker
+
+NamespaceDeleteWorker:
+  handler: com.serverless.sqsTriggers.namespaceDeleteSQSWorkers.NamespaceDeleteWorker
   events:
     - sqs:
         arn:
           Fn::GetAtt:
-            - PublicNoteDLQ
+            - NamespaceDelete
             - Arn
-  vpc:
-    subnetIds:
-      - "subnet-ad0a8de0"
-      - "subnet-f37686ac"
-      - "subnet-91d621f7"
-      - "subnet-c07d8fe1"
-      - "subnet-fddce7c3"
-      - "subnet-2054fd2e"
-    securityGroupIds:
-      - "sg-0aeaa35ab3c10796d"
-      - "sg-0fad68a531aa4fea5"
-      - "sg-51d4667f"
+        batchSize: 1
+
+NamespaceDeleteDLQWorker:
+  handler: com.serverless.sqsTriggers.namespaceDeleteSQSWorkers.NamespaceDeleteDLQWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - NamespaceDeleteDLQ
+            - Arn
+
+NodeDeleteWorker:
+  handler: com.serverless.sqsTriggers.nodeDeleteSQSWorkers.NodeDeleteWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - NodeDelete
+            - Arn
+
+NodeDeleteDLQWorker:
+  handler: com.serverless.sqsTriggers.nodeDeleteSQSWorkers.NodeDeleteDLQWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - NodeDeleteDLQ
+            - Arn
 
 PublicNoteWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteWorker
@@ -47,6 +64,28 @@ PublicNoteWorker:
       - "sg-0aeaa35ab3c10796d"
       - "sg-0fad68a531aa4fea5"
       - "sg-51d4667f"
+
+PublicNoteSQSWorker:
+  handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteDLQWorker
+  events:
+    - sqs:
+        arn:
+          Fn::GetAtt:
+            - PublicNoteDLQ
+            - Arn
+  vpc:
+    subnetIds:
+      - "subnet-ad0a8de0"
+      - "subnet-f37686ac"
+      - "subnet-91d621f7"
+      - "subnet-c07d8fe1"
+      - "subnet-fddce7c3"
+      - "subnet-2054fd2e"
+    securityGroupIds:
+      - "sg-0aeaa35ab3c10796d"
+      - "sg-0fad68a531aa4fea5"
+      - "sg-51d4667f"
+
 
 # Note: Since we are creating new elasticache cluster and all the lambdas irrespective of stage in the same VPC we don't need to create new VPC endpoints.
 # Refer: https://us-east-1.console.aws.amazon.com/vpc/home?region=us-east-1#Endpoints:

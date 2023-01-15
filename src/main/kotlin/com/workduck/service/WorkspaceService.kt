@@ -9,11 +9,9 @@ import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
 import com.workduck.models.Entity
-import com.workduck.models.HierarchyUpdateSource
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
-import com.workduck.models.Namespace
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
@@ -77,11 +75,9 @@ class WorkspaceService (
 
     fun updateWorkspaceHierarchy(
         workspace: Workspace,
-        newNodeHierarchy: List<String>,
-        hierarchyUpdateSource: HierarchyUpdateSource
+        newNodeHierarchy: List<String>
     ) {
         Workspace.populateHierarchiesAndUpdatedAt(workspace, newNodeHierarchy, workspace.archivedNodeHierarchyInformation)
-        workspace.hierarchyUpdateSource = hierarchyUpdateSource
         updateWorkspace(workspace)
     }
 
@@ -98,7 +94,7 @@ class WorkspaceService (
             getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
 
         LOG.debug("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
-        updateWorkspaceHierarchy(workspace, updatedNodeHierarchy, HierarchyUpdateSource.ARCHIVE)
+        updateWorkspaceHierarchy(workspace, updatedNodeHierarchy)
     }
 
     private fun getUpdatedNodeHierarchyOnDeletingNode(
@@ -152,7 +148,7 @@ class WorkspaceService (
         nodeHierarchy += jobToGetNodePathsFromRelationships.await()
         val workspace = jobToGetWorkspace.await() as Workspace
 
-        updateWorkspaceHierarchy(workspace, nodeHierarchy, HierarchyUpdateSource.REFRESH)
+        updateWorkspaceHierarchy(workspace, nodeHierarchy)
     }
 
     private fun getNodePaths(

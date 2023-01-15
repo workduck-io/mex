@@ -1,8 +1,5 @@
 package com.workduck.utils
 
-import com.serverless.models.requests.GenericListRequest
-import com.serverless.utils.Constants
-import com.workduck.models.Entity
 import com.workduck.models.Page
 
 object PageHelper {
@@ -127,12 +124,4 @@ object PageHelper {
         // TODO(explore autoMerge cmd line)
     }
 
-
-    fun convertGenericRequestToList(genericRequest: GenericListRequest) : List<String>{
-        return genericRequest.ids
-    }
-
-    fun getTTLForArchivedNode() : Long{
-        return Constants.getCurrentTimeInSeconds() + 60*24*60*60
-    }
 }

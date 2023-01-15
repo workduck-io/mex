@@ -6,13 +6,12 @@ import com.workduck.models.NamespaceMetadata
 import com.workduck.utils.Helper
 
 class NamespaceMetadataConverter : DynamoDBTypeConverter<String, NamespaceMetadata?> {
-    override fun convert(namespaceMetadata: NamespaceMetadata?): String {
-        return if(namespaceMetadata == null) return ""
-        else Helper.objectMapper.writeValueAsString(namespaceMetadata)
+    override fun convert(namespaceMetadata: NamespaceMetadata?): String? {
+        return namespaceMetadata?.let { Helper.objectMapper.writeValueAsString(it) }
     }
 
-    override fun unconvert(nodeMetadata: String): NamespaceMetadata? {
-        return Helper.objectMapper.readValue(nodeMetadata)
+    override fun unconvert(nodeMetadata: String?): NamespaceMetadata? {
+        return nodeMetadata?.let { Helper.objectMapper.readValue(it) }
     }
 
 

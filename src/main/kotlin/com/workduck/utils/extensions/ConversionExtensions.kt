@@ -1,5 +1,8 @@
 package com.workduck.utils.extensions
 
+import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.NamespaceRequest
 import com.serverless.models.requests.NodeBulkRequest
@@ -7,16 +10,17 @@ import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
+import com.serverless.sqsNodeEventHandlers.DDBPayload
+import com.serverless.sqsNodeEventHandlers.SQSPayload
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNodeID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
-import com.workduck.models.Page
 import com.workduck.models.Snippet
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
-import com.workduck.utils.PageHelper
+import com.workduck.utils.Helper
 
 fun NodeRequest.toNode(workspaceID: String, userID: String): Node =
         Node(
@@ -58,6 +62,15 @@ fun NodeBulkRequest.toNode(nodeID: String, nodeTitle: String, workspaceID: Strin
     return node
 }
 
+fun String.toNode(): Node = Helper.objectMapper.readValue(this, Node::class.java)
+
+fun Any.toNode() : Node = Helper.objectMapper.convertValue(this)
+
+fun Any.toNamespace() : Namespace = Helper.objectMapper.convertValue(this)
+
+fun String.toSQSPayload() : SQSPayload = Helper.objectMapper.readValue(this)
+
+fun String.toDDBPayload() : DDBPayload = Helper.objectMapper.readValue(this)
 
 fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspaceID: String): Snippet =
     Snippet(
@@ -96,7 +109,7 @@ fun GenericListRequest.toIDList() : List<String> {
 
 
 fun GenericListRequest.toNodeIDList() : List<String> {
-    require( this.ids.none { nodeID -> !nodeID.isValidID(Constants.NODE_ID_PREFIX) } ) { "Invalid NodeID(s)" }
+    require( this.ids.none { nodeID -> !nodeID.isValidNodeID() } ) { "Invalid NodeID(s)" }
     return this.ids
 }
 

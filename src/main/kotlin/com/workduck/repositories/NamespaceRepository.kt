@@ -12,16 +12,14 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.getListOfNodes
 import com.workduck.models.AccessType
+import com.workduck.models.HierarchyUpdateAction
 import com.workduck.models.Identifier
 import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceAccess
-import com.workduck.models.Node
-import com.workduck.models.NodeAccess
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
@@ -57,12 +55,45 @@ class NamespaceRepository(
         TODO("Using deleteComment instead")
     }
 
+    fun softDeleteNamespace(namespaceID : String, workspaceID: String, successorNamespaceID: String?) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":deleted"] = 1
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":expireAt"] = Helper.getTTLForNamespace()
+
+        var updateExpression = "SET deleted = :deleted, updatedAt = :updatedAt, expireAt = :expireAt"
+        when(successorNamespaceID != null){
+            true -> {
+                expressionAttributeValues[":successorNamespace"] = successorNamespaceID
+                updateExpression += ", successorNamespace = :successorNamespace"
+            }
+        }
+
+        /* the namespace should not be deleted already ( 0/null != 1 ) */
+        val conditionExpression = "deleted <> :deleted"
+
+        try {
+            return UpdateItemSpec().update(
+                pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
+            ).let {
+                table.updateItem(it)
+            }
+        } catch(e: ConditionalCheckFailedException){
+            throw IllegalStateException(Messages.ERROR_NAMESPACE_DELETED)
+        }
+
+
+    }
+
     fun updateNamespace(workspaceID: String, namespaceID: String, namespace: Namespace) {
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
 
         expressionAttributeValues[":namespaceName"] = namespace.name
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":deleted"] = 1
 
         var updateExpression = ""
         when(namespace.namespaceMetadata != null){
@@ -75,7 +106,7 @@ class NamespaceRepository(
             }
 
         }
-        val conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+        val conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
 
         return UpdateItemSpec().update(
                 pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
@@ -92,10 +123,11 @@ class NamespaceRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Namespace.name.uppercase())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
 
         return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)",
-                expressionAttributeValues = expressionAttributeValues).let {
+                expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted").let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig) }
     }
 
@@ -104,11 +136,12 @@ class NamespaceRepository(
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Namespace.name.uppercase())
         expressionAttributeValues[":name"] = AttributeValue(namespaceName)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
 
 
         return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)",
-                filterExpression = "namespaceName = :name" ,expressionAttributeValues = expressionAttributeValues).let {
+                filterExpression = "namespaceName = :name and deleted <> :deleted" ,expressionAttributeValues = expressionAttributeValues).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).isNotEmpty()
                 }
 
@@ -119,10 +152,11 @@ class NamespaceRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue().withS(namespaceID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Namespace>().query(
                 keyConditionExpression = "PK = :PK and SK = :SK", projectionExpression = "publicAccess",
-                expressionAttributeValues = expressionAttributeValues
+                expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted",
         ).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
                 when(list.size){
@@ -138,10 +172,11 @@ class NamespaceRepository(
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":publicAccess"] = publicAccess
+        expressionAttributeValues[":deleted"] = 1
 
         return UpdateItemSpec().update(
                 pk = workspaceID, sk = namespaceID, updateExpression = "SET publicAccess = :publicAccess",
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
         ).let {
             table.updateItem(it)
         }
@@ -151,10 +186,11 @@ class NamespaceRepository(
         val table = dynamoDB.getTable(tableName)
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":itemStatus"] = targetStatus.name
+        expressionAttributeValues[":deleted"] = 1
 
         return UpdateItemSpec().update(
                 pk = workspaceID, sk = namespaceID, updateExpression = "SET itemStatus = :itemStatus",
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
         ).let {
             table.updateItem(it)
         }
@@ -164,10 +200,11 @@ class NamespaceRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Namespace>().queryWithIndex(
                 index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                expressionAttributeValues = expressionAttributeValues
+                expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
         ).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).firstOrNull()
         }
@@ -196,10 +233,11 @@ class NamespaceRepository(
         expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
         expressionAttributeValues[":PK"] = AttributeValue("WORKSPACE")
         expressionAttributeValues[":true"] = AttributeValue().withN("1")
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
         //expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
 
         return DynamoDBQueryExpression<Namespace>().queryWithIndex(index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-                filterExpression = "publicAccess = :true", expressionAttributeValues = expressionAttributeValues).let {
+                filterExpression = "publicAccess = :true and deleted <> :deleted ", expressionAttributeValues = expressionAttributeValues).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
                 if(list.isNotEmpty()) list[0]
                 else throw NoSuchElementException(Messages.RESOURCE_NOT_FOUND)
@@ -216,12 +254,13 @@ class NamespaceRepository(
         expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
         expressionAttributeValues[":path"] = mutableListOf(path)
         expressionAttributeValues[":empty_list"] = mutableListOf<String>()
+        expressionAttributeValues[":deleted"] = 1
 
         val updateExpression = "set nodeHierarchyInformation = list_append(if_not_exists(nodeHierarchyInformation, :empty_list), :path), updatedAt = :updatedAt"
 
         try {
             UpdateItemSpec().update(pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
-                    conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
+                    conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted", expressionAttributeValues = expressionAttributeValues).let {
                 table.updateItem(it)
             }
 
@@ -269,14 +308,20 @@ class NamespaceRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
-    fun checkIfNamespaceExistsForWorkspace(namespaceID: String, workspaceID: String): Boolean {
+    fun checkIfNamespaceExistsForWorkspace(namespaceID: String, workspaceID: String, skipDeleted: Boolean = true): Boolean {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(namespaceID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
+
+        val filterExpression = when(skipDeleted){
+            true -> "deleted <> :deleted"
+            false -> null
+        }
 
         return DynamoDBQueryExpression<Namespace>().query(
                 keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "PK",
-                expressionAttributeValues = expressionAttributeValues
+                expressionAttributeValues = expressionAttributeValues, filterExpression = filterExpression
         ).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig)
         }.isNotEmpty()
@@ -288,10 +333,11 @@ class NamespaceRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Namespace.name.uppercase())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
 
         return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and begins_with(SK, :SK)",
-                expressionAttributeValues = expressionAttributeValues, projectionExpression = "PK, SK").let {
+                expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted", projectionExpression = "PK, SK").let {
                     mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).map { namespace ->
                         namespace.id
                     }
@@ -366,53 +412,50 @@ class NamespaceRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Namespace>().queryWithIndex(
             index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-            expressionAttributeValues = expressionAttributeValues, projectionExpression = "PK, SK"
+            expressionAttributeValues = expressionAttributeValues, projectionExpression = "PK, SK", filterExpression = "deleted <> :deleted"
         ).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).firstOrNull()?.workspaceIdentifier?.id
         }
 
     }
 
+    fun updateHierarchies(workspaceID: String, namespaceID: String, activeHierarchy : List<String>, archivedHierarchy : List<String>, hierarchyUpdateAction: HierarchyUpdateAction){
 
-//
-//
-//    fun getActiveNamespace(workspaceID: String, namespaceID: String): Namespace? {
-//        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-//        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
-//        expressionAttributeValues[":SK"] = AttributeValue(namespaceID)
-//        expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
-//
-//
-//        return DynamoDBQueryExpression<Namespace>().query(keyConditionExpression = "PK = :PK and SK = :SK",
-//                expressionAttributeValues = expressionAttributeValues, filterExpression = "itemStatus = :itemStatus").let {
-//            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).firstOrNull() }
-//    }
-//
-//    fun isNamespaceActive(workspaceID: String, namespaceID: String) : Boolean{
-//        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-//        expressionAttributeValues[":PK"] = AttributeValue().withS(workspaceID)
-//        expressionAttributeValues[":SK"] = AttributeValue().withS(namespaceID)
-//        expressionAttributeValues[":itemStatus"] = AttributeValue().withS(namespaceID)
-//
-//
-//        return DynamoDBQueryExpression<Namespace>().query(
-//                keyConditionExpression = "PK = :PK and SK = :SK", projectionExpression = "publicAccess",
-//                expressionAttributeValues = expressionAttributeValues
-//        ).let {
-//            mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).let { list ->
-//                when(list.size){
-//                    0 -> throw NoSuchElementException(Messages.RESOURCE_NOT_FOUND)
-//                    else -> list.first().publicAccess
-//                }
-//            }
-//        }
-//
-//    }
-//
-//
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+        expressionAttributeValues[":activeHierarchy"] = activeHierarchy
+        expressionAttributeValues[":archivedHierarchy"] = archivedHierarchy
+
+        val updateExpression = when(hierarchyUpdateAction){
+            HierarchyUpdateAction.REPLACE -> {
+                "set nodeHierarchyInformation = :activeHierarchy, " +
+                        "archivedNodeHierarchyInformation = :archivedHierarchy, updatedAt = :updatedAt"
+            }
+            HierarchyUpdateAction.APPEND -> {
+                expressionAttributeValues[":empty_list"] = mutableListOf<String>()
+                "set nodeHierarchyInformation = list_append(if_not_exists(nodeHierarchyInformation, :empty_list), :activeHierarchy), " +
+                        "archivedNodeHierarchyInformation = list_append(if_not_exists(archivedNodeHierarchyInformation, :empty_list), :archivedHierarchy), updatedAt = :updatedAt"
+
+            }
+        }
+
+        try {
+            UpdateItemSpec().update(pk = workspaceID, sk = namespaceID, updateExpression = updateExpression,
+                conditionExpression = "attribute_exists(PK) and attribute_exists(SK)", expressionAttributeValues = expressionAttributeValues).let {
+                table.updateItem(it)
+            }
+
+        }catch (e: ConditionalCheckFailedException){
+            LOG.warn("Invalid WorkspaceID : $workspaceID or NamespaceID : $namespaceID")
+            throw ConditionalCheckFailedException("Invalid WorkspaceID : $workspaceID or NamespaceID : $namespaceID")
+        }
+
+    }
 
     companion object {
         private val LOG = LogManager.getLogger(NamespaceRepository::class.java)

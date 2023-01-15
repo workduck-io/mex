@@ -3,7 +3,7 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.serverless.utils.Constants
 import com.serverless.utils.getListOfNodes
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNodeID
 import com.serverless.utils.isValidTitle
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
@@ -25,7 +25,7 @@ data class NodePath(
             "Path cannot be empty"
         }
 
-        require(allNodesIDs.none { nodeID -> !nodeID.isValidID(Constants.NODE_ID_PREFIX) }) {
+        require(allNodesIDs.none { nodeID -> !nodeID.isValidNodeID() }) {
             "One or more node ids passed are invalid"
         }
 

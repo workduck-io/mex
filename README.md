@@ -65,3 +65,22 @@ AWS_SECRET_ACCESS_KEY=***************
 - run `sls offline` in terminal . APIs should be available on port **4000**. 
 
 Cheers!🍻
+
+### Known errors :
+
+**domainName Error**
+
+```
+TypeError: Cannot read properties of undefined (reading 'domainName')
+at ServerlessCustomDomain.addOutputs (/Users/varungarg/WorkDuck/mex/node_modules/serverless-domain-manager/dist/src/index.js:559:38)
+at ServerlessCustomDomain.<anonymous> (/Users/varungarg/WorkDuck/mex/node_modules/serverless-domain-manager/dist/src/index.js:246:22)
+at Generator.next (<anonymous>)
+at fulfilled (/Users/varungarg/WorkDuck/mex/node_modules/serverless-domain-manager/dist/src/index.js:5:58)
+at processTicksAndRejections (node:internal/process/task_queues:96:5)
+
+     For debugging logs, run again after setting the "SLS_DEBUG=*" environment variable.
+```
+
+_Fix_
+
+`serverless create_domain --stage ${stageYouWantToDeploy}`

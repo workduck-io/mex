@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.serverless.utils.Constants
-import com.serverless.utils.isValidID
+import com.serverless.utils.isValidNamespaceID
+import com.serverless.utils.isValidNodeID
 import com.serverless.utils.isValidTitle
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
@@ -43,9 +44,9 @@ open class NodeRequest(
 ) : WDRequest {
 
     init {
-        require(id.isValidID(Constants.NODE_ID_PREFIX) && referenceID?.isValidID(Constants.NODE_ID_PREFIX) ?: true) { "Invalid Node ID(s)" }
+        require(id.isValidNodeID() && referenceID?.isValidNodeID() ?: true) { "Invalid Node ID(s)" }
 
-        require(namespaceIdentifier.id.isValidID(Constants.NAMESPACE_ID_PREFIX)) { "Invalid NamespaceID" }
+        require(namespaceIdentifier.id.isValidNamespaceID()) { "Invalid NamespaceID" }
 
         require(title.isNotEmpty()) { "Title is required" }
 

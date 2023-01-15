@@ -32,8 +32,6 @@ class NodeStrategyFactory {
 
         const val getAllArchivedNodesObject = "GET /node/archive"
 
-        const val getNodeVersionMetadata = "GET /node/{id}/version/metadata"
-
         const val makeNodePublicObject = "PATCH /node/makePublic/{id}"
 
         const val makeNodePrivateObject = "PATCH /node/makePrivate/{id}"
@@ -76,7 +74,6 @@ class NodeStrategyFactory {
             archiveNodeMiddlewareObject to ArchiveNodeMiddlewareStrategy(),
             appendToNodeObject to AppendToNodeStrategy(),
             updateNodeBlock to UpdateNodeBlockStrategy(),
-            getNodeVersionMetadata to GetNodeVersionMetaDataStrategy(),
             getMetadataOfNodes to GetNodesMetadataStrategy(),
             unarchiveNodeObject to UnarchiveNodeStrategy(),
             deleteArchivedNodeObject to DeleteArchivedNodeStrategy(),

@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 object DDBHelper {
 
 //    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
-//        AwsClientBuilder.EndpointConfiguration("http://host.docker.internal:8000", "us-east-1"))
+//        AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-east-1"))
 //        .build()
 
     fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder
@@ -18,11 +18,16 @@ object DDBHelper {
         .build()
 
     fun getTableName() : String {
+        return "${getStage()}-mex"
+    }
+
+    fun getStage() : String {
         return when (System.getenv("STAGE")) {
-            null -> "local-mex" /* for local testing without serverless offline */
-            "test" -> "staging-mex"
-            else -> System.getenv("TABLE_NAME")
+            null -> "local" /* for local testing without serverless offline */
+            "test" -> "staging"
+            else -> System.getenv("STAGE")
         }
+
     }
 
 }

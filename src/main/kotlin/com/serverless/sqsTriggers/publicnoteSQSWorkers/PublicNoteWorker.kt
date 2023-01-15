@@ -13,7 +13,7 @@ import com.serverless.utils.CacheHelper
 
 // PublicNoteWorker Lambda is triggered via DDB Streams attached to the node entity.
 class PublicNoteWorker : RequestHandler<SQSEvent, Void> {
-    override fun handleRequest(sqsEvent: SQSEvent?, context: Context): Void? {
+    override fun handleRequest(sqsEvent: SQSEvent?, context: Context?): Void? {
         sqsEvent?.also { event ->
             event.records?.let { records ->
                 records.map { record ->

@@ -13,12 +13,9 @@ import com.serverless.utils.Messages
 import com.workduck.models.AccessType
 
 import com.workduck.models.EntityOperationType
-import com.workduck.models.HierarchyUpdateSource
-import com.workduck.models.ItemType
+import com.workduck.models.HierarchyUpdateAction
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceAccess
-import com.workduck.models.NamespaceIdentifier
-import com.workduck.models.WorkspaceIdentifier
 
 import com.workduck.repositories.NamespaceRepository
 import com.workduck.repositories.Repository
@@ -78,16 +75,18 @@ class NamespaceService (
         repository.update(namespace)
     }
 
-    fun deleteNamespace(namespaceID: String, userWorkspaceID: String, userID: String) = runBlocking {
+    fun deleteNamespace(namespaceID: String, userWorkspaceID: String, successorNamespaceID: String?) = runBlocking {
 
-        val workspaceIDOfNamespace = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.MANAGE)[Constants.WORKSPACE_ID]
-                ?: throw IllegalArgumentException("Invalid Parameters")
+        /* only owner can delete a workspace */
+        require(namespaceAccessService.checkIfNamespaceExistsForWorkspace(namespaceID, userWorkspaceID)) { Messages.ERROR_NAMESPACE_PERMISSION }
 
-        val jobToGetListOfNodeIDsToDelete = async { nodeService.getAllNodesWithNamespaceID(namespaceID, workspaceIDOfNamespace) }
-        launch { nodeService.batchDeleteNodes(jobToGetListOfNodeIDsToDelete.await(), workspaceIDOfNamespace) }
-        launch { repository.delete(WorkspaceIdentifier(workspaceIDOfNamespace), NamespaceIdentifier(namespaceID)) }
+        /* if successor namespace is specified, check permissions for it */
+        successorNamespaceID?.let {
+            require(namespaceAccessService.checkIfNamespaceExistsForWorkspace(successorNamespaceID, userWorkspaceID)) { Messages.ERROR_NAMESPACE_PERMISSION }
+        }
 
-
+        namespaceRepository.softDeleteNamespace(namespaceID, userWorkspaceID, successorNamespaceID)
+        
     }
 
 
@@ -130,10 +129,8 @@ class NamespaceService (
     fun updateNamespaceHierarchy(
             namespace: Namespace,
             newNodeHierarchy: List<String>,
-            hierarchyUpdateSource: HierarchyUpdateSource
     ) {
         Namespace.populateHierarchiesAndUpdatedAt(namespace, newNodeHierarchy, namespace.archivedNodeHierarchyInformation)
-        namespace.hierarchyUpdateSource = hierarchyUpdateSource
         updateNamespace(namespace)
     }
 
@@ -293,7 +290,9 @@ class NamespaceService (
         return namespaceAccessService.getUserNamespaceAccessType(namespaceID, userID).name
     }
 
-
+    fun updateHierarchies(workspaceID: String, namespaceID: String, hierarchyUpdateAction: HierarchyUpdateAction,  activeHierarchy : List<String> = listOf(), archivedHierarchy : List<String> = listOf()){
+        namespaceRepository.updateHierarchies(workspaceID, namespaceID, activeHierarchy, archivedHierarchy, hierarchyUpdateAction)
+    }
 
     companion object {
         private val LOG = LogManager.getLogger(NamespaceService::class.java)

@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
-import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.ItemCollection
@@ -32,12 +31,10 @@ import com.workduck.models.ItemStatus
 import com.workduck.models.ItemType
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
-import com.workduck.models.PageMetadata
 import com.workduck.models.NodeVersion
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
-import java.time.Instant
 
 
 class NodeRepository(
@@ -69,14 +66,76 @@ class NodeRepository(
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":orderList"] = orderList
         expressionAttributeValues[":empty_list"] = mutableListOf<Element>()
+        expressionAttributeValues[":deleted"] = 1
 
         return UpdateItemSpec().update(
             pk = workspaceID, sk = nodeID, updateExpression = updateExpression, expressionAttributeValues = expressionAttributeValues,
-            conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+            conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
         ).let {
             table.updateItem(it)
             mapOf("nodeID" to nodeID, "appendedElements" to elements)
         }
+    }
+
+    /* when a namespace gets deleted, all the non-deleted nodes of the namespace should get deleted.
+       when a user tries to delete a node, only an archived node should be deleted. ( active nodes -> archived -> deleted )
+     */
+    fun softDeleteNode(nodeID: String, workspaceID: String, userID: String) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":deleted"] = 1
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":expireAt"] = Helper.getTTLForDeletingNode()
+        expressionAttributeValues[":lastEditedBy"] = userID
+
+        val updateExpression = "SET deleted = :deleted, updatedAt = :updatedAt, expireAt = :expireAt, lastEditedBy = " +
+                ":lastEditedBy"
+
+        /* the node should not be deleted already ( 0/null != 1 ) */
+        val conditionExpression = "deleted <> :deleted and attribute_exists(SK) and attribute_exists(PK)"
+
+        try {
+            return UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
+            ).let {
+                table.updateItem(it)
+            }
+        } catch(e: ConditionalCheckFailedException){
+            LOG.warn("Failed to delete $nodeID")
+            throw IllegalStateException(Messages.ERROR_NAMESPACE_DELETED)
+        }
+
+
+    }
+
+    fun changeNamespace(nodeID: String, workspaceID: String, sourceNamespaceID: String, targetNamespaceID: String, userID: String){
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+        expressionAttributeValues[":targetNamespace"] = targetNamespaceID
+        expressionAttributeValues[":sourceNamespace"] = sourceNamespaceID
+        expressionAttributeValues[":lastEditedBy"] = userID
+        expressionAttributeValues[":updatedAt"] = getCurrentTime()
+        expressionAttributeValues[":deleted"] = 1 /* no need to change namespace of a deleted node */
+
+        // TODO ( remove when the feature is stable )
+        LOG.info("change namespace from $sourceNamespaceID to $targetNamespaceID")
+        val updateExpression = "SET updatedAt = :updatedAt, lastEditedBy = :lastEditedBy, AK = :targetNamespace"
+
+        val conditionExpression = "AK = :sourceNamespace and attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
+
+        try {
+            return UpdateItemSpec().update(
+                pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
+            ).let {
+                table.updateItem(it)
+            }
+        } catch(e: ConditionalCheckFailedException){
+            LOG.warn("Failed to change namespace of $nodeID from $sourceNamespaceID to $targetNamespaceID")
+            throw IllegalStateException(Messages.ERROR_NAMESPACE_DELETED)
+        }
+
     }
 
     fun getAllNodesWithNamespaceID(namespaceID: String, workspaceID: String): List<String> {
@@ -84,10 +143,13 @@ class NodeRepository(
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
         expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
+
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
-            filterExpression = "AK = :AK", expressionAttributeValues = expressionAttributeValues
+            filterExpression = "AK = :AK and deleted <> :deleted", expressionAttributeValues =
+            expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
@@ -101,10 +163,11 @@ class NodeRepository(
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
         expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
         expressionAttributeValues[":publicAccess"] = AttributeValue().withN(publicAccess.toString())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().query(
                 keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
-                filterExpression = "AK = :AK and publicAccess = :publicAccess", expressionAttributeValues = expressionAttributeValues
+                filterExpression = "AK = :AK and publicAccess = :publicAccess and deleted <> :deleted", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
@@ -112,43 +175,23 @@ class NodeRepository(
         }
     }
 
-    fun getAllNodesWithNamespaceIDAndStatus(namespaceID: String, workspaceID: String, itemStatus: ItemStatus): List<String> {
+
+    fun getAllNodesWithWorkspaceID(workspaceID: String): List<String> {
+
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
-        expressionAttributeValues[":AK"] = AttributeValue(namespaceID)
-        expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().query(
-                keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
-                filterExpression = "AK = :AK and itemStatus = :itemStatus", expressionAttributeValues = expressionAttributeValues
+            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
+            filterExpression = "publicAccess = :publicAccess and deleted <> :deleted", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
             }
         }
-    }
 
-    fun getAllNodesWithWorkspaceID(workspaceID: String): MutableList<String> {
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":PK"] = workspaceID
-        expressionAttributeValues[":SK"] = ItemType.Node.name.uppercase()
-
-        val items: ItemCollection<QueryOutcome?>? = QuerySpec().withKeyConditionExpression("PK = :PK and begins_with(SK, :SK)")
-            .withValueMap(expressionAttributeValues)
-            .withProjectionExpression("SK")
-            .let {
-                dynamoDB.getTable(tableName).query(it)
-            }
-
-        val iterator: Iterator<Item> = items!!.iterator()
-
-        var itemList: MutableList<String> = mutableListOf()
-        while (iterator.hasNext()) {
-            val item: Item = iterator.next()
-            itemList = (itemList + (item["PK"] as String)).toMutableList()
-        }
-        return itemList
     }
 
     fun getAllNodesWithUserID(userID: String): List<String> {
@@ -156,10 +199,11 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":createdBy"] = AttributeValue(userID)
         expressionAttributeValues[":itemType"] = AttributeValue("Node")
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(
             index = "createdBy-itemType-index", keyConditionExpression = "createdBy = :createdBy  and itemType = :itemType",
-            projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues
+            projectionExpression = "PK", expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
         ).let { it ->
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
@@ -172,20 +216,6 @@ class NodeRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
-    fun createNodeWithVersion(node: Node, nodeVersion: NodeVersion): Node? {
-        return try {
-            val transactionWriteRequest = TransactionWriteRequest()
-            transactionWriteRequest.addPut(node)
-            transactionWriteRequest.addPut(nodeVersion)
-            mapper.transactionWrite(transactionWriteRequest, dynamoDBMapperConfig)
-            node
-        } catch (e: Exception) {
-            println(e)
-            null
-        }
-    }
-
-
 
     fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
         val table = dynamoDB.getTable(tableName)
@@ -194,61 +224,14 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedBlock"] = updatedBlock
         expressionAttributeValues[":userID"] = userID
+        expressionAttributeValues[":deleted"] = 1
 
         return UpdateItemSpec().update(
             pk = workspaceID, sk = nodeID, updateExpression = "SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ",
-            expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+            expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
         ).let {
             table.updateItem(it)
             objectMapper.readValue(updatedBlock)
-        }
-    }
-
-    fun getMetaDataForActiveVersions(nodeID: String): MutableList<String>? {
-        val table = dynamoDB.getTable(tableName)
-        println("Inside getAllVersionsOfNode function")
-
-        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":pk"] = AttributeValue().withS("$nodeID${Constants.DELIMITER}VERSION")
-        expressionAttributeValues[":status"] = AttributeValue().withS("ACTIVE")
-        expressionAttributeValues[":NodeVersion"] = AttributeValue().withS("Node Version")
-
-        val q = DynamoDBQueryExpression<NodeVersion>().query(
-            keyConditionExpression = "PK = :pk", filterExpression = "versionStatus = :status and itemType = :NodeVersion",
-            expressionAttributeValues = expressionAttributeValues, projectionExpression = "SK"
-        )
-
-        return try {
-            val nodeVersionList: List<NodeVersion> = mapper.query(NodeVersion::class.java, q, dynamoDBMapperConfig)
-
-            val itemList: MutableList<String> = mutableListOf()
-            for (v in nodeVersionList) {
-                if (v.updatedAt != null) itemList.add(v.updatedAt!!)
-            }
-
-            itemList
-        } catch (e: Exception) {
-            println(e)
-            null
-        }
-    }
-
-    fun setTTLForOldestVersion(nodeID: String, oldestUpdatedAt: String) {
-
-        val table: Table = dynamoDB.getTable(tableName)
-
-        val now: Long = Instant.now().epochSecond // unix time
-        val ttl = (60).toLong()
-
-        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
-        expressionAttributeValues[":ttl"] = (now + ttl)
-        expressionAttributeValues[":status"] = "INACTIVE"
-
-        UpdateItemSpec().update(
-            pk = "$nodeID${Constants.DELIMITER}VERSION", sk = oldestUpdatedAt, updateExpression = "SET timeToLive = :ttl, versionStatus = :status",
-            expressionAttributeValues = expressionAttributeValues
-        ).also {
-            table.updateItem(it)
         }
     }
 
@@ -260,6 +243,7 @@ class NodeRepository(
         expressionAttributeValues[":active"] = ItemStatus.ACTIVE.name
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":expireAt"] = null
+        expressionAttributeValues[":deleted"] = 1
 
         val nodesProcessedList: MutableList<String> = mutableListOf()
 
@@ -268,7 +252,7 @@ class NodeRepository(
                 expressionAttributeValues[":title"] = "$nodeName(1)"
                 UpdateItemSpec().updateWithNullAttributes(
                     pk = workspaceID, sk = nodeID, updateExpression = "SET itemStatus = :active, title = :title, updatedAt = :updatedAt, expireAt = :expireAt",
-                    expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK)"
+                    expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
                 ).also {
                     table.updateItem(it)
                     nodesProcessedList += nodeID
@@ -284,10 +268,12 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
+
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "nodeData.$blockID, dataOrder",
-            expressionAttributeValues = expressionAttributeValues
+            expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
         }.firstOrNull()
@@ -327,6 +313,7 @@ class NodeRepository(
         expressionAttributeValues[":updatedDataOrder"] = existingDataOrder
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":lastEditedBy"] = userID
+        expressionAttributeValues[":deleted"] = 1
 
         val updateExpression = "remove $blockIdExpression " +
                 "set dataOrder = :updatedDataOrder, " +
@@ -335,7 +322,7 @@ class NodeRepository(
         try {
             UpdateItemSpec().update(
                 pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
             ).also {
                 table.updateItem(it)
             }
@@ -360,6 +347,7 @@ class NodeRepository(
 
         expressionAttributeValues[":dataOrderNode1"] = AttributeValue().withL(dataOrderList)
         expressionAttributeValues[":updatedAt"] = AttributeValue().withN(currentTime.toString())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         val updateExpression1 = "remove nodeData.${block?.id} " +
             "set dataOrder = :dataOrderNode1, " +
@@ -369,6 +357,7 @@ class NodeRepository(
             .withKey(nodeKey)
             .withUpdateExpression(updateExpression1)
             .withExpressionAttributeValues(expressionAttributeValues)
+            .withConditionExpression("deleted <> :deleted")
     }
 
     private fun getUpdateToAddBlockToNode(block: AdvancedElement?, workspaceID: String, nodeID: String, currentTime: Long): Update {
@@ -381,6 +370,7 @@ class NodeRepository(
         expressionAttributeValues[":updatedAt"] = AttributeValue().withN(currentTime.toString())
         expressionAttributeValues[":orderList"] = AttributeValue().withL(AttributeValue().withS(block?.id))
         expressionAttributeValues[":block"] = AttributeValue(Helper.objectMapper.writeValueAsString(block))
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         val updateExpression = "set dataOrder = list_append(dataOrder, :orderList), " +
             "nodeData.${block?.id} = :block, updatedAt = :updatedAt"
@@ -389,6 +379,7 @@ class NodeRepository(
             .withKey(nodeKey)
             .withUpdateExpression(updateExpression)
             .withExpressionAttributeValues(expressionAttributeValues)
+            .withConditionExpression("deleted <> :deleted")
     }
 
     fun updateNodeNamespaceAndPublicAccess(nodeID: String, workspaceID: String, namespaceID: String, publicAccess: Int?) {
@@ -408,11 +399,12 @@ class NodeRepository(
 
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":AK"] = namespaceID
+        expressionAttributeValues[":deleted"] = 1
 
 
         UpdateItemSpec().update(
             pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
-            expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+            expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
         ).also {
             table.updateItem(it)
         }
@@ -437,12 +429,13 @@ class NodeRepository(
         expressionAttributeValues[":lastEditedBy"] = userID
         expressionAttributeValues[":updatedAt"] = getCurrentTime()
         expressionAttributeValues[":AK"] = namespaceID
+        expressionAttributeValues[":deleted"] = 1
 
 
         try {
             UpdateItemSpec().update(
                 pk = workspaceID, sk = nodeID, updateExpression = updateExpression,
-                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+                expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
             ).also {
                 table.updateItem(it)
             }
@@ -455,10 +448,12 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":pk"] = AttributeValue().withS(workspaceID)
         expressionAttributeValues[":sk"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
+
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "PK = :pk and SK = :sk", projectionExpression = "PK",
-            expressionAttributeValues = expressionAttributeValues
+            expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
         }.isNotEmpty()
@@ -468,10 +463,11 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue().withS(ItemType.Workspace.name.uppercase())
         expressionAttributeValues[":SK"] = AttributeValue().withS(nodeID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().queryWithIndex( index = "SK-PK-Index",
                 keyConditionExpression = "SK = :SK and begins_with(PK, :PK)", projectionExpression = "PK, AK",
-                expressionAttributeValues = expressionAttributeValues
+                expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
         }.firstOrNull()?.let { node ->
@@ -480,18 +476,15 @@ class NodeRepository(
     }
 
 
-
-
-
-
     fun getAllNodeIDToNodeNameMap(workspaceID: String, itemStatus: ItemStatus): Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(ItemType.Node.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().query(
-            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", filterExpression = "itemStatus = :itemStatus",
+            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", filterExpression = "itemStatus = :itemStatus and deleted <> :deleted",
             projectionExpression = "PK, SK, title", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig)
@@ -631,10 +624,11 @@ class NodeRepository(
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "SK = :SK  and  PK = :PK",
-            filterExpression = "itemStatus = :itemStatus", projectionExpression = "dataOrder", expressionAttributeValues = expressionAttributeValues
+            filterExpression = "itemStatus = :itemStatus and deleted <> :deleted", projectionExpression = "dataOrder", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
                 nodeList.firstOrNull()?.let { node -> node.dataOrder ?: mutableListOf<String>() } ?: throw NoSuchElementException("Requested Resource Not Found")
@@ -647,17 +641,18 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         /* if itemStatus not provided, search for both types of nodes */
         val filterExpression = when(itemStatus == null){
             true -> {
                 expressionAttributeValues[":active"] = AttributeValue(ItemStatus.ACTIVE.name)
                 expressionAttributeValues[":archived"] = AttributeValue(ItemStatus.ARCHIVED.name)
-                "itemStatus = :active or itemStatus = :archived"
+                "(itemStatus = :active or itemStatus = :archived) and  deleted <> :deleted"
             }
             false -> {
                 expressionAttributeValues[":itemStatus"] = AttributeValue(itemStatus.name)
-                "itemStatus = :itemStatus"
+                "itemStatus = :itemStatus and deleted <> :deleted"
             }
         }
 
@@ -674,12 +669,13 @@ class NodeRepository(
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
         expressionAttributeValues[":itemStatus"] = AttributeValue(ItemStatus.ACTIVE.name)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         val workspaceDetailsMap = mutableMapOf<String, String>()
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(
             index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-            filterExpression = "itemStatus = :itemStatus", projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues
+            filterExpression = "itemStatus = :itemStatus and deleted <> :deleted", projectionExpression = "PK, createdBy", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).let { nodeList ->
                 nodeList.firstOrNull()?.let { node ->
@@ -695,9 +691,11 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().query(
-            keyConditionExpression = "PK = :PK and SK=:SK", projectionExpression = "tags", expressionAttributeValues = expressionAttributeValues
+            keyConditionExpression = "PK = :PK and SK=:SK", projectionExpression = "tags", expressionAttributeValues = expressionAttributeValues,
+            filterExpression = "deleted <> :deleted"
         ).let { query ->
             mapper.query(Node::class.java, query, dynamoDBMapperConfig).getOrNull(0)?.tags
         }
@@ -708,10 +706,11 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.Node.name)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(
             index = "PK-itemType-index", keyConditionExpression = "PK = :PK  and itemType = :itemType",
-            expressionAttributeValues = expressionAttributeValues
+            expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
         ).let { it ->
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
                 node.id to mapOf("metadata" to node.metadata, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
@@ -724,10 +723,12 @@ class NodeRepository(
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":SK"] = AttributeValue(nodeID)
         expressionAttributeValues[":PK"] = AttributeValue(ItemType.Workspace.name.uppercase())
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
         return DynamoDBQueryExpression<Node>().queryWithIndex(
             index = "SK-PK-Index", keyConditionExpression = "SK = :SK  and begins_with(PK, :PK)",
-            projectionExpression = "PK, SK, createdBy", expressionAttributeValues = expressionAttributeValues
+            projectionExpression = "PK, SK, createdBy", expressionAttributeValues = expressionAttributeValues,
+            filterExpression = "deleted <> :deleted"
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).firstOrNull()?.let { node ->
                 mapOf((node.createdBy ?: "" ) to AccessType.OWNER.name)

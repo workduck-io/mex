@@ -19,6 +19,7 @@ object Messages {
     const val ERROR_APPENDING_NODE = "Error appending to node"
     const val ERROR_UPDATING_NODE_BLOCK = "Error updating node block"
     const val ERROR_UPDATING_NODE_METADATA = "Error updating node metadata"
+    const val ERROR_NODE_DELETED = "Node already deleted"
 
 
     const val ERROR_DELETING_NODE = "Error deleting node"
@@ -60,7 +61,11 @@ object Messages {
     const val ERROR_NAMESPACE_PERMISSION = "Either the namespace does not exist or you do not have permissions"
     const val ERROR_NAMESPACE_PRIVATE = "Namespace already private"
     const val ERROR_NAMESPACE_PUBLIC = "Namespace already public"
+    const val ERROR_NAMESPACE_DELETED = "Namespace already deleted"
     const val INVALID_NAMESPACE_ID  = "Invalid NamespaceID"
+    const val SUCCESSOR_NAMESPACE_NULL = "Successor Namespace Information Unavailable"
+    const val CREATED_BY_NULL = "Created By Information Unavailable"
+    const val INVALID_SUCCESSOR_NAMESPACE = "Either the successor namespace does not exist or you do not have permissions"
 
 
 
