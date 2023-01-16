@@ -10,6 +10,8 @@ import com.serverless.models.requests.SharedNamespaceRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
+import com.serverless.utils.commonPrefixList
+import com.serverless.utils.getListFromPath
 import com.workduck.models.AccessType
 
 import com.workduck.models.EntityOperationType
@@ -22,6 +24,7 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.utils.AccessItemHelper
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.NodeHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
@@ -293,6 +296,52 @@ class NamespaceService (
     fun updateHierarchies(workspaceID: String, namespaceID: String, hierarchyUpdateAction: HierarchyUpdateAction,  activeHierarchy : List<String> = listOf(), archivedHierarchy : List<String> = listOf()){
         namespaceRepository.updateHierarchies(workspaceID, namespaceID, activeHierarchy, archivedHierarchy, hierarchyUpdateAction)
     }
+
+    fun getNodeIDFromPath(rootNodeID: String?, namespaceID: String, nodeNameList: List<String>, userID: String, userWorkspaceID: String) : String? {
+        val workspaceID = namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(namespaceID, userWorkspaceID, userID, EntityOperationType.WRITE)[Constants.WORKSPACE_ID]
+        require(workspaceID != null) { Messages.ERROR_NAMESPACE_PERMISSION }
+        val namespaceHierarchy = getNamespaceAfterPermissionCheck(namespaceID)?.nodeHierarchyInformation
+            ?: throw IllegalArgumentException(Messages.ERROR_GETTING_NAMESPACE)
+
+        return getLastNodeID(rootNodeID, nodeNameList, namespaceHierarchy)
+
+    }
+
+    private fun getLastNodeID(passedRootNodeID: String?, passedNodeNameList: List<String>, namespaceHierarchy: List<String>) : String {
+        return when(passedRootNodeID != null){
+            true -> getLastNodeIDFromPathAndRootNodeID(passedRootNodeID, passedNodeNameList, namespaceHierarchy)
+            false -> getLastNodeIDFromPath(passedNodeNameList, namespaceHierarchy)
+        }
+    }
+
+    /* passedNodeNameList contains names starting from 1st child */
+    private fun getLastNodeIDFromPathAndRootNodeID(passedRootNodeID: String, passedNodeNameList: List<String>, namespaceHierarchy: List<String>): String {
+        for(path in namespaceHierarchy){
+            val listOfIDs = NodeHelper.getIDPath(path).getListFromPath()
+            val pathRootNodeID = listOfIDs.first()
+            if(pathRootNodeID == passedRootNodeID){
+                /* since the passed path does not contain name of the root node, drop it from hierarchy path */
+                val namesListExcludingFirst = NodeHelper.getNamePath(path).getListFromPath().drop(1)
+                if(passedNodeNameList.commonPrefixList(namesListExcludingFirst) == passedNodeNameList){
+                    return listOfIDs[passedNodeNameList.size] /* +1 to account for root node */
+                }
+            }
+        }
+        return ""
+    }
+
+    /* passedNodeNameList contains names starting from root node */
+    private fun getLastNodeIDFromPath(passedNodeNameList: List<String>, namespaceHierarchy: List<String>): String {
+        for(path in namespaceHierarchy){
+            val listOfNamesFromPath = NodeHelper.getNamePath(path).getListFromPath()
+            if(passedNodeNameList.commonPrefixList(listOfNamesFromPath) == passedNodeNameList){
+                val listOfIDs= NodeHelper.getIDPath(path).getListFromPath()
+                return listOfIDs[passedNodeNameList.size - 1]
+            }
+        }
+        return ""
+    }
+
 
     companion object {
         private val LOG = LogManager.getLogger(NamespaceService::class.java)

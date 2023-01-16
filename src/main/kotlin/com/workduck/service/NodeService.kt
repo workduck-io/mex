@@ -28,7 +28,7 @@ import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
 import com.serverless.utils.createNodePath
 import com.serverless.utils.getDifferenceWithOldHierarchy
-import com.serverless.utils.getListOfNodes
+import com.serverless.utils.getListFromPath
 import com.serverless.utils.getRoughSizeOfEntity
 import com.serverless.utils.isNodeUnchanged
 import com.serverless.utils.mix
@@ -233,7 +233,7 @@ class NodeService( // Todo: Inject them from handlers
         return nodeHierarchy.lastOrNull {
             getNamePath(it) == nodeNamePathToAdd
         }?.let {
-            nodeNamePathToAdd.getListOfNodes().last().addAlphanumericStringToTitle()
+            nodeNamePathToAdd.getListFromPath().last().addAlphanumericStringToTitle()
         } ?: passedNodeTitle
     }
 
@@ -476,9 +476,9 @@ class NodeService( // Todo: Inject them from handlers
         val updatedPaths = mutableListOf<String>()
         for (path in currentHierarchy) {
             /* check if the name path in current hierarchy matches passed existing nodes */
-            if (getNamePath(path).getListOfNodes().commonPrefixList(existingNodes.allNodes) == existingNodes.allNodes) {
+            if (getNamePath(path).getListFromPath().commonPrefixList(existingNodes.allNodes) == existingNodes.allNodes) {
                 /* break the connection from last node */
-                updatedPaths.addIfNotEmpty(path.getListOfNodes().subList(0, path.getListOfNodes().indexOf(existingNodes.allNodes.last())).convertToPathString())
+                updatedPaths.addIfNotEmpty(path.getListFromPath().subList(0, path.getListFromPath().indexOf(existingNodes.allNodes.last())).convertToPathString())
             } else {
                 newHierarchy.addIfNotEmpty(path)
             }
@@ -533,7 +533,7 @@ class NodeService( // Todo: Inject them from handlers
     }
 
     private fun getPathAfterNode(nodePath: String, nodeID: String): String {
-        return nodePath.getListOfNodes().subList(nodePath.getListOfNodes(Constants.DELIMITER).indexOf(nodeID) + 1, nodePath.getListOfNodes().size).convertToPathString()
+        return nodePath.getListFromPath().subList(nodePath.getListFromPath(Constants.DELIMITER).indexOf(nodeID) + 1, nodePath.getListFromPath().size).convertToPathString()
     }
 
     private fun renameNodeInNamespaceWithAccessValue(nodeID: String, newName: String, userID: String, workspaceID: String, namespaceID: String, publicAccess: Int?) {
@@ -648,7 +648,7 @@ class NodeService( // Todo: Inject them from handlers
     private fun getNodesToCreate(longestExistingPath: String, nodePath: String): List<String> {
         val longestExistingNamePath = getNamePath(longestExistingPath)
 
-        return nodePath.getListOfNodes().removePrefixList(longestExistingNamePath.getListOfNodes())
+        return nodePath.getListFromPath().removePrefixList(longestExistingNamePath.getListFromPath())
     }
 
     private fun getUpdatedNodeHierarchyInBulkCreate(
@@ -1022,10 +1022,10 @@ class NodeService( // Todo: Inject them from handlers
             val workspace = workspaceService.getWorkspace(node.workspaceIdentifier.id) as Workspace
             val currentHierarchy = workspace.nodeHierarchyInformation ?: listOf()
             for (nodePath in currentHierarchy) {
-                val idList = getIDPath(nodePath).getListOfNodes()
+                val idList = getIDPath(nodePath).getListFromPath()
                 val indexOfNodeID = idList.indexOf(node.id)
                 if (indexOfNodeID != -1) {
-                    val nameList = getNamePath(nodePath).getListOfNodes().toMutableList()
+                    val nameList = getNamePath(nodePath).getListFromPath().toMutableList()
                     nameList[indexOfNodeID] = node.title
                     newHierarchy.add(nameList.mix(idList).convertToPathString())
                 } else {

@@ -11,6 +11,7 @@ object Messages {
     const val INVALID_NODE_ID  = "Invalid NodeID"
     const val INVALID_BLOCK_ID  = "Invalid BlockID"
     const val INVALID_NODE_STATE  = "Invalid Node state"
+    const val ERROR_NODE_PATH_MISSING = "Node path missing"
 
     const val ERROR_MOVING_BLOCK = "Error moving node"
 
@@ -42,6 +43,7 @@ object Messages {
     const val ERROR_REGISTERING_USER = "Error registering user"
     const val ERROR_UPDATING_USER = "Error updating user"
 
+    const val INVALID_TITLES = "Invalid Title(s)"
 
     const val ERROR_GETTING_WORKSPACE = "Error getting workspace"
     const val ERROR_GETTING_WORKSPACES = "Error getting workspaces"
@@ -59,6 +61,7 @@ object Messages {
     const val ERROR_CREATING_NAMESPACE = "Error creating namespace"
     const val ERROR_DELETING_NAMESPACE = "Error deleting namespace"
     const val ERROR_NAMESPACE_PERMISSION = "Either the namespace does not exist or you do not have permissions"
+    const val ERROR_NAMESPACE_MISSING = "NamespaceID missing"
     const val ERROR_NAMESPACE_PRIVATE = "Namespace already private"
     const val ERROR_NAMESPACE_PUBLIC = "Namespace already public"
     const val ERROR_NAMESPACE_DELETED = "Namespace already deleted"

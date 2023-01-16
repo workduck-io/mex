@@ -2,7 +2,7 @@ package com.workduck.utils
 
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.commonSuffixList
-import com.serverless.utils.getListOfNodes
+import com.serverless.utils.getListFromPath
 import com.workduck.models.MatchType
 
 object WorkspaceHelper {
@@ -41,13 +41,13 @@ object WorkspaceHelper {
                 if (path != pathToCompare) {
                     when (matchType) {
                         MatchType.PREFIX -> {
-                            if (path.getListOfNodes().commonPrefixList(pathToCompare.getListOfNodes()) == path.getListOfNodes()) {
+                            if (path.getListFromPath().commonPrefixList(pathToCompare.getListFromPath()) == path.getListFromPath()) {
                                 redundantPath = true
                                 break
                             }
                         }
                         MatchType.SUFFIX -> {
-                            if (path.getListOfNodes().commonSuffixList(pathToCompare.getListOfNodes()) == path.getListOfNodes()) {
+                            if (path.getListFromPath().commonSuffixList(pathToCompare.getListFromPath()) == path.getListFromPath()) {
                                 redundantPath = true
                                 break
                             }

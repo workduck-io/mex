@@ -7,7 +7,7 @@ import com.serverless.utils.addAlphanumericStringToTitle
 import com.serverless.utils.addIfNotEmpty
 import com.serverless.utils.commonPrefixList
 import com.serverless.utils.convertToPathString
-import com.serverless.utils.getListOfNodes
+import com.serverless.utils.getListFromPath
 import com.serverless.utils.splitIgnoreEmpty
 import com.workduck.models.MatchType
 import com.workduck.models.Namespace
@@ -62,12 +62,12 @@ object NodeHelper {
         if(longestExistingPathBasedOnNames.isEmpty()) return longestExistingPathBasedOnNames
 
 
-        val nodeNamesFromLongestExistingPath = getNamePath(longestExistingPathBasedOnNames).getListOfNodes()
-        val nodeIDsFromLongestExistingPath = getIDPath(longestExistingPathBasedOnNames).getListOfNodes()
+        val nodeNamesFromLongestExistingPath = getNamePath(longestExistingPathBasedOnNames).getListFromPath()
+        val nodeIDsFromLongestExistingPath = getIDPath(longestExistingPathBasedOnNames).getListFromPath()
 
         var indexTillActualCommonNode = -1
         var isNodeIDMismatched = false
-        for ((index, existingNodeName) in getNamePath(nodePath.path).getListOfNodes().withIndex()) { /* iterate through nodePath nodes */
+        for ((index, existingNodeName) in getNamePath(nodePath.path).getListFromPath().withIndex()) { /* iterate through nodePath nodes */
             if (index + 1 > nodeNamesFromLongestExistingPath.size) break /* when no. of nodes in passed path size exceeds nodes from the longest path */
 
             if (existingNodeName == nodeNamesFromLongestExistingPath[index]) {
@@ -86,7 +86,7 @@ object NodeHelper {
         updateNodePathFromNamesAndIDs(nodePath)
 
         return if(indexTillActualCommonNode == -1) ""
-        else longestExistingPathBasedOnNames.getListOfNodes().take(indexTillActualCommonNode + 1).convertToPathString()
+        else longestExistingPathBasedOnNames.getListFromPath().take(indexTillActualCommonNode + 1).convertToPathString()
     }
 
 
@@ -152,7 +152,7 @@ object NodeHelper {
                 if (nodePath.contains(nodeID)) {
                     isNodePresentInPath = true
                     pathsListForSinglePath.add(
-                        nodePath.getListOfNodes().let {
+                        nodePath.getListFromPath().let {
                             it.subList(it.indexOf(nodeID) - 1, it.size)
                         }.convertToPathString()
                     )
@@ -162,7 +162,7 @@ object NodeHelper {
                 val finalPathToArchive = WorkspaceHelper.removeRedundantPaths(pathsListForSinglePath, MatchType.SUFFIX)[0]
                 newDestinationHierarchy?.add(finalPathToArchive)
                 /* active hierarchy is nodePath minus the archived path */
-                newSourceHierarchy.addIfNotEmpty(nodePath.getListOfNodes().dropLast(finalPathToArchive.getListOfNodes().size).convertToPathString())
+                newSourceHierarchy.addIfNotEmpty(nodePath.getListFromPath().dropLast(finalPathToArchive.getListFromPath().size).convertToPathString())
             } else { /* this path will remain unchanged */
                 newSourceHierarchy.add(nodePath)
             }
@@ -182,7 +182,7 @@ object NodeHelper {
     fun getNodeIDsFromHierarchy(hierarchiesList : List<String>) : List<String> {
         if(hierarchiesList.isEmpty()) return listOf()
         return hierarchiesList.map { nodePath ->
-            getIDPath(nodePath).getListOfNodes()
+            getIDPath(nodePath).getListFromPath()
         }.flatten().toSet().toList()
 
     }
