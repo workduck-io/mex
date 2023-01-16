@@ -679,7 +679,7 @@ Namespace:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /v1/namespace/{namespaceID}/path/{nodeID}/{path}
+        path: /v1/namespace/{namespaceID}/path/{path}
         method: get
         authorizer: mexAuthorizer
 
