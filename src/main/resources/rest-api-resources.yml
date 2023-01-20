@@ -560,7 +560,7 @@ Namespace:
 
     - httpApi:
         path: /namespace/{id}
-        method: delete
+        method: post
         authorizer: mexAuthorizer
 
     - httpApi:
@@ -623,7 +623,7 @@ Namespace:
 
     - httpApi:
         path: /v1/namespace/{id}
-        method: delete
+        method: post
         authorizer: mexAuthorizer
 
     - httpApi:

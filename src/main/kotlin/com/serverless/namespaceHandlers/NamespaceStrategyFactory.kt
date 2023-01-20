@@ -11,7 +11,7 @@ class NamespaceStrategyFactory {
 
         const val updateNamespaceObject = "PATCH /namespace"
 
-        const val deleteNamespaceObject = "DELETE /namespace/{id}"
+        const val deleteNamespaceObject = "POST /namespace/{id}"
 
         const val getAllNamespaceDataObject = "GET /namespace/all"
 
