@@ -69,7 +69,8 @@ object Messages {
     const val SUCCESSOR_NAMESPACE_NULL = "Successor Namespace Information Unavailable"
     const val CREATED_BY_NULL = "Created By Information Unavailable"
     const val INVALID_SUCCESSOR_NAMESPACE = "Either the successor namespace does not exist or you do not have permissions"
-
+    const val INVALID_ACTION = "Invalid Action"
+    const val ERROR_SAME_NAMESPACE_SUCCESSOR_NAMESPACE = "Successor Namespace can't be same as current Namespace"
 
 
     const val ERROR_CREATING_SNIPPET = "Error creating snippet"

@@ -13,6 +13,9 @@ import java.lang.IllegalArgumentException
 class DeleteNamespaceStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
         val successorNamespaceID = input.payload?.getSuccessorNamespaceID()
+
+        input.payload?.validateAction()
+
         return input.pathParameters?.id?.let { namespaceID ->
             namespaceService.deleteNamespace(namespaceID, input.headers.workspaceID, successorNamespaceID).let {
                 ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_DELETING_NAMESPACE)
@@ -29,6 +32,14 @@ private fun WDRequest.getSuccessorNamespaceID():String =
             namespaceId.also { it.checkForValidNamespace() }
         } ?: throw IllegalArgumentException( Messages.ERROR_NAMESPACE_PERMISSION)
     }
+
+
+private fun WDRequest.validateAction() =
+    (this as SuccessorNamespaceRequest).run {
+        this.action.also { action ->
+            require(action.lowercase() == "delete") { Messages.INVALID_ACTION } }
+    }
+
 
 
 /*
