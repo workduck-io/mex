@@ -28,6 +28,7 @@ import com.workduck.utils.NodeHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
 import kotlin.math.E
@@ -193,18 +194,18 @@ class NamespaceService (
     }
 
 
-    fun getAllNamespaceMetadata(workspaceID: String, userID: String): List<Map<String, String?>> = runBlocking {
-        val jobToGetListOfNamespacesInOwnWorkspace = async { namespaceRepository.getAllNamespaceIDsForWorkspace(workspaceID) }
+    fun getAllNamespaceMetadata(userWorkspaceID: String, userID: String): List<Map<String, String?>> = runBlocking {
+        val jobToGetListOfNamespacesInOwnWorkspace = async { namespaceRepository.getAllNamespaceIDsForWorkspace(userWorkspaceID) }
 
         val jobToGetAccessItemsForSharedNamespaces = async {  namespaceRepository.getAllSharedNamespacesWithUser(userID) }
 
 
-        val setOfNamespaceIDToWorkspaceID = mutableSetOf<Pair<String, String>>()
+        val setOfOwnedNamespaceIDToWorkspaceID = mutableSetOf<Pair<String, String>>()
         jobToGetListOfNamespacesInOwnWorkspace.await().map {
-            setOfNamespaceIDToWorkspaceID.add(Pair(it, workspaceID))
+            setOfOwnedNamespaceIDToWorkspaceID.add(Pair(it, userWorkspaceID))
         }
 
-        return@runBlocking getNamespaceTitleWithIDs(jobToGetAccessItemsForSharedNamespaces.await(), setOfNamespaceIDToWorkspaceID)
+        return@runBlocking getNamespaceTitleWithIDs(jobToGetAccessItemsForSharedNamespaces.await(), setOfOwnedNamespaceIDToWorkspaceID)
 
     }
 
@@ -227,10 +228,11 @@ class NamespaceService (
     }
 
 
-    fun getNamespaceTitleWithIDs(namespaceAccessItemsMap: Map<String, NamespaceAccess>, setOfNamespaceIDWorkspaceID: MutableSet<Pair<String, String>>): List<Map<String, String?>> {
-        setOfNamespaceIDWorkspaceID.addAll(createSetFromNamespaceAccessItems(namespaceAccessItemsMap.values.toList()))
+    fun getNamespaceTitleWithIDs(namespaceAccessItemsMap: Map<String, NamespaceAccess>, setOfNamespaceIDToWorkspaceID: MutableSet<Pair<String, String>>): List<Map<String, String?>> {
+        /* this is now a set containing all pairs of mapping of namespaceID to workspaceID including the ones shared with the user */
+        setOfNamespaceIDToWorkspaceID.addAll(createSetFromNamespaceAccessItems(namespaceAccessItemsMap.values.toList()))
 
-        val unprocessedData = namespaceRepository.batchGetNamespaceMetadataAndTitle(setOfNamespaceIDWorkspaceID)
+        val unprocessedData = namespaceRepository.batchGetNamespaceMetadataAndTitle(setOfNamespaceIDToWorkspaceID)
         val listOfNamespaceData = mutableListOf<Map<String, String?>>()
 
         for (namespaceData in unprocessedData) {
@@ -242,14 +244,16 @@ class NamespaceService (
         return listOfNamespaceData
     }
 
-    private fun populateMapForSharedNamespaceData(namespaceData: MutableMap<String, AttributeValue>, namespaceAccessItemsMap: Map<String, NamespaceAccess>): Map<String, String?> {
+    private fun populateMapForSharedNamespaceData(namespaceData: MutableMap<String, AttributeValue>, sharedNamespaceAccessItemsMap: Map<String, NamespaceAccess>): Map<String, String?> {
         val map = mutableMapOf<String, String?>()
 
         val namespaceID = namespaceData["SK"]!!.s
+        val namespaceAccessRecord = sharedNamespaceAccessItemsMap[namespaceID]
+
         map["namespaceID"] = namespaceID
         map["namespaceTitle"] = namespaceData["namespaceName"]!!.s
-        map["accessType"] = namespaceAccessItemsMap[namespaceID]?.accessType?.name ?: AccessType.MANAGE.name
-        map["granterID"] = namespaceAccessItemsMap[namespaceID]?.granterID
+        map["accessType"] = namespaceAccessRecord?.accessType?.name ?: AccessType.OWNER.name
+        map["granterID"] = namespaceAccessRecord?.granterID
 
 
 
