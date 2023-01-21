@@ -86,6 +86,8 @@ class NamespaceService (
         /* if successor namespace is specified, check permissions for it */
         successorNamespaceID?.let {
             require(namespaceAccessService.checkIfNamespaceExistsForWorkspace(successorNamespaceID, userWorkspaceID)) { Messages.ERROR_NAMESPACE_PERMISSION }
+            require(namespaceID != successorNamespaceID) {  }
+
         }
 
         namespaceRepository.softDeleteNamespace(namespaceID, userWorkspaceID, successorNamespaceID)
