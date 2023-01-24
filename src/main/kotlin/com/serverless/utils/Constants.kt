@@ -33,5 +33,6 @@ object Constants {
     const val NAMESPACE_METADATA = "namespaceMetadata"
     const val WORKSPACE_ID = "workspaceID"
     const val WORKSPACE_OWNER = "workspaceOwner"
+    const val PERSONAL_NAMESPACE_NAME = "Personal"
 
 }

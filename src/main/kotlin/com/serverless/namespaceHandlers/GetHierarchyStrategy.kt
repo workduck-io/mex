@@ -13,8 +13,8 @@ class GetHierarchyStrategy : NamespaceStrategy {
         } ?: false
 
         return when (getMetadata) {
-            true -> ApiResponseHelper.generateStandardResponse(namespaceService.getNodeHierarchyOfWorkspaceWithMetaData(input.headers.workspaceID), Messages.ERROR_GETTING_HIERARCHY)
-            false -> ApiResponseHelper.generateStandardResponse(namespaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID), Messages.ERROR_GETTING_HIERARCHY)
+            true -> ApiResponseHelper.generateStandardResponse(namespaceService.getNodeHierarchyOfWorkspaceWithMetaData(input.headers.workspaceID, input.tokenBody.userID), Messages.ERROR_GETTING_HIERARCHY)
+            false -> ApiResponseHelper.generateStandardResponse(namespaceService.getNodeHierarchyOfWorkspace(input.headers.workspaceID, input.tokenBody.userID), Messages.ERROR_GETTING_HIERARCHY)
 
         }
 

@@ -9,7 +9,7 @@ import com.workduck.service.NamespaceService
 class GetAllNamespaceDataStrategy : NamespaceStrategy {
     override fun apply(input: Input, namespaceService: NamespaceService): ApiGatewayResponse {
 
-        return namespaceService.getAllNamespaceData(input.headers.workspaceID).let {
+        return namespaceService.getAllNamespaceData(input.headers.workspaceID, input.tokenBody.userID).let {
             ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_GETTING_NAMESPACES)
         }
     }
