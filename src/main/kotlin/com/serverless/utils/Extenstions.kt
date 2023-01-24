@@ -5,6 +5,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.SnippetRequest
 import com.workduck.models.Entity
+import com.workduck.models.Namespace
 import com.workduck.models.Node
 import com.workduck.models.Page
 import com.workduck.models.Snippet
@@ -35,6 +36,15 @@ fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
         it.isNotEmpty()
     }
 }
+
+fun List<Namespace>.filterPersonalNamespaces(userID: String) : List<Namespace> {
+    return this.filterNot { namespace ->
+        namespace.name == Constants.PERSONAL_NAMESPACE_NAME && namespace.createdBy != userID
+    }
+}
+
+
+
 
 fun List<String>.removePrefixList(listToRemove: List<String>): List<String> {
     if(listToRemove.isEmpty()) return this

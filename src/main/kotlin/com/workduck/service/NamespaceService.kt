@@ -11,6 +11,7 @@ import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
 import com.serverless.utils.commonPrefixList
+import com.serverless.utils.filterPersonalNamespaces
 import com.serverless.utils.getListFromPath
 import com.workduck.models.AccessType
 
@@ -114,8 +115,8 @@ class NamespaceService (
 
     }
 
-    fun getAllNamespaceData(workspaceID: String): List<Namespace> {
-        return namespaceRepository.getAllNamespaceData(workspaceID)
+    fun getAllNamespaceData(workspaceID: String, userID: String): List<Namespace> {
+        return namespaceRepository.getAllNamespaceData(workspaceID).filterPersonalNamespaces(userID)
     }
 
 
@@ -140,15 +141,15 @@ class NamespaceService (
         updateNamespace(namespace)
     }
 
-    fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String): Map<String, Any> = runBlocking {
-        val jobToGetHierarchy =  async { getNodeHierarchyOfWorkspace(workspaceID) }
+    fun getNodeHierarchyOfWorkspaceWithMetaData(workspaceID: String, userID: String): Map<String, Any> = runBlocking {
+        val jobToGetHierarchy =  async { getNodeHierarchyOfWorkspace(workspaceID, userID) }
         val jobToGetNodesMetadata = async { nodeService.getMetadataForNodesOfWorkspace(workspaceID) }
         return@runBlocking mapOf("hierarchy" to jobToGetHierarchy.await(), "nodesMetadata" to jobToGetNodesMetadata.await())
     }
 
 
-    fun getNodeHierarchyOfWorkspace(workspaceID: String): Map<String, Any>  = runBlocking {
-        val jobToGetNamespaces = async { getAllNamespaceData(workspaceID) }
+    fun getNodeHierarchyOfWorkspace(workspaceID: String, userID: String): Map<String, Any>  = runBlocking {
+        val jobToGetNamespaces = async { getAllNamespaceData(workspaceID, userID) }
 
         val hierarchyMap: MutableMap<String, Any> = mutableMapOf()
 
@@ -195,7 +196,7 @@ class NamespaceService (
 
 
     fun getAllNamespaceMetadata(userWorkspaceID: String, userID: String): List<Map<String, String?>> = runBlocking {
-        val jobToGetListOfNamespacesInOwnWorkspace = async { namespaceRepository.getAllNamespaceIDsForWorkspace(userWorkspaceID) }
+        val jobToGetListOfNamespacesInOwnWorkspace = async { namespaceRepository.getAllFilteredNamespaceIDsForWorkspace(userWorkspaceID, userID) }
 
         val jobToGetAccessItemsForSharedNamespaces = async {  namespaceRepository.getAllSharedNamespacesWithUser(userID) }
 
@@ -209,8 +210,8 @@ class NamespaceService (
 
     }
 
-    fun getAllNamespacesOfWorkspace(workspaceID: String): List<Map<String, String?>> {
-        val namespaceIDsOfWorkspace = namespaceRepository.getAllNamespaceIDsForWorkspace(workspaceID)
+    fun getAllNamespacesOfWorkspace(workspaceID: String, userID: String): List<Map<String, String?>> {
+        val namespaceIDsOfWorkspace = namespaceRepository.getAllFilteredNamespaceIDsForWorkspace(workspaceID, userID)
 
         val setOfNamespaceIDToWorkspaceID = mutableSetOf<Pair<String, String>>()
 

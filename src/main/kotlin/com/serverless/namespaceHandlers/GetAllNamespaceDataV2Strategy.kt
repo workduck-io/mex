@@ -27,7 +27,7 @@ class GetAllNamespaceDataV2Strategy : NamespaceStrategy {
                 ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_GETTING_NAMESPACES)
             }
         } else if(getOnlyWorkspace) {
-            return namespaceService.getAllNamespacesOfWorkspace(input.headers.workspaceID).let {
+            return namespaceService.getAllNamespacesOfWorkspace(input.headers.workspaceID, input.tokenBody.userID).let {
                 ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_GETTING_NAMESPACES)
             }
 
