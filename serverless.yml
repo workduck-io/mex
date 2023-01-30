@@ -114,9 +114,9 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - 'us-east-1_Zu7FAh7hj' #userpool id
+              - '${self:custom.cognitoPoolMap.${opt:stage, self:provider.stage}}' # UserPool ID
         audience:
-          - '6pvqt64p0l2kqkk2qafgdh13qe'
+          - '${self:custom.cognitoClientMap.${opt:stage, self:provider.stage}}' # Client ID for Cognito Pool
   logs:
     httpApi:
       # requestTime : time of request
@@ -204,6 +204,16 @@ custom:
       createRoute53Record: true
       endpointType: regional
       apiType: http
+  cognitoPoolMap:
+    dev: us-east-1_Zu7FAh7hj
+    staging: us-east-1_Zu7FAh7hj
+    test: us-east-1_O5YTlVrCd
+    local: us-east-1_Zu7FAh7hj
+  cognitoClientMap:
+    dev: 6pvqt64p0l2kqkk2qafgdh13qe
+    staging: 6pvqt64p0l2kqkk2qafgdh13qe
+    test: 25qd6eq6vv3906osgv8v3f8c6v
+    local: 6pvqt64p0l2kqkk2qafgdh13qe
 
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
