@@ -24,7 +24,6 @@ object DDBHelper {
     fun getStage() : String {
         return when (System.getenv("STAGE")) {
             null -> "local" /* for local testing without serverless offline */
-            "test" -> "staging"
             else -> System.getenv("STAGE")
         }
 
