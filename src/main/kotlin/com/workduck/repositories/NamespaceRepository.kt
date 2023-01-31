@@ -324,7 +324,7 @@ class NamespaceRepository(
             keyConditionExpression = "PK = :PK and begins_with(SK, :SK)",
             expressionAttributeValues = expressionAttributeValues,
             filterExpression = "deleted <> :deleted",
-            projectionExpression = "PK, SK"
+            projectionExpression = "PK, SK, namespaceName, createdBy"
         ).let {
             mapper.query(Namespace::class.java, it, dynamoDBMapperConfig).filterPersonalNamespaces(userID)
                 .map { namespace ->
