@@ -33,12 +33,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install Serverless Framework
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-        run: npm install -g serverless
-
-      - name: Deploy to AWS Lambda
-        run: sls deploy --aws-profile -stage=test
+      - name: serverless deploy
+          uses: serverless/github-action@v3.1
+          with:
+            args: deploy --stage test
+#      - name: Install Serverless Framework
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.npm
+#          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+#        run: npm install -g serverless
+#
+#      - name: Deploy to AWS Lambda
+#        run: sls deploy --aws-profile -stage=test
