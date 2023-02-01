@@ -33,14 +33,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install Serverless Framework
-        run: npm install -g serverless@3.25.1
 
       - name: Install dependencies
         run: npm install
 
-      - name: Deploy to AWS Lambda
-        run: sls deploy --stage test
+
+      - name: serverless deploy
+        uses: serverless/github-action@v3.1
+        with:
+          args: deploy --stage test
+
+#      - name: Install Serverless Framework
+#        run: npm install -g serverless@3.25.1
+#
+#
+#      - name: Deploy to AWS Lambda
+#        run: sls deploy --stage test
 
 #      - name: serverless deploy
 #        uses: serverless/github-action@v3.1
