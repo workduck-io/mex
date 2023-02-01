@@ -158,7 +158,7 @@ package:
   artifact: target/mex-dev.jar
 
 plugins:
-  - serverless-offline
+  #- serverless-offline
   - serverless-domain-manager
   - serverless-plugin-warmup
   - serverless-prune-plugin
