@@ -34,9 +34,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: serverless deploy
-          uses: serverless/github-action@v3.1
-          with:
-            args: deploy --stage test
+        uses: serverless/github-action@v3.1
+        with:
+          args: deploy --stage test
 #      - name: Install Serverless Framework
 #        uses: actions/cache@v2
 #        with:
