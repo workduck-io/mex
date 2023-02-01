@@ -34,11 +34,11 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install Serverless Framework
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
         run: npm install -g serverless
-        cache:
-          paths:
-            - ~/.npm
-            - ~/.serverless
 
       - name: Deploy to AWS Lambda
         run: sls deploy --aws-profile -stage=test
