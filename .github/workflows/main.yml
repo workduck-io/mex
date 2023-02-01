@@ -34,7 +34,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Deploy to AWS Lambda
         run: sls deploy --aws-profile default -stage=test
