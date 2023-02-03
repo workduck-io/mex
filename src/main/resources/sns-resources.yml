@@ -7,3 +7,11 @@ Resources:
       Subscription:
        - Endpoint: "varun.garg@workduck.io"
          Protocol: "email"
+  DDBAlarmsSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: 'ddb-alarms-mex'
+      TopicName: ddb-alarms-mex-${opt:stage, self:provider.stage}
+      Subscription:
+        - Endpoint: "ddb-alarms-aaaaiul5sicbiorxwhkybvam4a@workduck-workspace.slack.com"
+          Protocol: "email"

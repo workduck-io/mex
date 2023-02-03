@@ -91,6 +91,10 @@ provider:
             - 'cognito-idp:AdminUpdateUserAttributes'
           Resource:
             - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/*'
+        - Effect: Allow
+          Action:
+            - "application-autoscaling:*"
+          Resource: "*"
   httpApi:
     cors:
       allowedOrigins: 
@@ -249,3 +253,5 @@ resources:
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
+  #- ${file(src/main/resources/ddb-alarms.yml)}
+  - ${file(src/main/resources/auto-scaling-policy.yml)}

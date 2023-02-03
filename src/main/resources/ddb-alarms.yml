@@ -1,0 +1,17 @@
+Resources:
+  ConsumedWriteCapacityAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ConsumedWriteCapacityAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      MetricName: ProvisionedWriteCapacityUnits
+      Namespace: AWS/DynamoDB
+      Period: 60
+      Statistic: Average
+      Threshold: 30
+      AlarmActions:
+        - !Ref DDBAlarmsSNS
+      Dimensions:
+        - Name: TableName
+          Value: test-mex
