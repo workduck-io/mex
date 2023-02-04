@@ -91,10 +91,6 @@ provider:
             - 'cognito-idp:AdminUpdateUserAttributes'
           Resource:
             - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/*'
-        - Effect: Allow
-          Action:
-            - "application-autoscaling:*"
-          Resource: "*"
   httpApi:
     cors:
       allowedOrigins: 
