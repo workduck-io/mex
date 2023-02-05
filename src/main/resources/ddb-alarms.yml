@@ -1,0 +1,72 @@
+Resources:
+  DDBConsumedWriteCapacityAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: DDBConsumedWriteCapacityAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      MetricName: ProvisionedWriteCapacityUnits
+      Namespace: AWS/DynamoDB
+      Period: 60
+      Statistic: Average
+      Threshold: 15
+      AlarmActions:
+        - !Ref DDBAlarmsSNS
+      Dimensions:
+        - Name: TableName
+          Value: !Ref mexDataTest
+
+
+  DDBConsumedReadCapacityAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: DDBConsumedReadCapacityAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      MetricName: ProvisionedWriteCapacityUnits
+      Namespace: AWS/DynamoDB
+      Period: 60
+      Statistic: Average
+      Threshold: 35
+      AlarmActions:
+        - !Ref DDBAlarmsSNS
+      Dimensions:
+        - Name: TableName
+          Value: !Ref mexDataTest
+
+
+  DDBReadThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: DDBReadThrottleAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      MetricName: ReadThrottleEvents
+      Namespace: AWS/DynamoDB
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      AlarmActions:
+        - !Ref DDBAlarmsSNS
+      Dimensions:
+        - Name: TableName
+          Value: !Ref mexDataTest
+
+
+  DDBWriteThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: DDBWriteThrottleAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      MetricName: WriteThrottleEvents
+      Namespace: AWS/DynamoDB
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      AlarmActions:
+        - !Ref DDBAlarmsSNS
+      Dimensions:
+        - Name: TableName
+          Value: !Ref mexDataTest
+

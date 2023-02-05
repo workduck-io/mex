@@ -249,3 +249,5 @@ resources:
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
+  - ${file(src/main/resources/ddb-alarms.yml)}
+  - ${file(src/main/resources/auto-scaling-policy.yml)}
