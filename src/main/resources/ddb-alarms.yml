@@ -1,6 +1,7 @@
 Resources:
   DDBConsumedWriteCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
+    Condition: IsStaging
     Properties:
       AlarmName: DDBConsumedWriteCapacityAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -19,6 +20,7 @@ Resources:
 
   DDBConsumedReadCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
+    Condition: IsStaging
     Properties:
       AlarmName: DDBConsumedReadCapacityAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -37,6 +39,7 @@ Resources:
 
   DDBReadThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
+    Condition: IsStaging
     Properties:
       AlarmName: DDBReadThrottleAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -55,6 +58,7 @@ Resources:
 
   DDBWriteThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
+    Condition: IsStaging
     Properties:
       AlarmName: DDBWriteThrottleAlarm
       ComparisonOperator: GreaterThanThreshold
