@@ -158,11 +158,11 @@ package:
   artifact: target/mex-dev.jar
 
 plugins:
-  - serverless-dynamodb-local
   - serverless-offline
   - serverless-domain-manager
   - serverless-plugin-warmup
   - serverless-prune-plugin
+  - serverless-simple-alias
 custom:
   serverless-offline:
     noPrependStageInUrl: true
@@ -174,7 +174,6 @@ custom:
     officeHoursWarmer:
       enabled:
         - staging
-        - test
       prewarm: true
       events:
         - schedule: cron(0/5 3-15 ? * MON-FRI *) # converted to UTC format -> IST : 8.30 am to 8.30 pm
@@ -183,7 +182,6 @@ custom:
     outOfOfficeHoursWarmer:
       enabled:
         - staging
-        - test
       prewarm: true
       events:
         - schedule: cron(0/15 15-23 ? * MON-FRI *) # 8.30 pm to 4.30 am IST
@@ -214,6 +212,11 @@ custom:
     staging: 6pvqt64p0l2kqkk2qafgdh13qe
     test: 25qd6eq6vv3906osgv8v3f8c6v
     local: 6pvqt64p0l2kqkk2qafgdh13qe
+  simpleAlias:
+    activeAliasName: 'latest'
+    useActiveAliasInGateway: true
+    makeLambdasActive: true
+    aliases: []
 
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
@@ -251,3 +254,4 @@ resources:
   - ${file(src/main/resources/elasticache-resources.yml)}
   - ${file(src/main/resources/ddb-alarms.yml)}
   - ${file(src/main/resources/auto-scaling-policy.yml)}
+  - ${file(src/main/resources/snapstart.yml)}

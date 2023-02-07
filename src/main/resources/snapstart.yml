@@ -1,0 +1,76 @@
+Resources:
+    NodeLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    SnippetLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    NamespaceLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    WorkspaceLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    UserLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    UserPreferenceLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    UserStarLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    TagLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    InternalTagLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    NamespaceDeleteWorkerLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    NamespaceDeleteDLQWorkerLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    NodeDeleteWorkerLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    NodeDeleteDLQWorkerLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    PublicNoteWorkerLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
+    PublicNoteSQSWorkerLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        SnapStart:
+          ApplyOn: PublishedVersions
