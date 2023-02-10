@@ -1,0 +1,58 @@
+prod:
+  subnetIds:
+    - "subnet-09c7244ba2b001dde"
+    - "subnet-02e5cc508f0c07cc6"
+    - "subnet-0d90d2fa73b9d966f"
+    securityGroupIds:
+      - "sg-03187fa066423b634"
+
+
+dev:
+  subnetIds:
+    - "subnet-ad0a8de0"
+    - "subnet-f37686ac"
+    - "subnet-91d621f7"
+    - "subnet-c07d8fe1"
+    - "subnet-fddce7c3"
+    - "subnet-2054fd2e"
+  securityGroupIds:
+    - "sg-0aeaa35ab3c10796d"
+    - "sg-0fad68a531aa4fea5"
+    - "sg-51d4667f"
+test:
+  subnetIds:
+    - "subnet-ad0a8de0"
+    - "subnet-f37686ac"
+    - "subnet-91d621f7"
+    - "subnet-c07d8fe1"
+    - "subnet-fddce7c3"
+    - "subnet-2054fd2e"
+  securityGroupIds:
+    - "sg-0aeaa35ab3c10796d"
+    - "sg-0fad68a531aa4fea5"
+    - "sg-51d4667f"
+staging:
+  subnetIds:
+    - "subnet-ad0a8de0"
+    - "subnet-f37686ac"
+    - "subnet-91d621f7"
+    - "subnet-c07d8fe1"
+    - "subnet-fddce7c3"
+    - "subnet-2054fd2e"
+  securityGroupIds:
+    - "sg-0aeaa35ab3c10796d"
+    - "sg-0fad68a531aa4fea5"
+    - "sg-51d4667f"
+
+local:
+  subnetIds:
+    - "subnet-ad0a8de0"
+    - "subnet-f37686ac"
+    - "subnet-91d621f7"
+    - "subnet-c07d8fe1"
+    - "subnet-fddce7c3"
+    - "subnet-2054fd2e"
+  securityGroupIds:
+    - "sg-0aeaa35ab3c10796d"
+    - "sg-0fad68a531aa4fea5"
+    - "sg-51d4667f"
