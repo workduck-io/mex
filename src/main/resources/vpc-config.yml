@@ -3,8 +3,8 @@ prod:
     - "subnet-09c7244ba2b001dde"
     - "subnet-02e5cc508f0c07cc6"
     - "subnet-0d90d2fa73b9d966f"
-    securityGroupIds:
-      - "sg-03187fa066423b634"
+  securityGroupIds:
+    - "sg-03187fa066423b634"
 
 
 dev:

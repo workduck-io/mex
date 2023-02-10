@@ -11,5 +11,5 @@ Resources:
       CacheNodeType: cache.t3.micro
       NumCacheClusters: 3
       SecurityGroupIds:
-        - sg-51d4667f
+        - sg-03187fa066423b634
       CacheSubnetGroupName: !Ref PrivateSubnetGroup

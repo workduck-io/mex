@@ -28,8 +28,6 @@ provider:
   timeout: 20
   memorySize: 1024
   logRetentionInDays: 7
-  custom:
-    vpcConfig: ${file(src/main/resources/vpc-config.yml)}
   environment:
     #AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     #AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
@@ -87,11 +85,11 @@ provider:
           Resource:
             - { Ref: DDBStreamSNS }
         - Effect: "Allow" # this for attaching lambda to VPC to enable them to create ENIs
-            Action:
-              - ec2:CreateNetworkInterface
-              - ec2:DescribeNetworkInterfaces
-              - ec2:DeleteNetworkInterface
-            Resource: "*"
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+          Resource: "*"
   httpApi:
     cors:
       allowedOrigins: 
@@ -200,6 +198,8 @@ custom:
     useActiveAliasInGateway: true
     makeLambdasActive: true
     aliases: []
+  vpc: ${file(src/main/resources/vpc-config.yml)}
+
 
 functions:
   - ${file(src/main/resources/rest-api-resources.yml)}
@@ -220,7 +220,7 @@ resources:
       IsStaging:
         Fn::Equals:
           - ${opt:stage, 'local'}
-          - staging
+          - prod
       IsDefault:
         Fn::Not:
           - Condition: IsStaging
