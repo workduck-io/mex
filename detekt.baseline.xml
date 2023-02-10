@@ -29,7 +29,6 @@
         <ID>MaxLineLength:WorkspaceRepository.kt$WorkspaceRepository$val workspace: Workspace? = mapper.load(Workspace::class.java, workspaceID, workspaceID, dynamoDBMapperConfig)</ID>
         <ID>MaxLineLength:WorkspaceService.kt$WorkspaceService$private val repository: Repository&lt;Workspace&gt; = RepositoryImpl(dynamoDB, mapper, workspaceRepository, dynamoDBMapperConfig)</ID>
         <ID>NestedBlockDepth:NodeService.kt$NodeService$private fun compareNodeWithStoredNode(node: Node, storedNode: Node)</ID>
-        <ID>NewLineAtEndOfFile:UserService.kt$com.workduck.service.UserService.kt</ID>
         <ID>NewLineAtEndOfFile:UserStrategyFactory.kt$com.serverless.userHandlers.UserStrategyFactory.kt</ID>
         <ID>SwallowedException:NamespaceRepository.kt$NamespaceRepository$catch (e: Exception) { null }</ID>
         <ID>SwallowedException:NodeRepository.kt$NodeRepository$catch (e: ConditionalCheckFailedException) { /* Will happen only in race condition because we're making the versions same in the service */ /* What should be the flow from here on? Call NodeService().update()? */ println("Version mismatch!!") null }</ID>
