@@ -1,6 +1,7 @@
 package com.serverless.utils
 
 import com.amazonaws.services.cognitoidp.model.UnauthorizedException
+import com.google.gson.Gson
 import com.serverless.models.Input
 import com.workduck.utils.Helper
 import java.util.regex.Pattern
@@ -9,6 +10,7 @@ object Helper {
 
     fun validateTokenAndWorkspace(input: Input){
         if(!Helper.validateWorkspace(input.headers.workspaceID, input.tokenBody.workspaceIDList)){
+            println("Resolved Input : ${Gson().toJson(input)}")
             throw UnauthorizedException("Not Authorized for the requested workspace")
         }
 

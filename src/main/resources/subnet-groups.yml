@@ -1,0 +1,10 @@
+Resources:
+  xxx:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: String
+      Description: 'Private SubnetIDs of VPC'
+      SubnetIds:
+        - String
+      Tags:
+        - Tag

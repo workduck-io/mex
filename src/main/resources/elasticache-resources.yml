@@ -2,8 +2,8 @@ Resources:
   PublicNoteElasticCacheCluster:
     Type: AWS::ElastiCache::ReplicationGroup
     Properties:
-      ReplicationGroupId: mex-public-note-cache-${opt:stage, self:provider.stage}
-      ReplicationGroupDescription: "Public note cache cluster"
+      ReplicationGroupId: mex-cache-${opt:stage, self:provider.stage}
+      ReplicationGroupDescription: "Redis cache cluster"
       MultiAZEnabled: true
       AutomaticFailoverEnabled: true
       AutoMinorVersionUpgrade: true
@@ -12,4 +12,4 @@ Resources:
       NumCacheClusters: 3
       SecurityGroupIds:
         - sg-51d4667f
-      CacheSubnetGroupName: mex-public-note-cache-subnet
+      CacheSubnetGroupName: !Ref PrivateSubnetGroup
