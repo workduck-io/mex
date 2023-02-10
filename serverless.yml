@@ -85,12 +85,6 @@ provider:
             - "sns:*"
           Resource:
             - { Ref: DDBStreamSNS }
-        - Effect: Allow
-          Action:
-            - 'cognito-idp:AdminGetUser'
-            - 'cognito-idp:AdminUpdateUserAttributes'
-          Resource:
-            - 'arn:aws:cognito-idp:us-east-1:418506370286:userpool/*'
   httpApi:
     cors:
       allowedOrigins: 
