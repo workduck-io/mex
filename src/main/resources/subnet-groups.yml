@@ -1,10 +1,15 @@
 Resources:
-  xxx:
+  PrivateSubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
     Properties:
-      CacheSubnetGroupName: String
+      CacheSubnetGroupName: prod-private-subnet-group
       Description: 'Private SubnetIDs of VPC'
       SubnetIds:
-        - String
+        - "subnet-09c7244ba2b001dde"
+        - "subnet-02e5cc508f0c07cc6"
+        - "subnet-0d90d2fa73b9d966f"
       Tags:
-        - Tag
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "redis"

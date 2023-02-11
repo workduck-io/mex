@@ -52,7 +52,7 @@ PublicNoteWorker:
           Fn::GetAtt:
             - PublicNote
             - Arn
-  vpc: '${self:custom.vpc.${opt:stage, self:provider.stage}}'
+  vpc: ${self:custom.vpc.${opt:stage, self:provider.stage}}
 
 PublicNoteSQSWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteDLQWorker
@@ -62,14 +62,14 @@ PublicNoteSQSWorker:
           Fn::GetAtt:
             - PublicNoteDLQ
             - Arn
-  vpc: '${self:custom.vpc.${opt:stage, self:provider.stage}}'
+  vpc: ${self:custom.vpc.${opt:stage, self:provider.stage}}
 
 
 # Note: Since we are creating new elasticache cluster and all the lambdas irrespective of stage in the same VPC we don't need to create new VPC endpoints.
 # Refer: https://us-east-1.console.aws.amazon.com/vpc/home?region=us-east-1#Endpoints:
 Node:
   handler: com.serverless.nodeHandlers.NodeHandler
-  vpc: '${self:custom.vpc.${opt:stage, self:provider.stage}}'
+  vpc: ${self:custom.vpc.${opt:stage, self:provider.stage}}
   events:
     - httpApi:
         path: /node/{id}

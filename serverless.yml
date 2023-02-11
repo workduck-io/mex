@@ -62,7 +62,7 @@ provider:
             - dynamodb:DescribeTable
             - dynamodb:BatchWriteItem
             - dynamodb:BatchGetItem
-          Resource: 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:*'
+          Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:*'
         - Effect: Allow
           Action:
             - 'lambda:InvokeFunction'
@@ -74,7 +74,7 @@ provider:
             - dynamodb:GetRecords
             - dynamodb:GetShardIterator
             - dynamodb:ListStreams
-          Resource: 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/*'
+          Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/*'
         - Effect: "Allow"
           Action:
             - "s3:*"
@@ -158,7 +158,7 @@ package:
 
 plugins:
   - serverless-offline
-  - serverless-domain-manager
+  #- serverless-domain-manager
   - serverless-prune-plugin
   - serverless-simple-alias
 custom:
@@ -168,19 +168,19 @@ custom:
     ignoreJWTSignature: true
     noAuth: true
     httpPort: 4000
-  customDomain:
-    rest:
-      domainName: api-${opt:stage, self:provider.stage}.workduck.io
-      basePath: 'mex'
-      stage: ${opt:stage, self:provider.stage}
-      createRoute53Record: true
-    http:
-      domainName: http-${opt:stage, self:provider.stage}.workduck.io
-      basePath: 'mex'
-      stage: ${opt:stage, self:provider.stage}
-      createRoute53Record: true
-      endpointType: regional
-      apiType: http
+#  customDomain:
+#    rest:
+#      domainName: api-${opt:stage, self:provider.stage}.workduck.io
+#      basePath: 'mex'
+#      stage: ${opt:stage, self:provider.stage}
+#      createRoute53Record: true
+#    http:
+#      domainName: http-${opt:stage, self:provider.stage}.workduck.io
+#      basePath: 'mex'
+#      stage: ${opt:stage, self:provider.stage}
+#      createRoute53Record: true
+#      endpointType: regional
+#      apiType: http
   cognitoPoolMap:
     dev: us-east-1_Zu7FAh7hj
     staging: us-east-1_Zu7FAh7hj
@@ -235,6 +235,7 @@ resources:
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
+  - ${file(src/main/resources/subnet-groups.yml)}
   - ${file(src/main/resources/ddb-alarms.yml)}
   - ${file(src/main/resources/auto-scaling-policy.yml)}
   - ${file(src/main/resources/snapstart.yml)}
