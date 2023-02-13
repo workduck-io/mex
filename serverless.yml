@@ -24,7 +24,6 @@ provider:
   runtime: java11
   stage: local
   region: ${opt:region, 'us-east-1'}
-  lambdaHashingVersion: 20201221
   timeout: 20
   memorySize: 1024
   logRetentionInDays: 7
@@ -34,62 +33,12 @@ provider:
     TABLE_NAME: ${opt:stage, 'local'}-mex
     JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     STAGE: ${opt:stage, 'local'}
-    PUBLIC_NOTE_CACHE_READER_ENDPOINT:
-      Fn::Join:
-        - ''
-        - - Ref: PublicNoteElasticCacheCluster
-          - -ro.m6edlo.ng.0001.use1.cache.amazonaws.com
-    PUBLIC_NOTE_CACHE_ENDPOINT:
-      Fn::Join:
-        -  ''
-        - - Ref: PublicNoteElasticCacheCluster
-          - .m6edlo.ng.0001.use1.cache.amazonaws.com
+    PUBLIC_NOTE_CACHE_READER_ENDPOINT: ${file(src/main/resources/cache-reader-endpoint.yml)}
+    PUBLIC_NOTE_CACHE_ENDPOINT: ${file(src/main/resources/cache-writer-endpoint.yml)}
   iam:
     role:
-      statements:
-        - Effect: Allow
-          Action:
-            - sqs:*
-          Resource: 'arn:aws:dynamodb:us-east-1:*:*'
-        - Effect: Allow
-          Action:
-            - dynamodb:Scan
-            - dynamodb:Query
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
-            - dynamodb:DescribeTable
-            - dynamodb:BatchWriteItem
-            - dynamodb:BatchGetItem
-          Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:*'
-        - Effect: Allow
-          Action:
-            - 'lambda:InvokeFunction'
-          Resource:
-            - '*'
-        - Effect: Allow
-          Action:
-            - dynamodb:DescribeStream
-            - dynamodb:GetRecords
-            - dynamodb:GetShardIterator
-            - dynamodb:ListStreams
-          Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/*'
-        - Effect: "Allow"
-          Action:
-            - "s3:*"
-          Resource: { "Fn::Join": [ "", [ "arn:aws:s3:::mex", "/*" ] ] }
-        - Effect: Allow
-          Action:
-            - "sns:*"
-          Resource:
-            - { Ref: DDBStreamSNS }
-        - Effect: "Allow" # this for attaching lambda to VPC to enable them to create ENIs
-          Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DescribeNetworkInterfaces
-            - ec2:DeleteNetworkInterface
-          Resource: "*"
+      statements: ${file(src/main/resources/permissions.yml)}
+
   httpApi:
     cors:
       allowedOrigins: 
@@ -116,42 +65,7 @@ provider:
               - '${self:custom.cognitoPoolMap.${opt:stage, self:provider.stage}}' # UserPool ID
         audience:
           - '${self:custom.cognitoClientMap.${opt:stage, self:provider.stage}}' # Client ID for Cognito Pool
-  logs:
-    httpApi:
-      # requestTime : time of request
-      # requestId : unique ID given to the request by API Gateway.
-      # httpMethod : GET/POST etc.
-      # path : path with values of parameters
-      # routeKey : routeKey
-      # status : The status code returned by the response
-      # responseLatency : The total time it took from when the request reached API Gateway to when the response was returned.
-      # integrationRequestId : request ID for your Lambda function invocation
-      # functionResponseStatus : status returned by the code in your Lambda function
-      # integrationLatency : Latency of Lambda function
-      # integrationServiceStatus : 200 is lambda is working correctly
-      # authorizeResultStatus : 200 if it was allowed or a 403 if it was denied.
-      # authorizerLatency: time taken by authorizer
-      # ip : userIP
-      # userAgent : userAgent
-      # principalId : can use this to identify the user in your application making a request
-      format: '{
-      "requestTime":"$context.requestTime",
-      "requestId":"$context.requestId",
-      "httpMethod":"$context.httpMethod",
-      "path":"$context.path",
-      "routeKey":"$context.routeKey",
-      "status":$context.status,
-      "responseLatency":$context.responseLatency,
-      "integrationRequestId":"$context.integration.requestId",
-      "functionResponseStatus":"$context.integration.status",
-      "integrationLatency":"$context.integration.latency",
-      "integrationServiceStatus":"$context.integration.integrationStatus",
-      "authorizeResultStatus":"$context.authorizer.status",
-      "authorizerRequestId":"$context.authorizer.requestId",
-      "authorizerLatency": "$context.authorizer.latency",
-      "ip":"$context.identity.sourceIp",
-      "userAgent":"$context.identity.userAgent",
-      "principalId":"$context.authorizer.principalId"}'
+  logs: ${file(src/main/resources/api-gateway-logs.yml)}
 
 package:
   artifact: target/mex-dev.jar
@@ -181,6 +95,7 @@ custom:
 #      createRoute53Record: true
 #      endpointType: regional
 #      apiType: http
+
   cognitoPoolMap:
     dev: us-east-1_Zu7FAh7hj
     staging: us-east-1_Zu7FAh7hj
@@ -202,36 +117,17 @@ custom:
 
 
 functions:
-  - ${file(src/main/resources/rest-api-resources.yml)}
+  - ${file(src/main/resources/api-resources.yml)}
 
 
 useDotenv: true
 
 resources:
-  - Conditions:
-#      IsProd:
-#        Fn::Equals:
-#          - ${opt:stage, 'local'}
-#          - prod
-#      IsTest:
-#        Fn::Equals:
-#          - ${opt:stage, 'local'}
-#          - test
-      IsStaging:
-        Fn::Equals:
-          - ${opt:stage, 'local'}
-          - prod
-      IsDefault:
-        Fn::Not:
-          - Condition: IsStaging
-#      IsDefault:
-#        Fn::Not:
-#          - Fn::Or: [ Condition: IsStaging ]
-
+  - ${file(src/main/resources/conditions.yml)}
   - ${file(src/main/resources/api-gateway-errors.yml)}
-#  - ${file(src/main/resources/prod-table-config.yml)}
-  - ${file(src/main/resources/staging-table-config.yml)}
-  - ${file(src/main/resources/default-table-config.yml)}
+  - ${file(src/main/resources/table-config-prod.yml)}
+  - ${file(src/main/resources/table-config-staging.yml)}
+  - ${file(src/main/resources/table-config-default.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
@@ -239,4 +135,3 @@ resources:
   - ${file(src/main/resources/ddb-alarms.yml)}
   - ${file(src/main/resources/auto-scaling-policy.yml)}
   - ${file(src/main/resources/snapstart.yml)}
-  #- ${file(src/main/resources/api-gateway-integration.yml)}

@@ -1,0 +1,44 @@
+- Effect: Allow
+  Action:
+    - sqs:*
+  Resource:
+    Fn::GetAtt: [PublicNoteDLQ, Arn]
+- Effect: Allow
+  Action:
+    - dynamodb:Scan
+    - dynamodb:Query
+    - dynamodb:GetItem
+    - dynamodb:PutItem
+    - dynamodb:UpdateItem
+    - dynamodb:DeleteItem
+    - dynamodb:DescribeTable
+    - dynamodb:BatchWriteItem
+    - dynamodb:BatchGetItem
+  Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:*'
+- Effect: Allow
+  Action:
+    - 'lambda:InvokeFunction'
+  Resource:
+    - '*'
+- Effect: Allow
+  Action:
+    - dynamodb:DescribeStream
+    - dynamodb:GetRecords
+    - dynamodb:GetShardIterator
+    - dynamodb:ListStreams
+  Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/*'
+- Effect: "Allow"
+  Action:
+    - "s3:*"
+  Resource: { "Fn::Join": [ "", [ "arn:aws:s3:::mex", "/*" ] ] }
+- Effect: Allow
+  Action:
+    - "sns:*"
+  Resource:
+    - { Ref: DDBStreamSNS }
+- Effect: "Allow" # this for attaching lambda to VPC to enable them to create ENIs
+  Action:
+    - ec2:CreateNetworkInterface
+    - ec2:DescribeNetworkInterfaces
+    - ec2:DeleteNetworkInterface
+  Resource: "*"

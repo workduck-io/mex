@@ -1,6 +1,5 @@
 package com.workduck.utils.extensions
 
-import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.GenericListRequest
@@ -12,7 +11,6 @@ import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.sqsNodeEventHandlers.DDBPayload
 import com.serverless.sqsNodeEventHandlers.SQSPayload
-import com.serverless.utils.Constants
 import com.serverless.utils.isValidNodeID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier

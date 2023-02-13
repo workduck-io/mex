@@ -1,0 +1,10 @@
+Fn::If:
+  - IsProd
+  - Fn::Join:
+      - ''
+      - - Ref: ElasticCacheCluster
+        - -ro.dugfr1.ng.0001.use1.cache.amazonaws.com
+  - Fn::Join:
+      - ''
+      - - Ref: PublicNoteElasticCacheCluster
+        - .m6edlo.ng.0001.use1.cache.amazonaws.com

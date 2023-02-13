@@ -1,6 +1,7 @@
 Resources:
-  PublicNoteElasticCacheCluster:
+  ElasticCacheCluster:
     Type: AWS::ElastiCache::ReplicationGroup
+    Condition: IsProd
     Properties:
       ReplicationGroupId: mex-cache-${opt:stage, self:provider.stage}
       ReplicationGroupDescription: "Redis cache cluster"
@@ -13,3 +14,19 @@ Resources:
       SecurityGroupIds:
         - sg-03187fa066423b634
       CacheSubnetGroupName: !Ref PrivateSubnetGroup
+
+  PublicNoteElasticCacheCluster: # same functionality as above, just different name and env.
+    Type: AWS::ElastiCache::ReplicationGroup
+    Condition: IsDefaultOrStaging
+    Properties:
+      ReplicationGroupId: mex-public-note-cache-${opt:stage, self:provider.stage}
+      ReplicationGroupDescription: "Redis cache cluster"
+      MultiAZEnabled: true
+      AutomaticFailoverEnabled: true
+      AutoMinorVersionUpgrade: true
+      Engine: redis
+      CacheNodeType: cache.t3.micro
+      NumCacheClusters: 3
+      SecurityGroupIds:
+        - sg-51d4667f
+      CacheSubnetGroupName: mex-public-note-cache-subnet

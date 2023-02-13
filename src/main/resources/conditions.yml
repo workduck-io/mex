@@ -1,0 +1,20 @@
+Conditions:
+  IsProd:
+    Fn::Equals:
+      - ${opt:stage, 'local'}
+      - prod
+  IsStaging:
+    Fn::Equals:
+      - ${opt:stage, 'local'}
+      - staging
+  IsDefault:
+    Fn::Not:
+      - Fn::Or: [ Condition: IsStaging , Condition: IsProd ] # ~(A || B ) => ~A && ~B
+  IsProdOrStaging:
+    Fn::Or:
+      - Condition: IsStaging
+      - Condition: IsProd
+  IsDefaultOrStaging:
+    Fn::Or:
+      - Condition: IsDefault
+      - Condition: IsStaging

@@ -1,14 +1,14 @@
 Resources:
   MyDynamoDBTableWriteCapacityScalableTarget:
     Type: "AWS::ApplicationAutoScaling::ScalableTarget"
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       MaxCapacity: 20
       MinCapacity: 2
       ResourceId: !Join
         - ""
         - - "table/"
-          - !Ref mexDataTest
+          - !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
       ScalableDimension: "dynamodb:table:WriteCapacityUnits"
       ServiceNamespace: dynamodb
@@ -16,7 +16,7 @@ Resources:
 
   MyDynamoDBTableWriteCapacityAutoscalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       PolicyName: MyDynamoDBTableWriteCapacityAutoscalingPolicy
       PolicyType: TargetTrackingScaling
@@ -32,14 +32,14 @@ Resources:
 
   MyDynamoDBTableReadCapacityScalableTarget:
     Type: "AWS::ApplicationAutoScaling::ScalableTarget"
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       MaxCapacity: 40
       MinCapacity: 3
       ResourceId: !Join
         - ""
         - - "table/"
-          - !Ref mexDataTest
+          - !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
       ScalableDimension: "dynamodb:table:ReadCapacityUnits"
       ServiceNamespace: dynamodb
@@ -47,7 +47,7 @@ Resources:
 
   MyDynamoDBTableReadCapacityAutoscalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       PolicyName: MyDynamoDBTableReadCapacityAutoscalingPolicy
       PolicyType: TargetTrackingScaling

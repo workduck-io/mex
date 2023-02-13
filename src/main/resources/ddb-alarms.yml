@@ -1,7 +1,7 @@
 Resources:
   DDBConsumedWriteCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       AlarmName: DDBConsumedWriteCapacityAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -15,12 +15,12 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
 
 
   DDBConsumedReadCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       AlarmName: DDBConsumedReadCapacityAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -34,12 +34,12 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
 
 
   DDBReadThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       AlarmName: DDBReadThrottleAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -53,12 +53,12 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
 
 
   DDBWriteThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
       AlarmName: DDBWriteThrottleAlarm
       ComparisonOperator: GreaterThanThreshold
@@ -72,5 +72,5 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
 
