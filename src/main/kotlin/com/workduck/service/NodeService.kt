@@ -16,6 +16,7 @@ import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
+import com.serverless.models.requests.SharedNamespaceRequest
 import com.serverless.models.requests.SharedNodeRequest
 import com.serverless.models.requests.UpdateAccessTypesRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
@@ -1243,15 +1244,32 @@ class NodeService( // Todo: Inject them from handlers
         updateNode(node, storedNode)
     }
 
-    fun revokeSharedAccess(wdRequest: WDRequest, revokerID: String, revokerWorkspaceID: String) {
-        val sharedNodeRequest = wdRequest as SharedNodeRequest
+    fun revokeSharedAccess(wdRequest: WDRequest, revokerUserID: String, revokerWorkspaceID: String) {
+        val shareNamespaceRequest = wdRequest as SharedNodeRequest
+        val userIDsToRemove = shareNamespaceRequest.userIDs
 
-        // check if the revoker has manage access
-        require(nodeAccessService.checkIfUserHasAccess(revokerWorkspaceID, sharedNodeRequest.nodeID, revokerID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
+        when(userIDsToRemove.size){
+            1 -> when(userIDsToRemove.first() == revokerUserID){
+                true -> revokeOwnAccess(revokerUserID, shareNamespaceRequest.nodeID)
+                false -> revokeOthersAccess(userIDsToRemove, revokerUserID, revokerWorkspaceID, shareNamespaceRequest.nodeID)
+            }
+            else -> revokeOthersAccess(userIDsToRemove, revokerUserID, revokerWorkspaceID, shareNamespaceRequest.nodeID)
+        }
 
-        // since only PK and SK matter here for deletion, can fill dummy fields.
-        val nodeAccessItems = getNodeAccessItems(sharedNodeRequest.nodeID, revokerWorkspaceID, revokerID, sharedNodeRequest.userIDs, sharedNodeRequest.accessType)
+    }
+
+    private fun revokeOthersAccess(userIDsToRemove : List<String>, revokerUserID: String, revokerWorkspaceID: String, nodeID: String){
+        require(nodeAccessService.checkIfUserHasAccess(revokerWorkspaceID, nodeID, revokerUserID, EntityOperationType.MANAGE)) { Messages.ERROR_NODE_PERMISSION }
+
+        // since PK and SK matter here for deletion, rest can fill dummy fields.
+        val nodeAccessItems = getNodeAccessItems(nodeID, revokerWorkspaceID, revokerUserID, userIDsToRemove, AccessType.MANAGE)
         nodeRepository.deleteBatchNodeAccessItem(nodeAccessItems)
+
+    }
+
+    private fun revokeOwnAccess(userID: String, nodeID: String){
+        nodeRepository.deleteNodeAccessItem(userID, nodeID)
+
     }
 
     /* will return information only if user has MANAGE access to the node or the namespace of the node */

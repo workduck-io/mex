@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
@@ -21,6 +22,7 @@ import com.workduck.models.ItemType
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceAccess
 import com.workduck.utils.AccessItemHelper
+import com.workduck.utils.AccessItemHelper.getNamespaceAccessItemPK
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
@@ -367,9 +369,15 @@ class NamespaceRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
+    fun deleteNamespaceAccessItem(userID: String, namespaceID: String){
+        val table = dynamoDB.getTable(tableName)
+        DeleteItemSpec().withPrimaryKey("PK", getNamespaceAccessItemPK(namespaceID), "SK", userID)
+            .also { table.deleteItem(it) }
+    }
+
     fun getSharedUserInformation(namespaceID: String): Map<String, String> {
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
-        expressionAttributeValues[":PK"] = AttributeValue(AccessItemHelper.getNamespaceAccessItemPK(namespaceID))
+        expressionAttributeValues[":PK"] = AttributeValue(getNamespaceAccessItemPK(namespaceID))
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.NamespaceAccess.name)
 
         return DynamoDBQueryExpression<NamespaceAccess>().query(
