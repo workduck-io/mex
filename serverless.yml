@@ -50,8 +50,7 @@ provider:
         - Effect: Allow
           Action:
             - sqs:*
-          Resource:
-            Fn::GetAtt: [PublicNoteDLQ, Arn]
+          Resource: 'arn:aws:dynamodb:us-east-1:*:*'
         - Effect: Allow
           Action:
             - dynamodb:Scan
