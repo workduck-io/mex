@@ -185,13 +185,31 @@ class NamespaceService (
     }
 
 
-    fun revokeSharedAccess(wdRequest: WDRequest, revokerUserID: String, workspaceID: String) {
+    fun revokeSharedAccess(wdRequest: WDRequest, revokerUserID: String, revokerWorkspaceID: String) {
         val shareNamespaceRequest = wdRequest as SharedNamespaceRequest
-        if (!namespaceAccessService.checkIfUserHasAccess(workspaceID, shareNamespaceRequest.namespaceID, revokerUserID, EntityOperationType.MANAGE)) throw NoSuchElementException("Namespace you're trying to share does not exist")
+        val userIDsToRemove = shareNamespaceRequest.userIDs
 
-        // since PK and SK matter here for deletion, can fill dummy fields.
-        val namespaceAccessItems = AccessItemHelper.getNamespaceAccessItems(shareNamespaceRequest.namespaceID, workspaceID, revokerUserID, shareNamespaceRequest.userIDs, shareNamespaceRequest.accessType)
+        when(userIDsToRemove.size){
+            1 -> when(userIDsToRemove.first() == revokerUserID){
+                true -> revokeOwnAccess(revokerUserID, shareNamespaceRequest.namespaceID)
+                false -> revokeOthersAccess(userIDsToRemove, revokerUserID, revokerWorkspaceID, shareNamespaceRequest.namespaceID)
+            }
+            else -> revokeOthersAccess(userIDsToRemove, revokerUserID, revokerWorkspaceID, shareNamespaceRequest.namespaceID)
+        }
+
+    }
+
+    private fun revokeOthersAccess(userIDsToRemove : List<String>, revokerUserID: String, revokerWorkspaceID: String, namespaceID: String){
+        require(namespaceAccessService.checkIfUserHasAccess(revokerWorkspaceID, namespaceID, revokerUserID, EntityOperationType.MANAGE)) { Messages.ERROR_NAMESPACE_PERMISSION }
+
+        // since PK and SK matter here for deletion, rest can fill dummy fields.
+        val namespaceAccessItems = AccessItemHelper.getNamespaceAccessItems(namespaceID, revokerWorkspaceID, revokerUserID, userIDsToRemove, AccessType.MANAGE)
         namespaceRepository.deleteBatchNamespaceAccessItems(namespaceAccessItems)
+
+    }
+
+    private fun revokeOwnAccess(userID: String, namespaceID: String){
+        namespaceRepository.deleteNamespaceAccessItem(userID, namespaceID)
     }
 
 

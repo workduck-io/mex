@@ -11,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes
 import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
@@ -499,6 +500,12 @@ class NodeRepository(
     fun deleteBatchNodeAccessItem(nodeAccessItems: List<NodeAccess>) {
         val failedBatches = mapper.batchWrite(emptyList<Any>(), nodeAccessItems, dynamoDBMapperConfig)
         Helper.logFailureForBatchOperation(failedBatches)
+    }
+
+    fun deleteNodeAccessItem(userID: String, nodeID: String){
+        val table = dynamoDB.getTable(tableName)
+        DeleteItemSpec().withPrimaryKey("PK", AccessItemHelper.getNodeAccessItemPK(nodeID), "SK", userID)
+            .also { table.deleteItem(it) }
     }
 
     fun deleteBatchNodes(nodes: List<Node>) {
