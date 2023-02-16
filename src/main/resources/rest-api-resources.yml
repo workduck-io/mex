@@ -152,8 +152,8 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /node/{id}/blockUpdate
-        method: post
+        path: /node/{id}/block
+        method: patch
 #        authorizer: mexAuthorizer
 
       # get metadata + updatedAt of all nodes of a workspace
@@ -298,8 +298,8 @@ Node:
         authorizer: mexAuthorizer
 
     - httpApi:
-        path: /v1/node/{id}/blockUpdate
-        method: post
+        path: /v1/node/{id}/block
+        method: patch
       #        authorizer: mexAuthorizer
 
       # get metadata + updatedAt of all nodes of a workspace

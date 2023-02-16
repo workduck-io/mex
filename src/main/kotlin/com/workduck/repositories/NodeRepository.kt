@@ -186,7 +186,7 @@ class NodeRepository(
 
         return DynamoDBQueryExpression<Node>().query(
             keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "SK",
-            filterExpression = "publicAccess = :publicAccess and deleted <> :deleted", expressionAttributeValues = expressionAttributeValues
+            filterExpression = "deleted <> :deleted", expressionAttributeValues = expressionAttributeValues
         ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).map { node ->
                 node.id
@@ -217,23 +217,37 @@ class NodeRepository(
         Helper.logFailureForBatchOperation(failedBatches)
     }
 
+    fun getNodeBlock(nodeID: String, workspaceID: String, blockID: String) : AdvancedElement {
+        val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
+        expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue(nodeID)
+        expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
-    fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userID: String): AdvancedElement? {
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", projectionExpression = "nodeData.$blockID",
+            filterExpression = "deleted <> :deleted", expressionAttributeValues = expressionAttributeValues
+        ).let {
+            mapper.query(Node::class.java, it, dynamoDBMapperConfig).first().data?.first() ?: throw NoSuchElementException(Messages.INVALID_BLOCK_ID)
+        }
+
+    }
+
+    fun updateNodeBlock(nodeID: String, workspaceID: String, updatedBlock: String, blockID: String, userID: String) {
         val table = dynamoDB.getTable(tableName)
-        val objectMapper = ObjectMapper()
 
         val expressionAttributeValues: MutableMap<String, Any> = HashMap()
         expressionAttributeValues[":updatedBlock"] = updatedBlock
         expressionAttributeValues[":userID"] = userID
         expressionAttributeValues[":deleted"] = 1
 
-        return UpdateItemSpec().update(
+
+        UpdateItemSpec().update(
             pk = workspaceID, sk = nodeID, updateExpression = "SET nodeData.$blockID = :updatedBlock, lastEditedBy = :userID ",
             expressionAttributeValues = expressionAttributeValues, conditionExpression = "attribute_exists(PK) and attribute_exists(SK) and deleted <> :deleted"
         ).let {
             table.updateItem(it)
-            objectMapper.readValue(updatedBlock)
         }
+
     }
 
     fun unarchiveAndRenameNodes(mapOfNodeIDToName: Map<String, String>, workspaceID: String): MutableList<String> {
