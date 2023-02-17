@@ -18,6 +18,7 @@ import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
 import com.serverless.models.requests.SharedNamespaceRequest
 import com.serverless.models.requests.SharedNodeRequest
+import com.serverless.models.requests.SingleElementRequest
 import com.serverless.models.requests.UpdateAccessTypesRequest
 import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WDRequest
@@ -35,6 +36,7 @@ import com.serverless.utils.isNodeUnchanged
 import com.serverless.utils.mix
 import com.serverless.utils.removePrefixList
 import com.serverless.utils.CacheHelper
+import com.serverless.utils.Constants.getCurrentTime
 import com.serverless.utils.orderPage
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
@@ -1064,17 +1066,37 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
-    fun updateNodeBlock(nodeID: String, workspaceID: String, userID: String, elementsListRequest: WDRequest): AdvancedElement? {
+    fun updateNodeBlock(nodeID: String, userWorkspaceID: String, userID: String, namespaceID: String?, singleElementRequest: WDRequest) {
 
-        val elementsListRequestConverted = elementsListRequest as ElementRequest
-        val element = elementsListRequestConverted.elements.let { it[0] }
+        /*if namespaceID is null, assume user is making the call in own workspace so no need to check for permission */
+        val workspaceID = when(namespaceID != null){
+            true -> {
+                namespaceService.namespaceAccessService.checkIfUserHasAccessAndGetWorkspaceDetails(
+                    namespaceID,
+                    userWorkspaceID,
+                    userID,
+                    EntityOperationType.WRITE
+                )[Constants.WORKSPACE_ID]!!
+            }
+            false -> userWorkspaceID
+        }
 
-        element.updatedAt = Constants.getCurrentTime()
+        val blockRequest = singleElementRequest as SingleElementRequest
+        val updatedBlock = blockRequest.block
 
-        // TODO(since we directly set the block info, createdAt and createdBy get lost since we're not getting anything from ddb)
-        val blockData = objectMapper.writeValueAsString(element)
+        val existingBlock = nodeRepository.getNodeBlock(nodeID, workspaceID, updatedBlock.id)
 
-        return nodeRepository.updateNodeBlock(nodeID, workspaceID, blockData, element.id, userID)
+        updateBlockMetadata(existingBlock, updatedBlock)
+
+        val blockData = objectMapper.writeValueAsString(updatedBlock)
+
+        nodeRepository.updateNodeBlock(nodeID, workspaceID, blockData, updatedBlock.id, userID)
+    }
+
+    private fun updateBlockMetadata(existingBlock : AdvancedElement, updatedBlock: AdvancedElement){
+        updatedBlock.updatedAt = getCurrentTime()
+        updatedBlock.createdAt = existingBlock.createdAt
+        updatedBlock.createdBy = existingBlock.createdBy
     }
 
     private fun createNodeObjectFromNodeRequest(nodeRequest: NodeRequest, workspaceID: String, userID: String): Node =

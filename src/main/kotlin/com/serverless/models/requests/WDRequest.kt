@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = RegisterUserRequest::class, name = "RegisterUserRequest"),
     JsonSubTypes.Type(value = RegisterWorkspaceRequest::class, name = "RegisterWorkspaceRequest"),
     JsonSubTypes.Type(value = MetadataRequest::class, name = "MetadataRequest"),
-    JsonSubTypes.Type(value = SuccessorNamespaceRequest::class, name = "SuccessorNamespaceRequest")
+    JsonSubTypes.Type(value = SuccessorNamespaceRequest::class, name = "SuccessorNamespaceRequest"),
+    JsonSubTypes.Type(value = SingleElementRequest::class, name = "SingleElementRequest")
 )
 interface WDRequest

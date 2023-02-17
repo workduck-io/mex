@@ -22,7 +22,7 @@ class NodeStrategyFactory {
 
         const val getAllNodesObject = "GET /node/all/{id}"
 
-        const val updateNodeBlock = "POST /node/{id}/blockUpdate"
+        const val updateNodeBlock = "PATCH /node/{id}/block"
 
         const val getMetadataOfNodes = "GET /node/metadata"
 
@@ -78,7 +78,6 @@ class NodeStrategyFactory {
             unarchiveNodeObject to UnarchiveNodeStrategy(),
             deleteArchivedNodeObject to DeleteArchivedNodeStrategy(),
             getAllArchivedNodesObject to GetAllArchivedNodesStrategy(),
-            updateNodeBlock to UpdateNodeBlockStrategy(),
             makeNodePublicObject to MakeNodePublicStrategy(),
             makeNodePrivateObject to MakeNodePrivateStrategy(),
             getPublicNodeObject to GetPublicNodeStrategy(),
