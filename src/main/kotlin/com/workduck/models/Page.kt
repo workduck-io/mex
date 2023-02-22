@@ -1,8 +1,8 @@
 package com.workduck.models
 
-interface Page : Entity {
+interface Page<T:Element> : Entity {
 
-    var data: List<AdvancedElement>?
+    var data: List<T>?
 
     var dataOrder: MutableList<String>?
 
@@ -25,7 +25,7 @@ interface Page : Entity {
     var metadata : PageMetadata?
 
     companion object {
-        fun populatePageWithCreatedAndPublicFields(page: Page, storedPage: Page) {
+        fun populatePageWithCreatedAndPublicFields(page: Page<Element>, storedPage: Page<Element>) {
             page.createdAt = storedPage.createdAt
             page.createdBy = storedPage.createdBy
             page.publicAccess = storedPage.publicAccess

@@ -98,7 +98,7 @@ data class Snippet(
     @DynamoDBAttribute(attributeName = "createdAt")
     override var createdAt: Long? = Constants.getCurrentTime()
 
-) : Entity, Page {
+) : Entity, Page<AdvancedElement> {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")
@@ -109,7 +109,7 @@ data class Snippet(
     var sk: String = "$id${Constants.DELIMITER}$version"
 
     companion object {
-        fun setCreatedFieldsNull(page: Page){
+        fun setCreatedFieldsNull(page: Page<AdvancedElement>){
             page.createdAt = null
             page.createdBy = null
         }
