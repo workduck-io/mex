@@ -3,7 +3,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBConsumedWriteCapacityAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-write-capacity-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: ProvisionedWriteCapacityUnits
@@ -16,13 +16,26 @@ Resources:
       Dimensions:
         - Name: TableName
           Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, 'local'}-mex-backend-ddb-write-capacity-alarm"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "alarm"
+        - Key: "ResourceContext"
+          Value: "ddb-write-capacity-alarm"
+        - Key: "Owner"
+          Value: "varun"
 
 
   DDBConsumedReadCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBConsumedReadCapacityAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-read-capacity-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: ProvisionedWriteCapacityUnits
@@ -35,13 +48,26 @@ Resources:
       Dimensions:
         - Name: TableName
           Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, 'local'}-mex-backend-ddb-read-capacity-alarm"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "alarm"
+        - Key: "ResourceContext"
+          Value: "ddb-read-capacity-alarm"
+        - Key: "Owner"
+          Value: "varun"
 
 
   DDBReadThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBReadThrottleAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-read-throttle-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: ReadThrottleEvents
@@ -54,13 +80,26 @@ Resources:
       Dimensions:
         - Name: TableName
           Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, 'local'}-mex-backend-ddb-read-throttle-alarm"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "alarm"
+        - Key: "ResourceContext"
+          Value: "ddb-read-throttle-alarm"
+        - Key: "Owner"
+          Value: "varun"
 
 
   DDBWriteThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBWriteThrottleAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-write-throttle-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: WriteThrottleEvents
@@ -73,4 +112,17 @@ Resources:
       Dimensions:
         - Name: TableName
           Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, 'local'}-mex-backend-ddb-write-throttle-alarm"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "alarm"
+        - Key: "ResourceContext"
+          Value: "ddb-write-throttle-alarm"
+        - Key: "Owner"
+          Value: "varun"
 

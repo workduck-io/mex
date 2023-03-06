@@ -1,15 +1,26 @@
 Resources:
   PrivateSubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
+    Condition: IsProd
     Properties:
-      CacheSubnetGroupName: prod-private-subnet-group
+      CacheSubnetGroupName: '{opt:stage, self:provider.stage}-mex-${self:provider.region}-cache-subnet-group'
       Description: 'Private SubnetIDs of VPC'
       SubnetIds:
-        - "subnet-09c7244ba2b001dde"
-        - "subnet-02e5cc508f0c07cc6"
-        - "subnet-0d90d2fa73b9d966f"
+        - "subnet-0918c38185ff1df2b" #prod-mex-us-east-1a-private-subnet
+        - "subnet-0de0aff561a2d98be" #prod-mex-us-east-1b-private-subnet
+        - "subnet-0a23f28b49187c6e5" #prod-mex-us-east-1c-private-subnet
       Tags:
+        - Key: "Name"
+          Value: "{opt:stage, self:provider.stage}-mex-${self:provider.region}-cache-subnet-group"
         - Key: "Environment"
           Value: "prod"
         - Key: "Component"
-          Value: "redis"
+          Value: "mex"
+        - Key: "ResourceType"
+          Value: "subnet-group"
+        - Key: "ResourceContext"
+          Value: "resource-subnet-group"
+        - Key: "Region"
+          Value: "us-east-1"
+        - Key: "Owner"
+          Value: "varun"

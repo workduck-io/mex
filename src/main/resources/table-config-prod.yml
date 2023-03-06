@@ -4,7 +4,7 @@ Resources:
     Condition: IsProd
     DeletionPolicy: Retain
     Properties:
-      TableName: "${opt:stage, 'local'}-mex"
+      TableName: "${opt:stage, 'local'}-mex-backend-ddb"
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S
@@ -106,4 +106,15 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: expireAt
         Enabled: true
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, 'local'}-mex-backend-ddb"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "ddb"
+        - Key: "Owner"
+          Value: "varun"
 

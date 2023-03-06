@@ -2,15 +2,15 @@ Resources:
   DDBStreamSNS:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: 'dlq-sns-mex'
+      DisplayName: 'DLQ Notification - ${opt:stage, self:provider.stage}' # Email Subject
       TopicName: dlq-sns-${opt:stage, self:provider.stage}
       Subscription:
-       - Endpoint: "varun.garg@workduck.io"
-         Protocol: "email"
+        - Endpoint: "dlq-sns-aaaai5b2qhovh5vuzszayhinre@workduck-workspace.slack.com" #dlq-sns slack channel
+          Protocol: "email"
   DDBAlarmsSNS:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: 'ddb-alarms-mex'
+      DisplayName: 'DDB Notification - ${opt:stage, self:provider.stage}' # Email Subject
       TopicName: ddb-alarms-mex-${opt:stage, self:provider.stage}
       Subscription:
         - Endpoint: "ddb-alarms-aaaaiul5sicbiorxwhkybvam4a@workduck-workspace.slack.com"

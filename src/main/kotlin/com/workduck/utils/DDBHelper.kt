@@ -18,7 +18,10 @@ object DDBHelper {
         .build()
 
     fun getTableName() : String {
-        return "${getStage()}-mex"
+        return when(getStage()){
+            "prod" -> "${getStage()}-mex-backend-ddb"
+            else -> "${getStage()}-mex"
+        }
     }
 
     fun getStage() : String {

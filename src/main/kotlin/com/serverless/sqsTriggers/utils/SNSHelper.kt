@@ -7,7 +7,10 @@ import java.lang.Exception
 
 object SNSHelper {
 
-    fun getSNSTopicArn() : String = "arn:aws:sns:us-east-1:418506370286:dlq-sns-${DDBHelper.getStage()}"
+    fun getSNSTopicArn() : String = when(DDBHelper.getStage()){
+        "prod" -> "arn:aws:sns:us-east-1:455613468381:${DDBHelper.getStage()}-mex-backend-dlq-sns"
+         else -> "arn:aws:sns:us-east-1:418506370286:dlq-sns-${DDBHelper.getStage()}"
+    }
 
 
     fun publishExceptionToSNSTopic(exception: Exception, snsClient: SnsClient) {

@@ -72,9 +72,9 @@ package:
 
 plugins:
   - serverless-offline
-  #- serverless-domain-manager
   - serverless-prune-plugin
   - serverless-simple-alias
+
 custom:
   serverless-offline:
     noPrependStageInUrl: true
@@ -113,7 +113,7 @@ custom:
     useActiveAliasInGateway: true
     makeLambdasActive: true
     aliases: []
-  vpc: ${file(src/main/resources/vpc-config.yml)}
+  vpc: ${file(src/main/resources/vpc-details.yml)}
 
 
 functions:
@@ -128,8 +128,10 @@ resources:
   - ${file(src/main/resources/table-config-prod.yml)}
   - ${file(src/main/resources/table-config-staging.yml)}
   - ${file(src/main/resources/table-config-default.yml)}
+  - ${file(src/main/resources/queue-resources-prod.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
+  - ${file(src/main/resources/sns-resources-prod.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
   - ${file(src/main/resources/subnet-groups.yml)}
   - ${file(src/main/resources/ddb-alarms.yml)}
