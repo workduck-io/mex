@@ -114,6 +114,7 @@ custom:
     makeLambdasActive: true
     aliases: []
   vpc: ${file(src/main/resources/vpc-details.yml)}
+  sqsLambdasArn: ${file(src/main/resources/sqs-lambdas-arn.yml)}
 
 
 functions:
@@ -131,9 +132,9 @@ resources:
   - ${file(src/main/resources/queue-resources-prod.yml)}
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
-  - ${file(src/main/resources/sns-resources-prod.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
-  - ${file(src/main/resources/subnet-groups.yml)}
+  #- ${file(src/main/resources/subnet-groups.yml)}
   - ${file(src/main/resources/ddb-alarms.yml)}
   - ${file(src/main/resources/auto-scaling-policy.yml)}
   - ${file(src/main/resources/snapstart.yml)}
+  #- ${file(src/main/resources/sqs-lambdas-arn.yml)}

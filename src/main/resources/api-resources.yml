@@ -11,57 +11,38 @@ NamespaceDeleteWorker:
   handler: com.serverless.sqsTriggers.namespaceDeleteSQSWorkers.NamespaceDeleteWorker
   events:
     - sqs:
-        arn:
-          Fn::GetAtt:
-            - NamespaceDelete
-            - Arn
-        batchSize: 1
+        arn: '${self:custom.sqsLambdasArn.NamespaceDeleteWorker.${opt:stage, self:provider.stage}}'
 
 NamespaceDeleteDLQWorker:
   handler: com.serverless.sqsTriggers.namespaceDeleteSQSWorkers.NamespaceDeleteDLQWorker
   events:
     - sqs:
-        arn:
-          Fn::GetAtt:
-            - NamespaceDeleteDLQ
-            - Arn
+        arn: '${self:custom.sqsLambdasArn.NamespaceDeleteDLQWorker.${opt:stage, self:provider.stage}}'
 
 NodeDeleteWorker:
   handler: com.serverless.sqsTriggers.nodeDeleteSQSWorkers.NodeDeleteWorker
   events:
     - sqs:
-        arn:
-          Fn::GetAtt:
-            - NodeDelete
-            - Arn
+        arn: '${self:custom.sqsLambdasArn.NodeDeleteWorker.${opt:stage, self:provider.stage}}'
 
 NodeDeleteDLQWorker:
   handler: com.serverless.sqsTriggers.nodeDeleteSQSWorkers.NodeDeleteDLQWorker
   events:
     - sqs:
-        arn:
-          Fn::GetAtt:
-            - NodeDeleteDLQ
-            - Arn
+        arn: '${self:custom.sqsLambdasArn.NodeDeleteDLQWorker.${opt:stage, self:provider.stage}}'
 
 PublicNoteWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteWorker
   events:
     - sqs:
-        arn:
-          Fn::GetAtt:
-            - PublicNote
-            - Arn
+        arn: '${self:custom.sqsLambdasArn.PublicNoteWorker.${opt:stage, self:provider.stage}}'
   vpc: ${self:custom.vpc.${opt:stage, self:provider.stage}}
 
-PublicNoteSQSWorker:
+PublicNoteDLQWorker:
   handler: com.serverless.sqsTriggers.publicnoteSQSWorkers.PublicNoteDLQWorker
   events:
     - sqs:
-        arn:
-          Fn::GetAtt:
-            - PublicNoteDLQ
-            - Arn
+        arn: ${self:custom.sqsLambdasArn.PublicNoteDLQWorker.${opt:stage, self:provider.stage}}
   vpc: ${self:custom.vpc.${opt:stage, self:provider.stage}}
 
 
@@ -178,7 +159,7 @@ Node:
         private: true
 
     - http:
-        path: /shared/node/{nodeID}
+        path: /shared/node/{id}
         method: get
         private: true
 
@@ -332,7 +313,7 @@ Node:
         private: true
 
     - http:
-        path: /v1/shared/node/{nodeID}
+        path: /v1/shared/node/{id}
         method: get
         private: true
 
@@ -654,7 +635,7 @@ Namespace:
         private: true
 
     - http:
-        path: /v1/namespace/{namespaceID}/path/{path}
+        path: /v1/namespace/{id}/path/{path}
         method: get
         private: true
 

@@ -1,21 +1,21 @@
 Resources:
-  PublicNote:
+  PublicNoteProd:
     Type: "AWS::SQS::Queue"
     Condition: IsProd
     Properties:
-      QueueName: ${opt:stage, self:provider.stage}-mex-backend-public-note-queue
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-public-note-queue.fifo
       FifoQueue: true
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "PublicNoteDLQ"
+            - "PublicNoteDLQProd"
             - "Arn"
         maxReceiveCount: 3
       # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
       VisibilityTimeout: 120
       Tags:
         - Key: "Name"
-          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue.fifo"
         - Key: "Environment"
           Value: "prod"
         - Key: "Component"
@@ -29,15 +29,15 @@ Resources:
 
 
 
-  PublicNoteDLQ:
+  PublicNoteDLQProd:
     Type: "AWS::SQS::Queue"
     Condition: IsProd
     Properties:
-      QueueName: ${opt:stage, self:provider.stage}-mex-backend-public-note-dlq
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-public-note-dlq.fifo
       FifoQueue: true
       Tags:
         - Key: "Name"
-          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue.fifo"
         - Key: "Environment"
           Value: "prod"
         - Key: "Component"
@@ -49,22 +49,22 @@ Resources:
         - Key: "Owner"
           Value: "varun"
 
-  NamespaceDelete:
+  NamespaceDeleteProd:
     Type: "AWS::SQS::Queue"
     Condition: IsProd
     Properties:
-      QueueName: ${opt:stage, self:provider.stage}-mex-backend-namespace-delete-queue
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-namespace-delete-queue.fifo
       FifoQueue: true
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "NamespaceDeleteDLQ"
+            - "NamespaceDeleteDLQProd"
             - "Arn"
         maxReceiveCount: 3
       VisibilityTimeout: 120
       Tags:
         - Key: "Name"
-          Value: "${opt:stage, self:provider.stage}-mex-backend-namespace-delete-queue"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-namespace-delete-queue.fifo"
         - Key: "Environment"
           Value: "prod"
         - Key: "Component"
@@ -76,15 +76,15 @@ Resources:
         - Key: "Owner"
           Value: "varun"
 
-  NamespaceDeleteDLQ:
+  NamespaceDeleteDLQProd:
     Type: "AWS::SQS::Queue"
     Condition: IsProd
     Properties:
-      QueueName: ${opt:stage, self:provider.stage}-mex-backend-namespace-delete-dlq
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-namespace-delete-dlq.fifo
       FifoQueue: true
       Tags:
         - Key: "Name"
-          Value: "${opt:stage, self:provider.stage}-mex-backend-namespace-delete-dlq"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-namespace-delete-dlq.fifo"
         - Key: "Environment"
           Value: "prod"
         - Key: "Component"
@@ -97,22 +97,22 @@ Resources:
           Value: "varun"
 
 
-  NodeDelete:
+  NodeDeleteProd:
     Type: "AWS::SQS::Queue"
     Condition: IsProd
     Properties:
-      QueueName: ${opt:stage, self:provider.stage}-mex-backend-node-delete-queue
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-node-delete-queue.fifo
       FifoQueue: true
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "NodeDeleteDLQ"
+            - "NodeDeleteDLQProd"
             - "Arn"
         maxReceiveCount: 3
       VisibilityTimeout: 120
       Tags:
         - Key: "Name"
-          Value: "${opt:stage, self:provider.stage}-mex-backend-node-delete-queue"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-node-delete-queue.fifo"
         - Key: "Environment"
           Value: "prod"
         - Key: "Component"
@@ -126,11 +126,11 @@ Resources:
 
 
 
-  NodeDeleteDLQ:
+  NodeDeleteDLQProd:
     Type: "AWS::SQS::Queue"
     Condition: IsProd
     Properties:
-      QueueName: ${opt:stage, self:provider.stage}-mex-backend-node-delete-dlq
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-node-delete-dlq.fifo
       FifoQueue: true
       Tags:
         - Key: "Name"

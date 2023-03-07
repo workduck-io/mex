@@ -1,34 +1,34 @@
 Resources:
-  ElasticCacheCluster:
-    Type: AWS::ElastiCache::ReplicationGroup
-    Condition: IsProd
-    Properties:
-      ReplicationGroupId: ${opt:stage, self:provider.stage}-mex-${self:provider.region}-redis-cache
-      ReplicationGroupDescription: "Redis cache cluster"
-      MultiAZEnabled: true
-      AutomaticFailoverEnabled: true
-      AutoMinorVersionUpgrade: true
-      Engine: redis
-      CacheNodeType: cache.t3.micro
-      NumCacheClusters: 3
-      SecurityGroupIds:
-        - sg-03187fa066423b634
-      CacheSubnetGroupName: !Ref PrivateSubnetGroup
-      Tags:
-        - Key: "Name"
-          Value: "${opt:stage, self:provider.stage}-mex-${self:provider.region}-redis-cache"
-        - Key: "Environment"
-          Value: "prod"
-        - Key: "Component"
-          Value: "mex"
-        - Key: "ResourceType"
-          Value: "cache"
-        - Key: "ResourceContext"
-          Value: "redis-cache"
-        - Key: "Region"
-          Value: "us-east-1"
-        - Key: "Owner"
-          Value: "varun"
+#  ElasticCacheCluster:
+#    Type: AWS::ElastiCache::ReplicationGroup
+#    Condition: IsProd
+#    Properties:
+#      ReplicationGroupId: ${opt:stage, self:provider.stage}-mex-${self:provider.region}-redis-cache
+#      ReplicationGroupDescription: "Redis cache cluster"
+#      MultiAZEnabled: true
+#      AutomaticFailoverEnabled: true
+#      AutoMinorVersionUpgrade: true
+#      Engine: redis
+#      CacheNodeType: cache.t3.micro
+#      NumCacheClusters: 3
+#      SecurityGroupIds:
+#        - sg-03187fa066423b634
+#      CacheSubnetGroupName: !Ref PrivateSubnetGroup
+#      Tags:
+#        - Key: "Name"
+#          Value: "${opt:stage, self:provider.stage}-mex-${self:provider.region}-redis-cache"
+#        - Key: "Environment"
+#          Value: "prod"
+#        - Key: "Component"
+#          Value: "mex"
+#        - Key: "ResourceType"
+#          Value: "cache"
+#        - Key: "ResourceContext"
+#          Value: "redis-cache"
+#        - Key: "Region"
+#          Value: "us-east-1"
+#        - Key: "Owner"
+#          Value: "varun"
 
   PublicNoteElasticCacheCluster: # same functionality as above, just different name and env.
     Type: AWS::ElastiCache::ReplicationGroup

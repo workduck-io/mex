@@ -15,20 +15,7 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
-      Tags:
-        - Key: "Name"
-          Value: "${opt:stage, 'local'}-mex-backend-ddb-write-capacity-alarm"
-        - Key: "Environment"
-          Value: "prod"
-        - Key: "Component"
-          Value: "mex-backend"
-        - Key: "ResourceType"
-          Value: "alarm"
-        - Key: "ResourceContext"
-          Value: "ddb-write-capacity-alarm"
-        - Key: "Owner"
-          Value: "varun"
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
 
 
   DDBConsumedReadCapacityAlarm:
@@ -47,20 +34,7 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
-      Tags:
-        - Key: "Name"
-          Value: "${opt:stage, 'local'}-mex-backend-ddb-read-capacity-alarm"
-        - Key: "Environment"
-          Value: "prod"
-        - Key: "Component"
-          Value: "mex-backend"
-        - Key: "ResourceType"
-          Value: "alarm"
-        - Key: "ResourceContext"
-          Value: "ddb-read-capacity-alarm"
-        - Key: "Owner"
-          Value: "varun"
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
 
 
   DDBReadThrottleAlarm:
@@ -79,20 +53,7 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
-      Tags:
-        - Key: "Name"
-          Value: "${opt:stage, 'local'}-mex-backend-ddb-read-throttle-alarm"
-        - Key: "Environment"
-          Value: "prod"
-        - Key: "Component"
-          Value: "mex-backend"
-        - Key: "ResourceType"
-          Value: "alarm"
-        - Key: "ResourceContext"
-          Value: "ddb-read-throttle-alarm"
-        - Key: "Owner"
-          Value: "varun"
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
 
 
   DDBWriteThrottleAlarm:
@@ -111,18 +72,4 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !If [IsProd, !Ref mexDataProd, !Ref mexDataTest]
-      Tags:
-        - Key: "Name"
-          Value: "${opt:stage, 'local'}-mex-backend-ddb-write-throttle-alarm"
-        - Key: "Environment"
-          Value: "prod"
-        - Key: "Component"
-          Value: "mex-backend"
-        - Key: "ResourceType"
-          Value: "alarm"
-        - Key: "ResourceContext"
-          Value: "ddb-write-throttle-alarm"
-        - Key: "Owner"
-          Value: "varun"
-
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]

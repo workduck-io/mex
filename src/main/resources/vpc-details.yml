@@ -1,8 +1,8 @@
 prod:
   subnetIds:
-    - "subnet-09c7244ba2b001dde"
-    - "subnet-02e5cc508f0c07cc6"
-    - "subnet-0d90d2fa73b9d966f"
+    - "subnet-0918c38185ff1df2b" #prod-mex-us-east-1a-private-subnet
+    - "subnet-0de0aff561a2d98be" #prod-mex-us-east-1b-private-subnet
+    - "subnet-0a23f28b49187c6e5" #prod-mex-us-east-1c-private-subnet
   securityGroupIds:
     - "sg-03187fa066423b634"
 

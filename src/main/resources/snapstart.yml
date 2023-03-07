@@ -69,7 +69,7 @@ Resources:
       Properties:
         SnapStart:
           ApplyOn: PublishedVersions
-    PublicNoteSQSWorkerLambdaFunction:
+    PublicNoteDLQWorkerLambdaFunction:
       Type: AWS::Lambda::Function
       Properties:
         SnapStart:

@@ -1,0 +1,50 @@
+NamespaceDeleteWorker:
+  prod:
+    Fn::GetAtt: ["NamespaceDeleteProd" , "Arn"]
+  stage:
+    Fn::GetAtt: ["NamespaceDelete" , "Arn"]
+  test:
+    Fn::GetAtt: [ "NamespaceDelete" , "Arn" ]
+
+NamespaceDeleteDLQWorker:
+  prod:
+    Fn::GetAtt: ["NamespaceDeleteDLQProd" , "Arn"]
+  stage:
+    Fn::GetAtt: ["NamespaceDeleteDLQ" , "Arn"]
+  test:
+    Fn::GetAtt: [ "NamespaceDeleteDLQ" , "Arn" ]
+
+
+NodeDeleteWorker:
+  prod:
+    Fn::GetAtt: ["NodeDeleteProd" , "Arn"]
+  stage:
+    Fn::GetAtt: ["NodeDelete" , "Arn"]
+  test:
+    Fn::GetAtt: [ "NodeDelete" , "Arn" ]
+
+NodeDeleteDLQWorker:
+  prod:
+    Fn::GetAtt: ["NodeDeleteDLQProd" , "Arn"]
+  stage:
+    Fn::GetAtt: ["NodeDeleteDLQ" , "Arn"]
+  test:
+    Fn::GetAtt: [ "NodeDeleteDLQ" , "Arn" ]
+
+
+
+PublicNoteWorker:
+  prod:
+    Fn::GetAtt: ["PublicNoteProd" , "Arn"]
+  stage:
+    Fn::GetAtt: ["PublicNote" , "Arn"]
+  test:
+    Fn::GetAtt: [ "PublicNote" , "Arn" ]
+
+PublicNoteDLQWorker:
+  prod:
+    Fn::GetAtt: ["PublicNoteDLQProd" , "Arn"]
+  stage:
+    Fn::GetAtt: ["PublicNoteDLQ" , "Arn"]
+  test:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
