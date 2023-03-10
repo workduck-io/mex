@@ -38,10 +38,20 @@ provider:
   iam:
     role:
       statements: ${file(src/main/resources/permissions.yml)}
+  endpointType: PRIVATE
+  apiGateway:
+    resourcePolicy:
+    - Effect: Allow
+      Principal: '*'
+      Action: execute-api:Invoke
+      Resource: arn:aws:execute-api:us-east-1:*
+      Condition:
+        StringEquals:
+          aws:sourceVpc: ${self:custom.vpc.vpc.${opt:stage, self:provider.stage}}
 
   httpApi:
     cors:
-      allowedOrigins: 
+      allowedOrigins:
         - "*"
       allowedHeaders:
         - Content-Type
@@ -53,18 +63,18 @@ provider:
         - X-Amzn-Trace-Id
         - mex-workspace-id
         - wd-request-id
-    authorizers:
-      mexAuthorizer:
-        identitySource: $request.header.Authorization
-        issuerUrl:
-          Fn::Join:
-            - ''
-            - - 'https://cognito-idp.'
-              - '${opt:region, self:provider.region}'
-              - '.amazonaws.com/'
-              - '${self:custom.cognitoPoolMap.${opt:stage, self:provider.stage}}' # UserPool ID
-        audience:
-          - '${self:custom.cognitoClientMap.${opt:stage, self:provider.stage}}' # Client ID for Cognito Pool
+#    authorizers:
+#      mexAuthorizer:
+#        identitySource: $request.header.Authorization
+#        issuerUrl:
+#          Fn::Join:
+#            - ''
+#            - - 'https://cognito-idp.'
+#              - '${opt:region, self:provider.region}'
+#              - '.amazonaws.com/'
+#              - '${self:custom.cognitoPoolMap.${opt:stage, self:provider.stage}}' # UserPool ID
+#        audience:
+#          - '${self:custom.cognitoClientMap.${opt:stage, self:provider.stage}}' # Client ID for Cognito Pool
   logs: ${file(src/main/resources/api-gateway-logs.yml)}
 
 package:
@@ -133,8 +143,6 @@ resources:
   - ${file(src/main/resources/queue-resources.yml)}
   - ${file(src/main/resources/sns-resources.yml)}
   - ${file(src/main/resources/elasticache-resources.yml)}
-  #- ${file(src/main/resources/subnet-groups.yml)}
   - ${file(src/main/resources/ddb-alarms.yml)}
   - ${file(src/main/resources/auto-scaling-policy.yml)}
   - ${file(src/main/resources/snapstart.yml)}
-  #- ${file(src/main/resources/sqs-lambdas-arn.yml)}

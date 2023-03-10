@@ -40,3 +40,7 @@
     - ec2:DescribeNetworkInterfaces
     - ec2:DeleteNetworkInterface
   Resource: "*"
+- Effect: Allow
+  Action:
+    - execute-api:Invoke
+  Resource: "*"
