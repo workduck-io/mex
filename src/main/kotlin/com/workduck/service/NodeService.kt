@@ -55,6 +55,7 @@ import com.workduck.models.NodeOperationType
 import com.workduck.models.Page
 import com.workduck.models.Workspace
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.Element
 import com.workduck.models.exceptions.WDNodeSizeLargeException
 import com.workduck.repositories.NodeRepository
 import com.workduck.repositories.PageRepository
@@ -999,7 +1000,7 @@ class NodeService( // Todo: Inject them from handlers
 
     fun updateNode(node: Node, storedNode: Node) : Node = runBlocking {
 
-        Page.populatePageWithCreatedAndPublicFields(node, storedNode)
+        Page.populatePageWithCreatedAndPublicFields(node as Page<Element>, storedNode as Page<Element>)
 
         node.dataOrder = createDataOrderForPage(node)
 

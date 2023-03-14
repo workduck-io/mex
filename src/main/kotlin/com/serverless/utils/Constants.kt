@@ -19,6 +19,7 @@ object Constants {
     const val NODE_ID_PREFIX = "NODE_"
     const val NAMESPACE_ID_PREFIX = "NAMESPACE_"
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
+    const val CAPTURE_ID_PREFIX = "CAPTURE_"
     const val NANO_ID_SIZE = 21
     const val MAX_NODE_IDS_FOR_BATCH_GET = 25
     const val DDB_MAX_ITEM_SIZE = 350000

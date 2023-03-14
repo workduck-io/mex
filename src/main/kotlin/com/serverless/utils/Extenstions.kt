@@ -10,6 +10,7 @@ import com.workduck.models.Node
 import com.workduck.models.Page
 import com.workduck.models.Snippet
 import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.AdvancedElement
 import com.workduck.utils.Helper
 import com.workduck.utils.PageHelper
 import kotlinx.coroutines.Deferred
@@ -118,6 +119,10 @@ fun String.isValidSnippetID(): Boolean {
     return this.isValidID(Constants.SNIPPET_ID_PREFIX)
 }
 
+fun String.isValidCaptureID(): Boolean {
+    return this.isValidID(Constants.CAPTURE_ID_PREFIX)
+}
+
 fun String.isValidNamespaceID(): Boolean {
     return this.isValidID(Constants.NAMESPACE_ID_PREFIX)
 }
@@ -192,6 +197,6 @@ fun Entity.getRoughSizeOfEntity() : Int{
 }
 
 
-fun Page.orderPage() : Page {
+fun Page<AdvancedElement>.orderPage() : Page<AdvancedElement> {
     return PageHelper.orderBlocks(this)
 }

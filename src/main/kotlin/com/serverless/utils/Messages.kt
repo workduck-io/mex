@@ -84,6 +84,9 @@ object Messages {
     const val ERROR_CLONING_SNIPPET = "Error cloning snippet"
     const val ERROR_UPDATING_SNIPPET_METADATA = "Error updating snippet metadata"
 
+    const val INVALID_CAPTURE_ID = "Invalid CaptureID"
+    const val ERROR_CREATING_SMART_CAPTURE = "Error creating smart capture"
+
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"
 

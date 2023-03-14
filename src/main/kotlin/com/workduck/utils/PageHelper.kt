@@ -1,10 +1,11 @@
 package com.workduck.utils
 
+import com.workduck.models.AdvancedElement
 import com.workduck.models.Page
 
 object PageHelper {
 
-    fun orderBlocks(page: Page): Page =
+    fun orderBlocks(page: Page<AdvancedElement>): Page<AdvancedElement> =
             page.apply {
                 page.data?.let { data ->
                     (
@@ -18,7 +19,7 @@ object PageHelper {
                 }
             }
 
-    fun createDataOrderForPage(page: Page): MutableList<String> {
+    fun createDataOrderForPage(page: Page<AdvancedElement>): MutableList<String> {
 
         val list = mutableListOf<String>()
         if(page.data.isNullOrEmpty()) return mutableListOf()
@@ -30,7 +31,7 @@ object PageHelper {
 
     /* If a block has been changed, change its metadata as well */
     /* If the page has changed, return true else false */
-    fun comparePageDataWithStoredPage(page: Page, storedPage: Page) : Boolean{
+    fun comparePageDataWithStoredPage(page: Page<AdvancedElement>, storedPage: Page<AdvancedElement>) : Boolean{
         var pageChanged = false
 
         /* in case a block has been deleted */
@@ -78,7 +79,7 @@ object PageHelper {
     }
 
 
-    fun mergePageVersions(page: Page, storedPage: Page) {
+    fun mergePageVersions(page: Page<AdvancedElement>, storedPage: Page<AdvancedElement>) {
 
         page.version = storedPage.version
 

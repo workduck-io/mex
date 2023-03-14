@@ -3,7 +3,8 @@ package com.workduck.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 class BlockElement(
-    val refId: String
+    val captureId: String,
+    val configId: String
 ) : Element {
     /**
      * Todo: Data to be loaded by the data loader instance which talks to entity db

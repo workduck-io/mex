@@ -360,7 +360,13 @@ Node:
         method: patch
         private: true
 
-
+SmartCapture:
+  handler: com.serverless.smartCaptureHandlers.SmartCaptureHandler
+  events:
+    - httpApi:
+        path: /capture
+        method: post
+        authorizer: mexAuthorizer
 
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler

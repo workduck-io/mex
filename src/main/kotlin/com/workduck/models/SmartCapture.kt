@@ -27,11 +27,11 @@ data class SmartCapture(
     @JsonProperty("itemType")
     @DynamoDBAttribute(attributeName = "itemType")
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
-    override var itemType: ItemType = ItemType.Snippet,
+    override var itemType: ItemType = ItemType.SmartCapture,
 
     @JsonProperty("title")
     @DynamoDBAttribute(attributeName = "title")
-    override var title: String = "New Snippet",
+    override var title: String = "New Capture",
 
     @JsonProperty("itemStatus")
     @DynamoDBAttribute(attributeName = "itemStatus")
@@ -39,16 +39,9 @@ data class SmartCapture(
     var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
     @JsonProperty("data")
-    @DynamoDBTypeConverted(converter = NodeDataConverter::class)
+    @DynamoDBTypeConverted(converter = CaptureDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<BlockElement>? = null,
-
-    @JsonProperty("metadata")
-    @JsonSerialize(converter = PageMetadataSerializer::class)
-    @JsonDeserialize(converter = PageMetadataDeserializer::class)
-    @DynamoDBTypeConverted(converter = PageMetadataConverter::class)
-    @DynamoDBAttribute(attributeName = "metadata")
-    override var metadata: PageMetadata?= null,
 
     @DynamoDBAttribute(attributeName = "dataOrder")
     override var dataOrder: MutableList<String>? = null,
@@ -64,25 +57,20 @@ data class SmartCapture(
     @DynamoDBAttribute(attributeName = "lastEditedBy")
     override var lastEditedBy: String? = null,
 
-    @JsonProperty("referenceSnippet")
-    @DynamoDBAttribute(attributeName = "referenceSnippet")
-    @DynamoDBTypeConverted(converter = SnippetIdentifierConverter::class)
-    var referenceSnippet : SnippetIdentifier? = null,
-
-//    @JsonProperty("namespaceIdentifier")
-//    @JsonDeserialize(converter = NamespaceIdentifierDeserializer::class)
-//    @JsonSerialize(converter = IdentifierSerializer::class)
-//    @DynamoDBTypeConverted(converter = NamespaceIdentifierConverter::class)
-//    @DynamoDBAttribute(attributeName = "namespaceIdentifier")
-//    override var namespaceIdentifier: NamespaceIdentifier? = null,
+    @JsonProperty("createdAt")
+    @DynamoDBAttribute(attributeName = "createdAt")
+    override var createdAt: Long? = Constants.getCurrentTime(),
 
     @JsonProperty("publicAccess")
     @DynamoDBAttribute(attributeName = "publicAccess")
     override var publicAccess: Boolean = false,
 
-    @JsonProperty("createdAt")
-    @DynamoDBAttribute(attributeName = "createdAt")
-    override var createdAt: Long? = Constants.getCurrentTime()
+    @JsonProperty("metadata")
+    @JsonSerialize(converter = PageMetadataSerializer::class)
+    @JsonDeserialize(converter = PageMetadataDeserializer::class)
+    @DynamoDBTypeConverted(converter = PageMetadataConverter::class)
+    @DynamoDBAttribute(attributeName = "metadata")
+    override var metadata: PageMetadata?= null,
 
 ) : Entity, Page<BlockElement> {
 
@@ -93,7 +81,6 @@ data class SmartCapture(
     @JsonProperty("sk")
     @DynamoDBRangeKey(attributeName = "SK")
     var sk: String = "$id${Constants.DELIMITER}$version"
-
     companion object {
         fun setCreatedFieldsNull(page: Page<BlockElement>){
             page.createdAt = null
