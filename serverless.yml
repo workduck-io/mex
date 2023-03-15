@@ -49,33 +49,8 @@ provider:
         StringEquals:
           aws:sourceVpc: ${self:custom.vpc.vpc.${opt:stage, self:provider.stage}}
 
-  httpApi:
-    cors:
-      allowedOrigins:
-        - "*"
-      allowedHeaders:
-        - Content-Type
-        - X-Amz-Date
-        - Authorization
-        - X-Api-Key
-        - X-Amz-Security-Token
-        - X-Amz-User-Agent
-        - X-Amzn-Trace-Id
-        - mex-workspace-id
-        - wd-request-id
-#    authorizers:
-#      mexAuthorizer:
-#        identitySource: $request.header.Authorization
-#        issuerUrl:
-#          Fn::Join:
-#            - ''
-#            - - 'https://cognito-idp.'
-#              - '${opt:region, self:provider.region}'
-#              - '.amazonaws.com/'
-#              - '${self:custom.cognitoPoolMap.${opt:stage, self:provider.stage}}' # UserPool ID
-#        audience:
-#          - '${self:custom.cognitoClientMap.${opt:stage, self:provider.stage}}' # Client ID for Cognito Pool
-  logs: ${file(src/main/resources/api-gateway-logs.yml)}
+  logs:
+    restApi: ${file(src/main/resources/api-gateway-logs.yml)}
 
 package:
   artifact: target/mex-dev.jar
