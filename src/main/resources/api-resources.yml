@@ -60,7 +60,7 @@ Node:
     # batch get nodes by ids
     - http:
         path: /node/ids
-        method: get
+        method: post
         private: true
 
     - http:
@@ -214,7 +214,7 @@ Node:
     # batch get nodes by ids
     - http:
         path: /v1/node/ids
-        method: get
+        method: post
         private: true
 
     - http:

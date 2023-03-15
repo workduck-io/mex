@@ -7,7 +7,7 @@ class NodeStrategyFactory {
 
         const val getNodeObject = "GET /node/{id}"
 
-        const val batchGetNodeObject = "GET /node/ids"
+        const val batchGetNodeObject = "POST /node/ids"
 
         const val createNodeObject = "POST /node"
 

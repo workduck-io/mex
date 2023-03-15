@@ -1,0 +1,11 @@
+- name: ${opt:stage, 'local'}-api-key
+  usagePlan:
+    name: default
+    quota:
+      limit: 100000
+      period: MONTH
+    throttle:
+      rateLimit: 1000
+      burstLimit: 2000
+
+#https://towardsaws.com/protect-your-apis-by-creating-api-keys-using-serverless-framework-fe662ad37447

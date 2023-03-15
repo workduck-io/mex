@@ -1,0 +1,7 @@
+- Effect: Allow
+  Principal: '*'
+  Action: execute-api:Invoke
+  Resource: arn:aws:execute-api:us-east-1:*
+  Condition:
+    StringEquals:
+      aws:sourceVpc: ${self:custom.vpc.vpc.${opt:stage, self:provider.stage}}

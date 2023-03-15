@@ -40,14 +40,7 @@ provider:
       statements: ${file(src/main/resources/permissions.yml)}
   endpointType: PRIVATE
   apiGateway:
-    resourcePolicy:
-    - Effect: Allow
-      Principal: '*'
-      Action: execute-api:Invoke
-      Resource: arn:aws:execute-api:us-east-1:*
-      Condition:
-        StringEquals:
-          aws:sourceVpc: ${self:custom.vpc.vpc.${opt:stage, self:provider.stage}}
+    resourcePolicy: ${file(src/main/resources/api-gateway-resource-policy.yml)}
 
   logs:
     restApi: ${file(src/main/resources/api-gateway-logs.yml)}
@@ -59,6 +52,7 @@ plugins:
   - serverless-offline
   - serverless-prune-plugin
   - serverless-simple-alias
+  - serverless-add-api-key
 
 custom:
   serverless-offline:
@@ -67,19 +61,6 @@ custom:
     ignoreJWTSignature: true
     noAuth: true
     httpPort: 4000
-#  customDomain:
-#    rest:
-#      domainName: api-${opt:stage, self:provider.stage}.workduck.io
-#      basePath: 'mex'
-#      stage: ${opt:stage, self:provider.stage}
-#      createRoute53Record: true
-#    http:
-#      domainName: http-${opt:stage, self:provider.stage}.workduck.io
-#      basePath: 'mex'
-#      stage: ${opt:stage, self:provider.stage}
-#      createRoute53Record: true
-#      endpointType: regional
-#      apiType: http
 
   cognitoPoolMap:
     dev: us-east-1_Zu7FAh7hj
@@ -87,20 +68,25 @@ custom:
     test: us-east-1_O5YTlVrCd
     local: us-east-1_Zu7FAh7hj
     prod: us-east-1_pMnpx4CIF #prod account
+
   cognitoClientMap:
     dev: 6pvqt64p0l2kqkk2qafgdh13qe
     staging: 6pvqt64p0l2kqkk2qafgdh13qe
     test: 25qd6eq6vv3906osgv8v3f8c6v
     local: 6pvqt64p0l2kqkk2qafgdh13qe
     prod: 5l9s56u8o1use2k56al76sce9f #prod account
+
   simpleAlias:
     activeAliasName: 'latest'
     useActiveAliasInGateway: true
     makeLambdasActive: true
     aliases: []
+
   vpc: ${file(src/main/resources/vpc-details.yml)}
+
   sqsLambdasArn: ${file(src/main/resources/sqs-lambdas-arn.yml)}
 
+  apiKeys: ${file(src/main/resources/api-gateway-keys.yml)}
 
 functions:
   - ${file(src/main/resources/api-resources.yml)}
