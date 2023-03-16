@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.serverless.models.Header
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.responses.CaptureEntity
@@ -11,6 +12,7 @@ import com.serverless.utils.SmartCaptureHelper
 import com.workduck.models.SmartCapture
 import com.workduck.repositories.*
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.ExternalLambdas.*
 import com.workduck.utils.Helper
 import com.workduck.utils.extensions.createSmartCaptureObjectFromSmartCaptureRequest
 
@@ -32,18 +34,24 @@ class SmartCaptureService {
     private val pageRepository: PageRepository<SmartCapture> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val repository: Repository<SmartCapture> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
 
-    fun createSmartCapture(wdRequest: WDRequest, userID: String, workspaceID: String): CaptureEntity {
+    fun createSmartCapture(wdRequest: WDRequest, userID: String, workspaceID: String, bearerToken: String): CaptureEntity {
         val request = wdRequest as SmartCaptureRequest
         val smartCapture: SmartCapture = request.createSmartCaptureObjectFromSmartCaptureRequest(userID, workspaceID)
         setMetadata(smartCapture)
-        // TODO call the entity lambda for capture creation
-        println("Before")
-        val cap = SmartCaptureHelper.serializeRequestToEntity(request)
-        println(objectMapper.writeValueAsString(cap))
-        println("done 1st phase")
-        println("after")
         smartCaptureRepository.createSmartCapture(smartCapture)
-        return cap
+
+        // Invoke the capture lambda
+        val capture = SmartCaptureHelper.serializeRequestToEntity(request)
+        val payload = LambdaPayload(
+            body = objectMapper.writeValueAsString(capture),
+            path = RoutePaths.CREATE_CAPTURE,
+            httpMethod = HttpMethods.POST,
+            headers = Header(workspaceID = smartCapture.workspaceIdentifier.id, bearerToken),
+            requestContext = RequestContext(resourcePath = RoutePaths.CREATE_CAPTURE, httpMethod = HttpMethods.POST),
+            routeKey = "${HttpMethods.POST} ${RoutePaths.CREATE_CAPTURE}"
+            )
+        Helper.invokeLambda(objectMapper.writeValueAsString(payload), LambdaFunctionNames.CREATE_CAPTURE_LAMBDA)
+        return capture
     }
 
     private fun setMetadata(smartCapture: SmartCapture){

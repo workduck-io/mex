@@ -16,9 +16,7 @@ import com.serverless.utils.Helper.validateTokenAndWorkspace
 
 class SmartCaptureHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     companion object {
-
         private val smartCaptureService = SmartCaptureService()
-
         private val LOG = LogManager.getLogger(SmartCaptureHandler::class.java)
 
         val json = """

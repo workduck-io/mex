@@ -1,7 +1,11 @@
 package com.workduck.utils
 
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.lambda.AWSLambdaClient
+import com.amazonaws.services.lambda.model.InvocationType
+import com.amazonaws.services.lambda.model.InvokeRequest
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -115,7 +119,19 @@ object Helper {
         return finalKeyValueMap
     }
 
+    fun invokeLambda(payload: String, functionName: String) {
+        val lambdaClient = AWSLambdaClient.builder()
+            .withRegion(Regions.US_EAST_1)
+            .build()
 
+        val res = lambdaClient.invoke(InvokeRequest()
+            .withFunctionName(functionName)
+            .withInvocationType(InvocationType.RequestResponse)
+            .withPayload(payload.trimIndent()))
+
+        println(res.statusCode)
+        println(String(res.payload.array()))
+    }
 
 
 
