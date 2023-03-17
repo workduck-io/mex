@@ -62,20 +62,6 @@ custom:
     noAuth: true
     httpPort: 4000
 
-  cognitoPoolMap:
-    dev: us-east-1_Zu7FAh7hj
-    staging: us-east-1_Zu7FAh7hj
-    test: us-east-1_O5YTlVrCd
-    local: us-east-1_Zu7FAh7hj
-    prod: us-east-1_pMnpx4CIF #prod account
-
-  cognitoClientMap:
-    dev: 6pvqt64p0l2kqkk2qafgdh13qe
-    staging: 6pvqt64p0l2kqkk2qafgdh13qe
-    test: 25qd6eq6vv3906osgv8v3f8c6v
-    local: 6pvqt64p0l2kqkk2qafgdh13qe
-    prod: 5l9s56u8o1use2k56al76sce9f #prod account
-
   simpleAlias:
     activeAliasName: 'latest'
     useActiveAliasInGateway: true
@@ -83,9 +69,7 @@ custom:
     aliases: []
 
   vpc: ${file(src/main/resources/vpc-details.yml)}
-
   sqsLambdasArn: ${file(src/main/resources/sqs-lambdas-arn.yml)}
-
   apiKeys: ${file(src/main/resources/api-gateway-keys.yml)}
 
 functions:

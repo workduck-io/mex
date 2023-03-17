@@ -10,7 +10,6 @@ object Helper {
 
     fun validateTokenAndWorkspace(input: Input){
         if(!Helper.validateWorkspace(input.headers.workspaceID, input.tokenBody.workspaceIDList)){
-            println("Resolved Input : ${Gson().toJson(input)}")
             throw UnauthorizedException("Not Authorized for the requested workspace")
         }
 
