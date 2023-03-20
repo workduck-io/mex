@@ -2,6 +2,7 @@ package com.workduck.utils.ExternalLambdas
 
 object RoutePaths {
     const val CREATE_CAPTURE = "/capture"
+    const val GET_CAPTURE = "/config/{configId}/capture/{captureId}"
 }
 
 object HttpMethods {

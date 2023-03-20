@@ -7,9 +7,11 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.serverless.models.Header
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.models.responses.CaptureEntity
 import com.serverless.utils.SmartCaptureHelper
+import com.serverless.utils.withNotFoundException
+import com.workduck.models.CaptureEntity
 import com.workduck.models.SmartCapture
+import com.workduck.models.exceptions.WDNotFoundException
 import com.workduck.repositories.*
 import com.workduck.utils.DDBHelper
 import com.workduck.utils.ExternalLambdas.*
@@ -50,8 +52,25 @@ class SmartCaptureService {
             requestContext = RequestContext(resourcePath = RoutePaths.CREATE_CAPTURE, httpMethod = HttpMethods.POST),
             routeKey = "${HttpMethods.POST} ${RoutePaths.CREATE_CAPTURE}"
             )
-        Helper.invokeLambda(objectMapper.writeValueAsString(payload), LambdaFunctionNames.CREATE_CAPTURE_LAMBDA)
+        Helper.invokeLambda(objectMapper.writeValueAsString(payload), LambdaFunctionNames.CAPTURE_LAMBDA)
         return capture
+    }
+
+    fun getSmartCapture(captureID: String, workspaceID: String, bearerToken: String): CaptureEntity? {
+        val smartCapture = smartCaptureRepository.getSmartCapture(captureID, workspaceID)
+        if ( smartCapture == null ) throw WDNotFoundException("Requested Entity Not Found")
+
+        val configID = smartCapture.data?.get(0)?.configId.toString()
+        val lambdaPayload = LambdaPayload(
+            path = RoutePaths.GET_CAPTURE,
+            httpMethod = HttpMethods.GET,
+            headers = Header(workspaceID = smartCapture.workspaceIdentifier.id, bearerToken),
+            requestContext = RequestContext(resourcePath = RoutePaths.GET_CAPTURE, httpMethod = HttpMethods.GET),
+            routeKey = "${HttpMethods.GET} ${RoutePaths.GET_CAPTURE}",
+            pathParameters = mapOf("captureId" to captureID, "configId" to configID)
+        )
+        val result = Helper.invokeLambda(objectMapper.writeValueAsString(lambdaPayload), LambdaFunctionNames.CAPTURE_LAMBDA)
+        return null
     }
 
     private fun setMetadata(smartCapture: SmartCapture){

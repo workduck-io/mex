@@ -1,8 +1,6 @@
 package com.serverless.utils
 
 import com.serverless.models.requests.SmartCaptureRequest
-import com.serverless.models.responses.CaptureElements
-import com.serverless.models.responses.CaptureEntity
 import com.serverless.models.responses.Response
 import com.serverless.transformers.SmartCaptureTransformer
 import com.serverless.transformers.Transformer

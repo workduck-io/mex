@@ -86,6 +86,7 @@ object Messages {
 
     const val INVALID_CAPTURE_ID = "Invalid CaptureID"
     const val ERROR_CREATING_SMART_CAPTURE = "Error creating smart capture"
+    const val ERROR_GETTING_SMART_CAPTURE = "Error getting smart capture"
 
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"

@@ -119,18 +119,19 @@ object Helper {
         return finalKeyValueMap
     }
 
-    fun invokeLambda(payload: String, functionName: String) {
+    fun invokeLambda(payload: String, functionName: String): MutableMap<String, Any> {
+        val resultPayload = mutableMapOf<String, Any>()
         val lambdaClient = AWSLambdaClient.builder()
             .withRegion(Regions.US_EAST_1)
             .build()
 
-        val res = lambdaClient.invoke(InvokeRequest()
+        val response = lambdaClient.invoke(InvokeRequest()
             .withFunctionName(functionName)
             .withInvocationType(InvocationType.RequestResponse)
-            .withPayload(payload.trimIndent()))
+            .withPayload(payload.trimIndent())).payload.asCharBuffer()
 
-        println(res.statusCode)
-        println(String(res.payload.array()))
+        println(response.toString())
+        return resultPayload
     }
 
 

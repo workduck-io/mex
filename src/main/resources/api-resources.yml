@@ -367,6 +367,10 @@ SmartCapture:
         path: /capture
         method: post
         authorizer: mexAuthorizer
+    - httpApi:
+        path: /capture/{id}
+        method: get
+        authorizer: mexAuthorizer
 
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler

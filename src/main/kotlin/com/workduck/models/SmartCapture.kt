@@ -8,6 +8,7 @@ import com.serverless.utils.Constants
 import com.workduck.converters.*
 import com.workduck.utils.Helper
 
+@DynamoDBTable(tableName = "local-mex")
 data class SmartCapture(
 
     @JsonProperty("workspaceIdentifier")

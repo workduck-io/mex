@@ -9,6 +9,8 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalOperator
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue
 import com.workduck.models.Entity
 import com.workduck.models.SmartCapture
+import com.workduck.models.WorkspaceIdentifier
+import com.workduck.utils.SmartCaptureHelper.getSmartCaptureSK
 
 class SmartCaptureRepository(
     private val mapper: DynamoDBMapper,
@@ -26,5 +28,9 @@ class SmartCaptureRepository(
         saveExpression.setConditionalOperator(ConditionalOperator.AND)
         mapper.save(smartCapture, saveExpression, dynamoDBMapperConfig)
         return smartCapture
+    }
+
+    fun getSmartCapture(captureID: String, workspaceID: String, version: Int = 1): SmartCapture? {
+        return mapper.load(SmartCapture::class.java, WorkspaceIdentifier(workspaceID), getSmartCaptureSK(captureID, version))
     }
 }

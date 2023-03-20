@@ -1,12 +1,8 @@
 package com.serverless.transformers
 
-import com.serverless.models.responses.CaptureEntity
 import com.serverless.models.responses.Response
 import com.serverless.models.responses.SmartCaptureResponse
-import com.workduck.models.AdvancedElement
-import com.workduck.models.BlockElement
-import com.workduck.models.SmartCapture
-import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.*
 
 class SmartCaptureTransformer:Transformer<CaptureEntity> {
     override fun transform(t: CaptureEntity?): Response? = t?.let {
