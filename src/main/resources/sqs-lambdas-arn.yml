@@ -5,6 +5,8 @@ NamespaceDeleteWorker:
     Fn::GetAtt: ["NamespaceDelete" , "Arn"]
   test:
     Fn::GetAtt: [ "NamespaceDelete" , "Arn" ]
+  local:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
 
 NamespaceDeleteDLQWorker:
   prod:
@@ -13,6 +15,8 @@ NamespaceDeleteDLQWorker:
     Fn::GetAtt: ["NamespaceDeleteDLQ" , "Arn"]
   test:
     Fn::GetAtt: [ "NamespaceDeleteDLQ" , "Arn" ]
+  local:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
 
 
 NodeDeleteWorker:
@@ -22,6 +26,8 @@ NodeDeleteWorker:
     Fn::GetAtt: ["NodeDelete" , "Arn"]
   test:
     Fn::GetAtt: [ "NodeDelete" , "Arn" ]
+  local:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
 
 NodeDeleteDLQWorker:
   prod:
@@ -30,7 +36,8 @@ NodeDeleteDLQWorker:
     Fn::GetAtt: ["NodeDeleteDLQ" , "Arn"]
   test:
     Fn::GetAtt: [ "NodeDeleteDLQ" , "Arn" ]
-
+  local:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
 
 
 PublicNoteWorker:
@@ -40,6 +47,8 @@ PublicNoteWorker:
     Fn::GetAtt: ["PublicNote" , "Arn"]
   test:
     Fn::GetAtt: [ "PublicNote" , "Arn" ]
+  local:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
 
 PublicNoteDLQWorker:
   prod:
@@ -47,4 +56,6 @@ PublicNoteDLQWorker:
   staging:
     Fn::GetAtt: ["PublicNoteDLQ" , "Arn"]
   test:
+    Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
+  local:
     Fn::GetAtt: [ "PublicNoteDLQ" , "Arn" ]
