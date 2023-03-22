@@ -14,8 +14,6 @@ class SnippetTransformer : Transformer<Snippet> {
             createdBy = t.createdBy,
             createdAt = t.createdAt,
             updatedAt = t.updatedAt,
-            version = t.version,
-            template = t.template,
             metadata = t.metadata
         )
     }

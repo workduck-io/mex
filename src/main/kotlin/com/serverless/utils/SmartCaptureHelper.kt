@@ -19,7 +19,7 @@ object SmartCaptureHelper {
         val blockElementList = mutableListOf<BlockElement>()
 
         for (blockData in request.data) {
-            val configID = blockData.properties?.get("configID") as String? ?: throw IllegalStateException("ConfigID not found")
+            val configID = blockData.properties?.get("configId") as String? ?: throw IllegalStateException("ConfigID not found")
             blockElementList.add(
                 BlockElement(captureId = request.id, configId = configID)
             )
@@ -38,7 +38,7 @@ object SmartCaptureHelper {
         captureEntity.page = data.properties?.get("page") as String?
         captureEntity.source = data.properties?.get("source") as String?
 
-        // Only one level of nesting??
+
         for (child in data.children!!) {
             captureElements.add(
                 CaptureElements(
