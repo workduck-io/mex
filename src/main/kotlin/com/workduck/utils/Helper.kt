@@ -128,9 +128,11 @@ object Helper {
         val response = lambdaClient.invoke(InvokeRequest()
             .withFunctionName(functionName)
             .withInvocationType(InvocationType.RequestResponse)
-            .withPayload(payload.trimIndent())).payload.asCharBuffer()
+            .withPayload(payload.trimIndent())).payload.array()
 
+        println(response)
         println(response.toString())
+        println(objectMapper.writeValueAsString(response))
         return resultPayload
     }
 
