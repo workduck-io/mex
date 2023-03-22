@@ -30,7 +30,7 @@ class SmartCaptureRepository(
         return smartCapture
     }
 
-    fun getSmartCapture(captureID: String, workspaceID: String, version: Int = 1): SmartCapture? {
-        return mapper.load(SmartCapture::class.java, WorkspaceIdentifier(workspaceID), getSmartCaptureSK(captureID, version))
+    fun getSmartCapture(captureID: String, workspaceID: String): SmartCapture? {
+        return mapper.load(SmartCapture::class.java, WorkspaceIdentifier(workspaceID), captureID)
     }
 }

@@ -36,9 +36,9 @@ class SmartCaptureHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
 
-        LOG.info(wdInput.routeKey)
+        LOG.info(wdInput.myRouteKey)
         LOG.info("Username: ${wdInput.tokenBody.username}")
-        val strategy = SmartCaptureStrategyFactory.getSmartCaptureStrategy(wdInput.routeKey)
+        val strategy = SmartCaptureStrategyFactory.getSmartCaptureStrategy(wdInput.myRouteKey)
             ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 400)
 
 

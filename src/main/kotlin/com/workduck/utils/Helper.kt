@@ -8,12 +8,13 @@ import com.amazonaws.services.lambda.model.InvocationType
 import com.amazonaws.services.lambda.model.InvokeRequest
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.json.UTF8DataInputJsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.serverless.utils.Constants
 import org.apache.logging.log4j.LogManager
 import java.security.SecureRandom
 import java.util.*
-import com.serverless.utils.Constants
 
 
 object Helper {
@@ -129,6 +130,8 @@ object Helper {
             .withFunctionName(functionName)
             .withInvocationType(InvocationType.RequestResponse)
             .withPayload(payload.trimIndent())).payload.array()
+
+        val returnValue = String(response, Charsets.UTF_8)
 
         println(response)
         println(response.toString())
