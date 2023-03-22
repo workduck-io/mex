@@ -1,6 +1,7 @@
 package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.serverless.utils.Messages
 import com.serverless.utils.getListFromPath
 import com.serverless.utils.isValidNodeID
 import com.serverless.utils.isValidTitle
@@ -33,7 +34,7 @@ data class NodePath(
         }
 
         require(allNodesNames.none { title -> !title.isValidTitle() }) {
-            "Invalid Title"
+            Messages.INVALID_TITLE
         }
     }
 }

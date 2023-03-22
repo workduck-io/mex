@@ -21,10 +21,7 @@ data class SmartCaptureRequest(
     @JsonProperty("title")
     val title: String,
 
-    @JsonProperty("version")
-    val version: Int? = 1,
-
-    ) : WDRequest {
+) : WDRequest {
 
     init {
         require(id.isValidCaptureID()) {
@@ -32,11 +29,11 @@ data class SmartCaptureRequest(
         }
 
         require(title.isNotEmpty()) {
-            "Title is required"
+            Messages.TITLE_REQUIRED
         }
 
         require(title.isValidTitle()) {
-            "Invalid Title"
+            Messages.INVALID_TITLE
         }
     }
 }

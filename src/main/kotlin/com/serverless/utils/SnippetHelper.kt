@@ -3,6 +3,7 @@ package com.serverless.utils
 import com.serverless.models.responses.Response
 import com.serverless.transformers.SnippetTransformer
 import com.serverless.transformers.Transformer
+import com.serverless.utils.SnippetHelper.checkAndReturnVersion
 import com.workduck.models.Entity
 import com.workduck.models.Snippet
 
@@ -24,7 +25,7 @@ object SnippetHelper {
     }
 
 
-    fun getValidVersion(version : String) : Int{
+    fun getValidVersionFromString(version : String) : Int{
         return if(version.toDoubleOrNull() != null) checkForWholeNumber(version)
         else throw IllegalArgumentException("Enter a valid version")
     }
@@ -33,12 +34,19 @@ object SnippetHelper {
         return when(version.matches("\\d+".toRegex())){
             false -> throw IllegalArgumentException("Enter a whole number")
             true -> {
-                when(version.toInt() > 0 ){
-                    true -> version.toInt()
-                    false -> throw IllegalArgumentException("Enter a positive number")
+                val intVersion = version.toInt()
+                checkAndReturnVersion(intVersion)
 
-                }
             }
         }
     }
+
+    fun checkAndReturnVersion(version: Int) : Int {
+        return when(version > 0 ){
+            true -> version
+            false -> throw IllegalArgumentException("Enter a positive number")
+
+        }
+    }
 }
+

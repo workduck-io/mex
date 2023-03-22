@@ -9,7 +9,7 @@ import com.workduck.service.SnippetService
 
 class GetPublicSnippetStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
-        val version = input.pathParameters?.version?.let { SnippetHelper.getValidVersion(it) } !!
+        val version = input.pathParameters?.version?.let { SnippetHelper.getValidVersionFromString(it) } !!
 
         return input.pathParameters.id?.let { snippetID ->
             snippetService.getPublicSnippet(snippetID, version)?.let {

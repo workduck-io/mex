@@ -11,7 +11,7 @@ class DeleteSnippetStrategy : SnippetStrategy {
     override fun apply(input: Input, snippetService: SnippetService): ApiGatewayResponse {
 
         val version = input.queryStringParameters?.get("version")?.let { version ->
-            SnippetHelper.getValidVersion(version)
+            SnippetHelper.getValidVersionFromString(version)
         }
 
         return input.pathParameters?.id?.let { snippetID ->

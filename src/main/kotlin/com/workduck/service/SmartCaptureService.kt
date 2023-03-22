@@ -24,17 +24,16 @@ class SmartCaptureService {
     private val dynamoDB: DynamoDB = DynamoDB(client)
     private val mapper = DynamoDBMapper(client)
 
-    private val tableName: String = when (System.getenv("TABLE_NAME")) {
-        null -> "local-mex" /* for local testing without serverless offline */
-        else -> System.getenv("TABLE_NAME")
-    }
+    private val tableName: String = DDBHelper.getTableName()
 
     private val dynamoDBMapperConfig = DynamoDBMapperConfig.Builder()
         .withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
         .build()
+
     private val smartCaptureRepository = SmartCaptureRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val pageRepository: PageRepository<SmartCapture> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
-    private val repository: Repository<SmartCapture> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
+    //private val repository: Repository<SmartCapture> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
+
 
     fun createSmartCapture(wdRequest: WDRequest, userID: String, workspaceID: String, bearerToken: String): CaptureEntity {
         val request = wdRequest as SmartCaptureRequest
@@ -58,7 +57,7 @@ class SmartCaptureService {
 
     fun getSmartCapture(captureID: String, workspaceID: String, bearerToken: String): CaptureEntity? {
         val smartCapture = smartCaptureRepository.getSmartCapture(captureID, workspaceID)
-        if ( smartCapture == null ) throw WDNotFoundException("Requested Entity Not Found")
+            ?: throw WDNotFoundException("Requested Entity Not Found")
 
         val configID = smartCapture.data?.get(0)?.configId.toString()
         val lambdaPayload = LambdaPayload(

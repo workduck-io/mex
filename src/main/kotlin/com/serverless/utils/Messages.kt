@@ -2,6 +2,8 @@ package com.serverless.utils
 
 object Messages {
 
+    const val INVALID_TITLE = "Invalid Title"
+    const val TITLE_REQUIRED = "Title cannot be empty"
 
     const val ERROR_CREATING_NODE = "Error creating node"
     const val ERROR_GETTING_NODE = "Error getting node"

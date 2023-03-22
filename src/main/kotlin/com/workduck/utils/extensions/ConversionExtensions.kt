@@ -12,7 +12,6 @@ import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.sqsNodeEventHandlers.DDBPayload
 import com.serverless.sqsNodeEventHandlers.SQSPayload
-import com.serverless.utils.Constants
 import com.serverless.utils.SmartCaptureHelper
 import com.serverless.utils.isValidNodeID
 import com.workduck.models.Namespace
@@ -93,7 +92,6 @@ fun SmartCaptureRequest.createSmartCaptureObjectFromSmartCaptureRequest(userID: 
         lastEditedBy = userID,
         data = SmartCaptureHelper.convertAdvancedToBlockElement(this),
         title = this.title,
-        version = this.version
     )
 
 

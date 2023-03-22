@@ -1,6 +1,7 @@
 package com.workduck.models
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -19,10 +20,12 @@ data class SmartCapture(
     override var workspaceIdentifier: WorkspaceIdentifier = WorkspaceIdentifier("DefaultWorkspace"),
 
     @JsonProperty("version")
-    @DynamoDBAttribute(attributeName = "version")
-    override var version: Int? = 1,
+    @DynamoDBVersionAttribute(attributeName = "version")
+    override var version: Int? = null,
 
+    @JsonAlias("SK")
     @JsonProperty("id")
+    @DynamoDBRangeKey(attributeName = "SK")
     var id: String = Helper.generateNanoID(IdentifierType.SMART_CAPTURE.name),
 
     @JsonProperty("itemType")
@@ -79,9 +82,7 @@ data class SmartCapture(
     @DynamoDBAttribute(attributeName = "updatedAt")
     override var updatedAt: Long = Constants.getCurrentTime()
 
-    @JsonProperty("sk")
-    @DynamoDBRangeKey(attributeName = "SK")
-    var sk: String = "$id${Constants.DELIMITER}$version"
+
     companion object {
         fun setCreatedFieldsNull(page: Page<BlockElement>){
             page.createdAt = null

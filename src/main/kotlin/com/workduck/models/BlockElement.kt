@@ -1,6 +1,8 @@
 package com.workduck.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 class BlockElement(
     val captureId: String,

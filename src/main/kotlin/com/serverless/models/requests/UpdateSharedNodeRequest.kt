@@ -33,9 +33,9 @@ data class UpdateSharedNodeRequest (
     init {
         require(id.isValidNodeID() ) { Messages.INVALID_NODE_ID }
 
-        require(title.isNotEmpty()) { "Title is required" }
+        require(title.isNotEmpty()) { Messages.TITLE_REQUIRED }
 
-        require(title.isValidTitle()) { "Invalid Title" }
+        require(title.isValidTitle()) { Messages.INVALID_TITLE }
     }
 
 }

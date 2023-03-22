@@ -141,8 +141,10 @@ private fun String.isValidID(prefix: String): Boolean {
 fun String.isValidTitle() : Boolean {
     return this.filter {
         it.isLetterOrDigit() || Constants.VALID_TITLE_SPECIAL_CHAR.contains(it)
-    }.length == this.length
+    }.length == this.length && this.isNotEmpty()
 }
+
+
 fun String.isValidNanoID(): Boolean {
     return this.filter {
         Constants.NANO_ID_RANGE.contains(it)

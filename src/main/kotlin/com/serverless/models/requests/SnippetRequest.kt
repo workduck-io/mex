@@ -3,7 +3,6 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.serverless.utils.Constants
 import com.serverless.utils.Messages
 import com.serverless.utils.isValidSnippetID
 import com.serverless.utils.isValidTitle
@@ -24,10 +23,10 @@ data class SnippetRequest(
     val title: String,
 
     @JsonProperty("version")
-    val version: Int = 1,
+    var version: Int = 1,
 
     @JsonProperty("template")
-    val template: Boolean?,
+    val template: Boolean? = false,
 
     @JsonProperty("metadata")
     val pageMetadata: PageMetadata? = null,
@@ -39,12 +38,8 @@ data class SnippetRequest(
             Messages.INVALID_SNIPPET_ID
         }
 
-        require(title.isNotEmpty()) {
-            "Title is required"
-        }
-
         require(title.isValidTitle()) {
-            "Invalid Title"
+            Messages.INVALID_TITLE
         }
 
         require(version > 0) {
