@@ -1,0 +1,147 @@
+Resources:
+  PublicNoteProd:
+    Type: "AWS::SQS::Queue"
+    Condition: IsProd
+    Properties:
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-public-note-queue.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "PublicNoteDLQProd"
+            - "Arn"
+        maxReceiveCount: 3
+      # AWS recommendation to set the visibility timeout as 6 times as the lambda's timeout
+      VisibilityTimeout: 120
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue.fifo"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "queue"
+        - Key: "ResourceContext"
+          Value: "public-note-queue"
+        - Key: "Owner"
+          Value: "varun"
+
+
+
+  PublicNoteDLQProd:
+    Type: "AWS::SQS::Queue"
+    Condition: IsProd
+    Properties:
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-public-note-dlq.fifo
+      FifoQueue: true
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue.fifo"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "dlq"
+        - Key: "ResourceContext"
+          Value: "public-note-dlq"
+        - Key: "Owner"
+          Value: "varun"
+
+  NamespaceDeleteProd:
+    Type: "AWS::SQS::Queue"
+    Condition: IsProd
+    Properties:
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-namespace-delete-queue.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "NamespaceDeleteDLQProd"
+            - "Arn"
+        maxReceiveCount: 3
+      VisibilityTimeout: 120
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-namespace-delete-queue.fifo"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "queue"
+        - Key: "ResourceContext"
+          Value: "namespace-delete-queue"
+        - Key: "Owner"
+          Value: "varun"
+
+  NamespaceDeleteDLQProd:
+    Type: "AWS::SQS::Queue"
+    Condition: IsProd
+    Properties:
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-namespace-delete-dlq.fifo
+      FifoQueue: true
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-namespace-delete-dlq.fifo"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "dlq"
+        - Key: "ResourceContext"
+          Value: "namespace-delete-dlq"
+        - Key: "Owner"
+          Value: "varun"
+
+
+  NodeDeleteProd:
+    Type: "AWS::SQS::Queue"
+    Condition: IsProd
+    Properties:
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-node-delete-queue.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "NodeDeleteDLQProd"
+            - "Arn"
+        maxReceiveCount: 3
+      VisibilityTimeout: 120
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-node-delete-queue.fifo"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "queue"
+        - Key: "ResourceContext"
+          Value: "node-delete-queue"
+        - Key: "Owner"
+          Value: "varun"
+
+
+
+  NodeDeleteDLQProd:
+    Type: "AWS::SQS::Queue"
+    Condition: IsProd
+    Properties:
+      QueueName: ${opt:stage, self:provider.stage}-mex-backend-node-delete-dlq.fifo
+      FifoQueue: true
+      Tags:
+        - Key: "Name"
+          Value: "${opt:stage, self:provider.stage}-mex-backend-public-note-queue"
+        - Key: "Environment"
+          Value: "prod"
+        - Key: "Component"
+          Value: "mex-backend"
+        - Key: "ResourceType"
+          Value: "dlq"
+        - Key: "ResourceContext"
+          Value: "node-delete-dlq"
+        - Key: "Owner"
+          Value: "varun"

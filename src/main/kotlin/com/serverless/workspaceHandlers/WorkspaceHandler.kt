@@ -41,9 +41,9 @@ class WorkspaceHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
-        LOG.info(wdInput.routeKey)
+        LOG.info(wdInput.myRouteKey)
         LOG.info("Username: ${wdInput.tokenBody.username}")
-        val strategy = WorkspaceStrategyFactory.getWorkspaceStrategy(wdInput.routeKey)
+        val strategy = WorkspaceStrategyFactory.getWorkspaceStrategy(wdInput.myRouteKey)
 
         if (strategy == null) {
             val responseBody = StandardResponse(Messages.REQUEST_NOT_RECOGNIZED)

@@ -40,10 +40,10 @@ class UserStarHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
 
         val wdInput: Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
-        LOG.info(wdInput.routeKey)
+        LOG.info(wdInput.myRouteKey)
         LOG.info("Username: ${wdInput.tokenBody.username}")
 
-        val strategy = UserStarStrategyFactory.getUserStarStrategy(wdInput.routeKey)
+        val strategy = UserStarStrategyFactory.getUserStarStrategy(wdInput.myRouteKey)
                 ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
         return try {

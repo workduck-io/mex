@@ -1,0 +1,7 @@
+Fn::If:
+  - IsProd
+  - 'prod-mex-us-east-1-redis-cache.dugfr1.ng.0001.use1.cache.amazonaws.com:6379'
+  - Fn::Join:
+      - ''
+      - - Ref: PublicNoteElasticCacheCluster
+        - .m6edlo.ng.0001.use1.cache.amazonaws.com

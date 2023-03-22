@@ -1,6 +1,7 @@
 package com.serverless.utils
 
 import com.amazonaws.services.cognitoidp.model.UnauthorizedException
+import com.google.gson.Gson
 import com.serverless.models.Input
 import com.workduck.utils.Helper
 import java.util.regex.Pattern

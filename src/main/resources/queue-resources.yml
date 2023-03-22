@@ -1,6 +1,7 @@
 Resources:
   PublicNote:
     Type: "AWS::SQS::Queue"
+    Condition: IsDefaultOrStaging
     Properties:
       QueueName: public-note-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true
@@ -14,11 +15,13 @@ Resources:
       VisibilityTimeout: 180
   PublicNoteDLQ:
     Type: "AWS::SQS::Queue"
+    Condition: IsDefaultOrStaging
     Properties:
       QueueName: public-note-dlq-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true
   NamespaceDelete:
     Type: "AWS::SQS::Queue"
+    Condition: IsDefaultOrStaging
     Properties:
       QueueName: namespace-delete-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true
@@ -31,11 +34,13 @@ Resources:
       VisibilityTimeout: 120
   NamespaceDeleteDLQ:
     Type: "AWS::SQS::Queue"
+    Condition: IsDefaultOrStaging
     Properties:
       QueueName: namespace-delete-dlq-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true
   NodeDelete:
     Type: "AWS::SQS::Queue"
+    Condition: IsDefaultOrStaging
     Properties:
       QueueName: node-delete-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true
@@ -48,6 +53,7 @@ Resources:
       VisibilityTimeout: 120
   NodeDeleteDLQ:
     Type: "AWS::SQS::Queue"
+    Condition: IsDefaultOrStaging
     Properties:
       QueueName: node-delete-dlq-${opt:stage, self:provider.stage}.fifo
       FifoQueue: true

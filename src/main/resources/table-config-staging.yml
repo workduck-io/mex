@@ -1,7 +1,7 @@
 Resources:
-  mexDataProd:
+  mexDataTest:
     Type: AWS::DynamoDB::Table
-    Condition: IsProd
+    Condition: IsStaging
     DeletionPolicy: Retain
     Properties:
       TableName: "${opt:stage, 'local'}-mex"
@@ -25,7 +25,9 @@ Resources:
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
@@ -37,6 +39,9 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
         - IndexName: PK-itemType-index
           KeySchema:
             - AttributeName: PK
@@ -49,6 +54,9 @@ Resources:
               - updatedAt
               - createdAt
             ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
         - IndexName: itemType-AK-index
           KeySchema:
             - AttributeName: itemType
@@ -57,6 +65,9 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
         - IndexName: WS-itemStatus-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -65,6 +76,9 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
         - IndexName: WS-itemType-index
           KeySchema:
             - AttributeName: workspaceIdentifier
@@ -73,6 +87,9 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
         - IndexName: createdBy-itemType-index
           KeySchema:
             - AttributeName: createdBy
@@ -81,6 +98,11 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
       TimeToLiveSpecification:
         AttributeName: expireAt
         Enabled: true

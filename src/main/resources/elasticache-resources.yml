@@ -1,9 +1,10 @@
 Resources:
-  PublicNoteElasticCacheCluster:
+  PublicNoteElasticCacheCluster: # we only create a redis cache cluster for non prod environment through this config
     Type: AWS::ElastiCache::ReplicationGroup
+    Condition: IsDefaultOrStaging
     Properties:
       ReplicationGroupId: mex-public-note-cache-${opt:stage, self:provider.stage}
-      ReplicationGroupDescription: "Public note cache cluster"
+      ReplicationGroupDescription: "Redis cache cluster"
       MultiAZEnabled: true
       AutomaticFailoverEnabled: true
       AutoMinorVersionUpgrade: true

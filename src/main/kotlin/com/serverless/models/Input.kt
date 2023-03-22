@@ -14,10 +14,20 @@ data class Input(
     val pathParameters: PathParameter?,
     val headers : Header,
     val body: String?,
-    val routeKey: String,
-    val queryStringParameters: Map<String, String>?
+    val routeKey: String?,
+    val queryStringParameters: Map<String, String>?,
+    val httpMethod: String?,
+    val resource: String?
 
 ) {
+
+    val myRouteKey : String = when(!routeKey.isNullOrEmpty()){
+        true -> routeKey
+        false -> {
+            require(!httpMethod.isNullOrEmpty() && !resource.isNullOrEmpty()) { "Invalid Request" }
+            "$httpMethod $resource"
+        }
+    }
 
     val payload: WDRequest? = body?.let { Helper.objectMapper.readValue(it) }
 

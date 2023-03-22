@@ -1,0 +1,46 @@
+- Effect: Allow
+  Action:
+    - sqs:*
+  Resource: !Sub 'arn:aws:sqs:${self:provider.region}:${AWS::AccountId}:*'
+- Effect: Allow
+  Action:
+    - dynamodb:Scan
+    - dynamodb:Query
+    - dynamodb:GetItem
+    - dynamodb:PutItem
+    - dynamodb:UpdateItem
+    - dynamodb:DeleteItem
+    - dynamodb:DescribeTable
+    - dynamodb:BatchWriteItem
+    - dynamodb:BatchGetItem
+  Resource: !Sub 'arn:aws:dynamodb:${self:provider.region}:${AWS::AccountId}:*'
+- Effect: Allow
+  Action:
+    - 'lambda:InvokeFunction'
+  Resource:
+    - '*'
+- Effect: Allow
+  Action:
+    - dynamodb:DescribeStream
+    - dynamodb:GetRecords
+    - dynamodb:GetShardIterator
+    - dynamodb:ListStreams
+  Resource: !Sub 'arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/*'
+- Effect: "Allow"
+  Action:
+    - "s3:*"
+  Resource: "*"
+- Effect: Allow
+  Action:
+    - "sns:*"
+  Resource: !Sub 'arn:aws:sqs:${self:provider.region}:${AWS::AccountId}:*'
+- Effect: "Allow" # this for attaching lambda to VPC to enable them to create ENIs
+  Action:
+    - ec2:CreateNetworkInterface
+    - ec2:DescribeNetworkInterfaces
+    - ec2:DeleteNetworkInterface
+  Resource: "*"
+- Effect: Allow
+  Action:
+    - execute-api:Invoke
+  Resource: "*"

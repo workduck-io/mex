@@ -1,9 +1,9 @@
 Resources:
   DDBConsumedWriteCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBConsumedWriteCapacityAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-write-capacity-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: ProvisionedWriteCapacityUnits
@@ -15,14 +15,14 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
 
 
   DDBConsumedReadCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBConsumedReadCapacityAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-read-capacity-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: ProvisionedWriteCapacityUnits
@@ -34,14 +34,14 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
 
 
   DDBReadThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBReadThrottleAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-read-throttle-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: ReadThrottleEvents
@@ -53,14 +53,14 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
 
 
   DDBWriteThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsStaging
+    Condition: IsProdOrStaging
     Properties:
-      AlarmName: DDBWriteThrottleAlarm
+      AlarmName: ${opt:stage, 'local'}-mex-backend-ddb-write-throttle-alarm
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       MetricName: WriteThrottleEvents
@@ -72,5 +72,4 @@ Resources:
         - !Ref DDBAlarmsSNS
       Dimensions:
         - Name: TableName
-          Value: !Ref mexDataTest
-
+          Value: !If [IsProd, !Ref mexDDBProd, !Ref mexDataTest]
