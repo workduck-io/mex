@@ -1,10 +1,10 @@
 package com.workduck.models
 
-class CaptureEntity(){
-    var captureId: String? = null
-    var configId: String? = null
-    var page: String? = null
-    var source: String? = null
+class CaptureEntity() {
+    var captureId: String = ""
+    var configId: String = ""
+    var page: String = ""
+    var source: String = ""
     var data: List<CaptureElements>? = null
     var workspaceId: String? = null
     var userId: String? = null
@@ -13,8 +13,8 @@ class CaptureEntity(){
 }
 
 class CaptureElements(
-    var id: String? = null,
-    var label: String? = null,
-    var value: String? = null,
+    var id: String,
+    var label: String,
+    var value: String,
     var properties: Map<String, Any>? = null,
 )

@@ -11,7 +11,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.json.UTF8DataInputJsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.responses.ExternalLambdaResponse
 import com.serverless.utils.Constants
+import com.workduck.models.CaptureEntity
 import org.apache.logging.log4j.LogManager
 import java.security.SecureRandom
 import java.util.*
@@ -131,11 +134,8 @@ object Helper {
             .withInvocationType(InvocationType.RequestResponse)
             .withPayload(payload.trimIndent())).payload.array()
 
-        val returnValue = String(response, Charsets.UTF_8)
-
-        println(response)
-        println(response.toString())
-        println(objectMapper.writeValueAsString(response))
+        val returnValue = objectMapper.readValue(String(response, Charsets.UTF_8), ExternalLambdaResponse::class.java)
+        println(objectMapper.writeValueAsString(returnValue))
         return resultPayload
     }
 

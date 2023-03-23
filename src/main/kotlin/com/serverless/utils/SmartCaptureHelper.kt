@@ -32,24 +32,24 @@ object SmartCaptureHelper {
         val captureElements = mutableListOf<CaptureElements>()
 
         // Assuming there will be only one element
-        val data = request.data[0]
-        captureEntity.captureId = request.id
-        captureEntity.configId = data.properties?.get("configId") as String?
-        captureEntity.page = data.properties?.get("page") as String?
-        captureEntity.source = data.properties?.get("source") as String?
+        for ( data in request.data ) {
+            captureEntity.captureId = request.id
+            captureEntity.configId = data.properties?.get("configId") as String
+            captureEntity.page = data.properties?.get("page") as String
+            captureEntity.source = data.properties?.get("source") as String
 
-
-        for (child in data.children!!) {
-            captureElements.add(
-                CaptureElements(
-                    id = child.id,
-                    label = child.children?.get(0)?.properties?.get("label") as String?,
-                    value = child.children?.get(0)?.properties?.get("value") as String?,
-                    properties = child.properties
+            for (child in data.children!!) {
+                captureElements.add(
+                    CaptureElements(
+                        id = child.id,
+                        label = child.children?.get(0)?.properties?.get("label") as String,
+                        value = child.children?.get(0)?.properties?.get("value") as String,
+                        properties = child.properties
+                    )
                 )
-            )
+            }
+            captureEntity.data = captureElements
         }
-        captureEntity.data = captureElements
         return captureEntity
     }
 }
