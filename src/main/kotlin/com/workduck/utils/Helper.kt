@@ -1,23 +1,15 @@
 package com.workduck.utils
 
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.lambda.AWSLambdaClient
-import com.amazonaws.services.lambda.model.InvocationType
-import com.amazonaws.services.lambda.model.InvokeRequest
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.json.UTF8DataInputJsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.serverless.models.responses.ExternalLambdaResponse
 import com.serverless.utils.Constants
-import com.workduck.models.CaptureEntity
 import org.apache.logging.log4j.LogManager
 import java.security.SecureRandom
-import java.util.*
+import java.util.UUID
 
 
 object Helper {
@@ -122,28 +114,5 @@ object Helper {
         }
         return finalKeyValueMap
     }
-
-    fun invokeLambda(payload: String, functionName: String): MutableMap<String, Any> {
-        val resultPayload = mutableMapOf<String, Any>()
-        val lambdaClient = AWSLambdaClient.builder()
-            .withRegion(Regions.US_EAST_1)
-            .build()
-
-        val response = lambdaClient.invoke(InvokeRequest()
-            .withFunctionName(functionName)
-            .withInvocationType(InvocationType.RequestResponse)
-            .withPayload(payload.trimIndent())).payload.array()
-
-        val returnValue = objectMapper.readValue(String(response, Charsets.UTF_8), ExternalLambdaResponse::class.java)
-        println(objectMapper.writeValueAsString(returnValue))
-        return resultPayload
-    }
-
-
-
-
-
-
-
 
 }

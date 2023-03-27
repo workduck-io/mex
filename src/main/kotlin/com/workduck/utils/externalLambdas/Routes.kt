@@ -1,4 +1,4 @@
-package com.workduck.utils.ExternalLambdas
+package com.workduck.utils.externalLambdas
 
 object RoutePaths {
     const val CREATE_CAPTURE = "/capture"

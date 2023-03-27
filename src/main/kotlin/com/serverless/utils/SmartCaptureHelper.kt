@@ -19,22 +19,22 @@ object SmartCaptureHelper {
         val blockElementList = mutableListOf<BlockElement>()
 
         for (blockData in request.data) {
-            val configID = blockData.properties?.get("configId") as String? ?: throw IllegalStateException("ConfigID not found")
+            val configID = blockData.properties?.get("configID") as String? ?: throw IllegalStateException("ConfigID not found")
             blockElementList.add(
-                BlockElement(captureId = request.id, configId = configID)
+                BlockElement(blockID = blockData.id, captureID = request.id, configID = configID)
             )
         }
         return blockElementList
     }
 
     fun serializeRequestToEntity(request: SmartCaptureRequest): CaptureEntity{
-        val captureEntity = CaptureEntity()
+        val captureEntity = CaptureEntity(captureID = request.id, configID = request.data.first().properties?.get("configID") as String)
         val captureElements = mutableListOf<CaptureElements>()
 
         // Assuming there will be only one element
         for ( data in request.data ) {
-            captureEntity.captureId = request.id
-            captureEntity.configId = data.properties?.get("configId") as String
+            captureEntity.captureID = request.id
+            captureEntity.configID = data.properties?.get("configId") as String
             captureEntity.page = data.properties?.get("page") as String
             captureEntity.source = data.properties?.get("source") as String
 
