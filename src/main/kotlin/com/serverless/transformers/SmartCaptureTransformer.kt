@@ -9,22 +9,24 @@ import com.workduck.models.SmartCapture
 import com.workduck.models.WorkspaceIdentifier
 
 class SmartCaptureTransformer:Transformer<CaptureEntity>, BulkTransformer<CaptureEntity> {
-    override fun transform(t: Array<CaptureEntity>): Array<Response> = t.let {
+    override fun transform(t: List<CaptureEntity>): List<Response> = t.let {
         val responses = mutableListOf<SmartCaptureResponse>()
         for (captureEntity in it) {
             responses.add(this.transform(captureEntity) as SmartCaptureResponse)
         }
-        return responses.toTypedArray()
+        return responses
     }
 
+    // TODO(re-review this )
     override fun transform(t: CaptureEntity?): Response? = t?.let {
         val smartCapture = SmartCapture()
         val advancedElements = mutableListOf<AdvancedElement>()
         smartCapture.id = t.captureID
-        smartCapture.title = t.page
-        smartCapture.workspaceIdentifier = WorkspaceIdentifier(t.workspaceID)
+        smartCapture.title = t.page ?: ""
+        smartCapture.workspaceIdentifier = WorkspaceIdentifier(t.workspaceID ?: "")
         smartCapture.createdBy = t.userID
-        smartCapture.data = listOf(BlockElement(captureID = t.captureID, configID = t.configID))
+        //TODO(fix this)
+        smartCapture.data = listOf(BlockElement(captureID = t.captureID, configID = t.configID, blockID = ""))
 
         for (data in t.data!!) {
             val childAdvancedElements = mutableListOf<AdvancedElement>()

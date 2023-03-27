@@ -10,7 +10,7 @@ import com.workduck.service.SmartCaptureService
 class CreateSmartCaptureStrategy: SmartCaptureStrategy {
     override fun apply(input: Input, smartCaptureService: SmartCaptureService): ApiGatewayResponse {
         return input.payload?.let { smartCaptureRequest ->
-            smartCaptureService.createOrUpdateSmartCapture(smartCaptureRequest, input.tokenBody.userID, input.headers.workspaceID, input.headers.bearerToken).let {
+            smartCaptureService.createSmartCapture(smartCaptureRequest, input.tokenBody.userID, input.headers.workspaceID, input.headers.bearerToken).let {
                 ApiResponseHelper.generateStandardResponse(null,204, Messages.ERROR_CREATING_SMART_CAPTURE)
             }
         } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)

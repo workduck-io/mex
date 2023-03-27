@@ -5,13 +5,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.lambda.model.InvocationType
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.models.Header
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.SmartCaptureHelper
 import com.workduck.models.CaptureEntity
-import com.workduck.models.Entity
 import com.workduck.models.SmartCapture
 import com.workduck.models.exceptions.WDException
 import com.workduck.models.exceptions.WDNotFoundException
@@ -66,6 +64,62 @@ class SmartCaptureService {
     }
 
 
+    fun deleteSmartCapture(captureID: String, workspaceID: String, bearerToken: String) {
+        val smartCapture = smartCaptureRepository.getSmartCapture(captureID, workspaceID)
+            ?: throw WDNotFoundException("Smart capture does not exist")
+
+        smartCaptureRepository.deleteSmartCapture(captureID, workspaceID)
+
+        val configID = smartCapture.data?.get(0)?.configID.toString()
+        invokeDeleteCaptureLambda(workspaceID, bearerToken, captureID, configID)
+        //TODO(figure out the return because when deleting, invocationType will be event)
+
+    }
+
+    fun getSmartCaptureWithConfigId(configID: String, workspaceID: String, bearerToken: String) : List<CaptureEntity> {
+        invokeGetCapturesWithConfigLambda(workspaceID, bearerToken, configID)
+        //TODO(figure out the return)
+        /*
+        val allCaptures = Helper.objectMapper.readValue(response.body, Array<CaptureEntity>::class.java).toMutableList()
+
+        for (capture in allCaptures) {
+            val captureInMexRepo = smartCaptureRepository.getSmartCapture(capture.captureId.toString(), workspaceID)
+            if (captureInMexRepo == null) {
+                allCaptures.remove(capture)
+            }
+        }
+
+        if(response.statusCode == 200) return allCaptures.toTypedArray() else return null*/
+        return listOf()
+    }
+
+    fun getAllSmartCaptureForUser(configID: String, workspaceID: String, bearerToken: String) : List<CaptureEntity> {
+        //TODO(why are we not passing userID?)
+        invokeGetCapturesForUserLambda(workspaceID, bearerToken, configID)
+        //TODO(figure out the return)
+
+        /*
+        val lambdaPayload = LambdaPayload(
+            path = RoutePaths.GET_ALL_CAPTURES_FOR_USER,
+            httpMethod = HttpMethods.GET,
+            headers = Header(workspaceID = workspaceID, bearerToken),
+            requestContext = RequestContext(resourcePath = RoutePaths.GET_ALL_CAPTURES_FOR_USER, httpMethod = HttpMethods.GET),
+            routeKey = "${HttpMethods.GET} ${RoutePaths.GET_ALL_CAPTURES_FOR_USER}",
+            pathParameters = mapOf("configId" to configId)
+        )
+        val response = Helper.invokeLambda(objectMapper.writeValueAsString(lambdaPayload), LambdaFunctionNames.CAPTURE_LAMBDA)
+        val allCaptures = Helper.objectMapper.readValue(response.body, Array<CaptureEntity>::class.java).toMutableList()
+
+        for (capture in allCaptures) {
+            val captureInMexRepo = smartCaptureRepository.getSmartCapture(capture.captureId.toString(), workspaceID)
+            if (captureInMexRepo == null) {
+                allCaptures.remove(capture)
+            }
+        }
+
+        if(response.statusCode == 200) return allCaptures.toTypedArray() else return null*/
+        return listOf()
+    }
 
     private fun invokeCreateCaptureLambda(captureEntity: CaptureEntity, workspaceID: String, bearerToken: String){
         val header = Header(workspaceID, bearerToken)
@@ -78,6 +132,28 @@ class SmartCaptureService {
         val requestContext = RequestContext(RoutePaths.GET_CAPTURE, HttpMethods.GET)
         val pathParameters : Map<String, String> = mapOf("captureID" to captureID, "configID" to configID)
         LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
+    }
+
+    private fun invokeDeleteCaptureLambda(workspaceID: String, bearerToken: String, captureID: String, configID: String){
+        val header = Header(workspaceID, bearerToken)
+        val requestContext = RequestContext(RoutePaths.DELETE_CAPTURE, HttpMethods.DELETE)
+        val pathParameters : Map<String, String> = mapOf("captureID" to captureID, "configID" to configID)
+        LambdaHelper.invokeLambda(header, requestContext, InvocationType.Event, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
+    }
+
+    private fun invokeGetCapturesWithConfigLambda(workspaceID: String, bearerToken: String, configID: String){
+        val header = Header(workspaceID, bearerToken)
+        val requestContext = RequestContext(RoutePaths.GET_ALL_CAPTURES_WITH_CONFIGID, HttpMethods.GET)
+        val pathParameters : Map<String, String> = mapOf("configId" to configID)
+        LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
+    }
+
+    private fun invokeGetCapturesForUserLambda(workspaceID: String, bearerToken: String, configID: String){
+        val header = Header(workspaceID, bearerToken)
+        val requestContext = RequestContext(RoutePaths.GET_ALL_CAPTURES_FOR_USER, HttpMethods.GET)
+        val pathParameters : Map<String, String> = mapOf("configId" to configID)
+        LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
+
     }
 
     private fun setMetadata(smartCapture: SmartCapture){

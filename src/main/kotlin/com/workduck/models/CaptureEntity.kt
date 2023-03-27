@@ -5,21 +5,15 @@ data class CaptureEntity(
 
     var configID: String,
 
-    var page: String,
+    var page: String?= null,
 
-    var source: String,
+    var source: String?=null,
 
-    var data: List<CaptureElements>,
+    var data: List<CaptureElements>?=null,
 
-    var workspaceID: String,
+    var workspaceID: String?=null,
 
     var userID: String? = null,
 
     var createdAt: Long? = null,
-
-class CaptureElements(
-    var id: String,
-    var label: String,
-    var value: String,
-    var properties: Map<String, Any>? = null,
 )

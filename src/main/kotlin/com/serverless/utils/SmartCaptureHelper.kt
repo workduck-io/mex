@@ -15,7 +15,7 @@ object SmartCaptureHelper {
         return smartCaptureTransformer.transform(capture)
     }
 
-    fun convertSmartCaptureToSmartCaptureArrayResponse(capture: Array<CaptureEntity>?): Array<Response> {
+    fun convertSmartCaptureToSmartCaptureArrayResponse(capture: List<CaptureEntity>?): List<Response> {
         return  smartCaptureTransformer.transform(capture!!)
     }
 
@@ -48,7 +48,7 @@ object SmartCaptureHelper {
                         id = child.id,
                         label = child.children?.get(0)?.properties?.get("label") as String,
                         value = child.children?.get(0)?.properties?.get("value") as String,
-                        properties = child.properties
+                        properties = child.properties ?: mapOf()
                     )
                 )
             }

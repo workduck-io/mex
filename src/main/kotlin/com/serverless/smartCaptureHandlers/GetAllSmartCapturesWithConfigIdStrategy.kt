@@ -11,7 +11,7 @@ import com.workduck.service.SmartCaptureService
 class GetAllSmartCapturesWithConfigIdStrategy: SmartCaptureStrategy {
     override fun apply(input: Input, smartCaptureService: SmartCaptureService): ApiGatewayResponse {
         return input.pathParameters?.configId?.let { configID ->
-            smartCaptureService.getSmartCaptureWithConfigId(configID, input.headers.workspaceID, input.headers.bearerToken).withNotFoundException().let {
+            smartCaptureService.getSmartCaptureWithConfigId(configID, input.headers.workspaceID, input.headers.bearerToken).let {
                 ApiResponseHelper.generateStandardResponse(SmartCaptureHelper.convertSmartCaptureToSmartCaptureArrayResponse(it), Messages.ERROR_GETTING_ALL_SMART_CAPTURES)
             }
         }!!

@@ -7,5 +7,5 @@ interface Transformer<T> {
 }
 
 interface BulkTransformer<T> {
-    fun transform(t: Array<T>): Array<Response>
+    fun transform(t: List<T>): List<Response>
 }
