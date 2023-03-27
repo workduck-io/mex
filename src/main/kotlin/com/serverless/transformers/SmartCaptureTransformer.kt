@@ -8,7 +8,15 @@ import com.workduck.models.CaptureEntity
 import com.workduck.models.SmartCapture
 import com.workduck.models.WorkspaceIdentifier
 
-class SmartCaptureTransformer:Transformer<CaptureEntity> {
+class SmartCaptureTransformer:Transformer<CaptureEntity>, BulkTransformer<CaptureEntity> {
+    override fun transform(t: Array<CaptureEntity>): Array<Response> = t.let {
+        val responses = mutableListOf<SmartCaptureResponse>()
+        for (captureEntity in it) {
+            responses.add(this.transform(captureEntity) as SmartCaptureResponse)
+        }
+        return responses.toTypedArray()
+    }
+
     override fun transform(t: CaptureEntity?): Response? = t?.let {
         val smartCapture = SmartCapture()
         val advancedElements = mutableListOf<AdvancedElement>()

@@ -5,12 +5,15 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.lambda.model.InvocationType
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.models.Header
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.SmartCaptureHelper
 import com.workduck.models.CaptureEntity
+import com.workduck.models.Entity
 import com.workduck.models.SmartCapture
+import com.workduck.models.exceptions.WDException
 import com.workduck.models.exceptions.WDNotFoundException
 import com.workduck.models.externalLambdas.RequestContext
 import com.workduck.repositories.SmartCaptureRepository

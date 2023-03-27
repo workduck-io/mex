@@ -9,10 +9,14 @@ import com.workduck.models.CaptureElements
 import com.workduck.models.CaptureEntity
 
 object SmartCaptureHelper {
-    val smartCaptureTransformer : Transformer<CaptureEntity> = SmartCaptureTransformer()
+    val smartCaptureTransformer = SmartCaptureTransformer()
 
     fun convertSmartCaptureToSmartCaptureResponse(capture: CaptureEntity?) : Response? {
         return smartCaptureTransformer.transform(capture)
+    }
+
+    fun convertSmartCaptureToSmartCaptureArrayResponse(capture: Array<CaptureEntity>?): Array<Response> {
+        return  smartCaptureTransformer.transform(capture!!)
     }
 
     fun convertAdvancedToBlockElement(request: SmartCaptureRequest): List<BlockElement> {

@@ -17,5 +17,9 @@ data class CaptureEntity(
 
     var createdAt: Long? = null,
 
-    var modifiedAt: Long? = null,
+class CaptureElements(
+    var id: String,
+    var label: String,
+    var value: String,
+    var properties: Map<String, Any>? = null,
 )
