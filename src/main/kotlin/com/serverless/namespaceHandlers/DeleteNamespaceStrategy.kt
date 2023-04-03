@@ -6,7 +6,7 @@ import com.serverless.models.Input
 import com.serverless.models.requests.SuccessorNamespaceRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidNamespaceID
+import com.serverless.utils.extensions.isValidNamespaceID
 import com.workduck.service.NamespaceService
 import java.lang.IllegalArgumentException
 

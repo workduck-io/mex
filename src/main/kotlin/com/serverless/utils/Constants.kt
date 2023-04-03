@@ -1,6 +1,8 @@
 package com.serverless.utils
 
+import com.workduck.models.IdentifierType
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import java.time.Instant
 
 object Constants {
@@ -20,6 +22,7 @@ object Constants {
     const val NAMESPACE_ID_PREFIX = "NAMESPACE_"
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
     const val CAPTURE_ID_PREFIX = "CAPTURE_"
+    const val CONFIG_ID_PREFIX = "CONFIG_"
     const val NANO_ID_SIZE = 21
     const val MAX_NODE_IDS_FOR_BATCH_GET = 25
     const val DDB_MAX_ITEM_SIZE = 350000
@@ -33,7 +36,13 @@ object Constants {
     const val NODE_HIERARCHY = "nodeHierarchy"
     const val NAMESPACE_METADATA = "namespaceMetadata"
     const val WORKSPACE_ID = "workspaceID"
+    const val NODE_ID = "nodeID"
+    const val NAMESPACE_ID = "namespaceID"
+    const val CONFIG_ID = "configID"
+    const val USER_ID = "userID"
     const val WORKSPACE_OWNER = "workspaceOwner"
     const val PERSONAL_NAMESPACE_NAME = "Personal"
+    const val SMART_CAPTURE_DEFAULT_NODE_ID = "NODE_XyeGVpziGiTUeMYafzbd9"
+    const val ELEMENT_SMART_CAPTURE = "smartCapture"
 
 }

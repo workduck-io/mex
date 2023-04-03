@@ -8,8 +8,8 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.models.requests.MetadataRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.orderPage
-import com.serverless.utils.setVersion
+import com.serverless.utils.extensions.orderPage
+import com.serverless.utils.extensions.setVersion
 import com.workduck.models.Entity
 import com.workduck.models.Snippet
 import com.workduck.models.SnippetIdentifier

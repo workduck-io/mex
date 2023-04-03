@@ -1,4 +1,4 @@
-package com.serverless.utils
+package com.serverless.utils.extensions
 
 import com.workduck.models.CaptureEntity
 import com.workduck.models.Entity

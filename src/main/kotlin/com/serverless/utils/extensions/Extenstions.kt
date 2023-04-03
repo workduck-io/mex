@@ -1,15 +1,14 @@
-package com.serverless.utils
+package com.serverless.utils.extensions
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
-import com.serverless.models.requests.SnippetRequest
+import com.serverless.utils.Constants
 import com.workduck.models.Entity
 import com.workduck.models.Namespace
 import com.workduck.models.Node
 import com.workduck.models.Page
 import com.workduck.models.Snippet
-import com.workduck.models.WorkspaceIdentifier
 import com.workduck.models.AdvancedElement
 import com.workduck.utils.Helper
 import com.workduck.utils.PageHelper
@@ -121,6 +120,10 @@ fun String.isValidSnippetID(): Boolean {
 
 fun String.isValidCaptureID(): Boolean {
     return this.isValidID(Constants.CAPTURE_ID_PREFIX)
+}
+
+fun String.isValidConfigID(): Boolean {
+    return this.isValidID(Constants.CONFIG_ID_PREFIX)
 }
 
 fun String.isValidNamespaceID(): Boolean {

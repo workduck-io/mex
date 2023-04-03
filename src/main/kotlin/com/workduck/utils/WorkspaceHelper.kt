@@ -1,8 +1,8 @@
 package com.workduck.utils
 
-import com.serverless.utils.commonPrefixList
-import com.serverless.utils.commonSuffixList
-import com.serverless.utils.getListFromPath
+import com.serverless.utils.extensions.commonPrefixList
+import com.serverless.utils.extensions.commonSuffixList
+import com.serverless.utils.extensions.getListFromPath
 import com.workduck.models.MatchType
 
 object WorkspaceHelper {

@@ -10,7 +10,6 @@ data class Header(
    @JsonProperty("mex-workspace-id")
    val workspaceID : String,
 
-   @JsonProperty("authorization")
-   @JsonAlias("Authorization")
+   @JsonProperty("bearerToken")
    val bearerToken : String
 )

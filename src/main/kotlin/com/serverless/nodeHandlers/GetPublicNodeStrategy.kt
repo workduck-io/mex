@@ -5,7 +5,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
 import com.serverless.utils.NodeHelper
-import com.serverless.utils.withNotFoundException
+import com.serverless.utils.extensions.withNotFoundException
 import com.workduck.service.NodeService
 
 class GetPublicNodeStrategy : NodeStrategy {

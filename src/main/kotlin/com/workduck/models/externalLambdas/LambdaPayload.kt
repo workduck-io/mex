@@ -1,9 +1,8 @@
 package com.workduck.models.externalLambdas
 
-import com.serverless.models.Header
 
 data class LambdaPayload(
-    val headers : Header,
+    val headers : ExternalRequestHeader,
     val requestContext: RequestContext,
     val httpMethod: String = requestContext.httpMethod,
     val path: String = requestContext.resourcePath,

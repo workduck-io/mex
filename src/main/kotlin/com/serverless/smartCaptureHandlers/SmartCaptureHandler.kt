@@ -8,7 +8,7 @@ import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
-import com.serverless.utils.handleWarmup
+import com.serverless.utils.extensions.handleWarmup
 import com.workduck.service.SmartCaptureService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager

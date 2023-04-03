@@ -10,9 +10,9 @@ import com.serverless.models.requests.SharedNamespaceRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.commonPrefixList
-import com.serverless.utils.filterPersonalNamespaces
-import com.serverless.utils.getListFromPath
+import com.serverless.utils.extensions.commonPrefixList
+import com.serverless.utils.extensions.filterPersonalNamespaces
+import com.serverless.utils.extensions.getListFromPath
 import com.workduck.models.AccessType
 
 import com.workduck.models.EntityOperationType
@@ -29,10 +29,7 @@ import com.workduck.utils.NodeHelper
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import com.workduck.utils.extensions.toNamespace
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
-import kotlin.math.E
 
 class NamespaceService (
 

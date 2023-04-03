@@ -7,8 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.WDRequest
-import com.serverless.utils.Constants
-import com.serverless.utils.isValidNodeID
+import com.serverless.utils.extensions.isValidNodeID
 import com.workduck.repositories.UserStarRepository
 import com.workduck.utils.DDBHelper
 import kotlinx.coroutines.async

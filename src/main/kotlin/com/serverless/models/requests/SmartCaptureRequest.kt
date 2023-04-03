@@ -4,44 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidCaptureID
-import com.serverless.utils.isValidNodeID
-import com.serverless.utils.isValidTitle
+import com.serverless.utils.extensions.isValidCaptureID
 import com.workduck.models.AdvancedElement
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("SmartCaptureRequest")
 data class SmartCaptureRequest(
 
-    @JsonProperty("id")
-    val id: String,
+    @JsonProperty("nodeNamespaceMap")
+    val nodeNamespaceMap: NodeNamespaceMap ? = null,
 
-    @JsonProperty("nodeID")
-    val nodeID: String?,
-
+    // rather than a list, a single Advanced Element
     @JsonProperty("data")
-    val data: List<AdvancedElement>,
+    val data: AdvancedElement,
 
-    @JsonProperty("title")
-    val title: String,
 
-) : WDRequest {
-
-    init {
-        require(id.isValidCaptureID()) {
-            Messages.INVALID_CAPTURE_ID
-        }
-
-        require(nodeID?.isValidNodeID() ?: true) {
-            Messages.INVALID_NODE_ID
-        }
-
-        require(title.isValidTitle()) {
-            Messages.INVALID_TITLE
-        }
-
-        require(data.isNotEmpty()) {
-            "Data cannot be empty"
-        }
-    }
-}
+) : WDRequest

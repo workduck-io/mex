@@ -3,9 +3,8 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.serverless.utils.Constants
-import com.serverless.utils.isValidNamespaceID
-import com.serverless.utils.isValidNodeID
+import com.serverless.utils.extensions.isValidNamespaceID
+import com.serverless.utils.extensions.isValidNodeID
 import com.workduck.converters.BlockMovementActionDeserializer
 import com.workduck.models.BlockMovementAction
 

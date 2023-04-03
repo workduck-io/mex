@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidSnippetID
-import com.serverless.utils.isValidTitle
+import com.serverless.utils.extensions.isValidSnippetID
+import com.serverless.utils.extensions.isValidTitle
 import com.workduck.models.AdvancedElement
 import com.workduck.models.PageMetadata
 

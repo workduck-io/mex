@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidNamespaceID
-import com.serverless.utils.isValidNodeID
-import com.serverless.utils.isValidTitle
+import com.serverless.utils.extensions.isValidNamespaceID
+import com.serverless.utils.extensions.isValidNodeID
+import com.serverless.utils.extensions.isValidTitle
 import com.workduck.converters.IdentifierSerializer
 import com.workduck.converters.NamespaceIdentifierDeserializer
 import com.workduck.models.AdvancedElement

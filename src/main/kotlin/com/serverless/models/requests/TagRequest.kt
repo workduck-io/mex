@@ -1,9 +1,8 @@
 package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidNodeID
+import com.serverless.utils.extensions.isValidNodeID
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)

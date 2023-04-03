@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.BlockMovementRequest
 import com.serverless.models.requests.ElementRequest
 import com.serverless.models.requests.GenericListRequest
@@ -16,7 +15,6 @@ import com.serverless.models.requests.NodeNamePath
 import com.serverless.models.requests.NodePath
 import com.serverless.models.requests.NodeRequest
 import com.serverless.models.requests.RefactorRequest
-import com.serverless.models.requests.SharedNamespaceRequest
 import com.serverless.models.requests.SharedNodeRequest
 import com.serverless.models.requests.SingleElementRequest
 import com.serverless.models.requests.UpdateAccessTypesRequest
@@ -24,20 +22,20 @@ import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.addAlphanumericStringToTitle
-import com.serverless.utils.addIfNotEmpty
-import com.serverless.utils.commonPrefixList
-import com.serverless.utils.convertToPathString
-import com.serverless.utils.createNodePath
-import com.serverless.utils.getDifferenceWithOldHierarchy
-import com.serverless.utils.getListFromPath
-import com.serverless.utils.getRoughSizeOfEntity
-import com.serverless.utils.isNodeUnchanged
-import com.serverless.utils.mix
-import com.serverless.utils.removePrefixList
+import com.serverless.utils.extensions.addAlphanumericStringToTitle
+import com.serverless.utils.extensions.addIfNotEmpty
+import com.serverless.utils.extensions.commonPrefixList
+import com.serverless.utils.extensions.convertToPathString
+import com.serverless.utils.extensions.createNodePath
+import com.serverless.utils.extensions.getDifferenceWithOldHierarchy
+import com.serverless.utils.extensions.getListFromPath
+import com.serverless.utils.extensions.getRoughSizeOfEntity
+import com.serverless.utils.extensions.isNodeUnchanged
+import com.serverless.utils.extensions.mix
+import com.serverless.utils.extensions.removePrefixList
 import com.serverless.utils.CacheHelper
 import com.serverless.utils.Constants.getCurrentTime
-import com.serverless.utils.orderPage
+import com.serverless.utils.extensions.orderPage
 import com.workduck.models.AccessType
 import com.workduck.models.AdvancedElement
 import com.workduck.models.BlockMovementAction
@@ -50,7 +48,6 @@ import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
 import com.workduck.models.NodeAccess
-import com.workduck.models.NodeIdentifier
 import com.workduck.models.NodeOperationType
 import com.workduck.models.Page
 import com.workduck.models.Workspace
@@ -76,7 +73,6 @@ import com.workduck.utils.PageHelper.createDataOrderForPage
 import com.workduck.utils.PageHelper.mergePageVersions
 import com.workduck.utils.RelationshipHelper.findStartNodeOfEndNode
 import com.workduck.utils.TagHelper.createTags
-import com.workduck.utils.TagHelper.deleteTags
 import com.workduck.utils.TagHelper.updateTags
 import com.workduck.utils.WorkspaceHelper.removeRedundantPaths
 import com.workduck.utils.extensions.toIDList
@@ -116,7 +112,7 @@ class NodeService( // Todo: Inject them from handlers
 ) {
     private val workspaceService: WorkspaceService = WorkspaceService(nodeService = this)
     val namespaceService: NamespaceService = NamespaceService(nodeService = this)
-    private val nodeAccessService: NodeAccessService = NodeAccessService(nodeRepository, namespaceService.namespaceAccessService)
+    val nodeAccessService: NodeAccessService = NodeAccessService(nodeRepository, namespaceService.namespaceAccessService)
 
     fun deleteBlockFromNode(blockIDRequest: WDRequest, userWorkspaceID: String, nodeID: String, userID: String) {
         val nodeWorkspaceID = nodeAccessService.checkUserAccessWithoutNamespaceAndReturnWorkspaceID(userWorkspaceID, nodeID, userID, EntityOperationType.WRITE)
@@ -996,6 +992,15 @@ class NodeService( // Todo: Inject them from handlers
             e.updatedAt = e.createdAt
         }
         return nodeRepository.append(nodeID, nodeWorkspaceID, userID, elements, orderList)
+    }
+
+    fun appendEntityBlocks(nodeID: String, nodeWorkspaceID: String, userID: String, elements: List<AdvancedElement>) {
+        val orderList = mutableListOf<String>()
+
+        for (e in elements) {
+            orderList += e.id
+        }
+        nodeRepository.append(nodeID, nodeWorkspaceID, userID, elements, orderList)
     }
 
     fun updateNode(node: Node, storedNode: Node) : Node = runBlocking {

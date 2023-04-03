@@ -10,7 +10,7 @@ import com.serverless.models.requests.WDRequest
 import com.serverless.utils.ExceptionParser
 import com.serverless.utils.Helper.validateTokenAndWorkspace
 import com.serverless.utils.Messages
-import com.serverless.utils.handleWarmup
+import com.serverless.utils.extensions.handleWarmup
 import com.workduck.service.SnippetService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager

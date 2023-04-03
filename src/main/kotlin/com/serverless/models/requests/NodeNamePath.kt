@@ -3,7 +3,7 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidTitle
+import com.serverless.utils.extensions.isValidTitle
 
 /**
  * Node path DTO

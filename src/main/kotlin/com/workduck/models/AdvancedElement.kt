@@ -51,6 +51,9 @@ open class AdvancedElement(
     @JsonProperty("elementMetadata")
     var elementMetadata : ElementMetadata ?= null,
 
+    @JsonProperty("entityRefID")
+    var entityRefID : String? = null,
+
     @JsonProperty("createdBy")
     var createdBy: String? = null,
 
