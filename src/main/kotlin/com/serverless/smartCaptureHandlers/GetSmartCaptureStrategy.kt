@@ -4,10 +4,8 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
-import com.serverless.utils.SmartCaptureHelper
 import com.serverless.utils.extensions.getNamespaceIDFromQueryParam
 import com.serverless.utils.extensions.getNodeIDFromQueryParam
-import com.serverless.utils.extensions.withNotFoundException
 import com.workduck.service.SmartCaptureService
 
 class GetSmartCaptureStrategy: SmartCaptureStrategy {
