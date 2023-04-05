@@ -17,9 +17,8 @@ class GetSmartCaptureStrategy: SmartCaptureStrategy {
         val namespaceID = input.getNamespaceIDFromQueryParam() ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
 
         return input.pathParameters!!.id!!.let { captureID ->
-            smartCaptureService.getSmartCapture(captureID, nodeID, namespaceID, input.headers.workspaceID, input.tokenBody.userID)
-                .let {
-                ApiResponseHelper.generateStandardResponse(null, Messages.ERROR_GETTING_SMART_CAPTURE)
+            smartCaptureService.getSmartCapture(captureID, nodeID, namespaceID, input.headers.workspaceID, input.tokenBody.userID).let {
+                ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_GETTING_SMART_CAPTURE)
             }
         } /* since the routeKey would be matched, can't be null */
     }

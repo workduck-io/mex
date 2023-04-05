@@ -1,4 +1,4 @@
-package com.workduck.models.externalLambdas
+package com.workduck.models.externalRequests
 
 
 data class LambdaPayload(

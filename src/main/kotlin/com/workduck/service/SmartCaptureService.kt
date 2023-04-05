@@ -1,6 +1,7 @@
 package com.workduck.service
 
 import com.amazonaws.services.lambda.model.InvocationType
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.NodeNamespaceMap
@@ -12,8 +13,10 @@ import com.serverless.utils.Messages
 import com.workduck.models.AdvancedElement
 import com.workduck.models.EntityOperationType
 import com.workduck.models.EntityServiceCreateResponse
-import com.workduck.models.externalLambdas.ExternalRequestHeader
-import com.workduck.models.externalLambdas.RequestContext
+import com.workduck.models.entityServiceResponses.MultipleEntityResponse
+import com.workduck.models.entityServiceResponses.SingleEntityResponse
+import com.workduck.models.externalRequests.ExternalRequestHeader
+import com.workduck.models.externalRequests.RequestContext
 import com.workduck.utils.EntityHelper
 import com.workduck.utils.Helper
 import com.workduck.utils.LambdaHelper
@@ -40,11 +43,11 @@ class SmartCaptureService (
 
         val refBlock = EntityHelper.createEntityReferenceBlock(smartCapture.id, captureID, Constants.ELEMENT_SMART_CAPTURE)
         nodeService.appendEntityBlocks(nodeWorkspaceMap.nodeID, nodeWorkspaceMap.workspaceID, userID, listOf(refBlock))
-
+        println(captureID)
         return captureID
     }
 
-    //TODO(make sure createAt, createdBy fields retain their values in the entity store)
+
     fun updateSmartCapture(smartCaptureID: String, wdRequest: WDRequest, userID: String, userWorkspaceID: String) {
         val request = wdRequest as SmartCaptureRequest
 
@@ -53,8 +56,7 @@ class SmartCaptureService (
 
         val smartCapture: AdvancedElement = request.data
 
-        //TODO(pass correct values)
-        populateSmartCaptureMetadata(smartCapture, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
+        populateSmartCaptureMetadata(smartCapture, userID, createdAt = null, createdBy = null)
         invokeUpdateCaptureLambda(smartCaptureID, smartCapture, nodeWorkspaceMap.workspaceID, userID)
 
 
@@ -74,8 +76,7 @@ class SmartCaptureService (
                 workspaceDetails[Constants.WORKSPACE_ID]!!
             }
 
-        invokeGetCaptureLambda(workspaceID, userID, captureID)
-        return null
+        return invokeGetCaptureLambda(workspaceID, userID, captureID).data
     }
 
 
@@ -95,8 +96,8 @@ class SmartCaptureService (
         invokeDeleteCaptureLambda(workspaceID, userID, captureID)
     }
 
-    fun getAllSmartCapturesForFilter(workspaceID: String, userID: String, filterType: String, filterValue: String) {
-        invokeGetCapturesWithFilterLambda(workspaceID, userID, filterType, filterValue)
+    fun getAllSmartCapturesForFilter(workspaceID: String, userID: String, filterType: String, filterValue: String): MultipleEntityResponse {
+        return invokeGetCapturesWithFilterLambda(workspaceID, userID, filterType, filterValue)
 
     }
 
@@ -149,16 +150,16 @@ class SmartCaptureService (
 
     private fun invokeUpdateCaptureLambda(captureID: String, smartCapture: AdvancedElement, workspaceID: String, userID: String){
         val header = ExternalRequestHeader(workspaceID, userID)
-        val requestContext = RequestContext(RoutePaths.CREATE_CAPTURE, HttpMethods.POST)
+        val requestContext = RequestContext(RoutePaths.UPDATE_CAPTURE, HttpMethods.PATCH)
         val requestBody = objectMapper.writeValueAsString(EntityHelper.createEntityPayload(smartCapture))
-        val pathParameters : Map<String, String> = mapOf("captureID" to captureID)
+        val pathParameters : Map<String, String> = mapOf("id" to captureID)
         LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, requestBody = requestBody, pathParameters = pathParameters)
     }
 
-    private fun invokeGetCaptureLambda(workspaceID: String, userID: String, captureID: String) : AdvancedElement{
+    private fun invokeGetCaptureLambda(workspaceID: String, userID: String, captureID: String) : SingleEntityResponse {
         val header = ExternalRequestHeader(workspaceID, userID)
         val requestContext = RequestContext(RoutePaths.GET_CAPTURE, HttpMethods.GET)
-        val pathParameters : Map<String, String> = mapOf("captureId" to captureID)
+        val pathParameters : Map<String, String> = mapOf("id" to captureID)
         val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
         val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
         return Helper.objectMapper.readValue(jsonBody)
@@ -168,16 +169,18 @@ class SmartCaptureService (
     private fun invokeDeleteCaptureLambda(workspaceID: String, userID: String, captureID: String){
         val header = ExternalRequestHeader(workspaceID, userID)
         val requestContext = RequestContext(RoutePaths.DELETE_CAPTURE, HttpMethods.DELETE)
-        val pathParameters : Map<String, String> = mapOf("captureID" to captureID)
-        //TODO(invocationType could be event)
+        val pathParameters : Map<String, String> = mapOf("id" to captureID)
         LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
     }
 
-    private fun invokeGetCapturesWithFilterLambda(workspaceID: String, userID: String, filterType: String, filterValue: String){
+    private fun invokeGetCapturesWithFilterLambda(workspaceID: String, userID: String, filterType: String, filterValue: String)  : MultipleEntityResponse{
         val header = ExternalRequestHeader(workspaceID, userID)
         val requestContext = RequestContext(RoutePaths.GET_ALL_CAPTURES_WITH_FILTER, HttpMethods.GET)
         val queryStringParameters : Map<String, String> = mapOf("filterType" to filterType, "filterValue" to filterValue)
-        LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, queryStringParameters = queryStringParameters)
+        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, queryStringParameters = queryStringParameters)
+        val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
+        val singleEntityResponseList: List<SingleEntityResponse> = Helper.objectMapper.readValue(jsonBody, object : TypeReference<List<SingleEntityResponse>>() {})
+        return MultipleEntityResponse(entities = singleEntityResponseList)
     }
 
 
@@ -188,74 +191,5 @@ class SmartCaptureService (
         smartCapture.updatedAt = createdAt?: Constants.getCurrentTime()
 
     }
-
-}
-
-fun main(){
-
-    val bearerToken = "eyJraWQiOiJ1MjhPdDR1R1pWTGpBaXRZbUxXRm9valVQNWxtVlVmZXhiV1wvT1ZKenJUWT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI1YjJiYzljZi02Y2M4LTQwZmYtOGE1My00NWIxZWI4NTE1NjEiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfWnU3RkFoN2hqIiwiY29nbml0bzp1c2VybmFtZSI6InJpc2hpdmlrcmFtK2xpbWl0QHdvcmtkdWNrLmlvIiwiY3VzdG9tOm1leF93b3Jrc3BhY2VfaWRzIjoiV09SS1NQQUNFX1ZQRG1WY0hZeEFyQ2FxR0hMbU15UiIsIm9yaWdpbl9qdGkiOiJiMjMyOGQ4Mi1jN2E2LTQ5OTMtOTE1YS03MTkyOTgyM2I2MDEiLCJhdWQiOiI2cHZxdDY0cDBsMmtxa2sycWFmZ2RoMTNxZSIsImV2ZW50X2lkIjoiNTZjNGU2NzAtZWJkNC00NGI4LTk0NDctY2ViMGNmMGU0YTQ1IiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE2NzMzNDIwNzIsImV4cCI6MTY3MzM0NTY3MiwiY3VzdG9tOnVzZXJfdHlwZSI6InByb21wdF93ZWJhcHAiLCJpYXQiOjE2NzMzNDIwNzIsImp0aSI6ImJlODAyNzc2LWJiYjMtNGE5OC05YzY4LWEzOTNkMjRjY2M5MyIsImVtYWlsIjoicmlzaGl2aWtyYW0rbGltaXRAd29ya2R1Y2suaW8ifQ.g4L67TMU2bhNt2gR8IivHvtCa3rRJqWKpWr-pzuAaf_FYVhLri75XpmOb2m3fkOP5aWNC2gs4Lbn2U8bj3_at7ClIpPBacIAILZoKXTJAq6LDIBF9qPvTOdIZjN_ONeO4J9H82ddSVFFfGYAk_ln8oXO7xwtW6-1Vhonuo32DGHmPWpNhBXL3EvjkxTPB15PjvRTe8u_BHKZq0xFOKaH_wznArdQa_NZAACdob-0_ICq_Ui8G1bp7_gFuJ93RQ1B1WHA2HyWbz65_94fUPd-rC00dPp5XNgUHEWl5-XNRMePKAIaUj437DPqMHN96VoSIT6pnlPu8ep6NMD-9lPCFw'"
-    val json = """
-        {
-          "type" : "SmartCaptureRequest",
-          "nodeNamespaceMap": {
-            "nodeID": "NODE_4yDN4rLMqeYERAPhPDp7p",
-            "namespaceID": "NAMESPACE_UNffmecrLRejbiccyVPhz"
-          },
-          "data": 
-            {
-              "id": "TEMP_tgVBX",
-              "elementType": "smartCapture",
-              "content": "",
-              "elementMetadata": {
-                "type": "smartCapture",
-                "page": "LinkedIn",
-                "sourceUrl": "https://www.linkedin.com/in/rishivikram-nandakumar/",
-                "configID": "CONFIG_dummy123"
-              },
-              "children": [
-                {
-                  "id": "LABEL_38CJ",
-                  "children": [
-                    {
-                      "properties": {
-                        "label": "Location",
-                        "value": "Bangalore Urban, Karnataka, India"
-                      }
-                    }
-                  ],
-                  "elementType": "p",
-                  "properties": {
-                    "type": "p",
-                    "row": 0
-                  }
-                },
-                {
-                  "id": "LABEL_37Xb",
-                  "children": [
-                    {
-                      "properties": {
-                        "label": "Headline",
-                        "value": "Product Engineer @Workduck Humans | Software Engineer"
-                      }
-                    }
-                  ],
-                  "elementType": "p",
-                  "properties": {
-                    "type": "p",
-                    "row": 0,
-                    "col": 1
-                  }
-                }
-              ]
-            }
-          
-        }
-    """.trimIndent()
-
-    val r = Helper.objectMapper.readValue<SmartCaptureRequest>(json)
-    //SmartCaptureService().createSmartCapture(r, "45135611-f861-4de2-9e1f-782e4c69ec3b", "WORKSPACE_ynJdV4zBmtixbNkEYqbCB")
-    SmartCaptureService().getSmartCapture("CAPTURE_K9zWcgMjrnJdytDwgtYmB", "NODE_4yDN4rLMqeYERAPhPDp7p", "NAMESPACE_UNffmecrLRejbiccyVPhz",
-    "WORKSPACE_ynJdV4zBmtixbNkEYqbCB", "45135611-f861-4de2-9e1f-782e4c69ec3b")
-
 
 }

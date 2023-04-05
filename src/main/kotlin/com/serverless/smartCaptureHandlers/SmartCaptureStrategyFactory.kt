@@ -13,6 +13,7 @@ class SmartCaptureStrategyFactory {
             createSmartCapture to CreateSmartCaptureStrategy(),
             getSmartCapture to GetSmartCaptureStrategy(),
             getAllSmartCapturesForFilterStrategy to GetAllSmartCapturesForFilterStrategy(),
+            updateSmartCaptureStrategy to UpdateSmartCaptureStrategy(),
             deleteSmartCapture to DeleteSmartCaptureStrategy()
         )
 

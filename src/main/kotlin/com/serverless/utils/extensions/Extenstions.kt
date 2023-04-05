@@ -123,7 +123,7 @@ fun String.isValidCaptureID(): Boolean {
 }
 
 fun String.isValidConfigID(): Boolean {
-    return this.isValidID(Constants.CONFIG_ID_PREFIX)
+    return this.startsWith(Constants.CONFIG_ID_PREFIX)
 }
 
 fun String.isValidNamespaceID(): Boolean {

@@ -4,13 +4,12 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.AWSLambdaClient
 import com.amazonaws.services.lambda.model.InvocationType
 import com.amazonaws.services.lambda.model.InvokeRequest
-import com.serverless.models.Header
 import com.serverless.models.responses.ExternalResponse
 import com.workduck.models.exceptions.WDServiceClientErrorException
 import com.workduck.models.exceptions.WDServiceServerErrorException
-import com.workduck.models.externalLambdas.ExternalRequestHeader
-import com.workduck.models.externalLambdas.LambdaPayload
-import com.workduck.models.externalLambdas.RequestContext
+import com.workduck.models.externalRequests.ExternalRequestHeader
+import com.workduck.models.externalRequests.LambdaPayload
+import com.workduck.models.externalRequests.RequestContext
 
 object LambdaHelper {
 
@@ -50,14 +49,23 @@ object LambdaHelper {
     }
 
     private fun handlerError(externalResponse: ExternalResponse) {
-        externalResponse.errorMessage?.let { errorMessage ->
+
+        if (externalResponse.statusCode in 400..599) {
+            val errorMessage = extractErrorMessage(externalResponse.body) ?: "An error occurred."
+
             when (externalResponse.statusCode) {
                 in 400..499 -> throw WDServiceClientErrorException(externalResponse.statusCode, errorMessage)
                 else -> throw WDServiceServerErrorException(externalResponse.statusCode, errorMessage)
             }
         }
+    }
 
-        // for the unhandled exceptions by EntityService.
-        if(externalResponse.statusCode == 500) throw WDServiceServerErrorException(externalResponse.statusCode, externalResponse.body ?: "")
+    private fun extractErrorMessage(responseBody: String?): String? {
+        return try {
+            val jsonBody = Helper.objectMapper.readValue(responseBody, Map::class.java)
+            jsonBody["message"] as? String
+        } catch (e: Exception) {
+            null
+        }
     }
 }

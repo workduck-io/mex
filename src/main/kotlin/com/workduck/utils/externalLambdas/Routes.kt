@@ -2,9 +2,10 @@ package com.workduck.utils.externalLambdas
 
 object RoutePaths {
     const val CREATE_CAPTURE = "/capture"
-    const val GET_CAPTURE = "/capture/{captureId}"
-    const val GET_ALL_CAPTURES_WITH_FILTER = "/capture"
-    const val DELETE_CAPTURE = "/capture/{captureId}"
+    const val UPDATE_CAPTURE = "/capture/{id}"
+    const val GET_CAPTURE = "/capture/{id}"
+    const val GET_ALL_CAPTURES_WITH_FILTER = "/capture/all"
+    const val DELETE_CAPTURE = "/capture/{id}"
 }
 
 object HttpMethods {

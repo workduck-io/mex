@@ -375,8 +375,8 @@ SmartCapture:
         request:
           parameters:
             querystrings:
-              nodeID: false
-              namespaceID: false
+              nodeID: true
+              namespaceID: true
 
     - http:
         path: /v1/capture/{id}

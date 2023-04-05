@@ -1,4 +1,4 @@
-package com.workduck.models.externalLambdas
+package com.workduck.models.externalRequests
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
