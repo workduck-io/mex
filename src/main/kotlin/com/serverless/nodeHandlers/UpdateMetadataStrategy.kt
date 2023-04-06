@@ -3,9 +3,8 @@ package com.serverless.nodeHandlers
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
-import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidNodeID
+import com.serverless.utils.extensions.isValidNodeID
 import com.workduck.service.NodeService
 
 class UpdateMetadataStrategy : NodeStrategy {

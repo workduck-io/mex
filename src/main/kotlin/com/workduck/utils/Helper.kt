@@ -6,10 +6,10 @@ import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.serverless.utils.Constants
 import org.apache.logging.log4j.LogManager
 import java.security.SecureRandom
-import java.util.*
-import com.serverless.utils.Constants
+import java.util.UUID
 
 
 object Helper {
@@ -114,14 +114,5 @@ object Helper {
         }
         return finalKeyValueMap
     }
-
-
-
-
-
-
-
-
-
 
 }

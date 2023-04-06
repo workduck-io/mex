@@ -1,15 +1,15 @@
-package com.serverless.utils
+package com.serverless.utils.extensions
 
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.requests.NodePath
-import com.serverless.models.requests.SnippetRequest
+import com.serverless.utils.Constants
 import com.workduck.models.Entity
 import com.workduck.models.Namespace
 import com.workduck.models.Node
 import com.workduck.models.Page
 import com.workduck.models.Snippet
-import com.workduck.models.WorkspaceIdentifier
+import com.workduck.models.AdvancedElement
 import com.workduck.utils.Helper
 import com.workduck.utils.PageHelper
 import kotlinx.coroutines.Deferred
@@ -118,6 +118,14 @@ fun String.isValidSnippetID(): Boolean {
     return this.isValidID(Constants.SNIPPET_ID_PREFIX)
 }
 
+fun String.isValidCaptureID(): Boolean {
+    return this.isValidID(Constants.CAPTURE_ID_PREFIX)
+}
+
+fun String.isValidConfigID(): Boolean {
+    return this.startsWith(Constants.CONFIG_ID_PREFIX)
+}
+
 fun String.isValidNamespaceID(): Boolean {
     return this.isValidID(Constants.NAMESPACE_ID_PREFIX)
 }
@@ -136,8 +144,10 @@ private fun String.isValidID(prefix: String): Boolean {
 fun String.isValidTitle() : Boolean {
     return this.filter {
         it.isLetterOrDigit() || Constants.VALID_TITLE_SPECIAL_CHAR.contains(it)
-    }.length == this.length
+    }.length == this.length && this.isNotEmpty()
 }
+
+
 fun String.isValidNanoID(): Boolean {
     return this.filter {
         Constants.NANO_ID_RANGE.contains(it)
@@ -192,6 +202,6 @@ fun Entity.getRoughSizeOfEntity() : Int{
 }
 
 
-fun Page.orderPage() : Page {
+fun Page<AdvancedElement>.orderPage() : Page<AdvancedElement> {
     return PageHelper.orderBlocks(this)
 }

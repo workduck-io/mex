@@ -11,7 +11,7 @@ import com.serverless.models.requests.UpdateSharedNodeRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.sqsNodeEventHandlers.DDBPayload
 import com.serverless.sqsNodeEventHandlers.SQSPayload
-import com.serverless.utils.isValidNodeID
+import com.serverless.utils.extensions.isValidNodeID
 import com.workduck.models.Namespace
 import com.workduck.models.NamespaceIdentifier
 import com.workduck.models.Node
@@ -82,7 +82,15 @@ fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspa
         metadata = this.pageMetadata
     )
 
-
+//fun SmartCaptureRequest.createSmartCaptureObjectFromSmartCaptureRequest(userID: String, workspaceID: String): SmartCapture =
+//    SmartCapture(
+//        id = this.id,
+//        workspaceIdentifier = WorkspaceIdentifier(workspaceID),
+//        lastEditedBy = userID,
+//        data = SmartCaptureHelper.convertAdvancedToBlockElement(this),
+//        title = this.title,
+//    )
+//
 
 fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
     return Workspace(

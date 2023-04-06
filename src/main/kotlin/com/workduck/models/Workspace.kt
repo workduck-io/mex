@@ -35,6 +35,7 @@ class Workspace(
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: ItemType = ItemType.Workspace,
 
+    //TODO(remove these fields)
     @JsonProperty("nodeHierarchyInformation")
     @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
     var nodeHierarchyInformation: List<String> ? = null,

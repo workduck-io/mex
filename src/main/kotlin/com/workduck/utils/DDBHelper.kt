@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 object DDBHelper {
 
 //    fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
-//        AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-east-1"))
+//        AwsClientBuilder.EndpointConfiguration("http://host.docker.internal:8000", "us-east-1"))
 //        .build()
 
     fun createDDBConnection(): AmazonDynamoDB = AmazonDynamoDBClientBuilder

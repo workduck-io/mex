@@ -4,7 +4,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidSnippetID
+import com.serverless.utils.extensions.isValidSnippetID
 import com.workduck.service.SnippetService
 
 class UpdateMetadataStrategy : SnippetStrategy {

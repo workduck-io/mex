@@ -12,7 +12,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.serverless.utils.filterPersonalNamespaces
+import com.serverless.utils.extensions.filterPersonalNamespaces
 import com.workduck.models.AccessType
 import com.workduck.models.HierarchyUpdateAction
 import com.workduck.models.Identifier

@@ -8,11 +8,13 @@ import com.workduck.utils.Helper
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
+    property = "type",
+    visible = true
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = HighlightMetadata::class, name = "highlight"),
-    JsonSubTypes.Type(value = HighlightMetadataV1::class, name = "highlightV1")
+    JsonSubTypes.Type(value = HighlightMetadataV1::class, name = "highlightV1"),
+    JsonSubTypes.Type(value = SmartCaptureMetadata::class, name = "smartCapture")
 )
 sealed class ElementMetadata
 
@@ -26,4 +28,12 @@ data class HighlightMetadata(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class HighlightMetadataV1(
     val id : String = Helper.generateNanoID(IdentifierType.HIGHLIGHT.name)
+) : ElementMetadata()
+
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class SmartCaptureMetadata(
+    val page: String,
+    val sourceUrl: String,
+    val configID : String
 ) : ElementMetadata()

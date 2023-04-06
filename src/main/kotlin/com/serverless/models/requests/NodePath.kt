@@ -1,9 +1,10 @@
 package com.serverless.models.requests
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.serverless.utils.getListFromPath
-import com.serverless.utils.isValidNodeID
-import com.serverless.utils.isValidTitle
+import com.serverless.utils.Messages
+import com.serverless.utils.extensions.getListFromPath
+import com.serverless.utils.extensions.isValidNodeID
+import com.serverless.utils.extensions.isValidTitle
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
 
@@ -33,7 +34,7 @@ data class NodePath(
         }
 
         require(allNodesNames.none { title -> !title.isValidTitle() }) {
-            "Invalid Title"
+            Messages.INVALID_TITLE
         }
     }
 }

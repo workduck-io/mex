@@ -4,12 +4,13 @@ import com.amazonaws.services.cognitoidp.model.UnauthorizedException
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMappingException
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
-import com.amazonaws.services.dynamodbv2.model.ItemCollectionSizeLimitExceededException
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.workduck.models.exceptions.WDNodeSizeLargeException
 import com.workduck.models.exceptions.WDNotFoundException
+import com.workduck.models.exceptions.WDServiceClientErrorException
+import com.workduck.models.exceptions.WDServiceServerErrorException
 
 
 /**
@@ -49,6 +50,13 @@ object ExceptionParser {
                     Messages.ITEM_SIZE_LARGE -> ApiResponseHelper.generateStandard4xxErrorResponse(e, Messages.ITEM_SIZE_LARGE, 400)
                     else -> ApiResponseHelper.generateStandard5xxErrorResponse(e,Messages.INTERNAL_SERVER_ERROR, 500)
                 }
+            }
+            is WDServiceServerErrorException -> {
+                ApiResponseHelper.generateStandard5xxErrorResponse(e, e.message ?: Messages.INTERNAL_SERVER_ERROR, e.statusCode)
+            }
+
+            is WDServiceClientErrorException -> {
+                ApiResponseHelper.generateStandard4xxErrorResponse(e, e.message ?: Messages.BAD_REQUEST, e.statusCode)
             }
             else -> ApiResponseHelper.generateStandard5xxErrorResponse(e,Messages.INTERNAL_SERVER_ERROR, 500)
         }

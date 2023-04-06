@@ -122,7 +122,7 @@ data class Node(
     @DynamoDBAttribute(attributeName = "createdAt")
     override var createdAt: Long? = Constants.getCurrentTime()
 
-) : Entity, Page, ItemStatusAdherence {
+) : Entity, Page<AdvancedElement>, ItemStatusAdherence {
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")

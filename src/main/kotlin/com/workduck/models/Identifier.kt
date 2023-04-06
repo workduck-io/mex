@@ -19,6 +19,7 @@ enum class IdentifierType(s: String) {
     BOOKMARK("BOOKMARK"),
     COMMENT("COMMENT"),
     SNIPPET("SNIPPET"),
+    SMART_CAPTURE("SMART_CAPTURE"),
     HIGHLIGHT("HIGHLIGHT"),
 
 }

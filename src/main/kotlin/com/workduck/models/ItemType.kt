@@ -15,5 +15,6 @@ enum class ItemType {
     NodeSchema,
     Snippet,
     NodeAccess,
-    NamespaceAccess
+    NamespaceAccess,
+    SmartCapture
 }

@@ -360,7 +360,49 @@ Node:
         method: patch
         private: true
 
+SmartCapture:
+  handler: com.serverless.smartCaptureHandlers.SmartCaptureHandler
+  events:
+    - http:
+        path: /v1/capture
+        method: post
+        private: true
 
+    - http:
+        path: /v1/capture/{id}
+        method: get
+        private: true
+        request:
+          parameters:
+            querystrings:
+              nodeID: true
+              namespaceID: true
+
+    - http:
+        path: /v1/capture/{id}
+        method: put
+        private: true
+
+    - http:
+        path: /v1/capture/{id}
+        method: delete
+        private: true
+        request:
+          parameters:
+            querystrings:
+              nodeID: false
+              namespaceID: false
+
+    - http:
+        path: /v1/capture/filter
+        method: get
+        private: true
+        request:
+          parameters:
+            querystrings:
+              configID: true
+              isWorkspaceID: true
+              isUserID: true
 
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler

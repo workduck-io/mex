@@ -1,7 +1,7 @@
 package com.workduck.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.serverless.utils.isValidSnippetID
+import com.serverless.utils.extensions.isValidSnippetID
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PageMetadata(

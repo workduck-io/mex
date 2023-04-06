@@ -2,6 +2,8 @@ package com.serverless.utils
 
 object Messages {
 
+    const val INVALID_TITLE = "Invalid Title"
+    const val TITLE_REQUIRED = "Title cannot be empty"
 
     const val ERROR_CREATING_NODE = "Error creating node"
     const val ERROR_GETTING_NODE = "Error getting node"
@@ -66,6 +68,7 @@ object Messages {
     const val ERROR_NAMESPACE_PUBLIC = "Namespace already public"
     const val ERROR_NAMESPACE_DELETED = "Namespace already deleted"
     const val INVALID_NAMESPACE_ID  = "Invalid NamespaceID"
+    const val INVALID_CONFIG_ID  = "Invalid ConfigID"
     const val SUCCESSOR_NAMESPACE_NULL = "Successor Namespace Information Unavailable"
     const val CREATED_BY_NULL = "Created By Information Unavailable"
     const val INVALID_SUCCESSOR_NAMESPACE = "Either the successor namespace does not exist or you do not have permissions"
@@ -83,6 +86,12 @@ object Messages {
     const val INVALID_SNIPPET_ID = "Invalid SnippetID"
     const val ERROR_CLONING_SNIPPET = "Error cloning snippet"
     const val ERROR_UPDATING_SNIPPET_METADATA = "Error updating snippet metadata"
+
+    const val INVALID_CAPTURE_ID = "Invalid CaptureID"
+    const val ERROR_CREATING_SMART_CAPTURE = "Error creating smart capture"
+    const val ERROR_GETTING_SMART_CAPTURE = "Error getting smart capture"
+    const val ERROR_GETTING_ALL_SMART_CAPTURES = "Error getting all smart captures"
+    const val ERROR_DELETING_SMART_CAPTURE = "Error deleting smart capture"
 
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"

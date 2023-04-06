@@ -4,7 +4,7 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
-import com.serverless.utils.isValidNamespaceID
+import com.serverless.utils.extensions.isValidNamespaceID
 import com.workduck.service.NodeService
 
 class DeleteArchivedNodeStrategy : NodeStrategy {

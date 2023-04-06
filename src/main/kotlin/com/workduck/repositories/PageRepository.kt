@@ -31,7 +31,7 @@ import com.workduck.utils.PageHelper
 import com.workduck.utils.SnippetHelper
 import org.apache.logging.log4j.LogManager
 
-class PageRepository <T : Page> (
+class PageRepository <T : Page<*>> (
         private val mapper: DynamoDBMapper,
         private val dynamoDB: DynamoDB,
         private val dynamoDBMapperConfig: DynamoDBMapperConfig,

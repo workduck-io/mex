@@ -14,5 +14,6 @@ data class PathParameter(
     val preferenceType: String?,
     val version: String?,
     val tagName: String?,
-    val path: String?
+    val path: String?,
+    val configId: String?
 )

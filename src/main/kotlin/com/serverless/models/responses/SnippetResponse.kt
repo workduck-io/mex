@@ -4,7 +4,7 @@ import com.workduck.models.AdvancedElement
 import com.workduck.models.PageMetadata
 
 data class SnippetResponse(
-    val id: String?,
+    val id: String,
 
     val data: List<AdvancedElement>?,
 
@@ -17,10 +17,6 @@ data class SnippetResponse(
     override val createdAt: Long?,
 
     override val updatedAt: Long,
-
-    var version: Int?,
-
-    var template: Boolean?,
 
     var metadata: PageMetadata?
 
