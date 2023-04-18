@@ -44,5 +44,7 @@ object Constants {
     const val PERSONAL_NAMESPACE_NAME = "Personal"
     const val SMART_CAPTURE_DEFAULT_NODE_ID = "NODE_XyeGVpziGiTUeMYafzbd9"
     const val ELEMENT_SMART_CAPTURE = "smartCapture"
+    const val HIGHLIGHT_DEFAULT_NODE_ID = "NODE_XyeGVpziGiTUeMYafzbd9"
+    const val ELEMENT_HIGHLIGHT = "highlight"
 
 }

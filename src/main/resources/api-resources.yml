@@ -360,6 +360,44 @@ Node:
         method: patch
         private: true
 
+Highlights:
+  handler: com.serverless.highlightHandlers.HighlightHandler
+  events:
+    - http:
+        path: /v1/highlight
+        method: post
+        private: true
+
+    - http:
+        path: /v1/highlight/multiple
+        method: post
+        private: true
+
+    - http:
+        path: /v1/highlight/{id}
+        method: get
+        private: true
+        request:
+          parameters:
+            querystrings:
+              nodeID: true
+              namespaceID: true
+
+    - http:
+        path: /v1/highlight/{id}
+        method: delete
+        private: true
+        request:
+          parameters:
+            querystrings:
+              nodeID: false
+              namespaceID: false
+
+    - http:
+        path: /v1/highlight/all
+        method: get
+        private: true
+
 SmartCapture:
   handler: com.serverless.smartCaptureHandlers.SmartCaptureHandler
   events:

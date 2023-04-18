@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = UpdateAccessTypesRequest::class, name = "UpdateAccessTypesRequest"),
     JsonSubTypes.Type(value = SmartCaptureRequest::class, name = "SmartCaptureRequest"),
     JsonSubTypes.Type(value = MoveEntityRequest::class, name = "MoveEntityRequest"),
+    JsonSubTypes.Type(value = HighlightRequest::class, name = "HighlightRequest"),
     JsonSubTypes.Type(value = SnippetRequest::class, name = "SnippetRequest"),
     JsonSubTypes.Type(value = ElementRequest::class, name = "ElementRequest"),
     JsonSubTypes.Type(value = WorkspaceRequest::class, name = "WorkspaceRequest"),

@@ -8,3 +8,10 @@ data class MultipleEntityResponse(
 
     val entities : List<SingleEntityResponse>
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class MultipleEntityPaginatedResponse(
+
+    val Items : List<SingleEntityResponse>,
+    val lastKey : String? = null
+)

@@ -43,7 +43,7 @@ data class SmartCapture(
     var itemStatus: ItemStatus = ItemStatus.ACTIVE,
 
     @JsonProperty("data")
-    @DynamoDBTypeConverted(converter = CaptureDataConverter::class)
+    @DynamoDBTypeConverted(converter = EntityDataConverter::class)
     @DynamoDBAttribute(attributeName = "nodeData")
     override var data: List<BlockElement>? = null,
 

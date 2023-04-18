@@ -5,13 +5,13 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.workduck.models.BlockElement
 import com.workduck.utils.Helper
 
-class CaptureDataConverter: DynamoDBTypeConverter<MutableMap<String, String>, MutableList<BlockElement>> {
+class EntityDataConverter: DynamoDBTypeConverter<MutableMap<String, String>, MutableList<BlockElement>> {
     private val objectMapper = Helper.objectMapper
 
     override fun convert(nodeData: MutableList<BlockElement>): MutableMap<String, String> {
         val mapOfData: MutableMap<String, String> = mutableMapOf()
         for (element in nodeData) {
-            mapOfData[element.captureID] = objectMapper.writeValueAsString(element)
+            mapOfData[element.entityID] = objectMapper.writeValueAsString(element)
         }
         return mapOfData
     }
