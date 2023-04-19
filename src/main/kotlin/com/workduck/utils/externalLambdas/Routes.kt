@@ -1,11 +1,11 @@
 package com.workduck.utils.externalLambdas
 
 object RoutePaths {
-    const val CREATE_CAPTURE = "/capture"
-    const val UPDATE_CAPTURE = "/capture/{id}"
-    const val GET_CAPTURE = "/capture/{id}"
-    const val GET_ALL_CAPTURES_WITH_FILTER = "/capture/all"
-    const val DELETE_CAPTURE = "/capture/{id}"
+    const val CREATE_CAPTURE = "/"
+    const val UPDATE_CAPTURE = "/{id}"
+    const val GET_CAPTURE = "/{id}"
+    const val GET_ALL_CAPTURES_WITH_FILTER = "/all"
+    const val DELETE_CAPTURE = "/{id}"
     const val CREATE_HIGHLIGHT = "/"
     const val GET_HIGHLIGHT = "/{id}"
     const val DELETE_HIGHLIGHT = "/{id}"

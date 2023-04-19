@@ -7,5 +7,8 @@ data class ExternalRequestHeader(
     val workspaceID : String,
 
     @JsonProperty("mex-user-id")
-    val userID : String
+    val userID : String,
+
+    @JsonProperty("external-source")
+    val externalSource : String? = "mex-backend"
 )
