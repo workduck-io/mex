@@ -14,4 +14,7 @@ data class HighlightRequest (
     // rather than a list, a single Advanced Element
     @JsonProperty("data")
     val data: AdvancedElement,
+
+    @JsonProperty("id")
+    val id: String? = null,
 ) : WDRequest

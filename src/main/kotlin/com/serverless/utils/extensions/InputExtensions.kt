@@ -13,7 +13,9 @@ fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let {
 }
 
 fun Input.getLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    return map[Constants.LASTKEY]
+    return map[Constants.LASTKEY]?.also { lastKey ->
+        require(lastKey.isValidHighlightLastKey()) { Messages.INVALID_HIGHLIGHT_ID }
+    }
 }
 
 fun Input.getNamespaceIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->

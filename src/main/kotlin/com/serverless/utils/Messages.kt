@@ -99,6 +99,7 @@ object Messages {
     const val ERROR_GETTING_ALL_HIGHLIGHTS = "Error getting all highlights"
     const val ERROR_GETTING_MULTIPLE_HIGHLIGHTS = "Error getting multiple highlights"
     const val ERROR_DELETING_HIGHLIGHT  = "Error deleting highlight"
+    const val INVALID_HIGHLIGHT_ID  = "Invalid HighlighID"
 
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"

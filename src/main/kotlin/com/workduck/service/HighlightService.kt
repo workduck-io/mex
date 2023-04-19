@@ -34,7 +34,7 @@ class HighlightService(
         val nodeWorkspaceMap = getNodeIDWorkspaceID(request.nodeNamespaceMap, userID, userWorkspaceID)
         val highlight: AdvancedElement = request.data
         populateHighlightMetadata(highlight, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
-        val highlightID = invokeCreateHighlightLambda(highlight, nodeWorkspaceMap.workspaceID, userID).id
+        val highlightID = invokeCreateOrUpdateHighlightLambda(request.id,highlight, nodeWorkspaceMap.workspaceID, userID).id
         val refBlock = EntityHelper.createEntityReferenceBlock(highlight.id, highlightID, Constants.ELEMENT_HIGHLIGHT)
         nodeService.appendEntityBlocks(nodeWorkspaceMap.nodeID, nodeWorkspaceMap.workspaceID, userID, listOf(refBlock))
 
@@ -122,10 +122,11 @@ class HighlightService(
     }
 
 
-    private fun invokeCreateHighlightLambda(highlight: AdvancedElement, workspaceID: String, userID: String) : EntityServiceCreateResponse {
+    private fun invokeCreateOrUpdateHighlightLambda(highlightID: String?,highlight: AdvancedElement, workspaceID: String, userID: String) : EntityServiceCreateResponse {
         val header = ExternalRequestHeader(workspaceID, userID)
         val requestContext = RequestContext(RoutePaths.CREATE_HIGHLIGHT, HttpMethods.POST)
-        val requestBody = objectMapper.writeValueAsString(EntityHelper.createEntityPayload(highlight))
+        val requestBody = if(highlightID == null) objectMapper.writeValueAsString(EntityHelper.createEntityPayload(highlight))
+                            else objectMapper.writeValueAsString(EntityHelper.updateEntityPayload(highlightID, highlight))
         val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.HIGHLIGHT_LAMBDA, requestBody = requestBody)
 
         val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
