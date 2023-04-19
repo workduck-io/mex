@@ -75,9 +75,8 @@ class HighlightService(
         invokeDeleteCaptureLambda(workspaceID, userID, highlightID)
     }
 
-    fun getAllHighlights(workspaceID: String, userID: String): MultipleEntityPaginatedResponse {
-        return invokeGetAllHighlightsLambda(workspaceID, userID)
-
+    fun getAllHighlights(workspaceID: String, userID: String, lastKey: String?): MultipleEntityPaginatedResponse {
+        return invokeGetAllHighlightsLambda(workspaceID, userID, lastKey)
     }
 
     fun getMultipleHighlights(wdRequest: WDRequest, userID: String, userWorkspaceID: String): MultipleEntityResponse {
@@ -151,10 +150,11 @@ class HighlightService(
         LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.HIGHLIGHT_LAMBDA, pathParameters = pathParameters)
     }
 
-    private fun invokeGetAllHighlightsLambda(workspaceID: String, userID: String)  : MultipleEntityPaginatedResponse {
+    private fun invokeGetAllHighlightsLambda(workspaceID: String, userID: String, lastKey: String?)  : MultipleEntityPaginatedResponse {
         val header = ExternalRequestHeader(workspaceID, userID)
         val requestContext = RequestContext(RoutePaths.GET_ALL_HIGHLIGHTS, HttpMethods.GET)
-        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.HIGHLIGHT_LAMBDA)
+        val response = if (lastKey == null) LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.HIGHLIGHT_LAMBDA)
+                        else LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.HIGHLIGHT_LAMBDA, queryStringParameters = mapOf("lastKey" to lastKey))
         val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
         val multipleEntityResponseList: MultipleEntityPaginatedResponse= Helper.objectMapper.readValue(jsonBody, object : TypeReference<MultipleEntityPaginatedResponse>() {})
         return MultipleEntityPaginatedResponse(Items = multipleEntityResponseList.Items, lastKey = multipleEntityResponseList.lastKey)

@@ -12,6 +12,10 @@ fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let {
     }
 }
 
+fun Input.getLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.LASTKEY]
+}
+
 fun Input.getNamespaceIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
     map[Constants.NAMESPACE_ID]?.also { nodeID ->
         require(nodeID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }

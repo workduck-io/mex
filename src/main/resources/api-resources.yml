@@ -397,6 +397,10 @@ Highlights:
         path: /v1/highlight/all
         method: get
         private: true
+        request:
+          parameters:
+            querystrings:
+              lastKey: false
 
 SmartCapture:
   handler: com.serverless.smartCaptureHandlers.SmartCaptureHandler

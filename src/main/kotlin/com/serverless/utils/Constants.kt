@@ -37,6 +37,7 @@ object Constants {
     const val NAMESPACE_METADATA = "namespaceMetadata"
     const val WORKSPACE_ID = "workspaceID"
     const val NODE_ID = "nodeID"
+    const val LASTKEY = "lastKey"
     const val NAMESPACE_ID = "namespaceID"
     const val CONFIG_ID = "configID"
     const val USER_ID = "userID"
