@@ -6,15 +6,18 @@ import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
 import com.serverless.utils.extensions.getBooleanFromQueryParam
+import com.serverless.utils.extensions.getCaptureLastKeyFromQueryParam
 import com.serverless.utils.extensions.getConfigIDFromQueryParam
+import com.serverless.utils.extensions.getHighlightLastKeyFromQueryParam
 import com.workduck.service.SmartCaptureService
 
 class GetAllSmartCapturesForFilterStrategy: SmartCaptureStrategy {
     override fun apply(input: Input, smartCaptureService: SmartCaptureService): ApiGatewayResponse {
 
         val (filterType, filterValue) = handleQueryParams(input)
+        val lastKey = input.getCaptureLastKeyFromQueryParam()
 
-        return smartCaptureService.getAllSmartCapturesForFilter(input.headers.workspaceID, input.tokenBody.userID, filterType, filterValue).let {
+        return smartCaptureService.getAllSmartCapturesForFilter(input.headers.workspaceID, input.tokenBody.userID, filterType, filterValue, lastKey).let {
             ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_DELETING_SMART_CAPTURE)
         }
     }

@@ -1,8 +1,5 @@
 package com.serverless.utils
 
-import com.workduck.models.IdentifierType
-import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import java.time.Instant
 
 object Constants {
@@ -38,7 +35,7 @@ object Constants {
     const val NAMESPACE_METADATA = "namespaceMetadata"
     const val WORKSPACE_ID = "workspaceID"
     const val NODE_ID = "nodeID"
-    const val LASTKEY = "lastKey"
+    const val LAST_KEY = "lastKey"
     const val NAMESPACE_ID = "namespaceID"
     const val CONFIG_ID = "configID"
     const val USER_ID = "userID"

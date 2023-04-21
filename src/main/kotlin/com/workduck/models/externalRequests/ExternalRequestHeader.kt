@@ -10,5 +10,5 @@ data class ExternalRequestHeader(
     val userID : String,
 
     @JsonProperty("external-source")
-    val externalSource : String? = "mex-backend"
+    val externalSource : String = "mex-backend"
 )

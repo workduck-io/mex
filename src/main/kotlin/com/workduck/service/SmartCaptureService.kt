@@ -1,12 +1,6 @@
 package com.workduck.service
 
-import com.amazonaws.services.lambda.model.InvocationType
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.MoveEntityRequest
-import com.serverless.models.requests.NodeNamespaceMap
-import com.serverless.models.requests.NodeWorkspaceMap
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
@@ -17,19 +11,19 @@ import com.workduck.models.EntityOperationType
 import com.workduck.models.EntityServiceCreateResponse
 import com.workduck.models.Node
 import com.workduck.models.entityServiceResponses.MultipleEntityResponse
-import com.workduck.models.entityServiceResponses.SingleEntityResponse
-import com.workduck.models.externalRequests.ExternalRequestHeader
-import com.workduck.models.externalRequests.RequestContext
+import com.workduck.service.serviceUtils.ServiceUtils.getNodeIDWorkspaceID
+import com.workduck.service.serviceUtils.ServiceUtils.populateEntityMetadata
+import com.workduck.service.serviceUtils.ServiceUtils.invokeCreateOrUpdateEntityLambda
+import com.workduck.service.serviceUtils.ServiceUtils.invokeUpdateEntityLambda
+import com.workduck.service.serviceUtils.ServiceUtils.invokeGetEntityLambda
+import com.workduck.service.serviceUtils.ServiceUtils.invokeDeleteEntityLambda
+import com.workduck.service.serviceUtils.ServiceUtils.invokeGetEntitiesWithFilterLambda
 import com.workduck.utils.EntityHelper
-import com.workduck.utils.Helper
-import com.workduck.utils.LambdaHelper
 import com.workduck.utils.externalLambdas.HttpMethods
 import com.workduck.utils.externalLambdas.LambdaFunctionNames
 import com.workduck.utils.externalLambdas.RoutePaths
 
 class SmartCaptureService (
-    private val objectMapper: ObjectMapper = Helper.objectMapper,
-
     private val nodeService : NodeService = NodeService()
 ){
 
@@ -37,13 +31,18 @@ class SmartCaptureService (
         val request = wdRequest as SmartCaptureRequest
 
         // this contains the nodeID to which smartCapture should be appended and the workspaceID of that node.
-        val nodeWorkspaceMap = getNodeIDWorkspaceID(request.nodeNamespaceMap, userID, userWorkspaceID)
+        val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
 
         val smartCapture: AdvancedElement = request.data
-        populateSmartCaptureMetadata(smartCapture, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
+        populateEntityMetadata(smartCapture, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
 
-        val captureID = invokeCreateCaptureLambda(smartCapture, nodeWorkspaceMap.workspaceID, userID).id
-
+        val captureID = invokeCreateOrUpdateEntityLambda(
+                            smartCapture,
+                            nodeWorkspaceMap.workspaceID,
+                            userID,
+                            LambdaFunctionNames.CAPTURE_LAMBDA,
+                            RoutePaths.CREATE_CAPTURE,
+                            HttpMethods.POST).id
         val refBlock = EntityHelper.createEntityReferenceBlock(smartCapture.id, captureID, Constants.ELEMENT_SMART_CAPTURE)
         nodeService.appendEntityBlocks(nodeWorkspaceMap.nodeID, nodeWorkspaceMap.workspaceID, userID, listOf(refBlock))
         println(captureID)
@@ -55,18 +54,22 @@ class SmartCaptureService (
         val request = wdRequest as SmartCaptureRequest
 
         // this contains the nodeID to which smartCapture should be appended and the workspaceID of that node.
-        val nodeWorkspaceMap = getNodeIDWorkspaceID(request.nodeNamespaceMap, userID, userWorkspaceID)
+        val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
 
         val smartCapture: AdvancedElement = request.data
 
-        populateSmartCaptureMetadata(smartCapture, userID, createdAt = null, createdBy = null)
-        invokeUpdateCaptureLambda(smartCaptureID, smartCapture, nodeWorkspaceMap.workspaceID, userID)
-
-
+        populateEntityMetadata(smartCapture, userID, createdAt = null, createdBy = null)
+        invokeUpdateEntityLambda(
+            smartCaptureID,
+            smartCapture,
+            nodeWorkspaceMap.workspaceID,
+            userID,
+            LambdaFunctionNames.CAPTURE_LAMBDA,
+            RoutePaths.UPDATE_CAPTURE,
+            HttpMethods.PATCH)
     }
 
-    fun getSmartCapture(captureID: String, nodeID: String, namespaceID: String, userWorkspaceID: String, userID: String): AdvancedElement {
-
+    fun getSmartCapture(captureID: String, nodeID: String, namespaceID: String, userWorkspaceID: String, userID: String): AdvancedElement? {
         val workspaceID = nodeService.nodeAccessService
             .checkIfUserHasAccessAndGetWorkspaceDetails(
                 nodeID,
@@ -79,7 +82,13 @@ class SmartCaptureService (
                 workspaceDetails[Constants.WORKSPACE_ID]!!
             }
 
-        return invokeGetCaptureLambda(workspaceID, userID, captureID).data
+        return invokeGetEntityLambda(
+                workspaceID,
+                userID,
+                captureID,
+                LambdaFunctionNames.CAPTURE_LAMBDA,
+                RoutePaths.GET_CAPTURE,
+                HttpMethods.GET).data
     }
 
 
@@ -96,12 +105,14 @@ class SmartCaptureService (
                 workspaceDetails[Constants.WORKSPACE_ID]!!
             }
 
-        invokeDeleteCaptureLambda(workspaceID, userID, captureID)
-    }
-
-    fun getAllSmartCapturesForFilter(workspaceID: String, userID: String, filterType: String, filterValue: String): MultipleEntityResponse {
-        return invokeGetCapturesWithFilterLambda(workspaceID, userID, filterType, filterValue)
-
+        invokeDeleteEntityLambda(
+            workspaceID,
+            userID,
+            captureID,
+            LambdaFunctionNames.CAPTURE_LAMBDA,
+            RoutePaths.DELETE_CAPTURE,
+            HttpMethods.DELETE
+        )
     }
 
     /* this endpoint is just to move smart capture from default capture node in user's own workspace */
@@ -112,10 +123,17 @@ class SmartCaptureService (
 
 
         // this map contains the nodeID to which smartCapture should be moved and the workspaceID of that node.
-        val nodeWorkspaceMap = getNodeIDWorkspaceID(request.nodeNamespaceMap, userID, userWorkspaceID)
+        val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
 
         //TODO(ask directly for blockID from entity service)
-        val blockID = invokeGetCaptureLambda(userWorkspaceID, userID, captureID).data.id
+
+        val blockID = invokeGetEntityLambda(
+                        userWorkspaceID,
+                        userID,
+                        captureID,
+                        LambdaFunctionNames.CAPTURE_LAMBDA,
+                        RoutePaths.GET_CAPTURE,
+                        HttpMethods.GET).data.id
 
         val sourceNodeWithBlockAndDataOrder: Node = nodeService.nodeRepository.getNodeWithBlockAndDataOrder(Constants.SMART_CAPTURE_DEFAULT_NODE_ID, blockID, userWorkspaceID).let{ node ->
             require(node != null) { Messages.INVALID_NODE_ID }
@@ -129,95 +147,15 @@ class SmartCaptureService (
         }
     }
 
-
-    private fun getNodeIDWorkspaceID(nodeNamespaceMap: NodeNamespaceMap?, userID: String, userWorkspaceID: String) : NodeWorkspaceMap {
-
-        return when(nodeNamespaceMap == null) {
-            true -> { /* if no node,namespace is given we will add the smart capture to user's workspace in default place. */
-                NodeWorkspaceMap(
-                    nodeID = Constants.SMART_CAPTURE_DEFAULT_NODE_ID,
-                    workspaceID = userWorkspaceID
-                )
-            }
-
-            false -> {
-                val nodeID = nodeNamespaceMap.nodeID
-                val namespaceID = nodeNamespaceMap.namespaceID
-                val workspaceID = nodeService.nodeAccessService
-                    .checkIfUserHasAccessAndGetWorkspaceDetails(
-                        nodeID,
-                        userWorkspaceID,
-                        namespaceID,
-                        userID,
-                        EntityOperationType.WRITE
-                    ).let { workspaceDetails ->
-                        require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
-                        workspaceDetails[Constants.WORKSPACE_ID]!!
-                    }
-                NodeWorkspaceMap(
-                    nodeID = nodeID,
-                    workspaceID = workspaceID
-                )
-
-            }
-        }
-
+    fun getAllSmartCapturesForFilter(workspaceID: String, userID: String, filterType: String, filterValue: String, lastKey: String?): MultipleEntityResponse {
+        return invokeGetEntitiesWithFilterLambda(
+                    workspaceID,
+                    userID,
+                    filterType,
+                    filterValue,
+                    LambdaFunctionNames.CAPTURE_LAMBDA,
+                    RoutePaths.GET_ALL_CAPTURES_WITH_FILTER,
+                    HttpMethods.GET,
+                    lastKey)
     }
-
-
-    private fun invokeCreateCaptureLambda(smartCapture: AdvancedElement, workspaceID: String, userID: String) : EntityServiceCreateResponse{
-        val header = ExternalRequestHeader(workspaceID, userID)
-        val requestContext = RequestContext(RoutePaths.CREATE_CAPTURE, HttpMethods.POST)
-        val requestBody = objectMapper.writeValueAsString(EntityHelper.createEntityPayload(smartCapture))
-        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, requestBody = requestBody)
-
-        val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
-        return Helper.objectMapper.readValue(jsonBody)
-
-    }
-
-    private fun invokeUpdateCaptureLambda(captureID: String, smartCapture: AdvancedElement, workspaceID: String, userID: String){
-        val header = ExternalRequestHeader(workspaceID, userID)
-        val requestContext = RequestContext(RoutePaths.UPDATE_CAPTURE, HttpMethods.PATCH)
-        val requestBody = objectMapper.writeValueAsString(EntityHelper.createEntityPayload(smartCapture))
-        val pathParameters : Map<String, String> = mapOf("id" to captureID)
-        LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, requestBody = requestBody, pathParameters = pathParameters)
-    }
-
-    private fun invokeGetCaptureLambda(workspaceID: String, userID: String, captureID: String) : SingleEntityResponse {
-        val header = ExternalRequestHeader(workspaceID, userID)
-        val requestContext = RequestContext(RoutePaths.GET_CAPTURE, HttpMethods.GET)
-        val pathParameters : Map<String, String> = mapOf("id" to captureID)
-        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
-        val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
-        return Helper.objectMapper.readValue(jsonBody)
-
-    }
-
-    private fun invokeDeleteCaptureLambda(workspaceID: String, userID: String, captureID: String){
-        val header = ExternalRequestHeader(workspaceID, userID)
-        val requestContext = RequestContext(RoutePaths.DELETE_CAPTURE, HttpMethods.DELETE)
-        val pathParameters : Map<String, String> = mapOf("id" to captureID)
-        LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, pathParameters = pathParameters)
-    }
-
-    private fun invokeGetCapturesWithFilterLambda(workspaceID: String, userID: String, filterType: String, filterValue: String)  : MultipleEntityResponse{
-        val header = ExternalRequestHeader(workspaceID, userID)
-        val requestContext = RequestContext(RoutePaths.GET_ALL_CAPTURES_WITH_FILTER, HttpMethods.GET)
-        val queryStringParameters : Map<String, String> = mapOf("filterType" to filterType, "filterValue" to filterValue)
-        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, LambdaFunctionNames.CAPTURE_LAMBDA, queryStringParameters = queryStringParameters)
-        val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
-        val singleEntityResponseList: List<SingleEntityResponse> = Helper.objectMapper.readValue(jsonBody, object : TypeReference<List<SingleEntityResponse>>() {})
-        return MultipleEntityResponse(entities = singleEntityResponseList)
-    }
-
-
-    private fun populateSmartCaptureMetadata(smartCapture: AdvancedElement, userID: String, createdAt : Long?, createdBy : String?){
-        smartCapture.createdBy = createdBy
-        smartCapture.createdAt = createdAt
-        smartCapture.lastEditedBy = userID
-        smartCapture.updatedAt = createdAt?: Constants.getCurrentTime()
-
-    }
-
 }

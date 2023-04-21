@@ -134,7 +134,7 @@ fun String.isValidNodeID(): Boolean {
     return this.isValidID(Constants.NODE_ID_PREFIX)
 }
 
-fun String.isValidHighlightLastKey(): Boolean {
+fun String.isValidHighlightID(): Boolean {
     return this.isValidID(Constants.HIGHLIGHT_ID_PREFIX)
 }
 

@@ -369,8 +369,13 @@ Highlights:
         private: true
 
     - http:
-        path: /v1/highlight/multiple
+        path: /v1/highlight/ids
         method: post
+        private: true
+
+    - http:
+        path: /v1/highlight/{id}
+        method: put
         private: true
 
     - http:
@@ -390,8 +395,8 @@ Highlights:
         request:
           parameters:
             querystrings:
-              nodeID: false
-              namespaceID: false
+              nodeID: true
+              namespaceID: true
 
     - http:
         path: /v1/highlight/all
@@ -432,8 +437,8 @@ SmartCapture:
         request:
           parameters:
             querystrings:
-              nodeID: false
-              namespaceID: false
+              nodeID: true
+              namespaceID: true
 
     - http:
         path: /v1/capture/filter
@@ -445,6 +450,7 @@ SmartCapture:
               configID: true
               isWorkspaceID: true
               isUserID: true
+              lastKey: false
 
     - http:
         path: /v1/capture/move

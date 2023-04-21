@@ -9,5 +9,5 @@ data class SaveableRange(
 
     var id: String ?= null,
 
-    var __isHighlightSource: Any? = null
+    var __isHighlightSource: Map<String, String>? = null
 )

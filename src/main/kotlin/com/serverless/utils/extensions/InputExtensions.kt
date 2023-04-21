@@ -3,7 +3,6 @@ package com.serverless.utils.extensions
 import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.workduck.models.Bold
 import com.workduck.utils.NodeHelper
 
 fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
@@ -12,9 +11,15 @@ fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let {
     }
 }
 
-fun Input.getLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    return map[Constants.LASTKEY]?.also { lastKey ->
-        require(lastKey.isValidHighlightLastKey()) { Messages.INVALID_HIGHLIGHT_ID }
+fun Input.getHighlightLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.LAST_KEY]?.also { lastKey ->
+        require(lastKey.isValidHighlightID()) { Messages.INVALID_HIGHLIGHT_ID }
+    }
+}
+
+fun Input.getCaptureLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.LAST_KEY]?.also { lastKey ->
+        require(lastKey.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }
     }
 }
 
@@ -40,6 +45,11 @@ fun Input.getBooleanFromQueryParam(queryParam : String) : Boolean  =  this.query
 
 fun Input.getCaptureIDFromPathParam(): String = this.pathParameters!!.id!!.let { id ->
     require(id.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }
+    id
+}
+
+fun Input.getHighlightIDFromPathParam(): String = this.pathParameters!!.id!!.let { id ->
+    require(id.isValidHighlightID()) { Messages.INVALID_HIGHLIGHT_ID }
     id
 }
 
