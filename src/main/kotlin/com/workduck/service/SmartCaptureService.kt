@@ -4,15 +4,18 @@ import com.amazonaws.services.lambda.model.InvocationType
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.serverless.models.requests.MoveEntityRequest
 import com.serverless.models.requests.NodeNamespaceMap
 import com.serverless.models.requests.NodeWorkspaceMap
 import com.serverless.models.requests.SmartCaptureRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
+import com.serverless.utils.extensions.isValidCaptureID
 import com.workduck.models.AdvancedElement
 import com.workduck.models.EntityOperationType
 import com.workduck.models.EntityServiceCreateResponse
+import com.workduck.models.Node
 import com.workduck.models.entityServiceResponses.MultipleEntityResponse
 import com.workduck.models.entityServiceResponses.SingleEntityResponse
 import com.workduck.models.externalRequests.ExternalRequestHeader
@@ -62,7 +65,7 @@ class SmartCaptureService (
 
     }
 
-    fun getSmartCapture(captureID: String, nodeID: String, namespaceID: String, userWorkspaceID: String, userID: String): AdvancedElement? {
+    fun getSmartCapture(captureID: String, nodeID: String, namespaceID: String, userWorkspaceID: String, userID: String): AdvancedElement {
 
         val workspaceID = nodeService.nodeAccessService
             .checkIfUserHasAccessAndGetWorkspaceDetails(
@@ -101,6 +104,31 @@ class SmartCaptureService (
 
     }
 
+    /* this endpoint is just to move smart capture from default capture node in user's own workspace */
+    fun moveSmartCapture(wdRequest: WDRequest, userID: String, userWorkspaceID: String) {
+        val request = wdRequest as MoveEntityRequest
+        val captureID = request.entityID
+        require(captureID.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }
+
+
+        // this map contains the nodeID to which smartCapture should be moved and the workspaceID of that node.
+        val nodeWorkspaceMap = getNodeIDWorkspaceID(request.nodeNamespaceMap, userID, userWorkspaceID)
+
+        //TODO(ask directly for blockID from entity service)
+        val blockID = invokeGetCaptureLambda(userWorkspaceID, userID, captureID).data.id
+
+        val sourceNodeWithBlockAndDataOrder: Node = nodeService.nodeRepository.getNodeWithBlockAndDataOrder(Constants.SMART_CAPTURE_DEFAULT_NODE_ID, blockID, userWorkspaceID).let{ node ->
+            require(node != null) { Messages.INVALID_NODE_ID }
+            require(node.data?.get(0) != null ) { Messages.INVALID_BLOCK_ID }
+            check(!node.dataOrder.isNullOrEmpty()) {Messages.INVALID_NODE_STATE}
+            node
+        }
+
+        sourceNodeWithBlockAndDataOrder.dataOrder!!.let { dataOrder ->
+            nodeService.nodeRepository.moveBlock(sourceNodeWithBlockAndDataOrder.data!![0], userWorkspaceID, Constants.SMART_CAPTURE_DEFAULT_NODE_ID, nodeWorkspaceMap.workspaceID, nodeWorkspaceMap.nodeID, dataOrder)
+        }
+    }
+
 
     private fun getNodeIDWorkspaceID(nodeNamespaceMap: NodeNamespaceMap?, userID: String, userWorkspaceID: String) : NodeWorkspaceMap {
 
@@ -108,7 +136,7 @@ class SmartCaptureService (
             true -> { /* if no node,namespace is given we will add the smart capture to user's workspace in default place. */
                 NodeWorkspaceMap(
                     nodeID = Constants.SMART_CAPTURE_DEFAULT_NODE_ID,
-                    workspaceID = Constants.WORKSPACE_ID
+                    workspaceID = userWorkspaceID
                 )
             }
 

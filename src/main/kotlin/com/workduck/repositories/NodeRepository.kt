@@ -294,9 +294,11 @@ class NodeRepository(
         }.firstOrNull()
     }
 
-    fun moveBlock(block: AdvancedElement?, workspaceIDOfSourceNode: String, sourceNodeID: String, workspaceIDOfDestinationNode: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
+    fun moveBlock(block: AdvancedElement, workspaceIDOfSourceNode: String, sourceNodeID: String, workspaceIDOfDestinationNode: String, destinationNodeID: String, dataOrderSourceNode: MutableList<String>) {
 
         val currentTime = getCurrentTime()
+
+        dataOrderSourceNode.remove(block.id)
 
         val deleteBlock = getUpdateToDeleteBlockFromNode(block, workspaceIDOfSourceNode, sourceNodeID, dataOrderSourceNode, currentTime)
         val addBlock = getUpdateToAddBlockToNode(block, workspaceIDOfDestinationNode, destinationNodeID, currentTime)

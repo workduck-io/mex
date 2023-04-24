@@ -7,6 +7,7 @@ class SmartCaptureStrategyFactory {
         const val updateSmartCaptureStrategy = "PUT /capture/{id}"
         const val deleteSmartCapture = "DELETE /capture/{id}"
         const val getAllSmartCapturesForFilterStrategy = "GET /capture/filter"
+        const val moveSmartCaptureStrategy = "PATCH /capture/move"
 
 
         private val smartCaptureRegistry: Map<String, SmartCaptureStrategy> = mapOf(
@@ -14,7 +15,8 @@ class SmartCaptureStrategyFactory {
             getSmartCapture to GetSmartCaptureStrategy(),
             getAllSmartCapturesForFilterStrategy to GetAllSmartCapturesForFilterStrategy(),
             updateSmartCaptureStrategy to UpdateSmartCaptureStrategy(),
-            deleteSmartCapture to DeleteSmartCaptureStrategy()
+            deleteSmartCapture to DeleteSmartCaptureStrategy(),
+            moveSmartCaptureStrategy to MoveSmartCaptureStrategy()
         )
 
         fun getSmartCaptureStrategy(routeKey: String): SmartCaptureStrategy? {

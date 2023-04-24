@@ -1227,13 +1227,12 @@ class NodeService( // Todo: Inject them from handlers
 
         when(copyOrMoveBlockRequest.action){
 
-            BlockMovementAction.COPY -> { sourceNodeWithBlockAndDataOrder.data!![0].also { block ->
+            BlockMovementAction.COPY -> { sourceNodeWithBlockAndDataOrder.data!![0].let { block ->
                     nodeRepository.append(destinationNodeID, workspaceIDOfDestinationNode, userID, listOf(block), mutableListOf(block.id))
                 }
             }
 
-            BlockMovementAction.MOVE -> { sourceNodeWithBlockAndDataOrder.dataOrder!!.also { dataOrder ->
-                    dataOrder.remove(blockID)
+            BlockMovementAction.MOVE -> { sourceNodeWithBlockAndDataOrder.dataOrder!!.let { dataOrder ->
                     nodeRepository.moveBlock(sourceNodeWithBlockAndDataOrder.data!![0], workspaceIDOfSourceNode, sourceNodeID, workspaceIDOfDestinationNode, destinationNodeID, dataOrder)
                 }
             }
