@@ -13,7 +13,8 @@ class DeleteHighlightStrategy: HighlightStrategy {
         val nodeID = input.getNodeIDFromQueryParam() ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
         val namespaceID = input.getNamespaceIDFromQueryParam() ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
 
-        return input.pathParameters?.id?.let { highlightID ->highlightService.deleteHighlight(highlightID, nodeID, namespaceID, input.headers.workspaceID, input.tokenBody.userID).let {
+        return input.pathParameters?.id?.let { highlightID ->
+            highlightService.deleteHighlight(highlightID, nodeID, namespaceID, input.headers.workspaceID, input.tokenBody.userID).let {
                 ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_DELETING_HIGHLIGHT)
             }
         }!!

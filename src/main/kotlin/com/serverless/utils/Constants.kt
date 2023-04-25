@@ -27,6 +27,7 @@ object Constants {
     const val TITLE_ALPHANUMERIC_SUFFIX_SIZE = 3
     const val PUBLIC_NOTE_EXP_TIME_IN_SECONDS: Long = 86400
     const val DEFAULT_PUBLIC_NOTE_CACHE_ENDPOINT: String = "mex-public-note-cache.m6edlo.ng.0001.use1.cache.amazonaws.com"
+    const val DEFAULT_VALUE = "defaultValue"
     const val NODE = "node"
     const val CHANGED_PATHS = "changedPaths"
     const val NAMESPACE_INFO = "namespaceInfo"

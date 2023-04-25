@@ -47,6 +47,22 @@ object ServiceUtils {
         return Helper.objectMapper.readValue(jsonBody)
     }
 
+    fun invokeCreateInstanceEntityLambda(
+        entityID: String,
+        workspaceID: String,
+        userID: String,
+        functionName: String,
+        routePath: String,
+        httpMethod: String,
+    ) : EntityServiceCreateResponse {
+        val header = ExternalRequestHeader(workspaceID, userID)
+        val requestContext = RequestContext(routePath, httpMethod)
+        val pathParameters : Map<String, String> = mapOf("id" to entityID)
+        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, functionName, pathParameters = pathParameters)
+        val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
+        return Helper.objectMapper.readValue(jsonBody)
+    }
+
     fun invokeGetEntityLambda(
         workspaceID: String,
         userID: String,
@@ -89,6 +105,23 @@ object ServiceUtils {
         val requestContext = RequestContext(routePath, httpMethod)
         val response = if (lastKey == null) LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, functionName)
                     else LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, functionName, queryStringParameters = mapOf("lastKey" to lastKey))
+        val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
+        val multipleEntityResponseList: MultipleEntityPaginatedResponse = Helper.objectMapper.readValue(jsonBody, object : TypeReference<MultipleEntityPaginatedResponse>() {})
+        return MultipleEntityPaginatedResponse(Items = multipleEntityResponseList.Items, lastKey = multipleEntityResponseList.lastKey)
+    }
+
+    fun invokeGetAllEntityByIDLambda(
+        entityID: String,
+        workspaceID: String,
+        userID: String,
+        functionName: String,
+        routePath: String,
+        httpMethod: String
+    )  : MultipleEntityPaginatedResponse {
+        val header = ExternalRequestHeader(workspaceID, userID)
+        val requestContext = RequestContext(routePath, httpMethod)
+        val pathParameters : Map<String, String> = mapOf("id" to entityID)
+        val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, functionName, pathParameters = pathParameters)
         val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
         val multipleEntityResponseList: MultipleEntityPaginatedResponse = Helper.objectMapper.readValue(jsonBody, object : TypeReference<MultipleEntityPaginatedResponse>() {})
         return MultipleEntityPaginatedResponse(Items = multipleEntityResponseList.Items, lastKey = multipleEntityResponseList.lastKey)

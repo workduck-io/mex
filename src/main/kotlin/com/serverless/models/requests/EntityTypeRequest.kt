@@ -3,13 +3,11 @@ package com.serverless.models.requests
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.serverless.utils.Messages
-import com.serverless.utils.extensions.isValidCaptureID
 import com.workduck.models.AdvancedElement
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("SmartCaptureRequest")
-data class SmartCaptureRequest(
+@JsonTypeName("EntityTypeRequest")
+data class EntityTypeRequest(
 
     @JsonProperty("nodeNamespaceMap")
     val nodeNamespaceMap: NodeNamespaceMap ? = null,

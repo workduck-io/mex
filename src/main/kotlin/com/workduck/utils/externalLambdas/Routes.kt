@@ -11,6 +11,8 @@ object RoutePaths {
     const val DELETE_HIGHLIGHT = "/{id}"
     const val GET_ALL_HIGHLIGHTS = "/all"
     const val GET_MULTIPLE_HIGHLIGHTS = "/multiple"
+    const val CREATE_HIGHLIGHT_INSTANCE = "/instance/{id}"
+    const val GET_ALL_HIGHLIGHT_INSTANCES = "/instances/all/{id}"
 }
 
 object HttpMethods {

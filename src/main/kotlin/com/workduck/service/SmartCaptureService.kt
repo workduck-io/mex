@@ -1,7 +1,7 @@
 package com.workduck.service
 
 import com.serverless.models.requests.MoveEntityRequest
-import com.serverless.models.requests.SmartCaptureRequest
+import com.serverless.models.requests.EntityTypeRequest
 import com.serverless.models.requests.WDRequest
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
@@ -28,7 +28,7 @@ class SmartCaptureService (
 ){
 
     fun createSmartCapture(wdRequest: WDRequest, userID: String, userWorkspaceID: String) : String {
-        val request = wdRequest as SmartCaptureRequest
+        val request = wdRequest as EntityTypeRequest
 
         // this contains the nodeID to which smartCapture should be appended and the workspaceID of that node.
         val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
@@ -51,7 +51,7 @@ class SmartCaptureService (
 
 
     fun updateSmartCapture(smartCaptureID: String, wdRequest: WDRequest, userID: String, userWorkspaceID: String) {
-        val request = wdRequest as SmartCaptureRequest
+        val request = wdRequest as EntityTypeRequest
 
         // this contains the nodeID to which smartCapture should be appended and the workspaceID of that node.
         val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)

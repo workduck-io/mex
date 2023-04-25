@@ -8,15 +8,19 @@ class HighlightStrategyFactory {
         const val getMultipleHighlight = "POST /highlight/ids"
         const val deleteHighlight = "DELETE /highlight/{id}"
         const val getAllHighlights = "GET /highlight/all"
+        const val createHighlightInstance = "POST /highlight/instance/{id}"
+        const val getAllHighlightInstances = "GET /highlight/instances/all/{id}"
 
 
         private val highlightRegistry: Map<String, HighlightStrategy> = mapOf(
             createHighlight to CreateHighlightStrategy(),
-            updateHighlight to updateHighlightStrategy(),
+            updateHighlight to UpdateHighlightStrategy(),
             getHighlight to GetHighlightStrategy(),
             deleteHighlight to DeleteHighlightStrategy(),
             getAllHighlights to GetAllHighlightsStrategy(),
-            getMultipleHighlight to GetAllHighlightsByIDsStrategy()
+            getMultipleHighlight to GetAllHighlightsByIDsStrategy(),
+            createHighlightInstance to CreateHighlightInstanceStrategy(),
+            getAllHighlightInstances to GetAllHighlightInstancesStrategy()
         )
 
         fun getHighlightStrategy(routeKey: String): HighlightStrategy? {

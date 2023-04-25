@@ -95,6 +95,8 @@ object Messages {
     const val ERROR_MOVING_SMART_CAPTURE = "Error moving smart capture"
 
     const val ERROR_CREATING_HIGHLIGHT = "Error creating highlight"
+    const val ERROR_CREATING_HIGHLIGHT_INSTANCE = "Error creating highlight instance"
+    const val ERROR_GETTING_ALL_HIGHLIGHT_INSTANCES = "Error getting all highlight instances"
     const val ERROR_UPDATING_HIGHLIGHT = "Error updating highlight"
     const val ERROR_GETTING_HIGHLIGHT = "Error getting highlight"
     const val ERROR_GETTING_ALL_HIGHLIGHTS = "Error getting all highlights"

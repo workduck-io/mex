@@ -7,12 +7,12 @@ import com.serverless.utils.Messages
 import com.serverless.utils.extensions.getHighlightIDFromPathParam
 import com.workduck.service.HighlightService
 
-class updateHighlightStrategy: HighlightStrategy {
+class CreateHighlightInstanceStrategy: HighlightStrategy {
     override fun apply(input: Input, highlightService: HighlightService): ApiGatewayResponse {
-        val id = input.getHighlightIDFromPathParam()
-        return input.payload?.let { highlightRequest ->
-            highlightService.updateHighlight(id, highlightRequest, input.tokenBody.userID, input.headers.workspaceID).let {
-                ApiResponseHelper.generateStandardResponse(null, 204, Messages.ERROR_UPDATING_HIGHLIGHT)
+        val highlightID = input.getHighlightIDFromPathParam()
+        return input.payload?.let { highlightInstanceRequest ->
+            highlightService.createHighlightInstance(highlightInstanceRequest, input.tokenBody.userID, input.headers.workspaceID, highlightID).let {
+                ApiResponseHelper.generateStandardResponse(it, Messages.ERROR_CREATING_HIGHLIGHT_INSTANCE)
             }
         } ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
     }

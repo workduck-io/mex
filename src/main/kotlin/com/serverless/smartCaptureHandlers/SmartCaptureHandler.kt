@@ -13,6 +13,7 @@ import com.workduck.service.SmartCaptureService
 import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 import com.serverless.utils.Helper.validateTokenAndWorkspace
+import com.serverless.utils.Messages
 
 class SmartCaptureHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
     companion object {
@@ -34,12 +35,12 @@ class SmartCaptureHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse>
     override fun handleRequest(input: Map<String, Any>, context: Context?): ApiGatewayResponse {
         input.handleWarmup(LOG)?.let{ return it }
 
-        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
+        val wdInput : Input = Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         LOG.info(wdInput.myRouteKey)
         LOG.info("Username: ${wdInput.tokenBody.username}")
         val strategy = SmartCaptureStrategyFactory.getSmartCaptureStrategy(wdInput.myRouteKey)
-            ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 400)
+            ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
 
         return try {

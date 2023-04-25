@@ -369,6 +369,11 @@ Highlights:
         private: true
 
     - http:
+        path: /v1/highlight/instance/{id}
+        method: post
+        private: true
+
+    - http:
         path: /v1/highlight/ids
         method: post
         private: true
@@ -406,6 +411,11 @@ Highlights:
           parameters:
             querystrings:
               lastKey: false
+
+    - http:
+        path: /v1/highlight/instances/all/{id}
+        method: get
+        private: true
 
 SmartCapture:
   handler: com.serverless.smartCaptureHandlers.SmartCaptureHandler

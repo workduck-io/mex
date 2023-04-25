@@ -7,8 +7,8 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.models.requests.WDRequest
-import com.serverless.smartCaptureHandlers.SmartCaptureStrategyFactory
 import com.serverless.utils.ExceptionParser
+import com.serverless.utils.Messages
 import com.serverless.utils.extensions.handleWarmup
 import com.workduck.service.HighlightService
 import com.workduck.utils.Helper
@@ -35,12 +35,12 @@ class HighlightHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         input.handleWarmup(LOG)?.let { return it }
 
         val wdInput: Input =
-            Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse("Malformed Request", 400)
+            Input.fromMap(input) ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.MALFORMED_REQUEST, 400)
 
         LOG.info(wdInput.myRouteKey)
         LOG.info("Username: ${wdInput.tokenBody.username}")
         val strategy = HighlightStrategyFactory.getHighlightStrategy(wdInput.myRouteKey)
-            ?: return ApiResponseHelper.generateStandardErrorResponse("Request not recognized", 400)
+            ?: return ApiResponseHelper.generateStandardErrorResponse(Messages.REQUEST_NOT_RECOGNIZED, 400)
 
 
         return try {
