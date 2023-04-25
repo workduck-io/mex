@@ -19,6 +19,7 @@ object Constants {
     const val INTERNAL_WORKSPACE = "WORKSPACE_INTERNAL"
     const val INTERNAL_NAMESPACE_ID = "NAMESPACE_DEFAULT"
     const val NODE_ID_PREFIX = "NODE_"
+    const val WORKSPACE_ID_PREFIX = "WORKSPACE_"
     const val NAMESPACE_ID_PREFIX = "NAMESPACE_"
     const val SNIPPET_ID_PREFIX = "SNIPPET_"
     const val CAPTURE_ID_PREFIX = "CAPTURE_"

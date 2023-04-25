@@ -122,6 +122,10 @@ fun String.isValidCaptureID(): Boolean {
     return this.isValidID(Constants.CAPTURE_ID_PREFIX)
 }
 
+fun String.isValidWorkspaceID(): Boolean {
+    return this.isValidID(Constants.WORKSPACE_ID)
+}
+
 fun String.isValidConfigID(): Boolean {
     return this.startsWith(Constants.CONFIG_ID_PREFIX)
 }

@@ -7,6 +7,8 @@ class SnippetStrategyFactory {
 
         const val createSnippet = "POST /snippet"
 
+        const val adminCreateSnippet = "POST /snippet/admin/{id}"
+
         const val createNewVersion = "POST /snippet/newVersion"
 
         const val updateSameSnippetVersion = "PUT /snippet"
@@ -32,6 +34,7 @@ class SnippetStrategyFactory {
         private val snippetRegistry: Map<String, SnippetStrategy> = mapOf(
                 getSnippet to GetSnippetStrategy(),
                 createSnippet to CreateSnippetStrategy(),
+                adminCreateSnippet to AdminCreateSnippetStrategy(),
                 deleteSnippet to DeleteSnippetStrategy(),
                 deleteAllVersionsOfSnippet to DeleteAllVersionsOfSnippetStrategy(),
                 makeSnippetPublic to MakeSnippetPublicStrategy(),

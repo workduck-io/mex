@@ -133,10 +133,14 @@ class NodeService( // Todo: Inject them from handlers
 
     }
 
+    fun adminCreateAndUpdateNode(request: WDRequest, adminWorkspaceID: String, workspaceID: String, userID: String): Node{
+        require(adminWorkspaceID == Constants.INTERNAL_WORKSPACE) { Messages.UNAUTHORIZED}
+        return createAndUpdateNode(request, workspaceID, userID)
 
+    }
 
     /* if operation is "create", will be used to create just a single leaf node */
-    fun createAndUpdateNode(request: WDRequest?, userWorkspaceID: String, userID: String): Node =
+    fun createAndUpdateNode(request: WDRequest, userWorkspaceID: String, userID: String): Node =
         runBlocking {
             val nodeRequest: NodeRequest = request as NodeRequest
 
@@ -146,33 +150,38 @@ class NodeService( // Todo: Inject them from handlers
                         workspaceDetails[Constants.WORKSPACE_ID]!!
             }
 
+            return@runBlocking createAndUpdateNodeAfterPermissionCheck(nodeRequest, nodeWorkspaceID, userID)
+        }
 
-            val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
+    fun createAndUpdateNodeAfterPermissionCheck(request: WDRequest, nodeWorkspaceID: String, userID: String) : Node = runBlocking{
+        val nodeRequest: NodeRequest = request as NodeRequest
+        val node: Node = createNodeObjectFromNodeRequest(nodeRequest, nodeWorkspaceID, userID)
 
-            val jobToGetStoredNode = async { getNodeAfterPermissionCheck(node.id, userID, ItemStatus.ACTIVE) }
+        val jobToGetStoredNode = async { getNodeAfterPermissionCheck(node.id, userID, ItemStatus.ACTIVE) }
 
-            val jobToGetNamespace = async {
-                node.namespaceIdentifier.id.let { namespaceID ->
-                    namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
-                        require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
-                        namespace
-                    }
-                }
-            }
-
-
-            return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
-                null -> {
-                    val namespace = jobToGetNamespace.await()
-                    updateNodeAttributesInSingleCreate(node, nodeRequest, namespace)
-                    createNode(node, namespace)
-                }
-                else -> {
-                    jobToGetNamespace.cancel()
-                    updateNode(node, storedNode)
+        val jobToGetNamespace = async {
+            node.namespaceIdentifier.id.let { namespaceID ->
+                namespaceService.getNamespaceAfterPermissionCheck(namespaceID).let { namespace ->
+                    require(namespace != null) { Messages.INVALID_NAMESPACE_ID }
+                    namespace
                 }
             }
         }
+
+
+        return@runBlocking when (val storedNode = jobToGetStoredNode.await()) {
+            null -> {
+                val namespace = jobToGetNamespace.await()
+                updateNodeAttributesInSingleCreate(node, nodeRequest, namespace)
+                createNode(node, namespace)
+            }
+            else -> {
+                jobToGetNamespace.cancel()
+                updateNode(node, storedNode)
+            }
+        }
+
+    }
 
 
 
