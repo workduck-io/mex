@@ -92,6 +92,7 @@ object Messages {
     const val ERROR_GETTING_SMART_CAPTURE = "Error getting smart capture"
     const val ERROR_GETTING_ALL_SMART_CAPTURES = "Error getting all smart captures"
     const val ERROR_DELETING_SMART_CAPTURE = "Error deleting smart capture"
+    const val ERROR_MOVING_SMART_CAPTURE = "Error moving smart capture"
 
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"

@@ -404,6 +404,11 @@ SmartCapture:
               isWorkspaceID: true
               isUserID: true
 
+    - http:
+        path: /v1/capture/move
+        method: patch
+        private: true
+
 Snippet:
   handler: com.serverless.snippetHandlers.SnippetHandler
   events:
