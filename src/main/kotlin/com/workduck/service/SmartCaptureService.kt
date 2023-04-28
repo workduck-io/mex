@@ -25,28 +25,18 @@ import com.workduck.utils.externalLambdas.RoutePaths
 
 class SmartCaptureService (
     private val nodeService : NodeService = NodeService()
-){
+) : EntityService() {
 
     fun createSmartCapture(wdRequest: WDRequest, userID: String, userWorkspaceID: String) : String {
-        val request = wdRequest as EntityTypeRequest
-
-        // this contains the nodeID to which smartCapture should be appended and the workspaceID of that node.
-        val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
-
-        val smartCapture: AdvancedElement = request.data
-        populateEntityMetadata(smartCapture, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
-
-        val captureID = invokeCreateOrUpdateEntityLambda(
-                            smartCapture,
-                            nodeWorkspaceMap.workspaceID,
-                            userID,
-                            LambdaFunctionNames.CAPTURE_LAMBDA,
-                            RoutePaths.CREATE_CAPTURE,
-                            HttpMethods.POST).id
-        val refBlock = EntityHelper.createEntityReferenceBlock(smartCapture.id, captureID, Constants.ELEMENT_SMART_CAPTURE)
-        nodeService.appendEntityBlocks(nodeWorkspaceMap.nodeID, nodeWorkspaceMap.workspaceID, userID, listOf(refBlock))
-        println(captureID)
-        return captureID
+        return createEntity(
+            wdRequest,
+            userID,
+            userWorkspaceID,
+            LambdaFunctionNames.CAPTURE_LAMBDA,
+            RoutePaths.CREATE_CAPTURE,
+            HttpMethods.POST,
+            Constants.ELEMENT_SMART_CAPTURE
+        )
     }
 
 

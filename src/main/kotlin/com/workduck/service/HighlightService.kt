@@ -23,25 +23,18 @@ import com.workduck.utils.externalLambdas.RoutePaths
 
 class HighlightService(
     private val nodeService : NodeService = NodeService()
-){
+) : EntityService(){
 
     fun createHighlight(wdRequest: WDRequest, userID: String, userWorkspaceID: String) : String {
-        val request = wdRequest as EntityTypeRequest
-        // this contains the nodeID to which highlight should be appended and the workspaceID of that node.
-        val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
-        val highlight: AdvancedElement = request.data
-        populateEntityMetadata(highlight, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
-        val highlightID = invokeCreateOrUpdateEntityLambda(
-                            highlight,
-                            nodeWorkspaceMap.workspaceID,
-                            userID,
-                            LambdaFunctionNames.HIGHLIGHT_LAMBDA,
-                            RoutePaths.CREATE_OR_UPDATE_HIGHLIGHT,
-                            HttpMethods.POST).id
-        val refBlock = EntityHelper.createEntityReferenceBlock(highlight.id, highlightID, Constants.ELEMENT_HIGHLIGHT)
-        nodeService.appendEntityBlocks(nodeWorkspaceMap.nodeID, nodeWorkspaceMap.workspaceID, userID, listOf(refBlock))
-
-        return highlightID
+        return createEntity(
+            wdRequest,
+            userID,
+            userWorkspaceID,
+            LambdaFunctionNames.HIGHLIGHT_LAMBDA,
+            RoutePaths.CREATE_OR_UPDATE_HIGHLIGHT,
+            HttpMethods.POST,
+            Constants.ELEMENT_HIGHLIGHT
+        )
     }
 
     fun createHighlightInstance(wdRequest: WDRequest, userID: String, userWorkspaceID: String, highlightID: String) : String {
