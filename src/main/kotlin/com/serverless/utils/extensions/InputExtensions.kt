@@ -17,6 +17,12 @@ fun Input.getHighlightLastKeyFromQueryParam(): String? = this.queryStringParamet
     }
 }
 
+fun Input.getParentHighlightIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.PARENT_ID]?.also { parentID ->
+        require(parentID.isValidHighlightID()) { Messages.INVALID_HIGHLIGHT_ID }
+    }
+}
+
 fun Input.getCaptureLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
     return map[Constants.LAST_KEY]?.also { lastKey ->
         require(lastKey.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }

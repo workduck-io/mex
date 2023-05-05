@@ -46,5 +46,6 @@ object Constants {
     const val ELEMENT_SMART_CAPTURE = "smartCapture"
     const val HIGHLIGHT_DEFAULT_NODE_ID = "NODE_XyeGVpziGiTUeMYafzbd9"
     const val ELEMENT_HIGHLIGHT = "highlight"
+    const val PARENT_ID = "parentID"
 
 }

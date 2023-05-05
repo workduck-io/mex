@@ -8,7 +8,6 @@ class HighlightStrategyFactory {
         const val getMultipleHighlight = "POST /highlight/ids"
         const val deleteHighlight = "DELETE /highlight/{id}"
         const val getAllHighlights = "GET /highlight/all"
-        const val createHighlightInstance = "POST /highlight/instance/{id}"
         const val getAllHighlightInstances = "GET /highlight/instances/all/{id}"
 
 
@@ -19,7 +18,6 @@ class HighlightStrategyFactory {
             deleteHighlight to DeleteHighlightStrategy(),
             getAllHighlights to GetAllHighlightsStrategy(),
             getMultipleHighlight to GetAllHighlightsByIDsStrategy(),
-            createHighlightInstance to CreateHighlightInstanceStrategy(),
             getAllHighlightInstances to GetAllHighlightInstancesStrategy()
         )
 

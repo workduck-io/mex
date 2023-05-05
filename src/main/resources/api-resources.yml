@@ -367,11 +367,10 @@ Highlights:
         path: /v1/highlight
         method: post
         private: true
-
-    - http:
-        path: /v1/highlight/instance/{id}
-        method: post
-        private: true
+        request:
+          parameters:
+            querystrings:
+              parentID: true
 
     - http:
         path: /v1/highlight/ids
