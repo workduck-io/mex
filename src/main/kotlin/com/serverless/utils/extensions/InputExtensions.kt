@@ -30,8 +30,8 @@ fun Input.getCaptureLastKeyFromQueryParam(): String? = this.queryStringParameter
 }
 
 fun Input.getNamespaceIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    map[Constants.NAMESPACE_ID]?.also { nodeID ->
-        require(nodeID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }
+    map[Constants.NAMESPACE_ID]?.also { namespaceID ->
+        require(namespaceID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }
     }
 }
 

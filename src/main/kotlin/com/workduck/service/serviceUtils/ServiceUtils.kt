@@ -132,7 +132,6 @@ object ServiceUtils {
         val requestBody = Helper.objectMapper.writeValueAsString(genericListRequest)
         val response = LambdaHelper.invokeLambda(header, requestContext, InvocationType.RequestResponse, functionName, requestBody = requestBody)
         val jsonBody = response.body ?: throw IllegalStateException("Could not get a response")
-        print(jsonBody)
         return jsonBody
     }
 

@@ -127,7 +127,7 @@ class HighlightService(
         )
     }
 
-    fun getAllHighlights(workspaceID: String, userID: String, lastKey: String?): MultipleEntityPaginatedResponse<AdvancedElement> {
+    fun getAllHighlights(workspaceID: String, userID: String, lastKey: String? = null): MultipleEntityPaginatedResponse<AdvancedElement> {
         return Helper.objectMapper.readValue(
             invokeGetAllEntityLambda(
                     workspaceID,

@@ -47,7 +47,6 @@ class SmartCaptureService (
                             HttpMethods.POST).id
         val refBlock = EntityHelper.createEntityReferenceBlock(smartCapture.id, captureID, Constants.ELEMENT_SMART_CAPTURE)
         nodeService.appendEntityBlocks(nodeWorkspaceMap.nodeID, nodeWorkspaceMap.workspaceID, userID, listOf(refBlock))
-        println(captureID)
         return captureID
     }
 

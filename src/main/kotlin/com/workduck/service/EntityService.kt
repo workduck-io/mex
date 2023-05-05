@@ -22,7 +22,7 @@ abstract class EntityService(
     ): String {
         val request = wdRequest as EntityTypeRequest
         val nodeWorkspaceMap = ServiceUtils.getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
-        val element: AdvancedElement = request.data
+        val element: AdvancedElement = request.data!!
         ServiceUtils.populateEntityMetadata(element, userID, createdAt = Constants.getCurrentTime(), createdBy = userID)
         val elementID = ServiceUtils.invokeCreateOrUpdateEntityLambda(
             element,
