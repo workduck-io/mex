@@ -6,8 +6,10 @@ import com.serverless.models.Input
 import com.serverless.utils.Messages
 import com.workduck.service.WorkspaceService
 
-class GetArchivedHierarchyStrategy : WorkspaceStrategy {
+class GetAllWorkspacesForUserStrategy : WorkspaceStrategy {
     override fun apply(input: Input, workspaceService: WorkspaceService): ApiGatewayResponse {
-        return ApiResponseHelper.generateStandardResponse(workspaceService.getArchivedNodeHierarchyOfWorkspace(input.headers.workspaceID), Messages.ERROR_GETTING_NODES)
+        return workspaceService.getAllWorkspacesForUser(input.tokenBody.username, input.tokenBody.userPoolID).let { workspaces ->
+            ApiResponseHelper.generateStandardResponse(workspaces, Messages.ERROR_GETTING_WORKSPACES)
+        }
     }
 }

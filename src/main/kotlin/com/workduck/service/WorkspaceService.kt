@@ -4,13 +4,11 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.models.requests.WDRequest
 import com.serverless.models.requests.WorkspaceRequest
 import com.serverless.utils.Constants
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
-import com.workduck.models.IdentifierType
 import com.workduck.models.ItemStatus
 import com.workduck.models.Relationship
 import com.workduck.models.Workspace
@@ -19,7 +17,6 @@ import com.workduck.repositories.Repository
 import com.workduck.repositories.RepositoryImpl
 import com.workduck.repositories.WorkspaceRepository
 import com.workduck.utils.DDBHelper
-import com.workduck.utils.Helper
 import com.workduck.utils.NodeHelper.getCommonPrefixNodePath
 import com.workduck.utils.NodeHelper.getIDPath
 import com.workduck.utils.NodeHelper.getNamePath
@@ -28,6 +25,11 @@ import com.workduck.utils.extensions.toWorkspace
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
+import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder
+import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest
+import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException
+import com.serverless.utils.Messages
+
 
 class WorkspaceService (
 
@@ -49,37 +51,68 @@ class WorkspaceService (
 
 ) {
 
-    fun createWorkspace(workspaceRequest: WDRequest): Entity {
-        val workspaceID = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
-        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest, workspaceID)
-        repository.create(workspace)
-        return workspace
-    }
+//    fun createWorkspace(workspaceRequest: WDRequest): Entity {
+//        val workspaceID = Helper.generateNanoID(IdentifierType.WORKSPACE.name)
+//        val workspace: Workspace = createWorkspaceObjectFromWorkspaceRequest(workspaceRequest as WorkspaceRequest, workspaceID)
+//        repository.create(workspace)
+//        return workspace
+//    }
 
     fun getWorkspace(workspaceID: String): Entity? {
         return repository.get(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID), Workspace::class.java)
     }
 
+    fun updateWorkspace(workspaceRequest: WDRequest, workspaceID: String, userID: String) {
+        val workspace = (workspaceRequest as WorkspaceRequest).toWorkspace(workspaceID)
+        require(checkIfUserHasWorkspaceAccess(workspace.id, userID)){ Messages.UNAUTHORIZED }
+        workspaceRepository.updateWorkspace(workspace)
+    }
 
-    fun getArchivedNodeHierarchyOfWorkspace(workspaceID: String): List<String> {
-        return (getWorkspace(workspaceID) as Workspace).archivedNodeHierarchyInformation ?: listOf()
+    //TODO(ask userService for this info)
+    private fun checkIfUserHasWorkspaceAccess(workspaceID: String, userID: String) : Boolean{
+        return true
     }
-    fun updateWorkspace(workspaceID: String, request: WDRequest) {
-        val workspaceRequest: WorkspaceRequest = request as WorkspaceRequest
-        workspaceRepository.updateWorkspaceName(workspaceID, workspaceRequest.name)
-    }
+
 
     fun updateWorkspace(workspace: Workspace) {
         repository.update(workspace)
     }
 
-    fun updateWorkspaceHierarchy(
-        workspace: Workspace,
-        newNodeHierarchy: List<String>
-    ) {
-        Workspace.populateHierarchiesAndUpdatedAt(workspace, newNodeHierarchy, workspace.archivedNodeHierarchyInformation)
-        updateWorkspace(workspace)
+    fun getAllWorkspacesForUser(username: String, userPoolID: String): List<Workspace> {
+
+        val workspaceIDList = getWorkspaceIDsFromCognito(username, userPoolID)
+
+        return workspaceRepository.bulkGetWorkspaces(workspaceIDList)
+
     }
+
+    private fun getWorkspaceIDsFromCognito(username: String, userPoolID: String) : List<String> {
+
+        val cognitoClient = AWSCognitoIdentityProviderClientBuilder.standard().build()
+
+        try {
+            val adminGetUserRequest = AdminGetUserRequest()
+                .withUserPoolId(userPoolID)
+                .withUsername(username)
+
+
+            val adminGetUserResult = cognitoClient.adminGetUser(adminGetUserRequest)
+
+            cognitoClient.shutdown()
+
+            val workspaceAttribute =
+                adminGetUserResult.userAttributes.firstOrNull { it.name == "custom:mex_workspace_ids" }
+            val workspaceString =
+                workspaceAttribute?.value ?: throw IllegalStateException("User not part of any workspace")
+
+            return workspaceString.split(Constants.DELIMITER)
+
+        } catch (e: AWSCognitoIdentityProviderException) {
+            throw IllegalArgumentException("Invalid User")
+        }
+
+    }
+
 
     fun deleteWorkspace(workspaceID: String): Identifier? {
         return repository.delete(WorkspaceIdentifier(workspaceID), WorkspaceIdentifier(workspaceID),)
@@ -89,13 +122,7 @@ class WorkspaceService (
         return workspaceRepository.getWorkspaceData(workspaceIDList)
     }
 
-    fun updateNodeHierarchyOnArchivingNode(workspace: Workspace, nodeID: String) {
-        val updatedNodeHierarchy =
-            getUpdatedNodeHierarchyOnDeletingNode(workspace.nodeHierarchyInformation ?: listOf(), nodeID)
 
-        LOG.debug("Updated Node Hierarchy After Archiving node : $nodeID : $updatedNodeHierarchy")
-        updateWorkspaceHierarchy(workspace, updatedNodeHierarchy)
-    }
 
     private fun getUpdatedNodeHierarchyOnDeletingNode(
         nodeHierarchyInformation: List<String>,
@@ -126,7 +153,7 @@ class WorkspaceService (
         return WorkspaceHelper.removeRedundantPaths(updatedPaths.distinct(), newNodeHierarchy)
     }
 
-
+    //TODO(remove this since we now support namespace hierarchy)
     fun refreshNodeHierarchyForWorkspace(workspaceID: String) = runBlocking {
 
         val jobToGetListOfRelationships =
@@ -148,7 +175,7 @@ class WorkspaceService (
         nodeHierarchy += jobToGetNodePathsFromRelationships.await()
         val workspace = jobToGetWorkspace.await() as Workspace
 
-        updateWorkspaceHierarchy(workspace, nodeHierarchy)
+        //updateWorkspaceHierarchy(workspace, nodeHierarchy)
     }
 
     private fun getNodePaths(
@@ -277,9 +304,6 @@ class WorkspaceService (
 
         return listOfAloneNodes
     }
-
-    private fun createWorkspaceObjectFromWorkspaceRequest(workspaceRequest: WorkspaceRequest, workspaceID: String): Workspace = workspaceRequest.toWorkspace(workspaceID)
-
 
     companion object {
         private val LOG = LogManager.getLogger(WorkspaceService::class.java)
