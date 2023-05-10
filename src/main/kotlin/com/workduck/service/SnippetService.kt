@@ -8,6 +8,8 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import com.serverless.models.requests.MetadataRequest
 import com.serverless.models.requests.SnippetRequest
 import com.serverless.models.requests.WDRequest
+import com.serverless.utils.Constants
+import com.serverless.utils.Messages
 import com.serverless.utils.extensions.orderPage
 import com.serverless.utils.extensions.setVersion
 import com.workduck.models.Entity
@@ -41,6 +43,11 @@ class SnippetService {
     private val snippetRepository = SnippetRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val pageRepository: PageRepository<Snippet> = PageRepository(mapper, dynamoDB, dynamoDBMapperConfig, client, tableName)
     private val repository: Repository<Snippet> = RepositoryImpl(dynamoDB, mapper, pageRepository, dynamoDBMapperConfig)
+
+    fun adminCreateAndUpdateSnippet(wdRequest: WDRequest, userID: String, adminWorkspace: String, workspaceID: String, createNextVersion: Boolean = false): Entity {
+        require(adminWorkspace == Constants.INTERNAL_WORKSPACE) { Messages.UNAUTHORIZED }
+        return createAndUpdateSnippet(wdRequest, userID, workspaceID, createNextVersion)
+    }
 
     fun createAndUpdateSnippet(wdRequest: WDRequest, userID: String, workspaceID: String, createNextVersion: Boolean = false): Entity {
         val snippet: Snippet = (wdRequest as SnippetRequest).createSnippetObjectFromSnippetRequest(userID, workspaceID)

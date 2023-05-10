@@ -31,6 +31,10 @@ fun Input.getBooleanFromQueryParam(queryParam : String) : Boolean  =  this.query
 } ?: false
 
 
+fun Input.getWorkspaceIDFromPathParam(): String = this.pathParameters!!.id!!.let { id ->
+    require(id.isValidWorkspaceID()) { Messages.INVALID_WORKSPACE_ID }
+    id
+}
 
 fun Input.getCaptureIDFromPathParam(): String = this.pathParameters!!.id!!.let { id ->
     require(id.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }

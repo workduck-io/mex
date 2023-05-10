@@ -222,6 +222,11 @@ Node:
         method: post
         private: true
 
+    - http:
+        path: /v1/node/admin/{id}
+        method: post
+        private: true
+
       #deleteNodes( archive them )
     - http:
         path: /v1/node/archive
@@ -539,6 +544,12 @@ Snippet:
     - http:
         path: /v1/snippet/all
         method: get
+        private: true
+
+    # create/ update a new snippet
+    - http:
+        path: /v1/snippet/admin/{id}
+        method: post
         private: true
 
 

@@ -11,6 +11,8 @@ class NodeStrategyFactory {
 
         const val createNodeObject = "POST /node"
 
+        const val adminCreateNodeObject = "POST /node/admin/{id}"
+
         const val createNodeObjectV2 = "POST /v2/node"
 
         /* since we're not hard deleting, just moving to archive */
@@ -69,6 +71,7 @@ class NodeStrategyFactory {
             getNodeObject to GetNodeStrategy(),
             batchGetNodeObject to GetNodesByIDStrategy(),
             createNodeObject to CreateNodeStrategy(),
+            adminCreateNodeObject to AdminCreateNodeStrategy(),
             createNodeObjectV2 to CreateNodeStrategyV2(),
             archiveNodeObject to ArchiveNodeStrategy(),
             archiveNodeMiddlewareObject to ArchiveNodeMiddlewareStrategy(),
