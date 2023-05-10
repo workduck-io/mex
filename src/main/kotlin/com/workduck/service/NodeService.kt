@@ -1030,7 +1030,8 @@ class NodeService( // Todo: Inject them from handlers
         val newHierarchy = mutableListOf<String>()
         if (node.title != storedNode.title) {
             val workspace = workspaceService.getWorkspace(node.workspaceIdentifier.id) as Workspace
-            val currentHierarchy = workspace.nodeHierarchyInformation ?: listOf()
+            //TODO(since we now have namespace hierarchies, update the logic)
+            val currentHierarchy = listOf<String>()
             for (nodePath in currentHierarchy) {
                 val idList = getIDPath(nodePath).getListFromPath()
                 val indexOfNodeID = idList.indexOf(node.id)
@@ -1042,7 +1043,7 @@ class NodeService( // Todo: Inject them from handlers
                     newHierarchy.add(nodePath)
                 }
             }
-            workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy)
+           // workspaceService.updateWorkspaceHierarchy(workspace, newHierarchy)
         }
     }
 

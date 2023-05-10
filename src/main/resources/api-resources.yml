@@ -764,20 +764,11 @@ Workspace:
         method: patch
         private: true
 
-
-User:
-  handler: com.serverless.userHandlers.UserHandler
-  events:
     - http:
-        path : /user/register
-        method: post
+        path: /v1/workspace/user
+        method: get
         private: true
 
-    #################### v1 api paths ####################
-    - http:
-        path: /v1/user/register
-        method: post
-        private: true
 
 UserPreference:
   handler: com.serverless.userPreferenceHandlers.UserPreferenceHandler

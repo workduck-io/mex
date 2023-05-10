@@ -12,8 +12,8 @@ class WorkspaceTransformer : Transformer<Workspace> {
             name = t.name,
             createdAt = t.createdAt,
             updatedAt = t.updatedAt,
-            nodeHierarchy = t.nodeHierarchyInformation ?: listOf(),
-            archivedNodeHierarchy = t.archivedNodeHierarchyInformation ?: listOf()
+            //nodeHierarchy = t.nodeHierarchyInformation ?: listOf(),
+            //archivedNodeHierarchy = t.archivedNodeHierarchyInformation ?: listOf()
         )
     }
 }

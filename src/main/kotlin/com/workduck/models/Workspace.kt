@@ -5,12 +5,17 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.serverless.utils.Constants
 import com.workduck.converters.ItemTypeConverter
+import com.workduck.converters.WorkspaceMetadataConverter
+import com.workduck.converters.WorkspaceMetadataDeserializer
 import com.workduck.utils.Helper
 
 @DynamoDBTable(tableName = "sampleData")
+@JsonIgnoreProperties(ignoreUnknown = true)
 class Workspace(
 
     @JsonProperty("id")
@@ -35,24 +40,15 @@ class Workspace(
     @DynamoDBTypeConverted(converter = ItemTypeConverter::class)
     override var itemType: ItemType = ItemType.Workspace,
 
-    //TODO(remove these fields)
-    @JsonProperty("nodeHierarchyInformation")
-    @DynamoDBAttribute(attributeName = "nodeHierarchyInformation")
-    var nodeHierarchyInformation: List<String> ? = null,
 
-    @JsonProperty("archivedNodeHierarchyInformation")
-    @DynamoDBAttribute(attributeName = "archivedNodeHierarchyInformation")
-    var archivedNodeHierarchyInformation: List<String> ? = null,
+    @JsonProperty("metadata")
+    @DynamoDBTypeConverted(converter = WorkspaceMetadataConverter::class)
+    @JsonDeserialize(converter = WorkspaceMetadataDeserializer::class)
+    @DynamoDBAttribute(attributeName = "metadata")
+    var workspaceMetadata : WorkspaceMetadata ?= null,
 
 ) : Entity {
 
-    companion object {
-        fun populateHierarchiesAndUpdatedAt(workspace: Workspace, activeHierarchy : List<String>, archivedHierarchy : List<String>?, updatedAt: Long = Constants.getCurrentTime()){
-            workspace.nodeHierarchyInformation = activeHierarchy
-            workspace.archivedNodeHierarchyInformation = archivedHierarchy
-            workspace.updatedAt = updatedAt
-        }
-    }
 
     @JsonProperty("updatedAt")
     @DynamoDBAttribute(attributeName = "updatedAt")

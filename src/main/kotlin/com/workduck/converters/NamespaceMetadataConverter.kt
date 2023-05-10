@@ -10,8 +10,8 @@ class NamespaceMetadataConverter : DynamoDBTypeConverter<String, NamespaceMetada
         return namespaceMetadata?.let { Helper.objectMapper.writeValueAsString(it) }
     }
 
-    override fun unconvert(nodeMetadata: String?): NamespaceMetadata? {
-        return nodeMetadata?.let { Helper.objectMapper.readValue(it) }
+    override fun unconvert(namespaceMetadata: String?): NamespaceMetadata? {
+        return namespaceMetadata?.let { Helper.objectMapper.readValue(it) }
     }
 
 

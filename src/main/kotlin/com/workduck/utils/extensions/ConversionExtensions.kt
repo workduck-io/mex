@@ -95,7 +95,8 @@ fun SnippetRequest.createSnippetObjectFromSnippetRequest(userID: String, workspa
 fun WorkspaceRequest.toWorkspace(workspaceID: String) : Workspace {
     return Workspace(
             id = workspaceID,
-            name = this.name
+            name = this.name,
+            workspaceMetadata = this.workspaceMetadata
     )
 }
 

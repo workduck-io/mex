@@ -11,7 +11,9 @@ import com.workduck.models.Element
 import com.workduck.models.Workspace
 import com.workduck.models.Entity
 import com.workduck.models.Identifier
+import com.workduck.models.Namespace
 import com.workduck.utils.DDBHelper
+import com.workduck.utils.Helper
 import org.apache.logging.log4j.LogManager
 import kotlin.math.exp
 
@@ -73,6 +75,51 @@ class WorkspaceRepository(
         }
         return workspaceMap
 
+    }
+
+    fun bulkGetWorkspaces(workspaceIDList : List<String>): List<Workspace> {
+
+        val itemsToGet = workspaceIDList.map { id ->
+            Workspace().apply {
+                this.id = id
+                this.idCopy = id
+            }
+        }
+
+        val batchResult =  mapper.batchLoad(itemsToGet, dynamoDBMapperConfig)
+        val result = batchResult.values.flatten()
+
+        // Cast the result to List<Workspace>
+        return result.filterIsInstance<Workspace>()
+
+    }
+
+    fun updateWorkspace(workspace: Workspace) {
+        val table = dynamoDB.getTable(tableName)
+        val expressionAttributeValues: MutableMap<String, Any> = HashMap()
+
+        expressionAttributeValues[":workspaceName"] = workspace.name
+        expressionAttributeValues[":updatedAt"] = Constants.getCurrentTime()
+
+
+        var updateExpression = ""
+        when (workspace.workspaceMetadata != null) {
+            true -> {
+                expressionAttributeValues[":metadata"] = Helper.objectMapper.writeValueAsString(workspace.workspaceMetadata)
+                updateExpression = "SET workspaceName = :workspaceName, updatedAt = :updatedAt, metadata = :metadata"
+            }
+            false -> {
+                updateExpression = "SET workspaceName = :workspaceName, updatedAt = :updatedAt"
+            }
+        }
+        val conditionExpression = "attribute_exists(PK) and attribute_exists(SK)"
+
+        return UpdateItemSpec().update(
+            pk = workspace.id, sk = workspace.id, updateExpression = updateExpression,
+            expressionAttributeValues = expressionAttributeValues, conditionExpression = conditionExpression
+        ).let {
+            table.updateItem(it)
+        }
     }
 
     companion object {
