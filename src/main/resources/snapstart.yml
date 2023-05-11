@@ -19,11 +19,6 @@ Resources:
       Properties:
         SnapStart:
           ApplyOn: PublishedVersions
-    UserLambdaFunction:
-      Type: AWS::Lambda::Function
-      Properties:
-        SnapStart:
-          ApplyOn: PublishedVersions
     UserPreferenceLambdaFunction:
       Type: AWS::Lambda::Function
       Properties:
