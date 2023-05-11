@@ -48,4 +48,4 @@
   Action:
     - 'cognito-idp:AdminGetUser'
   Resource:
-    - 'arn:aws:cognito-idp:${self:provider.region}:${AWS::AccountId}:userpool/*'
+    - !Sub 'arn:aws:cognito-idp:${self:provider.region}:${AWS::AccountId}:userpool/*'
