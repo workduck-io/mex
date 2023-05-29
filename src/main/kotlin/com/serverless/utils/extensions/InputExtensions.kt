@@ -11,22 +11,12 @@ fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let {
     }
 }
 
-fun Input.getHighlightLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    return map[Constants.LAST_KEY]?.also { lastKey ->
-        require(lastKey.isValidHighlightID()) { Messages.INVALID_HIGHLIGHT_ID }
-    }
+fun Input.getParentIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.PARENT_ID]
 }
 
-fun Input.getParentHighlightIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    return map[Constants.PARENT_ID]?.also { parentID ->
-        require(parentID.isValidHighlightID()) { Messages.INVALID_HIGHLIGHT_ID }
-    }
-}
-
-fun Input.getCaptureLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    return map[Constants.LAST_KEY]?.also { lastKey ->
-        require(lastKey.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }
-    }
+fun Input.getLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.LAST_KEY]
 }
 
 fun Input.getNamespaceIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->

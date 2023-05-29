@@ -4,7 +4,6 @@ import com.serverless.ApiGatewayResponse
 import com.serverless.ApiResponseHelper
 import com.serverless.models.Input
 import com.serverless.utils.Messages
-import com.serverless.utils.extensions.getHighlightLastKeyFromQueryParam
 import com.workduck.service.HighlightService
 
 class GetAllHighlightsStrategy : HighlightStrategy {

@@ -75,8 +75,8 @@ class SmartCaptureService (): EntityService(){
             userID = userID,
             userWorkspaceID = userWorkspaceID,
             lambdaFunctionName = LambdaFunctionNames.CAPTURE_LAMBDA,
-            routePath = RoutePaths.CREATE_CAPTURE,
-            httpMethod = HttpMethods.POST,
+            routePath = RoutePaths.GET_CAPTURE,
+            httpMethod = HttpMethods.GET,
             defaultNodeID = Constants.SMART_CAPTURE_DEFAULT_NODE_ID,
             entityID = captureID
         )

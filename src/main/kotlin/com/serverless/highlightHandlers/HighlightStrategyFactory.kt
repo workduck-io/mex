@@ -9,6 +9,7 @@ class HighlightStrategyFactory {
         const val deleteHighlight = "DELETE /highlight/{id}"
         const val getAllHighlights = "GET /highlight/all"
         const val getAllHighlightInstances = "GET /highlight/instances/all/{id}"
+        const val moveHighlightStrategy = "PATCH /highlight/move"
 
 
         private val highlightRegistry: Map<String, HighlightStrategy> = mapOf(
@@ -18,7 +19,8 @@ class HighlightStrategyFactory {
             deleteHighlight to DeleteHighlightStrategy(),
             getAllHighlights to GetAllHighlightsStrategy(),
             getMultipleHighlight to GetAllHighlightsByIDsStrategy(),
-            getAllHighlightInstances to GetAllHighlightInstancesStrategy()
+            getAllHighlightInstances to GetAllHighlightInstancesStrategy(),
+            moveHighlightStrategy to MoveHighlightStrategy()
         )
 
         fun getHighlightStrategy(routeKey: String): HighlightStrategy? {

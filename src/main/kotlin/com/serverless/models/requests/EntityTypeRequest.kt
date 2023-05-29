@@ -14,7 +14,7 @@ data class EntityTypeRequest(
 
     // rather than a list, a single Advanced Element
     @JsonProperty("data")
-    val data: AdvancedElement? = null,
+    val data: AdvancedElement,
 
 
 ) : WDRequest

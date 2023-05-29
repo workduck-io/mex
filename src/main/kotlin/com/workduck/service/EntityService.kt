@@ -15,6 +15,7 @@ import com.workduck.service.serviceUtils.ServiceUtils.invokeGetAllEntityLambda
 import com.workduck.service.serviceUtils.ServiceUtils.invokeGetAllEntityInstancesByIDLambda
 import com.workduck.service.serviceUtils.ServiceUtils.invokeGetEntitiesWithFilterLambda
 import com.serverless.models.requests.EntityTypeRequest
+import com.serverless.models.requests.HighlightInstanceRequest
 import com.serverless.models.requests.GenericListRequest
 import com.serverless.models.requests.MoveEntityRequest
 import com.serverless.utils.Constants
@@ -87,7 +88,7 @@ abstract class EntityService(
         elementType: String,
         parentID: String
     ): String {
-        val request = wdRequest as EntityTypeRequest
+        val request = wdRequest as HighlightInstanceRequest
         val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
         val elementID = invokeCreateInstanceEntityLambda(
             parentID,
@@ -206,7 +207,7 @@ abstract class EntityService(
         defaultNodeID: String,
         entityID: String
     ){
-        // this map contains the nodeID to which smartCapture should be moved and the workspaceID of that node.
+        // this map contains the nodeID to which entity should be moved and the workspaceID of that node.
         val nodeWorkspaceMap = getNodeIDWorkspaceID(nodeService, request.nodeNamespaceMap, userID, userWorkspaceID)
 
         //TODO(ask directly for blockID from entity service)

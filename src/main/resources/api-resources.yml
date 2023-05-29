@@ -409,11 +409,16 @@ Highlights:
         request:
           parameters:
             querystrings:
-              lastKey: false
+              lastKey: true
 
     - http:
         path: /v1/highlight/instances/all/{id}
         method: get
+        private: true
+
+    - http:
+        path: /v1/highlight/move
+        method: patch
         private: true
 
 SmartCapture:
@@ -459,7 +464,7 @@ SmartCapture:
               configID: true
               isWorkspaceID: true
               isUserID: true
-              lastKey: false
+              lastKey: true
 
     - http:
         path: /v1/capture/move
