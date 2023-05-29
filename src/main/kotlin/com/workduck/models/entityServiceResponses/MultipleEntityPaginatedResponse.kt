@@ -1,10 +1,10 @@
 package com.workduck.models.entityServiceResponses
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class MultipleEntityResponse(
+data class MultipleEntityPaginatedResponse<T>(
 
-    val entities : List<SingleEntityResponse>
+    val Items : List<T>,
+    val lastKey : String? = null
 )

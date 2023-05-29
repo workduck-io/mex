@@ -8,4 +8,6 @@ data class SaveableRange(
     var text: String ?= null,
 
     var id: String ?= null,
+
+    var __isHighlightSource: Map<String, String>? = null
 )

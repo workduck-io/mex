@@ -365,6 +365,67 @@ Node:
         method: patch
         private: true
 
+Highlights:
+  handler: com.serverless.highlightHandlers.HighlightHandler
+  events:
+    - http:
+        path: /v1/highlight
+        method: post
+        private: true
+        request:
+          parameters:
+            querystrings:
+              parentID: true
+
+    - http:
+        path: /v1/highlight/ids
+        method: post
+        private: true
+
+    - http:
+        path: /v1/highlight/{id}
+        method: put
+        private: true
+
+    - http:
+        path: /v1/highlight/{id}
+        method: get
+        private: true
+        request:
+          parameters:
+            querystrings:
+              nodeID: true
+              namespaceID: true
+
+    - http:
+        path: /v1/highlight/{id}
+        method: delete
+        private: true
+        request:
+          parameters:
+            querystrings:
+              nodeID: true
+              namespaceID: true
+
+    - http:
+        path: /v1/highlight/all
+        method: get
+        private: true
+        request:
+          parameters:
+            querystrings:
+              lastKey: true
+
+    - http:
+        path: /v1/highlight/instances/all/{id}
+        method: get
+        private: true
+
+    - http:
+        path: /v1/highlight/move
+        method: patch
+        private: true
+
 SmartCapture:
   handler: com.serverless.smartCaptureHandlers.SmartCaptureHandler
   events:
@@ -395,8 +456,8 @@ SmartCapture:
         request:
           parameters:
             querystrings:
-              nodeID: false
-              namespaceID: false
+              nodeID: true
+              namespaceID: true
 
     - http:
         path: /v1/capture/filter
@@ -408,6 +469,7 @@ SmartCapture:
               configID: true
               isWorkspaceID: true
               isUserID: true
+              lastKey: true
 
     - http:
         path: /v1/capture/move

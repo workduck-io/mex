@@ -3,7 +3,6 @@ package com.serverless.utils.extensions
 import com.serverless.models.Input
 import com.serverless.utils.Constants
 import com.serverless.utils.Messages
-import com.workduck.models.Bold
 import com.workduck.utils.NodeHelper
 
 fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
@@ -12,9 +11,17 @@ fun Input.getNodeIDFromQueryParam(): String? = this.queryStringParameters?.let {
     }
 }
 
+fun Input.getParentIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.PARENT_ID]
+}
+
+fun Input.getLastKeyFromQueryParam(): String? = this.queryStringParameters?.let { map ->
+    return map[Constants.LAST_KEY]
+}
+
 fun Input.getNamespaceIDFromQueryParam(): String? = this.queryStringParameters?.let { map ->
-    map[Constants.NAMESPACE_ID]?.also { nodeID ->
-        require(nodeID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }
+    map[Constants.NAMESPACE_ID]?.also { namespaceID ->
+        require(namespaceID.isValidNamespaceID()) { Messages.INVALID_NAMESPACE_ID }
     }
 }
 
@@ -38,6 +45,11 @@ fun Input.getWorkspaceIDFromPathParam(): String = this.pathParameters!!.id!!.let
 
 fun Input.getCaptureIDFromPathParam(): String = this.pathParameters!!.id!!.let { id ->
     require(id.isValidCaptureID()) { Messages.INVALID_CAPTURE_ID }
+    id
+}
+
+fun Input.getHighlightIDFromPathParam(): String = this.pathParameters!!.id!!.let { id ->
+    require(id.isValidHighlightID()) { Messages.INVALID_HIGHLIGHT_ID }
     id
 }
 

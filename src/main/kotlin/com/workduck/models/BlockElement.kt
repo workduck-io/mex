@@ -6,8 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 class BlockElement(
     val blockID: String,
-    val captureID: String,
-    val configID: String
+    val entityID: String
 ) : Element {
     /**
      * Todo: Data to be loaded by the data loader instance which talks to entity db

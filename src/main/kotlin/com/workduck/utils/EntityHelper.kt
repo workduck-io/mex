@@ -10,6 +10,10 @@ object EntityHelper {
     }
 
     fun createEntityPayload(entity : AdvancedElement) : EntityRequest {
-        return EntityRequest(entity)
+        return EntityRequest(data = entity)
+    }
+
+    fun updateEntityPayload(id: String, entity : AdvancedElement) : EntityRequest {
+        return EntityRequest(id, data = entity)
     }
 }

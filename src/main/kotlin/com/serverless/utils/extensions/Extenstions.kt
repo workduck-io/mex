@@ -138,6 +138,10 @@ fun String.isValidNodeID(): Boolean {
     return this.isValidID(Constants.NODE_ID_PREFIX)
 }
 
+fun String.isValidHighlightID(): Boolean {
+    return this.isValidID(Constants.HIGHLIGHT_ID_PREFIX)
+}
+
 
 private fun String.isValidID(prefix: String): Boolean {
     return this.startsWith(prefix) &&

@@ -94,6 +94,16 @@ object Messages {
     const val ERROR_DELETING_SMART_CAPTURE = "Error deleting smart capture"
     const val ERROR_MOVING_SMART_CAPTURE = "Error moving smart capture"
 
+    const val ERROR_CREATING_HIGHLIGHT = "Error creating highlight"
+    const val ERROR_CREATING_HIGHLIGHT_INSTANCE = "Error creating highlight instance"
+    const val ERROR_GETTING_ALL_HIGHLIGHT_INSTANCES = "Error getting all highlight instances"
+    const val ERROR_UPDATING_HIGHLIGHT = "Error updating highlight"
+    const val ERROR_GETTING_HIGHLIGHT = "Error getting highlight"
+    const val ERROR_GETTING_ALL_HIGHLIGHTS = "Error getting all highlights"
+    const val ERROR_GETTING_MULTIPLE_HIGHLIGHTS = "Error getting multiple highlights"
+    const val ERROR_DELETING_HIGHLIGHT  = "Error deleting highlight"
+    const val INVALID_HIGHLIGHT_ID  = "Invalid HighlighID"
+
 
     const val ERROR_GETTING_TAGS = "Error fetching tags"
 
