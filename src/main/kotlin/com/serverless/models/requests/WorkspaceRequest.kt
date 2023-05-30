@@ -12,6 +12,6 @@ data class WorkspaceRequest(
     @JsonProperty("name")
     val name: String,
 
-    @JsonProperty("metadata")
+    @JsonProperty("workspaceMetadata")
     val workspaceMetadata: WorkspaceMetadata? = null,
 ) : WDRequest
