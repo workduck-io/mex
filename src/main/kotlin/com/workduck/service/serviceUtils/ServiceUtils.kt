@@ -183,7 +183,7 @@ object ServiceUtils {
             true -> { /* if no node,namespace is given we will add the highlight to user's workspace in default place. */
                 NodeWorkspaceMap(
                     nodeID = Constants.HIGHLIGHT_DEFAULT_NODE_ID,
-                    workspaceID = Constants.WORKSPACE_ID
+                    workspaceID = userWorkspaceID
                 )
             }
 
