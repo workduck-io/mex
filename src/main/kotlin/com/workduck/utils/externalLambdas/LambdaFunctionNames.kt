@@ -1,6 +1,7 @@
 package com.workduck.utils.externalLambdas
 
 object LambdaFunctionNames {
-    const val CAPTURE_LAMBDA = "smartcapture-test-capture"
-    const val HIGHLIGHT_LAMBDA = "highlights-test-main"
+    val stage: String = System.getenv("STAGE") ?: "test"
+    val CAPTURE_LAMBDA = "smartcapture-$stage-capture"
+    val HIGHLIGHT_LAMBDA = "highlights-$stage-main"
 }
