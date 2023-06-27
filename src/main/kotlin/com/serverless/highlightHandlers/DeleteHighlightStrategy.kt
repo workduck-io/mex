@@ -10,8 +10,8 @@ import com.workduck.service.HighlightService
 
 class DeleteHighlightStrategy: HighlightStrategy {
     override fun apply(input: Input, highlightService: HighlightService): ApiGatewayResponse {
-        val nodeID = input.getNodeIDFromQueryParam() ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
-        val namespaceID = input.getNamespaceIDFromQueryParam() ?: throw IllegalArgumentException(Messages.MALFORMED_REQUEST)
+        val nodeID = input.getNodeIDFromQueryParam()
+        val namespaceID = input.getNamespaceIDFromQueryParam()
 
         return input.pathParameters?.id?.let { highlightID ->
             highlightService.deleteHighlight(highlightID, nodeID, namespaceID, input.headers.workspaceID, input.tokenBody.userID).let {

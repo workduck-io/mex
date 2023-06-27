@@ -68,7 +68,7 @@ class HighlightService(): EntityService() {
     }
 
 
-    fun deleteHighlight(highlightID: String, nodeID: String, namespaceID: String, userWorkspaceID: String, userID: String) {
+    fun deleteHighlight(highlightID: String, nodeID: String?, namespaceID: String?, userWorkspaceID: String, userID: String) {
         deleteEntity(
             userID = userID,
             userWorkspaceID = userWorkspaceID,
