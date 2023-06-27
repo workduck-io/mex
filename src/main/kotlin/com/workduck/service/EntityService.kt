@@ -168,25 +168,27 @@ abstract class EntityService(
     protected fun deleteEntity(
         userID: String,
         userWorkspaceID: String,
-        nodeID: String,
-        namespaceID: String,
+        nodeID: String?,
+        namespaceID: String?,
         lambdaFunctionName: String,
         routePath: String,
         httpMethod: String,
         entityID: String
     ) {
-        val workspaceID = nodeService.nodeAccessService
-            .checkIfUserHasAccessAndGetWorkspaceDetails(
-                nodeID,
-                userWorkspaceID,
-                namespaceID,
-                userID,
-                EntityOperationType.WRITE
-            ).let { workspaceDetails ->
-                require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
-                workspaceDetails[Constants.WORKSPACE_ID]!!
-            }
-
+        var workspaceID = userWorkspaceID
+        if(nodeID != null && namespaceID != null) {
+            workspaceID = nodeService.nodeAccessService
+                .checkIfUserHasAccessAndGetWorkspaceDetails(
+                    nodeID,
+                    userWorkspaceID,
+                    namespaceID,
+                    userID,
+                    EntityOperationType.WRITE
+                ).let { workspaceDetails ->
+                    require(!workspaceDetails[Constants.WORKSPACE_ID].isNullOrEmpty()) { Messages.ERROR_NODE_PERMISSION }
+                    workspaceDetails[Constants.WORKSPACE_ID]!!
+                }
+        }
         invokeDeleteEntityLambda(
             workspaceID,
             userID,
