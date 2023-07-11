@@ -25,7 +25,7 @@ enum class ElementTypes(val type: String) {
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "elementType",
+        property = "type",
         visible = true,
         defaultImpl = AdvancedElement::class
 )
