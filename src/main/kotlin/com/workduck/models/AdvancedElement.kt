@@ -1,6 +1,5 @@
 package com.workduck.models
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -54,7 +53,8 @@ open class AdvancedElement(
     var properties: Map<String, Any>? = null,
 
     @JsonIgnore
-    @JsonProperty("elementMetadata")
+    @JsonProperty("metadata")
+    @JsonAlias("elementMetadata")
     var elementMetadata : ElementMetadata ?= null,
 
     @JsonProperty("entityRefID")
@@ -75,7 +75,7 @@ open class AdvancedElement(
     @JsonProperty("updatedAt")
     var updatedAt: Long? = null
 
-    @JsonProperty("type")
+    @JsonProperty("type") // used in serialization.
     fun getType(): String {
         return this.elementType
     }
