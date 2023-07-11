@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.workduck.utils.Helper
 
-enum class IdentifierType(s: String) {
+enum class IdentifierType(val short: String) {
     OWNER("OWN"),
     NAMESPACE("NAMESPACE"),
     NODE("NODE"),
