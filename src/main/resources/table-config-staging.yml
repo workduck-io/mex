@@ -10,15 +10,9 @@ Resources:
           AttributeType: S
         - AttributeName: SK
           AttributeType: S
-        - AttributeName: AK
-          AttributeType: S
         - AttributeName: itemType
           AttributeType: S
         - AttributeName: createdBy
-          AttributeType: S
-        - AttributeName: workspaceIdentifier
-          AttributeType: S
-        - AttributeName: itemStatus
           AttributeType: S
       KeySchema:
         - AttributeName: PK
@@ -42,54 +36,6 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
-        - IndexName: PK-itemType-index
-          KeySchema:
-            - AttributeName: PK
-              KeyType: HASH
-            - AttributeName: itemType
-              KeyType: RANGE
-          Projection:
-            NonKeyAttributes:
-              - metadata
-              - updatedAt
-              - createdAt
-            ProjectionType: INCLUDE
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
-        - IndexName: itemType-AK-index
-          KeySchema:
-            - AttributeName: itemType
-              KeyType: HASH
-            - AttributeName: AK
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
-        - IndexName: WS-itemStatus-index
-          KeySchema:
-            - AttributeName: workspaceIdentifier
-              KeyType: HASH
-            - AttributeName: itemStatus
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
-        - IndexName: WS-itemType-index
-          KeySchema:
-            - AttributeName: workspaceIdentifier
-              KeyType: HASH
-            - AttributeName: itemType
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
         - IndexName: createdBy-itemType-index
           KeySchema:
             - AttributeName: createdBy
@@ -103,7 +49,7 @@ Resources:
             WriteCapacityUnits: 1
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
-      TimeToLiveSpecification:
-        AttributeName: expireAt
-        Enabled: true
+#      TimeToLiveSpecification:
+#        AttributeName: expireAt
+#        Enabled: true
 
