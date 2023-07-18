@@ -22,6 +22,7 @@ import com.amazonaws.services.dynamodbv2.model.Update
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serverless.utils.Constants
+import com.serverless.utils.Constants.NODE_ID_PREFIX
 import com.serverless.utils.Constants.getCurrentTime
 import com.serverless.utils.Messages
 import com.workduck.models.AccessType
@@ -728,13 +729,14 @@ class NodeRepository(
 
         val expressionAttributeValues: MutableMap<String, AttributeValue> = HashMap()
         expressionAttributeValues[":PK"] = AttributeValue(workspaceID)
+        expressionAttributeValues[":SK"] = AttributeValue().withS(NODE_ID_PREFIX)
         expressionAttributeValues[":itemType"] = AttributeValue(ItemType.Node.name)
         expressionAttributeValues[":deleted"] = AttributeValue().withN("1")
 
-        return DynamoDBQueryExpression<Node>().queryWithIndex(
-            index = "PK-itemType-index", keyConditionExpression = "PK = :PK  and itemType = :itemType",
-            expressionAttributeValues = expressionAttributeValues, filterExpression = "deleted <> :deleted"
-        ).let { it ->
+        return DynamoDBQueryExpression<Node>().query(
+            keyConditionExpression = "PK = :PK and begins_with(SK, :SK)", expressionAttributeValues = expressionAttributeValues,
+            filterExpression = "itemType = :itemType and deleted <> :deleted", projectionExpression = "metadata, createdAt, updatedAt"
+        ).let {
             mapper.query(Node::class.java, it, dynamoDBMapperConfig).associate { node ->
                 node.id to mapOf("metadata" to node.metadata, "updatedAt" to node.updatedAt, "createdAt" to node.createdAt)
             }
