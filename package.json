@@ -10,5 +10,9 @@
   },
   "dependencies": {
     "serverless": "3.27.0"
+  },
+  "scripts": {
+    "deploy:test": "mvn clean install && sls deploy --stage test --verbose",
+    "deploy:staging": "mvn clean install && sls deploy --stage staging --verbose"
   }
 }

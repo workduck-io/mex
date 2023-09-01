@@ -8,10 +8,12 @@ data class PageMetadata(
     var icon: Icon? = null,
 
     // TODO(Add validation to check if the id exists)
-    var templateID: String? = null // snippet id
+    var templateID: String? = null, // snippet id
+    var usedTemplateID: String? = null // snippet id
 
 ) {
     init {
         require(templateID?.isValidSnippetID() ?: true) { "Invalid TemplateID" }
+        require(usedTemplateID?.isValidSnippetID() ?: true) { "Invalid UsedTemplateID" }
     }
 }
