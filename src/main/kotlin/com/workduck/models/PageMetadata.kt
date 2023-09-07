@@ -9,7 +9,8 @@ data class PageMetadata(
 
     // TODO(Add validation to check if the id exists)
     var templateID: String? = null, // snippet id
-    var usedTemplateID: String? = null // snippet id
+    var usedTemplateID: String? = null, // used snippet id
+    var conditions: Any? = null // used conditions
 
 ) {
     init {

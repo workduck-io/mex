@@ -18,6 +18,8 @@ data class SnippetResponse(
 
     override val updatedAt: Long,
 
-    var metadata: PageMetadata?
+    var metadata: PageMetadata?,
+
+    val template: Boolean?
 
 ) : Response, TimestampAdhereResponse
